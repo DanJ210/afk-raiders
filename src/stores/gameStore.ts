@@ -177,6 +177,18 @@ export const useGameStore = defineStore('game', () => {
     awaySummary.value = null
   }
 
+  const RAIDER_NAME_MAX_LENGTH = 25
+
+  function renameRaider(newName: string) {
+    const trimmed = newName.trim().slice(0, RAIDER_NAME_MAX_LENGTH)
+    if (!trimmed) return
+    state.value = {
+      ...state.value,
+      raider: { ...state.value.raider, name: trimmed },
+    }
+    persistSave(state.value, rng.getSeed(), lastTickAt.value)
+  }
+
   return {
     state,
     phase,
@@ -192,5 +204,7 @@ export const useGameStore = defineStore('game', () => {
     callExtract,
     resetSave,
     dismissAwaySummary,
+    renameRaider,
+    RAIDER_NAME_MAX_LENGTH,
   }
 })
