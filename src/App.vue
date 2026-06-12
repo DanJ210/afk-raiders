@@ -52,7 +52,7 @@ const activeMobileTab = ref<MobileTabId>('comms')
         <CommsLog />
       </section>
 
-      <section v-show="activeMobileTab === 'stash'" class="app__mobile-panel app__mobile-panel--fill">
+      <section v-if="activeMobileTab === 'stash'" class="app__mobile-panel app__mobile-panel--fill">
         <HomeStash />
       </section>
 
