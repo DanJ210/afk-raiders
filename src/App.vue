@@ -75,7 +75,7 @@ const activeMobileTab = ref<MobileTabId>('comms')
         class="app__mobile-nav-btn"
         :class="{ 'app__mobile-nav-btn--active': activeMobileTab === tab.id }"
         :aria-current="activeMobileTab === tab.id ? 'page' : undefined"
-        @click="activeMobileTab = tab.id"
+        @click="activeMobileTab = tab.id">
         <span class="app__mobile-nav-icon" aria-hidden="true">{{ tab.icon }}</span>
         <span class="app__mobile-nav-label">{{ tab.label }}</span>
       </button>

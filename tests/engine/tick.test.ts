@@ -7,7 +7,6 @@ import { describe, it, expect } from 'vitest'
 import { createRNG } from '../../src/engine/rng'
 import { processTick } from '../../src/engine/tick'
 import { createInitialState } from '../../src/engine/initialState'
-import { HOME_STASH_ITEM_LIMIT } from '../../src/engine/homeStash'
 
 const FIXED_SEED = 42
 
@@ -128,7 +127,7 @@ describe('deterministic snapshot', () => {
     expect(result.state.raider.extractCount).toBe(1)
   })
 
-  it('caps the home stash at 10 total items when extracting', () => {
+  it('stacks extracted quantities into existing stash entries', () => {
     const rng = createRNG(FIXED_SEED)
     const initial = createInitialState(0)
     const state = {
@@ -139,7 +138,7 @@ describe('deterministic snapshot', () => {
           name: 'Scrap',
           value: 2,
           rarity: 1,
-          quantity: HOME_STASH_ITEM_LIMIT - 1,
+          quantity: 9,
         },
       ],
       raid: {
@@ -167,14 +166,14 @@ describe('deterministic snapshot', () => {
         name: 'Scrap',
         value: 2,
         rarity: 1,
-        quantity: HOME_STASH_ITEM_LIMIT - 1,
+        quantity: 9,
       },
       {
         itemId: 'ammo',
         name: 'Ammo Box',
         value: 8,
         rarity: 2,
-        quantity: 1,
+        quantity: 3,
       },
     ])
   })
