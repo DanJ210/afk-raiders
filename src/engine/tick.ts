@@ -17,6 +17,7 @@ import type { GameState, LogEvent, TickResult } from './types.js'
 import type { RNG } from './rng.js'
 import { tickPhase } from './raidStateMachine.js'
 import { runGreedCheck } from './greedCheck.js'
+import { transferBackpackToHomeStash } from './homeStash.js'
 import { resolveEvent, resolveFlavorKey, applyEffects, events as allEvents } from './eventResolver.js'
 
 /** Maximum log entries to keep in memory (avoids unbounded growth) */
@@ -24,6 +25,7 @@ const MAX_LOG_SIZE = 200
 
 export function processTick(state: GameState, rng: RNG, now: number = Date.now(), extractionPreference?: number): TickResult {
   const emitted: LogEvent[] = []
+  const backpackBeforePhaseTick = state.raid.backpack
 
   // ------------------------------------------------------------------
   // 1. Run phase state machine
@@ -42,8 +44,6 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
 
     // Reset raider HP on HUB return; bookkeep deaths and extractions; transfer loot to home stash
     if (transition.to === 'HUB') {
-      let updatedHomeStash = [...currentState.homeStash]
-      
       if (transition.from === 'DOWNED') {
         currentState = {
           ...currentState,
@@ -54,18 +54,8 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
           },
         }
       } else if (transition.from === 'EXTRACTING') {
-        // Transfer backpack items to home stash on successful extraction
-        for (const item of currentState.raid.backpack) {
-          const existingIdx = updatedHomeStash.findIndex(i => i.itemId === item.itemId)
-          if (existingIdx >= 0) {
-            updatedHomeStash[existingIdx] = {
-              ...updatedHomeStash[existingIdx],
-              quantity: updatedHomeStash[existingIdx].quantity + item.quantity,
-            }
-          } else {
-            updatedHomeStash.push(item)
-          }
-        }
+        const { homeStash } = transferBackpackToHomeStash(currentState.homeStash, backpackBeforePhaseTick)
+
         currentState = {
           ...currentState,
           raider: {
@@ -73,7 +63,7 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
             hp: currentState.raider.maxHp,
             extractCount: currentState.raider.extractCount + 1,
           },
-          homeStash: updatedHomeStash,
+          homeStash,
         }
       }
     }

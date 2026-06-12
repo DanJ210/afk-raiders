@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useGameStore } from '../stores/gameStore'
+import { HOME_STASH_ITEM_LIMIT } from '../engine/homeStash'
 import { rarityLabel, rarityBarClass } from '../utils/rarity'
 
 const store = useGameStore()
@@ -45,7 +46,7 @@ function getCategoryEmoji(itemName: string): string {
         </div>
         <div class="home-stash__stat">
           <span class="home-stash__stat-label">Items</span>
-          <span class="home-stash__stat-value">{{ totalItemCount }}</span>
+          <span class="home-stash__stat-value">{{ totalItemCount }} / {{ HOME_STASH_ITEM_LIMIT }}</span>
         </div>
       </div>
 
