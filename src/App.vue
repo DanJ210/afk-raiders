@@ -56,7 +56,7 @@ const activeMobileTab = ref<MobileTabId>('comms')
         <HomeStash />
       </section>
 
-      <section v-show="activeMobileTab === 'raider'" class="app__mobile-panel">
+      <section v-if="activeMobileTab === 'raider'" class="app__mobile-panel">
         <RaiderCard />
         <ExtractionPreference />
         <HandlerActions />
