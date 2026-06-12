@@ -52,7 +52,9 @@ function getCategoryEmoji(itemName: string): string {
       <div class="home-stash__items">
         <div v-for="item in homeStash" :key="item.itemId" class="stash-item">
           <span class="stash-item__emoji">{{ getCategoryEmoji(item.name) }}</span>
-          <span :class="rarityBarClass(item.rarity)" :title="rarityLabel(item.rarity)" aria-hidden="true" />
+          <span :class="rarityBarClass(item.rarity)" :title="rarityLabel(item.rarity)">
+            <span class="stash-item__rarity-text">{{ rarityLabel(item.rarity) }}</span>
+          </span>
           <div class="stash-item__content">
             <span class="stash-item__name">{{ item.name }}</span>
             <span class="stash-item__qty">×{{ item.quantity }}</span>
@@ -168,5 +170,17 @@ function getCategoryEmoji(itemName: string): string {
   font-weight: 600;
   font-family: var(--font-mono);
   font-size: 0.9rem;
+}
+
+.stash-item__rarity-text {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 </style>
