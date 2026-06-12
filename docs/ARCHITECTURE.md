@@ -27,6 +27,7 @@ afk-raiders/
 │   │   └── catchUp.ts           # Fast-forward elapsed ticks on app open
 │   ├── content/                 # The comedy lives here, as data
 │   │   ├── events.json          # Madlibs templates with {slots}
+│   │   ├── extraction_events.json # LZ drama: failed/early extractions, ambushes
 │   │   ├── loot.json            # 47 varieties of water bottle
 │   │   ├── robots.json          # Anxieticks, Tattletales, Roomba Prime…
 │   │   ├── zones.json           # Damp Battlegrounds, etc.
@@ -38,6 +39,7 @@ afk-raiders/
 │   │   ├── CommsLog.vue         # THE star — autoscrolling feed
 │   │   ├── RaiderCard.vue       # Stats, mood, Rat Rating
 │   │   ├── BackpackPanel.vue
+│   │   ├── HomeStash.vue        # Persistent stash — extracted loot, ×N stacking
 │   │   ├── HandlerActions.vue   # Encourage / Scold / Signal meter
 │   │   ├── HubView.vue
 │   │   └── RaidView.vue
@@ -66,6 +68,11 @@ Events are picked by context (zone, greed level, mood, HP) and fill `{slot}` pla
 }
 ```
 Writing jokes never touches engine code — and this is the future community-content pipeline.
+
+Events may also set `"effects": { "forcePhase": "..." }` to force a phase change. This powers `extraction_events.json`: during the EXTRACTING window (~45s extraction + a final tick to call the return shuttle, 4 ticks total) events can make extraction fail (`forcePhase: "RAIDING"` — backpack kept), succeed early (`forcePhase: "HUB"` — loot transferred to the home stash), or end in tragedy (`forcePhase: "DOWNED"` — bag lost).
+
+### Home stash transfer
+On every EXTRACTING → HUB transition (natural or event-forced), `processTick` merges the backpack into `state.homeStash` before the backpack resets. Duplicate item IDs stack quantities; the stash only ever shrinks via a future sell mechanic.
 
 ### 3. Signal as the only real input
 Signal regenerates (~1 per 10 min, capped 3–5). Encourage/Scold nudge hidden behavior weights; CALL EXTRACT (3 Signal) forces an extraction attempt. The UI exposes nothing else that affects the sim.

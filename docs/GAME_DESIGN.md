@@ -17,7 +17,14 @@ You are **not** the raider. You are their Handler back in the underground hub, w
 2. **Deploy:** Raider autonomously picks a zone and wanders it.
 3. **Raid events:** Loot finds, robot encounters, weather, meeting other AI raiders (alliance → inevitable betrayal).
 4. **The Greed Check™ (signature mechanic):** At intervals the Raider rolls to extract *or* push deeper for better loot. Backpack value rises → death risk rises. Pure dramatic tension, zero input required.
-5. **Extract or die:** Death = lose the bag (keep the Emotional Support Pocket item), respawn in hub with a sheepish log entry. Repeat forever.
+5. **Extract or die:** Extraction takes ~45 seconds, then a final beat to hit the big RETURN HOME button. During that window **extraction events** can fire — the shuttle may arrive early (instant success), the beacon may get jammed (back into the zone, backpack kept), or the raider may go down at the LZ (lose the bag). Death = lose the bag (keep the Emotional Support Pocket item), respawn in hub with a sheepish log entry. Repeat forever.
+
+### The Home Stash
+Loot that makes it home goes into the **Stash** — a persistent collection that survives raids, deaths, and sessions:
+- On successful extraction the raider's backpack is transferred into the stash.
+- The stash **never empties** unless items are sold (selling/trading is a future hub mechanic).
+- Duplicate items stack with a ×2 / ×3 quantity multiplier, and their displayed value is multiplied accordingly.
+- The in-raid backpack resets if the raider dies or fails to extract — the stash is untouched.
 
 ## 3. The Handler (player) — Signal
 The only player resource. Regenerates ~1 per 10 minutes, capped at 3–5.
@@ -64,6 +71,7 @@ Everything funny flows through an autoscrolling text feed:
 ## 7. Data Model (MVP)
 - **Raider** — stats, mood, Rat Rating, skills
 - **Raid** — zone, tick count, backpack contents/value, greed level, phase
+- **Home Stash** — persistent extracted loot; stacks duplicates (×N); only shrinks via selling (future)
 - **EventLog** — the comms feed entries
 - **Inventory / Gear** — hub stash, equipped items
 - **Quest** — active parody quests

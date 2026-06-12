@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { ref } from 'vue'
+import { useMediaQuery } from '@vueuse/core'
 import { useGameStore } from './stores/gameStore'
 import CommsLog from './components/CommsLog.vue'
 import RaiderCard from './components/RaiderCard.vue'
@@ -9,6 +11,18 @@ import HandlerActions from './components/HandlerActions.vue'
 import AwaySummary from './components/AwaySummary.vue'
 
 const store = useGameStore()
+const isMobile = useMediaQuery('(max-width: 600px)')
+
+type MobileTabId = 'comms' | 'stash' | 'raider' | 'raid'
+
+const mobileTabs: Array<{ id: MobileTabId; label: string; icon: string }> = [
+  { id: 'comms', label: 'Comms Feed', icon: '📻' },
+  { id: 'stash', label: 'Home Stash', icon: '🏠' },
+  { id: 'raider', label: 'Raider', icon: '🧍' },
+  { id: 'raid', label: 'Current Raid', icon: '🎒' },
+]
+
+const activeMobileTab = ref<MobileTabId>('comms')
 </script>
 
 <template>
@@ -19,7 +33,7 @@ const store = useGameStore()
       <button class="app__reset" title="Reset save data" @click="store.resetSave()">↺ Reset</button>
     </header>
 
-    <main class="app__main">
+    <main v-if="!isMobile" class="app__main">
       <aside class="app__sidebar">
         <RaiderCard />
         <BackpackPanel />
@@ -32,6 +46,40 @@ const store = useGameStore()
         <CommsLog />
       </div>
     </main>
+
+    <main v-else class="app__main-mobile">
+      <section v-if="activeMobileTab === 'comms'" class="app__mobile-panel app__mobile-panel--fill">
+        <CommsLog />
+      </section>
+
+      <section v-if="activeMobileTab === 'stash'" class="app__mobile-panel app__mobile-panel--fill">
+        <HomeStash />
+      </section>
+
+      <section v-if="activeMobileTab === 'raider'" class="app__mobile-panel">
+        <RaiderCard />
+        <ExtractionPreference />
+        <HandlerActions />
+      </section>
+
+      <section v-if="activeMobileTab === 'raid'" class="app__mobile-panel app__mobile-panel--fill">
+        <BackpackPanel />
+      </section>
+    </main>
+
+    <nav v-if="isMobile" class="app__mobile-nav" aria-label="Primary">
+      <button
+        v-for="tab in mobileTabs"
+        :key="tab.id"
+        type="button"
+        class="app__mobile-nav-btn"
+        :class="{ 'app__mobile-nav-btn--active': activeMobileTab === tab.id }"
+        :aria-current="activeMobileTab === tab.id ? 'page' : undefined"
+        @click="activeMobileTab = tab.id">
+        <span class="app__mobile-nav-icon" aria-hidden="true">{{ tab.icon }}</span>
+        <span class="app__mobile-nav-label">{{ tab.label }}</span>
+      </button>
+    </nav>
 
     <AwaySummary />
   </div>
@@ -106,15 +154,85 @@ const store = useGameStore()
   min-height: 0;
 }
 
-/* Mobile: stack sidebar above log */
+.app__main-mobile {
+  flex: 1;
+  min-height: 0;
+}
+
+.app__mobile-panel {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+}
+
+.app__mobile-panel--fill > * {
+  flex: 1;
+  min-height: 0;
+}
+
+.app__mobile-nav {
+  position: sticky;
+  bottom: 0;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+  background: var(--color-bg);
+  border-top: 1px solid var(--color-border);
+  padding: 8px 0 calc(8px + env(safe-area-inset-bottom));
+}
+
+.app__mobile-nav-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: 1px solid transparent;
+  color: var(--color-muted);
+  border-radius: 8px;
+  padding: 6px 4px;
+  cursor: pointer;
+  font-family: var(--font-mono);
+}
+
+.app__mobile-nav-btn--active {
+  color: var(--color-accent);
+  background: var(--color-surface);
+  border-color: var(--color-border);
+}
+
+.app__mobile-nav-icon {
+  font-size: 1rem;
+}
+
+.app__mobile-nav-label {
+  font-size: 0.62rem;
+  letter-spacing: 0.03em;
+  text-align: center;
+}
+
 @media (max-width: 600px) {
-  .app__main {
-    grid-template-columns: 1fr;
-    grid-template-rows: auto 1fr;
+  .app {
+    padding-bottom: 0;
   }
 
-  .app__log {
-    min-height: 300px;
+  .app__header {
+    align-items: center;
+  }
+
+  .app__subtitle {
+    width: 100%;
+    flex: none;
+  }
+
+  .app__mobile-panel--fill :deep(.comms-log),
+  .app__mobile-panel--fill :deep(.home-stash),
+  .app__mobile-panel--fill :deep(.backpack-panel) {
+    height: 100%;
+    max-height: none;
   }
 }
 </style>

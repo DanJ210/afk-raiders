@@ -13,19 +13,51 @@
  *   6. Increment tick counter, append events to log.
  */
 
-import type { GameState, LogEvent, TickResult } from './types.js'
+import type { BackpackItem, GameState, LogEvent, TickResult } from './types.js'
 import type { RNG } from './rng.js'
 import { tickPhase } from './raidStateMachine.js'
 import { runGreedCheck } from './greedCheck.js'
-import { transferBackpackToHomeStash } from './homeStash.js'
 import { resolveEvent, resolveFlavorKey, applyEffects, events as allEvents } from './eventResolver.js'
 
 /** Maximum log entries to keep in memory (avoids unbounded growth) */
 const MAX_LOG_SIZE = 200
 
+/**
+ * Merge a raid backpack into the home stash. Duplicate itemIds stack their
+ * quantities (shown in the UI as ×N with multiplied value). The stash never
+ * empties except via selling (future mechanic).
+ */
+function mergeIntoStash(stash: BackpackItem[], backpack: BackpackItem[]): BackpackItem[] {
+  const merged = [...stash]
+  for (const item of backpack) {
+    const existingIdx = merged.findIndex(i => i.itemId === item.itemId)
+    if (existingIdx >= 0) {
+      merged[existingIdx] = {
+        ...merged[existingIdx],
+        quantity: merged[existingIdx].quantity + item.quantity,
+      }
+    } else {
+      merged.push({ ...item })
+    }
+  }
+  return merged
+}
+
+/** Apply successful-extraction bookkeeping: transfer loot home, heal up, count the win. */
+function applySuccessfulExtraction(state: GameState, extractedBackpack: BackpackItem[]): GameState {
+  return {
+    ...state,
+    raider: {
+      ...state.raider,
+      hp: state.raider.maxHp,
+      extractCount: state.raider.extractCount + 1,
+    },
+    homeStash: mergeIntoStash(state.homeStash, extractedBackpack),
+  }
+}
+
 export function processTick(state: GameState, rng: RNG, now: number = Date.now(), extractionPreference?: number): TickResult {
   const emitted: LogEvent[] = []
-  const backpackBeforePhaseTick = state.raid.backpack
 
   // ------------------------------------------------------------------
   // 1. Run phase state machine
@@ -42,7 +74,9 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
       phase: transition.to,
     })
 
-    // Reset raider HP on HUB return; bookkeep deaths and extractions; transfer loot to home stash
+    // Reset raider HP on HUB return; bookkeep deaths and extractions; transfer loot to home stash.
+    // NOTE: tickPhase already cleared the backpack on HUB entry, so read the
+    // pre-tick backpack from the input state.
     if (transition.to === 'HUB') {
       if (transition.from === 'DOWNED') {
         currentState = {
@@ -54,17 +88,7 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
           },
         }
       } else if (transition.from === 'EXTRACTING') {
-        const { homeStash } = transferBackpackToHomeStash(currentState.homeStash, backpackBeforePhaseTick)
-
-        currentState = {
-          ...currentState,
-          raider: {
-            ...currentState.raider,
-            hp: currentState.raider.maxHp,
-            extractCount: currentState.raider.extractCount + 1,
-          },
-          homeStash,
-        }
+        currentState = applySuccessfulExtraction(currentState, state.raid.backpack)
       }
     }
   }
@@ -126,10 +150,37 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
   const event = resolveEvent(currentState, rng, now)
   if (event) {
     const template = allEvents.find(e => e.id === event.id)
+    emitted.push(event)
     if (template) {
       currentState = applyEffects(currentState, template, rng)
+
+      // Some events (mostly extraction events) force a phase change:
+      //  - EXTRACTING → HUB     = early successful extraction (loot goes home)
+      //  - EXTRACTING → RAIDING = failed extraction (backpack kept, back to the zone)
+      //  - EXTRACTING → DOWNED  = died at the LZ (backpack lost on respawn)
+      const forcedPhase = template.effects?.forcePhase
+      if (forcedPhase && forcedPhase !== currentState.raid.phase) {
+        const fromPhase = currentState.raid.phase
+        const backpackBeforeForce = currentState.raid.backpack
+        const { raid: forcedRaid, transition: forcedTransition } = tickPhase(
+          currentState.raid,
+          forcedPhase,
+        )
+        currentState = { ...currentState, raid: forcedRaid }
+        if (forcedTransition) {
+          emitted.push({
+            id: `phase_${forcedTransition.from}_to_${forcedTransition.to}`,
+            tick: state.tick,
+            timestamp: now,
+            text: forcedTransition.eventText,
+            phase: forcedTransition.to,
+          })
+        }
+        if (fromPhase === 'EXTRACTING' && forcedPhase === 'HUB') {
+          currentState = applySuccessfulExtraction(currentState, backpackBeforeForce)
+        }
+      }
     }
-    emitted.push(event)
   }
 
   // ------------------------------------------------------------------
