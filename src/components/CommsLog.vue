@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch, nextTick, onMounted } from 'vue'
 import { useGameStore } from '../stores/gameStore'
+import { TICK_INTERVAL_MS } from '../engine/catchUp'
 
 const store = useGameStore()
 const logEl = ref<HTMLElement | null>(null)
@@ -53,6 +54,17 @@ onMounted(scrollToTop)
       <span class="comms-log__title">COMMS FEED</span>
     </header>
     <div
+      class="comms-log__tick-track"
+      role="progressbar"
+      aria-label="Time until next transmission"
+    >
+      <div
+        :key="store.lastTickAt"
+        class="comms-log__tick-bar"
+        :style="{ animationDuration: `${TICK_INTERVAL_MS}ms` }"
+      ></div>
+    </div>
+    <div
       ref="logEl"
       class="comms-log__feed"
       role="log"
@@ -102,6 +114,31 @@ onMounted(scrollToTop)
   font-size: 0.75rem;
   letter-spacing: 0.1em;
   color: var(--color-accent);
+}
+
+.comms-log__tick-track {
+  height: 3px;
+  background: var(--color-surface-raised);
+  border-bottom: 1px solid var(--color-border);
+  overflow: hidden;
+}
+
+.comms-log__tick-bar {
+  height: 100%;
+  background: var(--color-accent);
+  opacity: 0.7;
+  animation-name: tick-fill;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+
+@keyframes tick-fill {
+  from {
+    width: 0%;
+  }
+  to {
+    width: 100%;
+  }
 }
 
 .comms-log__feed {
