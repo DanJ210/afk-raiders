@@ -21,7 +21,7 @@ export interface EventTemplate extends ContentEntry {
   effects?: {
     backpackValue?: number | string // number or dice string like "+1d6"
     mood?: number
-    hp?: number | string // number or dice string like "-5d96"
+    hp?: number | string // number or dice string like "-15d21"
     greedLevel?: number
     ratRating?: number
     forcePhase?: Phase

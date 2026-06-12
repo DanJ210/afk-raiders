@@ -16,7 +16,7 @@
   {
     "id": "robot_encounter_anxietick",
     "weight": 22,
-    "text": "An Anxietick {robot_flavor_anxietick}. Hid behind a crate. It still managed to nick an ankle on the way past.",
+    "text": "An Anxietick {robot_flavor_anxietick}. Hid behind a crate. It still managed to nick an ankle on its way past.",
     "requires": { "phase": "RAIDING" },
     "effects": { "mood": -1, "ratRating": 1, "hp": "-1d4" }
   },
