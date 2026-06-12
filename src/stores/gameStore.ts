@@ -124,6 +124,7 @@ export const useGameStore = defineStore('game', () => {
   // Handler actions
   // ------------------------------------------------------------------
   function encourage() {
+    if (state.value.raid.phase !== 'RAIDING') return
     const updated = spendSignal(computeSignal(state.value.signal, Date.now()), 'ENCOURAGE')
     if (!updated) return
     state.value = {
@@ -131,6 +132,7 @@ export const useGameStore = defineStore('game', () => {
       signal: updated,
       pendingEncourage: true,
     }
+    persistSave(state.value, rng.getSeed(), lastTickAt.value)
   }
 
   function scold() {
