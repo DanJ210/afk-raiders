@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useGameStore } from '../stores/gameStore'
+import { rarityLabel, rarityBarClass } from '../utils/rarity'
 
 const store = useGameStore()
 
@@ -51,6 +52,7 @@ function getCategoryEmoji(itemName: string): string {
       <div class="home-stash__items">
         <div v-for="item in homeStash" :key="item.itemId" class="stash-item">
           <span class="stash-item__emoji">{{ getCategoryEmoji(item.name) }}</span>
+          <span :class="rarityBarClass(item.rarity)" :title="rarityLabel(item.rarity)" aria-hidden="true" />
           <div class="stash-item__content">
             <span class="stash-item__name">{{ item.name }}</span>
             <span class="stash-item__qty">×{{ item.quantity }}</span>
