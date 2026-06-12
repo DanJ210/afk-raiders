@@ -1,0 +1,58 @@
+[
+  {
+    "id": "hub_gossip",
+    "weight": 30,
+    "text": "{hub_gossip}",
+    "requires": { "phase": "HUB" },
+    "effects": { "mood": 1 }
+  },
+  {
+    "id": "hub_gear_check",
+    "weight": 20,
+    "text": "Ran a gear check. Everything is technically present. Confidence: borderline.",
+    "requires": { "phase": "HUB" },
+    "effects": {}
+  },
+  {
+    "id": "hub_mre",
+    "weight": 20,
+    "text": "Ate an expired MRE before deploying. Flavor: existential. Stomach: coping.",
+    "requires": { "phase": "HUB" },
+    "effects": { "mood": 1 }
+  },
+  {
+    "id": "hub_pep_talk",
+    "weight": 15,
+    "text": "Gave themselves a pep talk in the locker-room mirror. Rat Rating momentarily irrelevant.",
+    "requires": { "phase": "HUB" },
+    "effects": { "mood": 2 }
+  },
+  {
+    "id": "hub_stash_check",
+    "weight": 15,
+    "text": "Checked the stash. Counted the water bottles. There are more water bottles than expected.",
+    "requires": { "phase": "HUB" },
+    "effects": {}
+  },
+  {
+    "id": "hub_nap",
+    "weight": 15,
+    "text": "Took a recovery nap on a cot in Desperanza. Dreamed about crates. Woke up reaching for one.",
+    "requires": { "phase": "HUB" },
+    "effects": { "mood": 1 }
+  },
+  {
+    "id": "hub_pod_queue",
+    "weight": 15,
+    "text": "Stood in the pod queue to size up the competition. Everyone avoided eye contact. Perfect.",
+    "requires": { "phase": "HUB" },
+    "effects": {}
+  },
+  {
+    "id": "hub_bandage_up",
+    "weight": 12,
+    "text": "Visited the medbay. The medic sighed before even looking up. Patched and cleared for deployment.",
+    "requires": { "phase": "HUB", "maxHp": 90 },
+    "effects": { "hp": 10 }
+  }
+]

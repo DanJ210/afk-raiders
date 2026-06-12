@@ -8,7 +8,8 @@
  *   1. Tick phase counter; if transitioning apply transition event.
  *   2. If RAIDING, run the Greed Check to decide push-deeper / extract / downed.
  *   3. Resolve a flavor event for the current phase.
- *   4. Apply event effects.
+ *   4. Apply event effects. If HP hits 0, the raider goes DOWNED and returns
+ *      home with nothing.
  *   5. Consume pending Handler actions (encourage / scold).
  *   6. Increment tick counter, append events to log.
  */
@@ -180,6 +181,33 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
           currentState = applySuccessfulExtraction(currentState, backpackBeforeForce)
         }
       }
+    }
+  }
+
+  // ------------------------------------------------------------------
+  // 3b. Death check — if HP ever reaches 0 outside the hub, the raider
+  //     goes down. Loot is lost; they respawn in Desperanza (HUB) after
+  //     the DOWNED flavor beat.
+  // ------------------------------------------------------------------
+  if (
+    currentState.raider.hp <= 0 &&
+    currentState.raid.phase !== 'DOWNED' &&
+    currentState.raid.phase !== 'HUB'
+  ) {
+    const fromPhase = currentState.raid.phase
+    const { raid: downedRaid, transition: downedTransition } = tickPhase(
+      currentState.raid,
+      'DOWNED',
+    )
+    currentState = { ...currentState, raid: downedRaid }
+    if (downedTransition) {
+      emitted.push({
+        id: `phase_${fromPhase}_to_DOWNED`,
+        tick: state.tick,
+        timestamp: now,
+        text: downedTransition.eventText,
+        phase: 'DOWNED',
+      })
     }
   }
 

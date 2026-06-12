@@ -1,0 +1,9 @@
+[
+  {
+    "id": "downed_quip",
+    "weight": 100,
+    "text": "{death_quip}",
+    "requires": { "phase": "DOWNED" },
+    "effects": { "ratRating": 3 }
+  }
+]

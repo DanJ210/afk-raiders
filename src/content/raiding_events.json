@@ -1,54 +1,5 @@
 [
   {
-    "id": "hub_gossip",
-    "weight": 30,
-    "text": "{hub_gossip}",
-    "requires": { "phase": "HUB" },
-    "effects": { "mood": 1 }
-  },
-  {
-    "id": "hub_gear_check",
-    "weight": 20,
-    "text": "Ran a gear check. Everything is technically present. Confidence: borderline.",
-    "requires": { "phase": "HUB" },
-    "effects": {}
-  },
-  {
-    "id": "hub_mre",
-    "weight": 20,
-    "text": "Ate an expired MRE before deploying. Flavor: existential. Stomach: coping.",
-    "requires": { "phase": "HUB" },
-    "effects": { "mood": 1 }
-  },
-  {
-    "id": "hub_pep_talk",
-    "weight": 15,
-    "text": "Gave themselves a pep talk in the locker-room mirror. Rat Rating momentarily irrelevant.",
-    "requires": { "phase": "HUB" },
-    "effects": { "mood": 2 }
-  },
-  {
-    "id": "hub_stash_check",
-    "weight": 15,
-    "text": "Checked the stash. Counted the water bottles. There are more water bottles than expected.",
-    "requires": { "phase": "HUB" },
-    "effects": {}
-  },
-  {
-    "id": "deploy_flavor_1",
-    "weight": 50,
-    "text": "Shuttle inbound. Checked gear twice. Still forgot the thing they needed.",
-    "requires": { "phase": "DEPLOYING" },
-    "effects": {}
-  },
-  {
-    "id": "deploy_flavor_2",
-    "weight": 50,
-    "text": "Altitude good. Zone visible below. Several concerning smoke plumes. Optimal.",
-    "requires": { "phase": "DEPLOYING" },
-    "effects": {}
-  },
-  {
     "id": "loot_mundane",
     "weight": 35,
     "text": "Found {mundane_item}. {hoarder_justification}",
@@ -117,26 +68,5 @@
     "text": "Backpack is almost full. Found another crate. Reorganising to fit. Just one more.",
     "requires": { "phase": "RAIDING", "minGreed": 40 },
     "effects": { "greedLevel": 8, "mood": 1 }
-  },
-  {
-    "id": "extraction_success_flavor",
-    "weight": 60,
-    "text": "{extract_success_line}",
-    "requires": { "phase": "EXTRACTING" },
-    "effects": { "mood": 3 }
-  },
-  {
-    "id": "extraction_tense",
-    "weight": 40,
-    "text": "Extraction beacon active. Counting down. Three robots in pursuit. This is fine.",
-    "requires": { "phase": "EXTRACTING" },
-    "effects": { "hp": -5, "mood": -1 }
-  },
-  {
-    "id": "downed_quip",
-    "weight": 100,
-    "text": "{death_quip}",
-    "requires": { "phase": "DOWNED" },
-    "effects": { "ratRating": 3 }
   }
 ]

@@ -9,11 +9,11 @@
 
 import type { Phase, RaidState } from './types.js'
 
-// Ticks each phase lasts before auto-transitioning
+// Ticks each phase lasts before auto-transitioning (1 tick = 15s)
 export const PHASE_DURATIONS: Record<Phase, number> = {
-  HUB: 4,          // a few hub-gossip ticks before auto-deploying
-  DEPLOYING: 2,    // loading screen / shuttle ride flavor
-  RAIDING: 1800,   // 30 minutes max
+  HUB: 20,         // 5 minutes max resting and prepping in Desperanza
+  DEPLOYING: 4,    // 60 seconds riding a one-person pod through the tunnel system
+  RAIDING: 120,    // 30 minutes max looting; events can end it early (extract or death)
   EXTRACTING: 4,   // ~45s extraction window + final tick = calling the return shuttle (60s at 15s/tick)
   DOWNED: 2,       // death rattle flavor before respawning
 }
@@ -86,7 +86,7 @@ function nextPhase(current: Phase): Phase {
   switch (current) {
     case 'HUB':        return 'DEPLOYING'
     case 'DEPLOYING':  return 'RAIDING'
-    case 'RAIDING':    return 'HUB'      // shouldn't happen naturally; greed check exits RAIDING
+    case 'RAIDING':    return 'EXTRACTING' // raid timer expired — forced to extract with whatever they have
     case 'EXTRACTING': return 'HUB'
     case 'DOWNED':     return 'HUB'
   }
@@ -94,9 +94,9 @@ function nextPhase(current: Phase): Phase {
 
 function phaseTransitionText(from: Phase, to: Phase): string {
   if (from === 'HUB' && to === 'DEPLOYING')
-    return 'Gear packed. Shuttle inbound. Radio silence advised.'
+    return 'Gear packed. Pod hatch sealed. One person capacity, zero personal space.'
   if (from === 'DEPLOYING' && to === 'RAIDING')
-    return 'Touchdown. Zone is hot. Try not to die immediately.'
+    return 'Pod doors hissed open. Zone is hot. Try not to die immediately.'
   if (from === 'RAIDING' && to === 'EXTRACTING')
     return 'Extract beacon deployed. Shuttle ETA 45 seconds. Please be at the LZ.'
   if (from === 'RAIDING' && to === 'DOWNED')

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useGameStore } from '../stores/gameStore'
 import { zoneName } from '../utils/zones'
 
@@ -7,6 +7,29 @@ const store = useGameStore()
 const raider = computed(() => store.raider)
 const currentZoneName = computed(() => zoneName(store.raid.zone))
 const showCurrentZone = computed(() => store.phase === 'RAIDING' && currentZoneName.value !== null)
+
+const editingName = ref(false)
+const nameInput = ref('')
+
+function startEdit() {
+  nameInput.value = raider.value.name
+  editingName.value = true
+}
+
+function commitEdit() {
+  if (!editingName.value) return
+  store.renameRaider(nameInput.value)
+  editingName.value = false
+}
+
+function cancelEdit() {
+  editingName.value = false
+}
+
+function onNameKeydown(e: KeyboardEvent) {
+  if (e.key === 'Enter') commitEdit()
+  if (e.key === 'Escape') cancelEdit()
+}
 
 function phaseLabel(phase: string): string {
   const labels: Record<string, string> = {
@@ -41,7 +64,20 @@ const hpClass = computed(() => {
 <template>
   <section class="raider-card" aria-label="Raider Status">
     <div class="raider-card__header">
-      <span class="raider-card__name">{{ raider.name }}</span>
+      <span v-if="!editingName" class="raider-card__name" role="button" tabindex="0" title="Click to rename" @click="startEdit" @keydown.enter.prevent="startEdit" @keydown.space.prevent="startEdit">
+        {{ raider.name }}
+        <span class="raider-card__name-edit-icon">✏️</span>
+      </span>
+      <span v-else class="raider-card__name-edit">
+        <input
+          v-model="nameInput"
+          class="raider-card__name-input"
+          :maxlength="store.RAIDER_NAME_MAX_LENGTH"
+          autofocus
+          @keydown="onNameKeydown"
+          @blur="commitEdit"
+        />
+      </span>
       <span class="raider-card__phase-badge" :data-phase="store.phase">
         {{ phaseLabel(store.phase) }}
       </span>
@@ -106,6 +142,33 @@ const hpClass = computed(() => {
   font-size: 1rem;
   font-weight: 700;
   color: var(--color-text);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.raider-card__name:hover .raider-card__name-edit-icon {
+  opacity: 1;
+}
+
+.raider-card__name-edit-icon {
+  font-size: 0.7rem;
+  opacity: 0.3;
+  transition: opacity 0.15s;
+}
+
+.raider-card__name-input {
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  font-weight: 700;
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-accent);
+  border-radius: 4px;
+  color: var(--color-text);
+  padding: 1px 6px;
+  width: 14ch;
+  outline: none;
 }
 
 .raider-card__phase-badge {

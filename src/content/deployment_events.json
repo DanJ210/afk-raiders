@@ -1,0 +1,44 @@
+[
+  {
+    "id": "deploy_pod_squeeze",
+    "weight": 25,
+    "text": "Sealed into a one-person tunnel pod. It is exactly one person sized. The backpack disagrees.",
+    "requires": { "phase": "DEPLOYING" },
+    "effects": {}
+  },
+  {
+    "id": "deploy_pod_launch",
+    "weight": 25,
+    "text": "Pod launched into the tunnel system. Acceleration: rude. Snacks: unsecured.",
+    "requires": { "phase": "DEPLOYING" },
+    "effects": { "mood": -1 }
+  },
+  {
+    "id": "deploy_tunnel_dark",
+    "weight": 20,
+    "text": "Hurtling through pitch-black tunnels. Something scraped the hull. The pod's speaker played a calming chime, badly.",
+    "requires": { "phase": "DEPLOYING" },
+    "effects": {}
+  },
+  {
+    "id": "deploy_pod_intercom",
+    "weight": 15,
+    "text": "The pod intercom crackled: 'Arrival in T-minus soon.' Reassuring. Specific.",
+    "requires": { "phase": "DEPLOYING" },
+    "effects": { "mood": 1 }
+  },
+  {
+    "id": "deploy_pod_neighbor",
+    "weight": 15,
+    "text": "Passed another pod going the opposite direction at speed. Brief eye contact through two layers of scratched plexiglass. A bond was formed.",
+    "requires": { "phase": "DEPLOYING" },
+    "effects": { "mood": 1 }
+  },
+  {
+    "id": "deploy_pod_regret",
+    "weight": 15,
+    "text": "Remembered the thing they forgot in Desperanza. The pod does not have a reverse gear. Noted for next time.",
+    "requires": { "phase": "DEPLOYING" },
+    "effects": { "mood": -1 }
+  }
+]
