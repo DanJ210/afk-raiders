@@ -185,6 +185,7 @@ export const useGameStore = defineStore('game', () => {
     signal,
     log,
     newEvents,
+    lastTickAt,
     awaySummary,
     encourage,
     scold,
