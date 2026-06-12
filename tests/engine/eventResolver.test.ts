@@ -1,0 +1,76 @@
+/**
+ * Focused unit tests for applyEffects in eventResolver.ts.
+ *
+ * Verifies that applying a loot effect:
+ *   - adds a BackpackItem to the backpack with the correct fields
+ *   - increments quantity when the same item is looted again
+ *   - keeps backpackValue consistent with the sum of applied deltas
+ *   - does not mutate the input state
+ */
+
+import { describe, it, expect } from 'vitest'
+import { createRNG } from '../../src/engine/rng'
+import { applyEffects } from '../../src/engine/eventResolver'
+import { createInitialState } from '../../src/engine/initialState'
+import type { EventTemplate } from '../../src/engine/types'
+
+// backpackValue=4 maps exclusively to water_bottle_tactical (the only item with value 4),
+// so item selection is fully deterministic — no RNG variance.
+const LOOT_TEMPLATE: EventTemplate = {
+  id: 'test_loot',
+  weight: 1,
+  text: 'You found something.',
+  effects: { backpackValue: 4 },
+}
+
+describe('applyEffects — backpack item behavior', () => {
+  it('adds a new BackpackItem when a loot effect is applied', () => {
+    const state = createInitialState(0)
+    const rng = createRNG(42)
+
+    const result = applyEffects(state, LOOT_TEMPLATE, rng)
+
+    expect(result.raid.backpack).toHaveLength(1)
+    const item = result.raid.backpack[0]
+    expect(item.itemId).toBe('water_bottle_tactical')
+    expect(item.name).toBe('tactical water bottle')
+    expect(item.value).toBe(4)
+    expect(item.rarity).toBe(3)
+    expect(item.quantity).toBe(1)
+  })
+
+  it('increments quantity when the same item is looted a second time', () => {
+    const state = createInitialState(0)
+    const rng = createRNG(42)
+
+    const afterFirst = applyEffects(state, LOOT_TEMPLATE, rng)
+    expect(afterFirst.raid.backpack).toHaveLength(1)
+    expect(afterFirst.raid.backpack[0].quantity).toBe(1)
+
+    const afterSecond = applyEffects(afterFirst, LOOT_TEMPLATE, rng)
+    expect(afterSecond.raid.backpack).toHaveLength(1)
+    expect(afterSecond.raid.backpack[0].itemId).toBe('water_bottle_tactical')
+    expect(afterSecond.raid.backpack[0].quantity).toBe(2)
+  })
+
+  it('keeps backpackValue equal to the cumulative sum of applied deltas', () => {
+    const state = createInitialState(0)
+    const rng = createRNG(42)
+
+    const afterFirst = applyEffects(state, LOOT_TEMPLATE, rng)
+    expect(afterFirst.raid.backpackValue).toBe(4)
+
+    const afterSecond = applyEffects(afterFirst, LOOT_TEMPLATE, rng)
+    expect(afterSecond.raid.backpackValue).toBe(8)
+  })
+
+  it('does not mutate the input state', () => {
+    const state = createInitialState(0)
+    const rng = createRNG(42)
+
+    applyEffects(state, LOOT_TEMPLATE, rng)
+
+    expect(state.raid.backpack).toHaveLength(0)
+    expect(state.raid.backpackValue).toBe(0)
+  })
+})
