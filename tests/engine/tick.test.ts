@@ -131,10 +131,10 @@ describe('deterministic snapshot', () => {
     const initial = createInitialState(0)
     let state = {
       ...initial,
-      raider: { ...initial.raider, hp: 1 },
+      raider: { ...initial.raider, hp: 0 },
       raid: {
         ...initial.raid,
-        phase: 'RAIDING' as const,
+        phase: 'DEPLOYING' as const,
         phaseTicksRemaining: 999,
         greedLevel: 0,
         backpack: [
