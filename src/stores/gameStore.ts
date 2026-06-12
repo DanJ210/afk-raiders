@@ -136,6 +136,7 @@ export const useGameStore = defineStore('game', () => {
   }
 
   function scold() {
+    if (state.value.raid.phase !== 'RAIDING') return
     const updated = spendSignal(computeSignal(state.value.signal, Date.now()), 'SCOLD')
     if (!updated) return
     state.value = {
@@ -143,6 +144,7 @@ export const useGameStore = defineStore('game', () => {
       signal: updated,
       pendingScold: true,
     }
+    persistSave(state.value, rng.getSeed(), lastTickAt.value)
   }
 
   function callExtract() {
