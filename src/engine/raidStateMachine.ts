@@ -13,8 +13,8 @@ import type { Phase, RaidState } from './types.js'
 export const PHASE_DURATIONS: Record<Phase, number> = {
   HUB: 4,          // a few hub-gossip ticks before auto-deploying
   DEPLOYING: 2,    // loading screen / shuttle ride flavor
-  RAIDING: 1800,   // 30 minutes max (1 tick per second)
-  EXTRACTING: 2,   // extraction countdown flavor
+  RAIDING: 1800,   // 30 minutes max
+  EXTRACTING: 4,   // ~45s extraction window + final tick = calling the return shuttle (60s at 15s/tick)
   DOWNED: 2,       // death rattle flavor before respawning
 }
 
@@ -36,14 +36,16 @@ export function tickPhase(
       to: forced,
       eventText: phaseTransitionText(raid.phase, forced),
     }
-    return {
-      raid: {
-        ...raid,
-        phase: forced,
-        phaseTicksRemaining: PHASE_DURATIONS[forced],
-      },
-      transition,
+    let forcedRaid: RaidState = {
+      ...raid,
+      phase: forced,
+      phaseTicksRemaining: PHASE_DURATIONS[forced],
     }
+    // Reset raid state when forced back to HUB (mirror of the natural-expiry path)
+    if (forced === 'HUB') {
+      forcedRaid = { ...forcedRaid, backpack: [], backpackValue: 0, greedLevel: 0, forceExtract: false }
+    }
+    return { raid: forcedRaid, transition }
   }
 
   const remaining = raid.phaseTicksRemaining - 1
@@ -96,11 +98,15 @@ function phaseTransitionText(from: Phase, to: Phase): string {
   if (from === 'DEPLOYING' && to === 'RAIDING')
     return 'Touchdown. Zone is hot. Try not to die immediately.'
   if (from === 'RAIDING' && to === 'EXTRACTING')
-    return 'Extract beacon deployed. Shuttle ETA 90 seconds. Please be at the LZ.'
+    return 'Extract beacon deployed. Shuttle ETA 45 seconds. Please be at the LZ.'
   if (from === 'RAIDING' && to === 'DOWNED')
     return "Raider is down. Emotional support pocket contents secured."
   if (from === 'EXTRACTING' && to === 'HUB')
     return 'Successful extraction. Welcome back to Desperanza. Please shower.'
+  if (from === 'EXTRACTING' && to === 'RAIDING')
+    return 'Shuttle waved off. Extraction unsuccessful. Back into the zone. The water bottles understand.'
+  if (from === 'EXTRACTING' && to === 'DOWNED')
+    return 'Downed at the LZ. So close. The shuttle pilot filed it under "tragic but funny."'
   if (from === 'DOWNED' && to === 'HUB')
     return 'Respawn in Desperanza. Gear lost. Dignity: pending recovery.'
   return `Phase transition: ${from} → ${to}`

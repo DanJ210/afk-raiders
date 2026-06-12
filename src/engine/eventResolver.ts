@@ -13,11 +13,12 @@
 import type { EventTemplate, GameState, LogEvent, LootItem, Phase } from './types.js'
 import type { RNG } from './rng.js'
 import eventsData from '../content/events.json'
+import extractionEventsData from '../content/extraction_events.json'
 import lootData from '../content/loot.json'
 import robotsData from '../content/robots.json'
 import flavorData from '../content/flavor.json'
 
-const events = eventsData as EventTemplate[]
+const events = [...eventsData, ...extractionEventsData] as EventTemplate[]
 const loot = lootData as LootItem[]
 const robots = robotsData as Array<{ id: string; weight: number; name: string; menace: number; flavorLines: string[] }>
 const flavor = flavorData as Record<string, Array<{ id: string; weight: number; text: string }>>

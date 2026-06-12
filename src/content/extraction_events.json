@@ -1,0 +1,72 @@
+[
+  {
+    "id": "extract_lz_sprint",
+    "weight": 30,
+    "text": "Sprinting to the LZ. Cardio skill: unallocated. Regret: allocated.",
+    "requires": { "phase": "EXTRACTING" },
+    "effects": { "mood": -1 }
+  },
+  {
+    "id": "extract_backpack_jingle",
+    "weight": 25,
+    "text": "Running to extract. The backpack jingles like a vending machine falling down stairs. Every robot heard it.",
+    "requires": { "phase": "EXTRACTING" },
+    "effects": { "hp": -3 }
+  },
+  {
+    "id": "extract_one_more_crate",
+    "weight": 15,
+    "text": "Saw one more crate near the LZ. Reached for it. The shuttle pilot honked. Honked back. Boarding anyway.",
+    "requires": { "phase": "EXTRACTING" },
+    "effects": { "greedLevel": 5, "mood": 1 }
+  },
+  {
+    "id": "extract_smoke_cover",
+    "weight": 20,
+    "text": "Popped smoke at the LZ for dramatic effect. Now can't see the shuttle. Or anything.",
+    "requires": { "phase": "EXTRACTING" },
+    "effects": { "mood": -1 }
+  },
+  {
+    "id": "extract_robot_pursuit",
+    "weight": 20,
+    "text": "Three Anxieticks in pursuit. They're nervous, we're nervous, the shuttle is nervous. Took shrapnel.",
+    "requires": { "phase": "EXTRACTING" },
+    "effects": { "hp": -8, "mood": -2 }
+  },
+  {
+    "id": "extract_early_dustoff",
+    "weight": 8,
+    "text": "Shuttle arrived early. Pilot said 'get in, loser, we're hoarding.' Immediate dust-off.",
+    "requires": { "phase": "EXTRACTING" },
+    "effects": { "mood": 3, "forcePhase": "HUB" }
+  },
+  {
+    "id": "extract_beacon_jammed",
+    "weight": 8,
+    "text": "Extract beacon jammed by a Tattletale. Shuttle waved off. Extraction unsuccessful. Re-entering the zone with dignity intact-ish.",
+    "requires": { "phase": "EXTRACTING" },
+    "effects": { "mood": -3, "forcePhase": "RAIDING" }
+  },
+  {
+    "id": "extract_lz_camper",
+    "weight": 6,
+    "text": "Another raider was camping the LZ. We emoted. They did not emote back.",
+    "requires": { "phase": "EXTRACTING" },
+    "effects": { "hp": -15, "mood": -2, "ratRating": 1 }
+  },
+  {
+    "id": "extract_downed_at_lz",
+    "weight": 4,
+    "text": "Roomba Prime rolled onto the LZ at the worst possible moment. The floor is clean. The raider is not okay.",
+    "requires": { "phase": "EXTRACTING" },
+    "effects": { "hp": -50, "mood": -3, "forcePhase": "DOWNED" }
+  },
+  {
+    "id": "extract_return_button",
+    "weight": 18,
+    "text": "Aboard the shuttle. Hovering over the big green RETURN HOME button. Savoring the moment. Pressing it.",
+    "requires": { "phase": "EXTRACTING" },
+    "effects": { "mood": 2 }
+  }
+]
