@@ -48,7 +48,7 @@ const activeMobileTab = ref<MobileTabId>('comms')
     </main>
 
     <main v-else class="app__main-mobile">
-      <section v-show="activeMobileTab === 'comms'" class="app__mobile-panel app__mobile-panel--fill">
+      <section v-if="activeMobileTab === 'comms'" class="app__mobile-panel app__mobile-panel--fill">
         <CommsLog />
       </section>
 
