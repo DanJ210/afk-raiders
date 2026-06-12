@@ -49,8 +49,7 @@ const canCallExtract = computed(() => currentSignal.value >= SIGNAL_COSTS.CALL_E
 
       <button
         class="action-btn action-btn--extract"
-        :disabled="!canCallExtract"
-        :title="`CALL EXTRACT (${SIGNAL_COSTS.CALL_EXTRACT} Signal) — force extraction attempt next tick`"
+        :disabled="!canCallExtract || store.phase !== 'RAIDING'"
         @click="store.callExtract()"
       >
         <span class="action-btn__icon">🚨</span>
