@@ -12,6 +12,40 @@ dist
 dist-ssr
 *.local
 
+# .NET Core
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# ASP.NET Scaffolding
+ScaffoldingReadMe.txt
+
+# NuGet Packages
+*.nupkg
+# NuGet Symbol Packages
+*.snupkg
+
+# dotenv environment variables file
+.env
+
+# Others
+~$*
+*~
+CodeCoverage/
+
+# MSBuild Binary and Structured Log
+*.binlog
+
+# MSTest test Results
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+
+# NUnit
+*.VisualState.xml
+TestResult.xml
+nunit-*.xml
+node_modules
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -22,3 +56,4 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+.vite/

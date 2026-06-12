@@ -21,6 +21,7 @@ import { computeSignal, spendSignal } from '../engine/signal.js'
 import { createInitialState, SAVE_VERSION } from '../engine/initialState.js'
 import type { GameState, LogEvent } from '../engine/types.js'
 import type { AwaySummary } from '../engine/catchUp.js'
+import { useSettingsStore } from './settingsStore.js'
 
 const STORAGE_KEY = 'afk-raiders-save'
 
@@ -87,8 +88,9 @@ export const useGameStore = defineStore('game', () => {
   // Tick loop
   // ------------------------------------------------------------------
   function tick() {
+    const settings = useSettingsStore()
     const tickNow = Date.now()
-    const result = processTick(state.value, rng, tickNow)
+    const result = processTick(state.value, rng, tickNow, settings.extractionPreference)
     state.value = result.state
     lastTickAt.value = tickNow
     newEvents.value = result.events
@@ -107,7 +109,8 @@ export const useGameStore = defineStore('game', () => {
       hiddenAt = Date.now()
     } else {
       if (hiddenAt !== null) {
-        const result = catchUp(state.value, rng, hiddenAt, Date.now())
+        const settings = useSettingsStore()
+        const result = catchUp(state.value, rng, hiddenAt, Date.now(), settings.extractionPreference)
         state.value = result.state
         if (result.summary.ticksReplayed > 0) {
           awaySummary.value = result.summary

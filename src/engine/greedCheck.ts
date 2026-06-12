@@ -44,17 +44,22 @@ const GREED_INCREMENT = 8               // how much greed rises each push-deeper
 export function runGreedCheck(
   raid: RaidState,
   rng: RNG,
-  opts: { encouraged: boolean; scolded: boolean },
+  opts: { encouraged: boolean; scolded: boolean; extractionPreference?: number },
 ): GreedCheckResult {
   const { greedLevel, forceExtract } = raid
+  const extractionPreference = opts.extractionPreference ?? 50
 
   // Forced extraction (CALL_EXTRACT action)
   if (forceExtract) {
     return { outcome: 'EXTRACT', newGreedLevel: greedLevel }
   }
 
-  // Calculate extract probability
-  let extractChance = BASE_EXTRACT_CHANCE - greedLevel * GREED_EXTRACT_PENALTY
+  // Calculate extract probability with slider modifier
+  // Safer (0) = +30% to extraction chance (eager to leave early)
+  // Hoarder (100) = -30% to extraction chance (wants to stay longer)
+  const sliderModifier = (50 - extractionPreference) * 0.006
+  
+  let extractChance = BASE_EXTRACT_CHANCE - greedLevel * GREED_EXTRACT_PENALTY + sliderModifier
   if (opts.encouraged) extractChance -= ENCOURAGE_EXTRACT_PENALTY
   if (opts.scolded) extractChance += SCOLD_EXTRACT_BONUS
   extractChance = Math.min(0.80, Math.max(0.05, extractChance))
@@ -77,7 +82,11 @@ export function runGreedCheck(
     return { outcome: 'EXTRACT', newGreedLevel: greedLevel }
   }
 
-  // Push deeper — greed rises
-  const newGreedLevel = Math.min(100, greedLevel + GREED_INCREMENT)
+  // Push deeper — greed rises (scaled by preference)
+  // Safer raiders gain greed faster (they should extract more)
+  // Hoarders gain greed slower (they want to loot more before extracting naturally)
+  const greedMultiplier = 1 + (extractionPreference - 50) * 0.01
+  const adjustedGreedIncrement = Math.round(GREED_INCREMENT * greedMultiplier)
+  const newGreedLevel = Math.min(100, greedLevel + adjustedGreedIncrement)
   return { outcome: 'PUSH_DEEPER', newGreedLevel }
 }

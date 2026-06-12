@@ -32,3 +32,27 @@ Key docs — read these before making changes:
 - TypeScript strict mode; no `any` unless unavoidable and commented.
 - Engine state is immutable-style: `processTick` returns new state + emitted events; it does not mutate input.
 - Event/loot/zone IDs are `snake_case` strings, stable once shipped (saves reference them).
+
+## Key Game Features
+
+### Home Stash
+Items successfully extracted are automatically transferred from the raider's backpack to a persistent `homeStash` array on the GameState. This survives raids, deaths, and sessions. When working with extraction logic or inventory systems, always ensure loot is transferred during the EXTRACTING → HUB phase transition (see `src/engine/tick.ts` for the implementation pattern).
+
+### Extraction Preference Slider
+Players control raid aggression via a slider (0-100) stored in `settingsStore` as `extractionPreference`:
+- **Safer (0):** Higher base extraction chance, greed grows faster
+- **Hoarder (100):** Lower extraction chance, greed grows slower
+- The slider affects `runGreedCheck()` in two ways:
+  1. Extract probability modifier: ±30% variance based on slider value
+  2. Greed accumulation rate: 0.5x to 1.5x multiplier
+- Pass `extractionPreference` through `processTick()` and `catchUp()` functions
+- Use `ExtractionPreference.vue` and `HomeStash.vue` components as reference for UI patterns
+
+### Raid Duration
+Max raid time is now 1800 ticks (30 minutes). The RAIDING phase duration is defined in `src/engine/raidStateMachine.ts` as `PHASE_DURATIONS.RAIDING`. Hoarder raiders with low extraction chance can stay looting the full duration before being forced to extract or die.
+
+## Future Development Notes
+- Home stash will eventually persist to IndexedDB when transitioning from localStorage
+- Consider adding sell/trade mechanics in the hub to let players convert stash items to currency
+- Extraction preference could be expanded to affect other raider behaviors (hiding frequency, trading mood, etc.)
+- Consider achievements/milestones for accumulated stash value

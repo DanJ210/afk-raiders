@@ -36,12 +36,14 @@ export interface CatchUpResult {
  * @param rng        Seeded RNG (restored from saved seed)
  * @param lastTickAt ms timestamp of the last processed tick
  * @param now        Current ms timestamp (default: Date.now())
+ * @param extractionPreference Optional extraction preference slider value (defaults to 50)
  */
 export function catchUp(
   state: GameState,
   rng: RNG,
   lastTickAt: number,
   now: number = Date.now(),
+  extractionPreference?: number,
 ): CatchUpResult {
   const elapsed = Math.max(0, now - lastTickAt)
   const rawTicks = Math.floor(elapsed / TICK_INTERVAL_MS)
@@ -64,7 +66,7 @@ export function catchUp(
   const tickNow = lastTickAt // advance time by tick interval each replay tick
 
   for (let i = 0; i < ticksToReplay; i++) {
-    const result = processTick(currentState, rng, tickNow + i * TICK_INTERVAL_MS)
+    const result = processTick(currentState, rng, tickNow + i * TICK_INTERVAL_MS, extractionPreference)
     currentState = result.state
   }
 
