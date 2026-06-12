@@ -53,11 +53,7 @@ onMounted(scrollToTop)
       <span class="comms-log__icon">📻</span>
       <span class="comms-log__title">COMMS FEED</span>
     </header>
-    <div
-      class="comms-log__tick-track"
-      role="progressbar"
-      aria-label="Time until next transmission"
-    >
+    <div class="comms-log__tick-track" aria-hidden="true">
       <div
         :key="store.lastTickAt"
         class="comms-log__tick-bar"
