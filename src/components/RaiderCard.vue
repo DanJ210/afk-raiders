@@ -61,7 +61,7 @@ const hpClass = computed(() => {
 <template>
   <section class="raider-card" aria-label="Raider Status">
     <div class="raider-card__header">
-      <span v-if="!editingName" class="raider-card__name" title="Click to rename" @click="startEdit">
+      <span v-if="!editingName" class="raider-card__name" role="button" tabindex="0" title="Click to rename" @click="startEdit" @keydown.enter.prevent="startEdit" @keydown.space.prevent="startEdit">
         {{ raider.name }}
         <span class="raider-card__name-edit-icon">✏️</span>
       </span>
