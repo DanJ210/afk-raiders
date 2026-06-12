@@ -39,8 +39,7 @@ const canCallExtract = computed(() => currentSignal.value >= SIGNAL_COSTS.CALL_E
 
       <button
         class="action-btn action-btn--scold"
-        :disabled="!canScold"
-        :title="`Scold (${SIGNAL_COSTS.SCOLD} Signal) — nudge raider toward caution`"
+        :disabled="!canScold || store.phase !== 'RAIDING'"
         @click="store.scold()"
       >
         <span class="action-btn__icon">🔇</span>
