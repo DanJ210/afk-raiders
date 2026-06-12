@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useGameStore } from '../stores/gameStore'
+import { zoneName } from '../utils/zones'
 
 const store = useGameStore()
 const raider = computed(() => store.raider)
+const currentZoneName = computed(() => zoneName(store.raid.zone))
+const showCurrentZone = computed(() => store.phase === 'RAIDING' && currentZoneName.value !== null)
 
 function phaseLabel(phase: string): string {
   const labels: Record<string, string> = {
@@ -61,6 +64,11 @@ const hpClass = computed(() => {
       <div class="raider-card__stat">
         <span class="raider-card__stat-label">Mood</span>
         <span class="raider-card__stat-value">{{ moodLabel(raider.mood) }}</span>
+      </div>
+
+      <div v-if="showCurrentZone" class="raider-card__stat">
+        <span class="raider-card__stat-label">Zone</span>
+        <span class="raider-card__stat-value">{{ currentZoneName }}</span>
       </div>
 
       <div class="raider-card__stat">
