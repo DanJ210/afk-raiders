@@ -13,7 +13,7 @@ import type { Phase, RaidState } from './types.js'
 export const PHASE_DURATIONS: Record<Phase, number> = {
   HUB: 4,          // a few hub-gossip ticks before auto-deploying
   DEPLOYING: 2,    // loading screen / shuttle ride flavor
-  RAIDING: 999,    // raiding is open-ended; exits via greed check
+  RAIDING: 1800,   // 30 minutes max (1 tick per second)
   EXTRACTING: 2,   // extraction countdown flavor
   DOWNED: 2,       // death rattle flavor before respawning
 }
