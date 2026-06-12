@@ -157,9 +157,11 @@ export const useGameStore = defineStore('game', () => {
     localStorage.removeItem(STORAGE_KEY)
     const freshNow = Date.now()
     seedValue.value = freshNow & 0xffffffff
+    rng = createRNG(seedValue.value)
     state.value = createInitialState(freshNow)
     lastTickAt.value = freshNow
     awaySummary.value = null
+    persistSave(state.value, rng.getSeed(), lastTickAt.value)
   }
 
   function dismissAwaySummary() {
