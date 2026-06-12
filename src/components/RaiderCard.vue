@@ -14,6 +14,7 @@ function startEdit() {
 }
 
 function commitEdit() {
+  if (!editingName.value) return
   store.renameRaider(nameInput.value)
   editingName.value = false
 }
