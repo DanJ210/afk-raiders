@@ -10,7 +10,7 @@
  *   5. {count}         → random plausible water-bottle count (for flavor)
  */
 
-import type { EventTemplate, GameState, LogEvent, Phase } from './types.js'
+import type { EventTemplate, GameState, LogEvent, LootItem, Phase } from './types.js'
 import type { RNG } from './rng.js'
 import eventsData from '../content/events.json'
 import lootData from '../content/loot.json'
@@ -18,7 +18,7 @@ import robotsData from '../content/robots.json'
 import flavorData from '../content/flavor.json'
 
 const events = eventsData as EventTemplate[]
-const loot = lootData as Array<{ id: string; weight: number; name: string; value: number }>
+const loot = lootData as LootItem[]
 const robots = robotsData as Array<{ id: string; weight: number; name: string; menace: number; flavorLines: string[] }>
 const flavor = flavorData as Record<string, Array<{ id: string; weight: number; text: string }>>
 
@@ -83,6 +83,49 @@ function fillSlots(text: string, rng: RNG): string {
   })
 }
 
+function pickLootItemForValue(targetValue: number, rng: RNG): LootItem {
+  const exactMatches = loot.filter(item => item.value === targetValue)
+  if (exactMatches.length > 0) {
+    return rng.weightedPick(exactMatches)
+  }
+
+  const lowerMatches = loot.filter(item => item.value <= targetValue)
+  if (lowerMatches.length > 0) {
+    const highestValue = Math.max(...lowerMatches.map(item => item.value))
+    const bestMatches = lowerMatches.filter(item => item.value === highestValue)
+    return rng.weightedPick(bestMatches)
+  }
+
+  return rng.weightedPick(loot)
+}
+
+function addBackpackItem(
+  raid: GameState['raid'],
+  item: LootItem,
+): GameState['raid'] {
+  const existing = raid.backpack.find(entry => entry.itemId === item.id)
+  const backpack = existing
+    ? raid.backpack.map(entry => (
+        entry.itemId === item.id
+          ? { ...entry, quantity: entry.quantity + 1 }
+          : entry
+      ))
+    : [...raid.backpack, {
+        itemId: item.id,
+        name: item.name,
+        value: item.value,
+        rarity: item.rarity,
+        flavor: item.flavor,
+        quantity: 1,
+      }]
+
+  return {
+    ...raid,
+    backpack,
+    backpackValue: raid.backpackValue + item.value,
+  }
+}
+
 /** Pick a random eligible event and return a filled LogEvent */
 export function resolveEvent(
   state: GameState,
@@ -119,7 +162,12 @@ export function applyEffects(
     const delta = typeof effects.backpackValue === 'string'
       ? parseDice(effects.backpackValue, rng)
       : effects.backpackValue
-    raid = { ...raid, backpackValue: Math.max(0, raid.backpackValue + delta) }
+    if (delta > 0) {
+      const item = pickLootItemForValue(delta, rng)
+      raid = addBackpackItem(raid, item)
+    } else {
+      raid = { ...raid, backpackValue: Math.max(0, raid.backpackValue + delta) }
+    }
   }
 
   if (effects.mood !== undefined) {

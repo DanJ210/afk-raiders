@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { ref, watch, nextTick, onMounted } from 'vue'
+import { computed, ref, watch, nextTick, onMounted } from 'vue'
 import { useGameStore } from '../stores/gameStore'
 
 const store = useGameStore()
 const logEl = ref<HTMLElement | null>(null)
-const userScrolledUp = ref(false)
+const userScrolledDown = ref(false)
+const entries = computed(() => [...store.log].reverse())
 
 function formatTime(ts: number): string {
   const d = new Date(ts)
@@ -26,23 +27,23 @@ function phaseBadge(phase: string): string {
 
 function onScroll() {
   if (!logEl.value) return
-  const { scrollTop, scrollHeight, clientHeight } = logEl.value
-  // Consider "scrolled up" if more than 60px from bottom
-  userScrolledUp.value = scrollHeight - scrollTop - clientHeight > 60
+  const { scrollTop } = logEl.value
+  // Consider "scrolled away" if more than 60px from the top
+  userScrolledDown.value = scrollTop > 60
 }
 
-async function scrollToBottom() {
-  if (userScrolledUp.value) return
+async function scrollToTop() {
+  if (userScrolledDown.value) return
   await nextTick()
   if (logEl.value) {
-    logEl.value.scrollTop = logEl.value.scrollHeight
+    logEl.value.scrollTop = 0
   }
 }
 
 // Auto-scroll when new events arrive
-watch(() => store.log, scrollToBottom, { deep: false })
+watch(() => store.log.length, scrollToTop)
 
-onMounted(scrollToBottom)
+onMounted(scrollToTop)
 </script>
 
 <template>
@@ -63,7 +64,7 @@ onMounted(scrollToBottom)
         Waiting for transmission…
       </p>
       <div
-        v-for="entry in store.log"
+        v-for="entry in entries"
         :key="`${entry.tick}-${entry.id}`"
         class="comms-log__entry"
       >
@@ -73,8 +74,8 @@ onMounted(scrollToBottom)
         <span class="comms-log__text">{{ entry.text }}</span>
       </div>
     </div>
-    <div v-if="userScrolledUp" class="comms-log__scroll-hint" @click="userScrolledUp = false; scrollToBottom()">
-      ▼ New messages
+    <div v-if="userScrolledDown" class="comms-log__scroll-hint" @click="userScrolledDown = false; scrollToTop()">
+      ▲ New messages at top
     </div>
   </section>
 </template>

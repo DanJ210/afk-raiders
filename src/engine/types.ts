@@ -32,6 +32,8 @@ export interface LootItem extends ContentEntry {
   name: string
   value: number
   flavor?: string
+  /** 1 = Common … 5 = Legendary. Higher rarity → lower weight → worth more when sold. */
+  rarity: number
 }
 
 export interface RobotEntry extends ContentEntry {
@@ -59,6 +61,9 @@ export interface BackpackItem {
   itemId: string
   name: string
   value: number
+  /** 1 = Common … 5 = Legendary */
+  rarity: number
+  flavor?: string
   quantity: number
 }
 

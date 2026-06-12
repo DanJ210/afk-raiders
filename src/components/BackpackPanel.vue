@@ -5,6 +5,14 @@ import { useGameStore } from '../stores/gameStore'
 const store = useGameStore()
 const raid = computed(() => store.raid)
 
+const backpackItems = computed(() =>
+  [...raid.value.backpack].sort((a, b) => {
+    if (b.rarity !== a.rarity) return b.rarity - a.rarity
+    if (b.value !== a.value) return b.value - a.value
+    return a.name.localeCompare(b.name)
+  }),
+)
+
 function greedLabel(level: number): string {
   if (level < 20) return '😌 Chill'
   if (level < 40) return '🤑 Interested'
@@ -19,6 +27,17 @@ const greedClass = computed(() => {
   if (g < 70) return 'greed--mid'
   return 'greed--high'
 })
+
+function rarityLabel(rarity: number): string {
+  const labels: Record<number, string> = {
+    1: 'Common',
+    2: 'Uncommon',
+    3: 'Rare',
+    4: 'Epic',
+    5: 'Legendary',
+  }
+  return labels[rarity] ?? `Rarity ${rarity}`
+}
 </script>
 
 <template>
@@ -44,12 +63,26 @@ const greedClass = computed(() => {
       </span>
     </div>
 
-    <p v-if="raid.phase === 'HUB'" class="backpack-panel__empty">
+    <p v-if="raid.backpack.length === 0 && raid.phase === 'HUB'" class="backpack-panel__empty">
       Backpack empty. Ready for terrible decisions.
     </p>
-    <p v-else-if="raid.backpackValue === 0" class="backpack-panel__empty">
+    <p v-else-if="raid.backpack.length === 0" class="backpack-panel__empty">
       Nothing yet. The zone is full of possibilities and also robots.
     </p>
+
+    <ul v-else class="backpack-panel__items">
+      <li v-for="item in backpackItems" :key="item.itemId" class="backpack-panel__item">
+        <div class="backpack-panel__item-main">
+          <span class="backpack-panel__item-name">{{ item.name }}</span>
+          <span class="backpack-panel__item-meta">{{ rarityLabel(item.rarity) }}</span>
+        </div>
+        <div class="backpack-panel__item-sub">
+          <span>Value {{ item.value }}</span>
+          <span v-if="item.quantity > 1">x{{ item.quantity }}</span>
+        </div>
+        <p v-if="item.flavor" class="backpack-panel__item-flavor">{{ item.flavor }}</p>
+      </li>
+    </ul>
   </section>
 </template>
 
@@ -126,5 +159,50 @@ const greedClass = computed(() => {
   color: var(--color-muted);
   font-style: italic;
   margin-top: 8px;
+}
+
+.backpack-panel__items {
+  list-style: none;
+  padding: 0;
+  margin: 12px 0 0;
+  display: grid;
+  gap: 8px;
+}
+
+.backpack-panel__item {
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 6px;
+  background: var(--color-surface-raised);
+  padding: 8px 10px;
+}
+
+.backpack-panel__item-main,
+.backpack-panel__item-sub {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.backpack-panel__item-name {
+  font-size: 0.86rem;
+  color: var(--color-text);
+}
+
+.backpack-panel__item-meta,
+.backpack-panel__item-sub,
+.backpack-panel__item-flavor {
+  font-size: 0.72rem;
+  color: var(--color-muted);
+  font-family: var(--font-mono);
+}
+
+.backpack-panel__item-sub {
+  margin-top: 4px;
+}
+
+.backpack-panel__item-flavor {
+  margin: 6px 0 0;
+  font-style: italic;
+  line-height: 1.4;
 }
 </style>
