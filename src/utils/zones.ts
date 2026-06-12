@@ -1,5 +1,5 @@
 import zonesData from '../content/zones.json'
-import type { ZoneEntry } from '../engine/types'
+import type { ZoneEntry } from '../engine/types.js'
 
 const zones = zonesData as ZoneEntry[]
 
