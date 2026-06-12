@@ -69,7 +69,11 @@ src/
 │   ├── signal.ts            # Signal meter logic
 │   └── initialState.ts      # Fresh GameState factory
 ├── content/         # All game text as data (never hardcoded in TS)
-│   ├── events.json  # ~20 weighted event templates with {slot} placeholders
+│   ├── hub_events.json        # Desperanza rest & prep events
+│   ├── deployment_events.json # Tunnel-pod ride events
+│   ├── raiding_events.json    # Looting / robot / greed events
+│   ├── extraction_events.json # LZ drama events
+│   ├── downed_events.json     # Death quip events
 │   ├── loot.json    # 12 loot items (several water bottle variants)
 │   ├── robots.json  # Anxieticks, Tattletales, Roomba Prime
 │   ├── zones.json   # Damp Battlegrounds

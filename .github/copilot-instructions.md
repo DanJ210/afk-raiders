@@ -49,7 +49,7 @@ Players control raid aggression via a slider (0-100) stored in `settingsStore` a
 - Use `ExtractionPreference.vue` and `HomeStash.vue` components as reference for UI patterns
 
 ### Raid Duration
-Max raid time is now 1800 ticks (30 minutes). The RAIDING phase duration is defined in `src/engine/raidStateMachine.ts` as `PHASE_DURATIONS.RAIDING`. Hoarder raiders with low extraction chance can stay looting the full duration before being forced to extract or die.
+Max raid time is 120 ticks = 30 minutes at the 15 s tick cadence. Phase durations are defined in `src/engine/raidStateMachine.ts` as `PHASE_DURATIONS`: HUB ≤ 5 min (20 ticks), DEPLOYING 60 s (4 ticks, one-person tunnel pods), RAIDING ≤ 30 min (120 ticks), EXTRACTING ~60 s (4 ticks). When the raid timer expires the raider is forced into EXTRACTING. If HP reaches 0 in any phase the raider goes DOWNED, loses the backpack, and respawns in the HUB. Each phase has its own events file in `src/content/` (hub_events, deployment_events, raiding_events, extraction_events, downed_events).
 
 ## Future Development Notes
 - Home stash will eventually persist to IndexedDB when transitioning from localStorage

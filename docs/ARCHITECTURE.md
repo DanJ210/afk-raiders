@@ -26,8 +26,11 @@ afk-raiders/
 │   │   ├── eventResolver.ts     # Weighted event tables by context
 │   │   └── catchUp.ts           # Fast-forward elapsed ticks on app open
 │   ├── content/                 # The comedy lives here, as data
-│   │   ├── events.json          # Madlibs templates with {slots}
+│   │   ├── hub_events.json      # Desperanza rest & prep (≤5 min)
+│   │   ├── deployment_events.json # One-person tunnel pod ride (60 s)
+│   │   ├── raiding_events.json  # Looting, robots, greed (≤30 min)
 │   │   ├── extraction_events.json # LZ drama: failed/early extractions, ambushes
+│   │   ├── downed_events.json   # Death quips
 │   │   ├── loot.json            # 47 varieties of water bottle
 │   │   ├── robots.json          # Anxieticks, Tattletales, Roomba Prime…
 │   │   ├── zones.json           # Damp Battlegrounds, etc.
