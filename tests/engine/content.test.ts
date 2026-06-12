@@ -109,6 +109,14 @@ describe('content validation', () => {
       }
     })
 
+    it('all loot rarities are valid', () => {
+      for (const item of loot) {
+        expect(Number.isInteger(item.rarity), `loot "${item.id}" rarity must be an integer`).toBe(true)
+        expect(item.rarity, `loot "${item.id}" has rarity ${item.rarity}`).toBeGreaterThan(0)
+        expect(item.rarity, `loot "${item.id}" has rarity ${item.rarity}`).toBeLessThanOrEqual(5)
+      }
+    })
+
     it('all loot IDs are unique', () => {
       const ids = loot.map(l => l.id)
       const unique = new Set(ids)
@@ -122,6 +130,19 @@ describe('content validation', () => {
     it('has at least 3 water bottle variants', () => {
       const waterBottles = loot.filter(l => l.id.startsWith('water_bottle'))
       expect(waterBottles.length).toBeGreaterThanOrEqual(3)
+    })
+
+    it('lighter loot items are at least as rare as heavier loot items', () => {
+      for (const a of loot) {
+        for (const b of loot) {
+          if (a.weight < b.weight) {
+            expect(
+              a.rarity,
+              `loot "${a.id}" is lighter than "${b.id}" but not rarer`,
+            ).toBeGreaterThanOrEqual(b.rarity)
+          }
+        }
+      }
     })
   })
 
