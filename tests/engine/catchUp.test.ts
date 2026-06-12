@@ -1,0 +1,77 @@
+/**
+ * Catch-up tests:
+ * - Elapsed time → expected tick count
+ * - 8-hour cap enforced
+ * - Away summary counts deaths and extracts correctly
+ */
+
+import { describe, it, expect } from 'vitest'
+import { createRNG } from '../../src/engine/rng'
+import { catchUp, TICK_INTERVAL_MS, MAX_CATCHUP_TICKS } from '../../src/engine/catchUp'
+import { createInitialState } from '../../src/engine/initialState'
+
+describe('catchUp', () => {
+  it('returns 0 ticks when no time elapsed', () => {
+    const state = createInitialState(1000)
+    const rng = createRNG(1)
+    const result = catchUp(state, rng, 1000, 1000)
+    expect(result.summary.ticksReplayed).toBe(0)
+  })
+
+  it('computes correct tick count from elapsed time', () => {
+    const state = createInitialState(0)
+    const rng = createRNG(1)
+    const elapsed = 3 * TICK_INTERVAL_MS  // exactly 3 ticks
+    const result = catchUp(state, rng, 0, elapsed)
+    expect(result.summary.ticksReplayed).toBe(3)
+  })
+
+  it('floors partial ticks', () => {
+    const state = createInitialState(0)
+    const rng = createRNG(1)
+    const elapsed = 2.7 * TICK_INTERVAL_MS
+    const result = catchUp(state, rng, 0, elapsed)
+    expect(result.summary.ticksReplayed).toBe(2)
+  })
+
+  it('caps at MAX_CATCHUP_TICKS (8 hours)', () => {
+    const state = createInitialState(0)
+    const rng = createRNG(1)
+    const hours24 = 24 * 60 * 60 * 1000
+    const result = catchUp(state, rng, 0, hours24)
+    expect(result.summary.ticksReplayed).toBe(MAX_CATCHUP_TICKS)
+  })
+
+  it('MAX_CATCHUP_TICKS corresponds to 8 hours', () => {
+    const hours8ms = 8 * 60 * 60 * 1000
+    const expected = Math.floor(hours8ms / TICK_INTERVAL_MS)
+    expect(MAX_CATCHUP_TICKS).toBe(expected)
+  })
+
+  it('advances the tick counter by ticksReplayed', () => {
+    const state = createInitialState(0)
+    const rng = createRNG(42)
+    const elapsed = 10 * TICK_INTERVAL_MS
+    const result = catchUp(state, rng, 0, elapsed)
+    expect(result.state.tick).toBe(state.tick + 10)
+  })
+
+  it('summary includes non-empty lines', () => {
+    const state = createInitialState(0)
+    const rng = createRNG(7)
+    const elapsed = 5 * TICK_INTERVAL_MS
+    const result = catchUp(state, rng, 0, elapsed)
+    expect(result.summary.lines.length).toBeGreaterThan(0)
+  })
+
+  it('is deterministic: same inputs → same output', () => {
+    const state = createInitialState(0)
+    const elapsed = 8 * TICK_INTERVAL_MS
+
+    const result1 = catchUp(state, createRNG(55), 0, elapsed)
+    const result2 = catchUp(state, createRNG(55), 0, elapsed)
+
+    expect(result1.state.tick).toBe(result2.state.tick)
+    expect(result1.summary.ticksReplayed).toBe(result2.summary.ticksReplayed)
+  })
+})

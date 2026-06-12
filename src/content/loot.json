@@ -1,0 +1,14 @@
+[
+  { "id": "water_bottle_classic",    "weight": 30, "name": "water bottle (classic)",       "value": 1,  "flavor": "Warm. Slightly dented. Perfect." },
+  { "id": "water_bottle_fancy",      "weight": 15, "name": "water bottle (fancy label)",   "value": 2,  "flavor": "Has a logo for a company that no longer exists. Collectible." },
+  { "id": "water_bottle_mystery",    "weight": 10, "name": "water bottle (mystery fluid)", "value": 3,  "flavor": "Not water. Maybe sports drink. Probably fine." },
+  { "id": "water_bottle_tactical",   "weight": 8,  "name": "tactical water bottle",        "value": 4,  "flavor": "Has MOLLE attachments. Holds water AND attitude." },
+  { "id": "water_bottle_emotional",  "weight": 5,  "name": "water bottle (half-empty)",    "value": 1,  "flavor": "Someone left this. It's not your fault they're gone." },
+  { "id": "expired_mre",             "weight": 20, "name": "expired MRE",                  "value": 3,  "flavor": "Best before: a date that feels personal." },
+  { "id": "left_boot",               "weight": 18, "name": "left boot",                    "value": 2,  "flavor": "Someone out there has the right one. The pair would be worth something." },
+  { "id": "crumpled_memo",           "weight": 15, "name": "crumpled memo",                "value": 1,  "flavor": "Subject: MANDATORY FUN. The irony is not lost on you." },
+  { "id": "decorative_spoon",        "weight": 12, "name": "decorative spoon",             "value": 2,  "flavor": "Commemorating a place that is definitely also abandoned now." },
+  { "id": "loose_battery",           "weight": 20, "name": "loose battery (maybe charged)","value": 2,  "flavor": "Rattles hopefully. Approximately 40% of batteries are fine." },
+  { "id": "broken_umbrella",         "weight": 10, "name": "broken umbrella",              "value": 1,  "flavor": "Two spokes missing. Still projects the right energy." },
+  { "id": "novelty_mug",             "weight": 8,  "name": "novelty mug (World's Okayest Survivor)", "value": 3, "flavor": "Technically accurate." }
+]
