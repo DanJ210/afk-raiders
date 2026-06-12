@@ -46,9 +46,7 @@ const hpClass = computed(() => {
 
     <div class="raider-card__stats">
       <div class="raider-card__stat">
-        <span class="raider-card__stat-label">HP</span>
-        <div class="hp-bar" role="progressbar" :aria-valuenow="raider.hp" :aria-valuemax="raider.maxHp">
-          <div class="hp-bar__fill" :class="hpClass" :style="{ width: hpPercent + '%' }" />
+        <div class="hp-bar" role="progressbar" aria-valuemin="0" :aria-valuenow="raider.hp" :aria-valuemax="raider.maxHp">
         </div>
         <span class="raider-card__stat-value">{{ raider.hp }}/{{ raider.maxHp }}</span>
       </div>
