@@ -190,7 +190,10 @@ export function applyEffects(
   }
 
   if (effects.hp !== undefined) {
-    raider = { ...raider, hp: Math.max(0, Math.min(raider.maxHp, raider.hp + effects.hp)) }
+    const delta = typeof effects.hp === 'string'
+      ? parseDice(effects.hp, rng)
+      : effects.hp
+    raider = { ...raider, hp: Math.max(0, Math.min(raider.maxHp, raider.hp + delta)) }
   }
 
   if (effects.greedLevel !== undefined) {
@@ -210,7 +213,10 @@ function parseDice(expr: string, rng: RNG): number {
   if (!match) return 1
   const base = parseInt(match[1], 10)
   const die = match[2] ? parseInt(match[2], 10) : 0
-  return die > 0 ? base + rng.int(0, die - 1) : base
+  if (die <= 0) return base
+
+  const sign = base < 0 ? -1 : 1
+  return base + sign * rng.int(0, die - 1)
 }
 
 /** Resolve a named flavor key to a random filled string — used by tick.ts for handler action feedback */

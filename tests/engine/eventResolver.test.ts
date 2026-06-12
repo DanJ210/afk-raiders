@@ -23,6 +23,13 @@ const LOOT_TEMPLATE: EventTemplate = {
   effects: { backpackValue: 4 },
 }
 
+const DAMAGE_TEMPLATE: EventTemplate = {
+  id: 'test_damage',
+  weight: 1,
+  text: 'You found something sharp.',
+  effects: { hp: '-5d10' },
+}
+
 describe('applyEffects — backpack item behavior', () => {
   it('adds a new BackpackItem when a loot effect is applied', () => {
     const state = createInitialState(0)
@@ -72,5 +79,15 @@ describe('applyEffects — backpack item behavior', () => {
 
     expect(state.raid.backpack).toHaveLength(0)
     expect(state.raid.backpackValue).toBe(0)
+  })
+
+  it('applies deterministic dice-based HP damage within range', () => {
+    const state = createInitialState(0)
+    const result1 = applyEffects(state, DAMAGE_TEMPLATE, createRNG(42))
+    const result2 = applyEffects(state, DAMAGE_TEMPLATE, createRNG(42))
+
+    expect(result1.raider.hp).toBe(result2.raider.hp)
+    expect(result1.raider.hp).toBeLessThanOrEqual(95)
+    expect(result1.raider.hp).toBeGreaterThanOrEqual(86)
   })
 })
