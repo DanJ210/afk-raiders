@@ -73,8 +73,9 @@ function getCategoryEmoji(itemName: string): string {
   border-radius: 8px;
   border: 1px solid var(--color-border);
   padding: 14px;
-  max-height: 300px;
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  max-height: 400px;
 }
 
 .home-stash__header {
@@ -126,6 +127,9 @@ function getCategoryEmoji(itemName: string): string {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  overflow-y: auto;
+  flex: 1;
+  padding-right: 2px;
 }
 
 .stash-item {

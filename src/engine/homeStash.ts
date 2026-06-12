@@ -1,6 +1,6 @@
 import type { BackpackItem } from './types.js'
 
-export const HOME_STASH_ITEM_LIMIT = 10
+export const HOME_STASH_ITEM_LIMIT = 120
 
 export function getTotalItemCount(items: BackpackItem[]): number {
   return items.reduce((sum, item) => sum + item.quantity, 0)
