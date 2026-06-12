@@ -10,5 +10,6 @@
   { "id": "decorative_spoon",        "weight": 12, "rarity": 3, "name": "decorative spoon",             "value": 2,  "flavor": "Commemorating a place that is definitely also abandoned now." },
   { "id": "loose_battery",           "weight": 20, "rarity": 2, "name": "loose battery (maybe charged)","value": 2,  "flavor": "Rattles hopefully. Approximately 40% of batteries are fine." },
   { "id": "broken_umbrella",         "weight": 10, "rarity": 3, "name": "broken umbrella",              "value": 1,  "flavor": "Two spokes missing. Still projects the right energy." },
-  { "id": "novelty_mug",             "weight": 8,  "rarity": 3, "name": "novelty mug (World's Okayest Survivor)", "value": 3, "flavor": "Technically accurate." }
+  { "id": "novelty_mug",             "weight": 8,  "rarity": 3, "name": "novelty mug (World's Okayest Survivor)", "value": 3, "flavor": "Technically accurate." },
+  { "id": "golden_water_bottle",     "weight": 2,  "rarity": 5, "name": "golden water bottle",          "value": 10, "flavor": "Solid gold. Terrible insulator. Priceless flex." }
 ]

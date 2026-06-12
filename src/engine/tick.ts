@@ -17,6 +17,7 @@ import type { BackpackItem, GameState, LogEvent, TickResult } from './types.js'
 import type { RNG } from './rng.js'
 import { tickPhase } from './raidStateMachine.js'
 import { runGreedCheck } from './greedCheck.js'
+import { transferBackpackToHomeStash } from './homeStash.js'
 import { resolveEvent, resolveFlavorKey, applyEffects, events as allEvents } from './eventResolver.js'
 
 /** Maximum log entries to keep in memory (avoids unbounded growth) */
@@ -58,6 +59,7 @@ function applySuccessfulExtraction(state: GameState, extractedBackpack: Backpack
 
 export function processTick(state: GameState, rng: RNG, now: number = Date.now(), extractionPreference?: number): TickResult {
   const emitted: LogEvent[] = []
+  const backpackBeforePhaseTick = state.raid.backpack
 
   // ------------------------------------------------------------------
   // 1. Run phase state machine

@@ -74,4 +74,32 @@ describe('catchUp', () => {
     expect(result1.state.tick).toBe(result2.state.tick)
     expect(result1.summary.ticksReplayed).toBe(result2.summary.ticksReplayed)
   })
+
+  it('reports loot value gained from items moved into the home stash', () => {
+    const rng = createRNG(1)
+    const initial = createInitialState(0)
+    const state = {
+      ...initial,
+      raid: {
+        ...initial.raid,
+        phase: 'EXTRACTING' as const,
+        phaseTicksRemaining: 1,
+        backpack: [
+          {
+            itemId: 'water_bottle',
+            name: 'Water Bottle',
+            value: 5,
+            rarity: 1,
+            quantity: 2,
+          },
+        ],
+        backpackValue: 10,
+      },
+    }
+
+    const result = catchUp(state, rng, 0, TICK_INTERVAL_MS)
+
+    expect(result.summary.extracts).toBe(1)
+    expect(result.summary.itemsGained).toBe(10)
+  })
 })

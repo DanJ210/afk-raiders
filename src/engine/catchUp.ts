@@ -9,6 +9,7 @@
 
 import type { GameState } from './types.js'
 import type { RNG } from './rng.js'
+import { getTotalItemValue } from './homeStash.js'
 import { processTick } from './tick.js'
 
 /** Real-time ms between ticks in the live app (15 seconds) */
@@ -59,7 +60,7 @@ export function catchUp(
   const before = {
     deathCount: state.raider.deathCount,
     extractCount: state.raider.extractCount,
-    backpackValue: state.raid.backpackValue,
+    stashValue: getTotalItemValue(state.homeStash),
   }
 
   let currentState = state
@@ -72,7 +73,7 @@ export function catchUp(
 
   const deaths = currentState.raider.deathCount - before.deathCount
   const extracts = currentState.raider.extractCount - before.extractCount
-  const itemsGained = Math.max(0, currentState.raid.backpackValue - before.backpackValue)
+  const itemsGained = Math.max(0, getTotalItemValue(currentState.homeStash) - before.stashValue)
 
   const lines = buildSummaryLines(ticksToReplay, deaths, extracts, itemsGained)
 

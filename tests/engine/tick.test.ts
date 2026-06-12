@@ -7,6 +7,7 @@ import { describe, it, expect } from 'vitest'
 import { createRNG } from '../../src/engine/rng'
 import { processTick } from '../../src/engine/tick'
 import { createInitialState } from '../../src/engine/initialState'
+import { HOME_STASH_ITEM_LIMIT } from '../../src/engine/homeStash'
 
 const FIXED_SEED = 42
 
@@ -89,5 +90,92 @@ describe('deterministic snapshot', () => {
 
     expect(state.tick).toBe(tickBefore)
     expect(state.raid.phase).toBe(phaseBefore)
+  })
+
+  it('transfers backpack loot into the home stash after extraction', () => {
+    const rng = createRNG(FIXED_SEED)
+    const state = {
+      ...createInitialState(0),
+      raid: {
+        ...createInitialState(0).raid,
+        phase: 'EXTRACTING' as const,
+        phaseTicksRemaining: 1,
+        backpack: [
+          {
+            itemId: 'water_bottle',
+            name: 'Water Bottle',
+            value: 5,
+            rarity: 1,
+            quantity: 2,
+          },
+        ],
+        backpackValue: 10,
+      },
+    }
+
+    const result = processTick(state, rng, 0)
+
+    expect(result.state.raid.phase).toBe('HUB')
+    expect(result.state.homeStash).toEqual([
+      {
+        itemId: 'water_bottle',
+        name: 'Water Bottle',
+        value: 5,
+        rarity: 1,
+        quantity: 2,
+      },
+    ])
+    expect(result.state.raider.extractCount).toBe(1)
+  })
+
+  it('caps the home stash at 10 total items when extracting', () => {
+    const rng = createRNG(FIXED_SEED)
+    const initial = createInitialState(0)
+    const state = {
+      ...initial,
+      homeStash: [
+        {
+          itemId: 'scrap',
+          name: 'Scrap',
+          value: 2,
+          rarity: 1,
+          quantity: HOME_STASH_ITEM_LIMIT - 1,
+        },
+      ],
+      raid: {
+        ...initial.raid,
+        phase: 'EXTRACTING' as const,
+        phaseTicksRemaining: 1,
+        backpack: [
+          {
+            itemId: 'ammo',
+            name: 'Ammo Box',
+            value: 8,
+            rarity: 2,
+            quantity: 3,
+          },
+        ],
+        backpackValue: 24,
+      },
+    }
+
+    const result = processTick(state, rng, 0)
+
+    expect(result.state.homeStash).toEqual([
+      {
+        itemId: 'scrap',
+        name: 'Scrap',
+        value: 2,
+        rarity: 1,
+        quantity: HOME_STASH_ITEM_LIMIT - 1,
+      },
+      {
+        itemId: 'ammo',
+        name: 'Ammo Box',
+        value: 8,
+        rarity: 2,
+        quantity: 1,
+      },
+    ])
   })
 })

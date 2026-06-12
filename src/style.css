@@ -23,8 +23,31 @@
   --color-warning:         #f0c84b;
   --color-danger:          #f05a5a;
 
+  /* Item rarity colors (tiers 1–5, industry-standard) */
+  --color-rarity-1: #9d9da8; /* gray */
+  --color-rarity-2: #4bde9f; /* green */
+  --color-rarity-3: #4b9ef0; /* blue */
+  --color-rarity-4: #b06af0; /* purple */
+  --color-rarity-5: #f0c84b; /* yellow */
+
   --font-mono: 'Courier New', Courier, monospace;
 }
+
+/* Rarity color bar shown in front of item names */
+.rarity-bar {
+  display: inline-block;
+  width: 4px;
+  align-self: stretch;
+  min-height: 1em;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.rarity-bar--1 { background: var(--color-rarity-1); }
+.rarity-bar--2 { background: var(--color-rarity-2); }
+.rarity-bar--3 { background: var(--color-rarity-3); }
+.rarity-bar--4 { background: var(--color-rarity-4); }
+.rarity-bar--5 { background: var(--color-rarity-5); }
 
 html, body, #app {
   height: 100%;
