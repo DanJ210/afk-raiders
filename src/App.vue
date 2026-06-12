@@ -62,7 +62,7 @@ const activeMobileTab = ref<MobileTabId>('comms')
         <HandlerActions />
       </section>
 
-      <section v-show="activeMobileTab === 'raid'" class="app__mobile-panel app__mobile-panel--fill">
+      <section v-if="activeMobileTab === 'raid'" class="app__mobile-panel app__mobile-panel--fill">
         <BackpackPanel />
       </section>
     </main>
