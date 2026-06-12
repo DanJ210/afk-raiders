@@ -121,11 +121,17 @@ onMounted(scrollToTop)
 
 .comms-log__tick-bar {
   height: 100%;
+  width: 0%;
   background: var(--color-accent);
   opacity: 0.7;
-  animation-name: tick-fill;
-  animation-timing-function: linear;
-  animation-fill-mode: forwards;
+  animation: tick-fill linear forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .comms-log__tick-bar {
+    animation: none;
+    width: 100%;
+  }
 }
 
 @keyframes tick-fill {
