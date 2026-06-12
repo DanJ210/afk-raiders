@@ -165,6 +165,10 @@ export function applyEffects(
     if (delta > 0) {
       const item = pickLootItemForValue(delta, rng)
       raid = addBackpackItem(raid, item)
+      raid = {
+        ...raid,
+        backpackValue: Math.max(0, raid.backpackValue + (delta - item.value)),
+      }
     } else {
       raid = { ...raid, backpackValue: Math.max(0, raid.backpackValue + delta) }
     }

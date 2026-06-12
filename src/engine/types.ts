@@ -32,7 +32,7 @@ export interface LootItem extends ContentEntry {
   name: string
   value: number
   flavor?: string
-  /** 1 = Common … 5 = Legendary. Higher rarity → lower weight → worth more when sold. */
+  /** 1 = Common … 5 = Legendary (higher = rarer). */
   rarity: number
 }
 

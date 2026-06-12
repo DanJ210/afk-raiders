@@ -111,6 +111,7 @@ describe('content validation', () => {
 
     it('all loot rarities are valid', () => {
       for (const item of loot) {
+        expect(Number.isInteger(item.rarity), `loot "${item.id}" rarity must be an integer`).toBe(true)
         expect(item.rarity, `loot "${item.id}" has rarity ${item.rarity}`).toBeGreaterThan(0)
         expect(item.rarity, `loot "${item.id}" has rarity ${item.rarity}`).toBeLessThanOrEqual(5)
       }
@@ -131,7 +132,7 @@ describe('content validation', () => {
       expect(waterBottles.length).toBeGreaterThanOrEqual(3)
     })
 
-    it('higher rarity items are lighter than lower rarity items', () => {
+    it('lighter loot items are at least as rare as heavier loot items', () => {
       for (const a of loot) {
         for (const b of loot) {
           if (a.weight < b.weight) {
