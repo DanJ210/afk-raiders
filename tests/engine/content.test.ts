@@ -25,7 +25,7 @@ function extractSlots(text: string): string[] {
 }
 
 describe('content validation', () => {
-  describe('events.json', () => {
+  describe('phase event files', () => {
     it('all event weights are > 0', () => {
       for (const ev of events) {
         expect(ev.weight, `event "${ev.id}" has weight ${ev.weight}`).toBeGreaterThan(0)

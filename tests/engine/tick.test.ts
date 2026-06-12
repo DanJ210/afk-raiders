@@ -59,7 +59,7 @@ describe('deterministic snapshot', () => {
     let state = createInitialState(0)
     const phases = new Set<string>()
 
-    for (let i = 0; i < 15; i++) {
+    for (let i = 0; i < 25; i++) {
       const result = processTick(state, rng, i * 5000)
       state = result.state
       phases.add(state.raid.phase)
@@ -125,6 +125,88 @@ describe('deterministic snapshot', () => {
       },
     ])
     expect(result.state.raider.extractCount).toBe(1)
+  })
+
+  it('downs the raider when HP reaches 0, losing the backpack', () => {
+    const initial = createInitialState(0)
+    let state = {
+      ...initial,
+      raider: { ...initial.raider, hp: 1 },
+      raid: {
+        ...initial.raid,
+        phase: 'RAIDING' as const,
+        phaseTicksRemaining: 999,
+        greedLevel: 0,
+        backpack: [
+          {
+            itemId: 'water_bottle',
+            name: 'Water Bottle',
+            value: 5,
+            rarity: 1,
+            quantity: 3,
+          },
+        ],
+        backpackValue: 15,
+      },
+    }
+
+    // Run ticks until an event damages the raider down to 0 HP
+    const rng = createRNG(FIXED_SEED)
+    let downed = false
+    for (let i = 0; i < 200 && !downed; i++) {
+      const result = processTick(state, rng, i * 5000)
+      if (result.state.raider.hp <= 0 || result.state.raid.phase === 'DOWNED') {
+        expect(result.state.raid.phase).toBe('DOWNED')
+        downed = true
+      }
+      state = result.state
+      // Stop if the raid ended some other way; re-arm a fresh raid
+      if (!downed && state.raid.phase !== 'RAIDING') {
+        state = {
+          ...state,
+          raider: { ...state.raider, hp: 1 },
+          raid: {
+            ...state.raid,
+            phase: 'RAIDING' as const,
+            phaseTicksRemaining: 999,
+            greedLevel: 0,
+          },
+        }
+      }
+    }
+
+    expect(downed).toBe(true)
+
+    // Ride out DOWNED → HUB: loot must be lost, HP restored, death counted
+    const deathsBefore = state.raider.deathCount
+    const stashBefore = state.homeStash
+    const rng2 = createRNG(7)
+    for (let i = 0; i < 5 && state.raid.phase !== 'HUB'; i++) {
+      state = processTick(state, rng2, i * 5000).state
+    }
+    expect(state.raid.phase).toBe('HUB')
+    expect(state.raid.backpack).toEqual([])
+    expect(state.homeStash).toEqual(stashBefore)
+    expect(state.raider.hp).toBe(state.raider.maxHp)
+    expect(state.raider.deathCount).toBe(deathsBefore + 1)
+  })
+
+  it('forces extraction when the raid timer expires', () => {
+    const rng = createRNG(FIXED_SEED)
+    const initial = createInitialState(0)
+    const state = {
+      ...initial,
+      raid: {
+        ...initial.raid,
+        phase: 'RAIDING' as const,
+        phaseTicksRemaining: 1,
+        greedLevel: 0,
+      },
+    }
+
+    const result = processTick(state, rng, 0)
+    // The expiring raid timer must push the raider into EXTRACTING (never straight home)
+    expect(result.events.some(e => e.id === 'phase_RAIDING_to_EXTRACTING')).toBe(true)
   })
 
   it('stacks extracted quantities into existing stash entries', () => {
