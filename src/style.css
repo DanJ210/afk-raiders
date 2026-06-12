@@ -1,0 +1,45 @@
+/* -----------------------------------------------------------------------
+   AFK Raiders — Global Stylesheet
+   Dark-first, mobile-friendly, monospace-heavy
+----------------------------------------------------------------------- */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --color-bg:              #0d0d1a;
+  --color-surface:         #12122a;
+  --color-surface-raised:  #1a1a38;
+  --color-border:          #2a2a4a;
+  --color-border-subtle:   #1e1e3a;
+  --color-text:            #d4d4f0;
+  --color-muted:           #6666a0;
+  --color-accent:          #7b9ef0;
+  --color-accent-secondary:#f0a04b;
+  --color-success:         #4bde9f;
+  --color-warning:         #f0c84b;
+  --color-danger:          #f05a5a;
+
+  --font-mono: 'Courier New', Courier, monospace;
+}
+
+html, body, #app {
+  height: 100%;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-mono);
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--color-bg); }
+::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 3px; }

@@ -1,0 +1,156 @@
+<script setup lang="ts">
+import { ref, watch, nextTick, onMounted } from 'vue'
+import { useGameStore } from '../stores/gameStore'
+
+const store = useGameStore()
+const logEl = ref<HTMLElement | null>(null)
+const userScrolledUp = ref(false)
+
+function formatTime(ts: number): string {
+  const d = new Date(ts)
+  const hh = String(d.getHours()).padStart(2, '0')
+  const mm = String(d.getMinutes()).padStart(2, '0')
+  return `${hh}:${mm}`
+}
+
+function phaseBadge(phase: string): string {
+  const badges: Record<string, string> = {
+    HUB: '🏠',
+    DEPLOYING: '🚁',
+    RAIDING: '⚡',
+    EXTRACTING: '🚨',
+    DOWNED: '💀',
+  }
+  return badges[phase] ?? '📡'
+}
+
+function onScroll() {
+  if (!logEl.value) return
+  const { scrollTop, scrollHeight, clientHeight } = logEl.value
+  // Consider "scrolled up" if more than 60px from bottom
+  userScrolledUp.value = scrollHeight - scrollTop - clientHeight > 60
+}
+
+async function scrollToBottom() {
+  if (userScrolledUp.value) return
+  await nextTick()
+  if (logEl.value) {
+    logEl.value.scrollTop = logEl.value.scrollHeight
+  }
+}
+
+// Auto-scroll when new events arrive
+watch(() => store.log, scrollToBottom, { deep: false })
+
+onMounted(scrollToBottom)
+</script>
+
+<template>
+  <section class="comms-log" aria-label="Comms Log">
+    <header class="comms-log__header">
+      <span class="comms-log__icon">📻</span>
+      <span class="comms-log__title">COMMS FEED</span>
+    </header>
+    <div
+      ref="logEl"
+      class="comms-log__feed"
+      role="log"
+      aria-live="polite"
+      aria-relevant="additions"
+      @scroll="onScroll"
+    >
+      <p v-if="store.log.length === 0" class="comms-log__empty">
+        Waiting for transmission…
+      </p>
+      <div
+        v-for="entry in store.log"
+        :key="`${entry.tick}-${entry.id}`"
+        class="comms-log__entry"
+      >
+        <span class="comms-log__meta">
+          {{ phaseBadge(entry.phase) }} {{ formatTime(entry.timestamp) }}
+        </span>
+        <span class="comms-log__text">{{ entry.text }}</span>
+      </div>
+    </div>
+    <div v-if="userScrolledUp" class="comms-log__scroll-hint" @click="userScrolledUp = false; scrollToBottom()">
+      ▼ New messages
+    </div>
+  </section>
+</template>
+
+<style scoped>
+.comms-log {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--color-surface);
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+}
+
+.comms-log__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: var(--color-surface-raised);
+  border-bottom: 1px solid var(--color-border);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  color: var(--color-accent);
+}
+
+.comms-log__feed {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 0;
+  scroll-behavior: smooth;
+}
+
+.comms-log__empty {
+  padding: 16px;
+  color: var(--color-muted);
+  font-style: italic;
+  font-size: 0.85rem;
+}
+
+.comms-log__entry {
+  display: flex;
+  gap: 8px;
+  padding: 5px 14px;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.comms-log__entry:last-child {
+  border-bottom: none;
+}
+
+.comms-log__meta {
+  flex-shrink: 0;
+  color: var(--color-muted);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  padding-top: 2px;
+  min-width: 60px;
+}
+
+.comms-log__text {
+  color: var(--color-text);
+  font-family: var(--font-mono);
+}
+
+.comms-log__scroll-hint {
+  padding: 6px 14px;
+  background: var(--color-accent);
+  color: var(--color-bg);
+  font-size: 0.75rem;
+  text-align: center;
+  cursor: pointer;
+  font-family: var(--font-mono);
+}
+</style>
