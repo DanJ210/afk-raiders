@@ -148,6 +148,7 @@ export const useGameStore = defineStore('game', () => {
   }
 
   function callExtract() {
+    if (state.value.raid.phase !== 'RAIDING') return
     const updated = spendSignal(computeSignal(state.value.signal, Date.now()), 'CALL_EXTRACT')
     if (!updated) return
     state.value = {
@@ -155,6 +156,7 @@ export const useGameStore = defineStore('game', () => {
       signal: updated,
       raid: { ...state.value.raid, forceExtract: true },
     }
+    persistSave(state.value, rng.getSeed(), lastTickAt.value)
   }
 
   function resetSave() {
