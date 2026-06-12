@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useGameStore } from '../stores/gameStore'
+import { rarityLabel, rarityBarClass } from '../utils/rarity'
 
 const store = useGameStore()
 const raid = computed(() => store.raid)
@@ -27,17 +28,6 @@ const greedClass = computed(() => {
   if (g < 70) return 'greed--mid'
   return 'greed--high'
 })
-
-function rarityLabel(rarity: number): string {
-  const labels: Record<number, string> = {
-    1: 'Common',
-    2: 'Uncommon',
-    3: 'Rare',
-    4: 'Epic',
-    5: 'Legendary',
-  }
-  return labels[rarity] ?? `Rarity ${rarity}`
-}
 </script>
 
 <template>
@@ -73,6 +63,7 @@ function rarityLabel(rarity: number): string {
     <ul v-else class="backpack-panel__items">
       <li v-for="item in backpackItems" :key="item.itemId" class="backpack-panel__item">
         <div class="backpack-panel__item-main">
+          <span :class="rarityBarClass(item.rarity)" :title="rarityLabel(item.rarity)" aria-hidden="true" />
           <span class="backpack-panel__item-name">{{ item.name }}</span>
           <span class="backpack-panel__item-meta">{{ rarityLabel(item.rarity) }}</span>
         </div>
@@ -184,6 +175,7 @@ function rarityLabel(rarity: number): string {
 }
 
 .backpack-panel__item-name {
+  flex: 1;
   font-size: 0.86rem;
   color: var(--color-text);
 }
