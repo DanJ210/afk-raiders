@@ -1,0 +1,90 @@
+name: Azure Preview Environments
+
+on:
+  pull_request:
+    branches:
+      - main
+    types: [opened, synchronize, reopened, closed]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: azure-preview-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  deploy-preview:
+    name: Deploy PR Preview
+    runs-on: ubuntu-latest
+    if: ${{ github.event.action != 'closed' }}
+    env:
+      AZURE_STATIC_WEB_APPS_API_TOKEN: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+    steps:
+      - name: Check Azure token
+        id: token
+        run: |
+          if [ -n "$AZURE_STATIC_WEB_APPS_API_TOKEN" ]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "AZURE_STATIC_WEB_APPS_API_TOKEN is not configured; skipping preview deploy."
+          fi
+
+      - name: Checkout
+        if: ${{ steps.token.outputs.configured == 'true' }}
+        uses: actions/checkout@v5
+
+      - name: Setup Node
+        if: ${{ steps.token.outputs.configured == 'true' }}
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        if: ${{ steps.token.outputs.configured == 'true' }}
+        run: npm ci
+
+      - name: Run tests
+        if: ${{ steps.token.outputs.configured == 'true' }}
+        run: npm test
+
+      - name: Build application
+        if: ${{ steps.token.outputs.configured == 'true' }}
+        run: npm run build
+
+      - name: Deploy preview to Azure Static Web Apps
+        if: ${{ steps.token.outputs.configured == 'true' }}
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ env.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          action: upload
+          app_location: /
+          output_location: dist
+
+  close-preview:
+    name: Close PR Preview
+    runs-on: ubuntu-latest
+    if: ${{ github.event.action == 'closed' }}
+    env:
+      AZURE_STATIC_WEB_APPS_API_TOKEN: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+    steps:
+      - name: Check Azure token
+        id: token
+        run: |
+          if [ -n "$AZURE_STATIC_WEB_APPS_API_TOKEN" ]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "AZURE_STATIC_WEB_APPS_API_TOKEN is not configured; skipping preview close."
+          fi
+
+      - name: Close preview environment
+        if: ${{ steps.token.outputs.configured == 'true' }}
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ env.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+          action: close
