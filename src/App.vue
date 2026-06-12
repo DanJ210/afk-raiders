@@ -3,6 +3,8 @@ import { useGameStore } from './stores/gameStore'
 import CommsLog from './components/CommsLog.vue'
 import RaiderCard from './components/RaiderCard.vue'
 import BackpackPanel from './components/BackpackPanel.vue'
+import ExtractionPreference from './components/ExtractionPreference.vue'
+import HomeStash from './components/HomeStash.vue'
 import HandlerActions from './components/HandlerActions.vue'
 import AwaySummary from './components/AwaySummary.vue'
 
@@ -21,6 +23,8 @@ const store = useGameStore()
       <aside class="app__sidebar">
         <RaiderCard />
         <BackpackPanel />
+        <ExtractionPreference />
+        <HomeStash />
         <HandlerActions />
       </aside>
 

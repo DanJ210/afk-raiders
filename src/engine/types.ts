@@ -105,6 +105,7 @@ export interface GameState {
   raid: RaidState
   signal: SignalState
   log: LogEvent[]
+  homeStash: BackpackItem[]
   // Set by CALL_EXTRACT so the tick driver knows to nudge the next greed check
   pendingEncourage: boolean
   pendingScold: boolean

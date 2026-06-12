@@ -15,6 +15,7 @@ const canCallExtract = computed(() => currentSignal.value >= SIGNAL_COSTS.CALL_E
   <section class="handler-actions" aria-label="Handler Actions">
     <header class="handler-actions__header">📶 SIGNAL</header>
     <div class="signal-meter" role="meter" aria-valuemin="0" :aria-valuenow="currentSignal" :aria-valuemax="SIGNAL_CAP">
+      <span
         v-for="i in SIGNAL_CAP"
         :key="i"
         class="signal-pip"
