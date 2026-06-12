@@ -29,8 +29,7 @@ const canCallExtract = computed(() => currentSignal.value >= SIGNAL_COSTS.CALL_E
     <div class="handler-actions__buttons">
       <button
         class="action-btn action-btn--encourage"
-        :disabled="!canEncourage"
-        :title="`Encourage (${SIGNAL_COSTS.ENCOURAGE} Signal) — nudge raider toward boldness`"
+        :disabled="!canEncourage || store.phase !== 'RAIDING'"
         @click="store.encourage()"
       >
         <span class="action-btn__icon">📣</span>
