@@ -58,8 +58,7 @@ export const useGameStore = defineStore('game', () => {
 
   // Seed is stable per save — derive from timestamp on first run
   const seedValue = ref<number>(saved?.seed ?? (now & 0xffffffff))
-  const rng = createRNG(seedValue.value)
-
+  let rng = createRNG(seedValue.value)
   // If we have a save, restore and catch up; otherwise start fresh
   let initialState = createInitialState(now)
   let awaySummaryData: AwaySummary | null = null
