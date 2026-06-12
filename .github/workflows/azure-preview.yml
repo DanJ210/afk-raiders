@@ -47,6 +47,10 @@ jobs:
         if: ${{ steps.token.outputs.configured == 'true' }}
         run: npm ci
 
+      - name: Run tests
+        if: ${{ steps.token.outputs.configured == 'true' }}
+        run: npm test
+
       - name: Build application
         if: ${{ steps.token.outputs.configured == 'true' }}
         run: npm run build
