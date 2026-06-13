@@ -61,8 +61,10 @@ export function sellItemFromHomeStash(
   }
 
   const entry = stash[entryIndex]
-  const unitsToSell = Math.max(0, Math.min(quantity ?? entry.quantity, entry.quantity))
-
+  const requested = quantity === undefined
+    ? entry.quantity
+    : (Number.isFinite(quantity) ? Math.floor(quantity) : 0)
+  const unitsToSell = Math.max(0, Math.min(requested, entry.quantity))
   if (unitsToSell === 0) {
     return { homeStash: stash, coinsGained: 0, soldItemCount: 0 }
   }
