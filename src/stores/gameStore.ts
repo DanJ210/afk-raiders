@@ -19,7 +19,7 @@ import { processTick } from '../engine/tick.js'
 import { catchUp, TICK_INTERVAL_MS } from '../engine/catchUp.js'
 import { computeSignal, spendSignal } from '../engine/signal.js'
 import { createInitialState, SAVE_VERSION } from '../engine/initialState.js'
-import { sellStashOverflow } from '../engine/homeStash.js'
+import { sellItemFromHomeStash, sellStashOverflow } from '../engine/homeStash.js'
 import type { GameState, LogEvent } from '../engine/types.js'
 import type { AwaySummary } from '../engine/catchUp.js'
 
@@ -188,6 +188,18 @@ export const useGameStore = defineStore('game', () => {
     awaySummary.value = null
   }
 
+  function sellHomeStashItem(itemId: string, quantity?: number) {
+    const sale = sellItemFromHomeStash(state.value.homeStash, itemId, quantity)
+    if (sale.soldItemCount === 0) return
+
+    state.value = {
+      ...state.value,
+      homeStash: sale.homeStash,
+      coins: state.value.coins + sale.coinsGained,
+    }
+    persistSave(state.value, rng.getSeed(), lastTickAt.value)
+  }
+
   const RAIDER_NAME_MAX_LENGTH = 25
 
   function renameRaider(newName: string) {
@@ -213,6 +225,7 @@ export const useGameStore = defineStore('game', () => {
     encourage,
     scold,
     callExtract,
+    sellHomeStashItem,
     resetSave,
     dismissAwaySummary,
     renameRaider,
