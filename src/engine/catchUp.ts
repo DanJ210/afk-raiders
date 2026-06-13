@@ -7,7 +7,7 @@
  * - Returns the new state plus a short summary of what happened
  */
 
-import type { GameState } from './types.js'
+import type { GameState, LogEvent } from './types.js'
 import type { RNG } from './rng.js'
 import { getTotalItemValue } from './homeStash.js'
 import { processTick } from './tick.js'
@@ -18,10 +18,13 @@ export const TICK_INTERVAL_MS = 15_000
 /** 8 hours' worth of ticks at TICK_INTERVAL_MS cadence */
 export const MAX_CATCHUP_TICKS = Math.floor((8 * 60 * 60 * 1000) / TICK_INTERVAL_MS)
 
+const SUMMARY_EVENT_LIMIT = 4
+
 export interface AwaySummary {
   ticksReplayed: number
   deaths: number
   extracts: number
+  /** Permanent stash value gained, including overflow loot converted into coins. */
   itemsGained: number
   lines: string[]
 }
@@ -57,58 +60,116 @@ export function catchUp(
     }
   }
 
-  const before = {
-    deathCount: state.raider.deathCount,
-    extractCount: state.raider.extractCount,
-    // Coins count too: overflow loot auto-sells, converting item value to coins
-    stashValue: getTotalItemValue(state.homeStash) + state.coins,
-  }
+  // Coins count too: overflow loot auto-sells, converting item value to coins.
+  const stashValueBefore = getTotalItemValue(state.homeStash) + state.coins
 
   let currentState = state
-  const tickNow = lastTickAt // advance time by tick interval each replay tick
+  const replayedEvents: LogEvent[] = []
 
   for (let i = 0; i < ticksToReplay; i++) {
-    const result = processTick(currentState, rng, tickNow + i * TICK_INTERVAL_MS, extractionPreference)
+    const tickNow = lastTickAt + (i + 1) * TICK_INTERVAL_MS
+    const result = processTick(currentState, rng, tickNow, extractionPreference)
     currentState = result.state
+    replayedEvents.push(...result.events)
   }
 
-  const deaths = currentState.raider.deathCount - before.deathCount
-  const extracts = currentState.raider.extractCount - before.extractCount
-  const itemsGained = Math.max(
+  const deaths = replayedEvents.filter(isDeathTransition).length
+  const extracts = replayedEvents.filter(isExtractionTransition).length
+  const lootValueGained = Math.max(
     0,
-    getTotalItemValue(currentState.homeStash) + currentState.coins - before.stashValue,
+    getTotalItemValue(currentState.homeStash) + currentState.coins - stashValueBefore,
   )
 
-  const lines = buildSummaryLines(ticksToReplay, deaths, extracts, itemsGained)
+  const lines = buildSummaryLines(ticksToReplay, deaths, extracts, lootValueGained, replayedEvents)
 
   return {
     state: currentState,
-    summary: { ticksReplayed: ticksToReplay, deaths, extracts, itemsGained, lines },
+    summary: { ticksReplayed: ticksToReplay, deaths, extracts, itemsGained: lootValueGained, lines },
   }
+}
+
+function isDeathTransition(event: LogEvent): boolean {
+  return event.id.startsWith('phase_') && event.id.endsWith('_to_DOWNED')
+}
+
+function isExtractionTransition(event: LogEvent): boolean {
+  return event.id === 'phase_EXTRACTING_to_HUB'
 }
 
 function buildSummaryLines(
   ticks: number,
   deaths: number,
   extracts: number,
-  itemsGained: number,
+  lootValueGained: number,
+  events: LogEvent[],
 ): string[] {
   const lines: string[] = []
-  lines.push(`${ticks} tick${ticks !== 1 ? 's' : ''} elapsed while you were away.`)
+  lines.push(`Replayed ${formatElapsed(ticks)} while you were away (${formatCount(ticks, 'tick')}).`)
 
-  if (deaths > 0 && extracts > 0) {
-    lines.push(`Raider died ${deaths} time${deaths !== 1 ? 's' : ''} and extracted ${extracts} time${extracts !== 1 ? 's' : ''}. Complicated.`)
-  } else if (deaths > 0) {
-    lines.push(`Raider died ${deaths} time${deaths !== 1 ? 's' : ''}. The Emotional Support Pocket survived.`)
-  } else if (extracts > 0) {
-    lines.push(`Raider extracted ${extracts} time${extracts !== 1 ? 's' : ''}. Without your help, somehow.`)
+  const stats = [
+    deaths === 0 ? 'no new deaths' : formatCount(deaths, 'death', 'deaths'),
+    extracts === 0 ? 'no successful extractions' : formatCount(extracts, 'successful extraction'),
+    lootValueGained === 0 ? 'no stash value gained' : `+${lootValueGained} stash value`,
+  ]
+  lines.push(`Stats: ${stats.join(', ')}.`)
+
+  const highlights = selectSummaryEvents(events)
+  if (highlights.length === 0) {
+    lines.push('No comms events were recorded during catch-up.')
   } else {
-    lines.push('Raider survived without incident. Suspicious.')
-  }
-
-  if (itemsGained > 0) {
-    lines.push(`Loot value gained: ${itemsGained}. Mostly water bottles, probably.`)
+    lines.push(...highlights.map(event => event.text))
   }
 
   return lines
+}
+
+function selectSummaryEvents(events: LogEvent[]): LogEvent[] {
+  const seenText = new Set<string>()
+  const ranked = events
+    .map((event, index) => ({ event, index, priority: summaryPriority(event) }))
+    .sort((a, b) => b.priority - a.priority || b.index - a.index)
+
+  const selected: Array<{ event: LogEvent; index: number }> = []
+  for (const item of ranked) {
+    if (selected.length >= SUMMARY_EVENT_LIMIT) break
+    if (seenText.has(item.event.text)) continue
+    seenText.add(item.event.text)
+    selected.push({ event: item.event, index: item.index })
+  }
+
+  return selected
+    .sort((a, b) => a.index - b.index)
+    .map(item => item.event)
+}
+
+function summaryPriority(event: LogEvent): number {
+  if (isDeathTransition(event) || isExtractionTransition(event)) return 5
+  if (event.id === 'stash_overflow_sale' || event.id.startsWith('robot_')) return 4
+  if (event.id.startsWith('healing_')) return 3
+  if (event.id.startsWith('phase_')) return 2
+  if (event.phase === 'RAIDING' || event.phase === 'EXTRACTING') return 1
+  return 0
+}
+
+function formatElapsed(ticks: number): string {
+  const seconds = Math.floor((ticks * TICK_INTERVAL_MS) / 1000)
+  if (seconds < 60) return formatCount(seconds, 'second')
+
+  const minutes = Math.floor(seconds / 60)
+  const remainingSeconds = seconds % 60
+  if (minutes < 60) {
+    return remainingSeconds === 0
+      ? formatCount(minutes, 'minute')
+      : `${formatCount(minutes, 'minute')} ${formatCount(remainingSeconds, 'second')}`
+  }
+
+  const hours = Math.floor(minutes / 60)
+  const remainingMinutes = minutes % 60
+  return remainingMinutes === 0
+    ? formatCount(hours, 'hour')
+    : `${formatCount(hours, 'hour')} ${formatCount(remainingMinutes, 'minute')}`
+}
+
+function formatCount(count: number, singular: string, plural = `${singular}s`): string {
+  return `${count} ${count === 1 ? singular : plural}`
 }
