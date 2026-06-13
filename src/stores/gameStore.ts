@@ -70,6 +70,7 @@ function persistSave(state: GameState, seed: number, lastTickAt: number) {
 export const useGameStore = defineStore('game', () => {
   const now = Date.now()
   const saved = loadSave()
+  const settings = useSettingsStore()
 
   // Seed is stable per save — derive from timestamp on first run
   const seedValue = ref<number>(saved?.seed ?? (now & 0xffffffff))
@@ -79,7 +80,7 @@ export const useGameStore = defineStore('game', () => {
   let awaySummaryData: AwaySummary | null = null
 
   if (saved) {
-    const catchUpResult = catchUp(saved.state, rng, saved.lastTickAt, now)
+    const catchUpResult = catchUp(saved.state, rng, saved.lastTickAt, now, settings.extractionPreference)
     initialState = catchUpResult.state
     if (catchUpResult.summary.ticksReplayed > 0) {
       awaySummaryData = catchUpResult.summary
@@ -102,7 +103,6 @@ export const useGameStore = defineStore('game', () => {
   // Tick loop
   // ------------------------------------------------------------------
   function tick() {
-    const settings = useSettingsStore()
     const tickNow = Date.now()
     const result = processTick(state.value, rng, tickNow, settings.extractionPreference)
     state.value = result.state
@@ -123,7 +123,6 @@ export const useGameStore = defineStore('game', () => {
       hiddenAt = Date.now()
     } else {
       if (hiddenAt !== null) {
-        const settings = useSettingsStore()
         const result = catchUp(state.value, rng, hiddenAt, Date.now(), settings.extractionPreference)
         state.value = result.state
         if (result.summary.ticksReplayed > 0) {

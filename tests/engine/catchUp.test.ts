@@ -64,6 +64,32 @@ describe('catchUp', () => {
     expect(result.summary.lines.length).toBeGreaterThan(0)
   })
 
+  it('uses actual replayed comms in the summary lines', () => {
+    const initial = createInitialState(0)
+    const state = {
+      ...initial,
+      raid: {
+        ...initial.raid,
+        phaseTicksRemaining: 1,
+      },
+    }
+    const result = catchUp(state, createRNG(3), 0, TICK_INTERVAL_MS)
+
+    expect(result.summary.lines.some(line => line.includes('Gear packed. Pod hatch sealed.'))).toBe(true)
+  })
+
+  it('timestamps replayed events at elapsed tick times', () => {
+    const lastTickAt = 1000
+    const result = catchUp(
+      createInitialState(lastTickAt),
+      createRNG(1),
+      lastTickAt,
+      lastTickAt + TICK_INTERVAL_MS,
+    )
+
+    expect(result.state.log[0].timestamp).toBe(lastTickAt + TICK_INTERVAL_MS)
+  })
+
   it('is deterministic: same inputs → same output', () => {
     const state = createInitialState(0)
     const elapsed = 8 * TICK_INTERVAL_MS
@@ -73,6 +99,42 @@ describe('catchUp', () => {
 
     expect(result1.state.tick).toBe(result2.state.tick)
     expect(result1.summary.ticksReplayed).toBe(result2.summary.ticksReplayed)
+  })
+
+  it('reports only new downings as away deaths', () => {
+    const initial = createInitialState(0)
+    const state = {
+      ...initial,
+      raider: { ...initial.raider, hp: 0 },
+      raid: {
+        ...initial.raid,
+        phase: 'DEPLOYING' as const,
+        phaseTicksRemaining: 2,
+      },
+    }
+
+    const result = catchUp(state, createRNG(42), 0, TICK_INTERVAL_MS)
+
+    expect(result.summary.deaths).toBe(1)
+    expect(result.summary.lines.some(line => line.includes('1 death'))).toBe(true)
+  })
+
+  it('does not count a pre-existing DOWNED respawn as a new away death', () => {
+    const initial = createInitialState(0)
+    const state = {
+      ...initial,
+      raid: {
+        ...initial.raid,
+        phase: 'DOWNED' as const,
+        phaseTicksRemaining: 1,
+      },
+    }
+
+    const result = catchUp(state, createRNG(9), 0, TICK_INTERVAL_MS)
+
+    expect(result.state.raider.deathCount).toBe(initial.raider.deathCount + 1)
+    expect(result.summary.deaths).toBe(0)
+    expect(result.summary.lines.some(line => line.includes('no new deaths'))).toBe(true)
   })
 
   it('reports loot value gained from items moved into the home stash', () => {
