@@ -37,7 +37,7 @@
   {
     "id": "robot_encounter_anxietick_disaster",
     "weight": 1,
-    "text": "An Anxietick {robot_flavor_anxietick}. Fled straight into a catastrophic workplace-safety incident.",
+    "text": "An Anxietick {robot_flavor_anxietick}. It bolted toward a catastrophic workplace-safety incident that had your name on it.",
     "requires": { "phase": "RAIDING" },
     "effects": { "mood": -3, "ratRating": 3, "robotEncounter": "anxietick", "robotDamageMultiplier": 4 }
   },
