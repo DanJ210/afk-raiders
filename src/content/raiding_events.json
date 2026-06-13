@@ -65,7 +65,7 @@
   {
     "id": "robot_encounter_roomba",
     "weight": 4,
-    "text": "Roomba Prime {robot_flavor_roomba_prime}. Took significant damage avoiding it. The floor was very clean.",
+    "text": "Roomba Prime {robot_flavor_roomba_prime}. It tried to take significant pieces of you. The floor was very clean.",
     "requires": { "phase": "RAIDING", "minGreed": 20 },
     "effects": { "mood": -3, "ratRating": 1, "robotEncounter": "roomba_prime" }
   },
