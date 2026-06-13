@@ -30,7 +30,7 @@
   {
     "id": "robot_encounter_anxietick_panic",
     "weight": 4,
-    "text": "An Anxietick {robot_flavor_anxietick}. Panicked, sprinted, and discovered three separate sharp edges personally.",
+    "text": "An Anxietick {robot_flavor_anxietick}. Panicked, sprinted, and introduced itself to every nearby object at speed.",
     "requires": { "phase": "RAIDING" },
     "effects": { "mood": -2, "ratRating": 2, "robotEncounter": "anxietick", "robotDamageMultiplier": 2 }
   },
