@@ -16,7 +16,7 @@
   {
     "id": "loot_bandage",
     "weight": 18,
-    "text": "Found medical supplies in a pouch labeled PROBABLY CLEAN.",
+    "text": "Spotted medical supplies in a pouch labeled PROBABLY CLEAN.",
     "requires": { "phase": "RAIDING" },
     "effects": { "healingItem": true, "mood": 1 }
   },
