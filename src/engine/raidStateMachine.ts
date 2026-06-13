@@ -56,6 +56,10 @@ export function tickPhase(
     if (forced === 'HUB') {
       forcedRaid = { ...forcedRaid, backpack: [], healingItems: [], backpackValue: 0, greedLevel: 0, forceExtract: false, zone: null, timeOfDay: null }
     }
+    // Healing items are lost on death — clear immediately so they aren't visible during DOWNED phase
+    if (forced === 'DOWNED') {
+      forcedRaid = { ...forcedRaid, healingItems: [] }
+    }
     return { raid: forcedRaid, transition }
   }
 
