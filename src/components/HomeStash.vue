@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useGameStore } from '../stores/gameStore'
 import { HOME_STASH_ITEM_LIMIT } from '../engine/homeStash'
+import type { BackpackItem } from '../engine/types'
 import { rarityLabel, rarityBarClass } from '../utils/rarity'
 
 const store = useGameStore()
@@ -27,6 +28,17 @@ const totalItemCount = computed(() => {
   return homeStash.value.reduce((sum, item) => sum + item.quantity, 0)
 })
 
+const selectedItemId = ref<string | null>(null)
+
+const selectedItem = computed<BackpackItem | null>(() => {
+  if (!selectedItemId.value) return null
+  return sortedStash.value.find(item => item.itemId === selectedItemId.value) ?? null
+})
+
+const selectedItemTotalValue = computed(() =>
+  selectedItem.value ? selectedItem.value.value * selectedItem.value.quantity : 0,
+)
+
 function formatNumber(value: number): string {
   return value.toLocaleString('en-US')
 }
@@ -43,6 +55,20 @@ function getCategoryEmoji(itemName: string): string {
   if (lower.includes('rare')) return '✨'
   return '📦'
 }
+
+function openItemDetails(itemId: string) {
+  selectedItemId.value = itemId
+}
+
+function closeItemDetails() {
+  selectedItemId.value = null
+}
+
+function sellSelectedItem() {
+  if (!selectedItem.value) return
+  store.sellHomeStashItem(selectedItem.value.itemId)
+  closeItemDetails()
+}
 </script>
 
 <template>
@@ -54,7 +80,7 @@ function getCategoryEmoji(itemName: string): string {
         <span class="home-stash__stat-label">Stash Value</span>
         <span class="home-stash__stat-value">{{ formatNumber(stashValue) }}</span>
       </div>
-      <div class="home-stash__stat" title="Coins earned by auto-selling overflow items">
+      <div class="home-stash__stat" title="Coins earned by selling stash items or auto-selling overflow">
         <span class="home-stash__stat-label">🪙 Coin Value</span>
         <span class="home-stash__stat-value">{{ formatNumber(coinValue) }}</span>
       </div>
@@ -69,16 +95,63 @@ function getCategoryEmoji(itemName: string): string {
     </div>
 
     <div v-else class="home-stash__items">
-      <div v-for="item in sortedStash" :key="item.itemId" class="stash-item">
+      <button
+        v-for="item in sortedStash"
+        :key="item.itemId"
+        type="button"
+        class="stash-item"
+        @click="openItemDetails(item.itemId)"
+      >
         <span class="stash-item__emoji">{{ getCategoryEmoji(item.name) }}</span>
         <span :class="rarityBarClass(item.rarity)" :title="rarityLabel(item.rarity)">
           <span class="stash-item__rarity-text">{{ rarityLabel(item.rarity) }}</span>
         </span>
         <div class="stash-item__content">
-          <span class="stash-item__name">{{ item.name }}</span>
-          <span class="stash-item__qty">×{{ item.quantity }}</span>
+          <div class="stash-item__topline">
+            <span class="stash-item__name">{{ item.name }}</span>
+            <span class="stash-item__qty">×{{ item.quantity }}</span>
+          </div>
+          <p v-if="item.flavor" class="stash-item__flavor">{{ item.flavor }}</p>
         </div>
-        <span class="stash-item__value">{{ item.value * item.quantity }}</span>
+        <span class="stash-item__value">{{ formatNumber(item.value * item.quantity) }}</span>
+      </button>
+    </div>
+
+    <div
+      v-if="selectedItem"
+      class="stash-dialog"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Sell stash item"
+      @click.self="closeItemDetails"
+    >
+      <div class="stash-dialog__card">
+        <div class="stash-dialog__header">
+          <div class="stash-dialog__title">
+            <span class="stash-dialog__emoji">{{ getCategoryEmoji(selectedItem.name) }}</span>
+            <div>
+              <h3 class="stash-dialog__name">{{ selectedItem.name }}</h3>
+              <p class="stash-dialog__meta">
+                {{ rarityLabel(selectedItem.rarity) }} · ×{{ selectedItem.quantity }} ·
+                {{ formatNumber(selectedItemTotalValue) }} value
+              </p>
+            </div>
+          </div>
+          <button type="button" class="stash-dialog__close" @click="closeItemDetails">✕</button>
+        </div>
+
+        <p class="stash-dialog__description">
+          {{ selectedItem.flavor || 'No description available.' }}
+        </p>
+
+        <div class="stash-dialog__actions">
+          <button type="button" class="stash-dialog__button stash-dialog__button--secondary" @click="closeItemDetails">
+            Cancel
+          </button>
+          <button type="button" class="stash-dialog__button stash-dialog__button--primary" @click="sellSelectedItem">
+            Sell for {{ formatNumber(selectedItemTotalValue) }}
+          </button>
+        </div>
       </div>
     </div>
   </section>
@@ -151,12 +224,23 @@ function getCategoryEmoji(itemName: string): string {
 
 .stash-item {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 8px;
   padding: 8px;
   background: var(--color-surface-raised);
   border-radius: 4px;
   font-size: 0.8rem;
+  border: 1px solid var(--color-border-subtle);
+  width: 100%;
+  text-align: left;
+  color: inherit;
+  cursor: pointer;
+}
+
+.stash-item:hover,
+.stash-item:focus-visible {
+  border-color: var(--color-accent);
+  outline: none;
 }
 
 .stash-item__emoji {
@@ -170,15 +254,19 @@ function getCategoryEmoji(itemName: string): string {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
+}
+
+.stash-item__topline {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
 }
 
 .stash-item__name {
   color: var(--color-text);
   font-family: var(--font-mono);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  flex: 1;
 }
 
 .stash-item__qty {
@@ -187,11 +275,21 @@ function getCategoryEmoji(itemName: string): string {
   font-family: var(--font-mono);
 }
 
+.stash-item__flavor {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 0.72rem;
+  font-family: var(--font-mono);
+  font-style: italic;
+  line-height: 1.4;
+}
+
 .stash-item__value {
   color: var(--color-accent);
   font-weight: 600;
   font-family: var(--font-mono);
   font-size: 0.9rem;
+  align-self: center;
 }
 
 .stash-item__rarity-text {
@@ -204,5 +302,106 @@ function getCategoryEmoji(itemName: string): string {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
+}
+
+.stash-dialog {
+  position: fixed;
+  inset: 0;
+  background: rgb(5 10 16 / 78%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 50;
+}
+
+.stash-dialog__card {
+  width: min(100%, 420px);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  padding: 16px;
+  box-shadow: 0 16px 40px rgb(0 0 0 / 35%);
+}
+
+.stash-dialog__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.stash-dialog__title {
+  display: flex;
+  gap: 10px;
+  min-width: 0;
+}
+
+.stash-dialog__emoji {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.stash-dialog__name {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--color-text);
+}
+
+.stash-dialog__meta {
+  margin: 4px 0 0;
+  color: var(--color-muted);
+  font-size: 0.75rem;
+  font-family: var(--font-mono);
+}
+
+.stash-dialog__close {
+  border: 0;
+  background: transparent;
+  color: var(--color-muted);
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.stash-dialog__description {
+  margin: 14px 0 0;
+  color: var(--color-text);
+  line-height: 1.5;
+}
+
+.stash-dialog__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.stash-dialog__button {
+  border-radius: 6px;
+  padding: 10px 14px;
+  font-family: var(--font-mono);
+  cursor: pointer;
+  border: 1px solid var(--color-border);
+}
+
+.stash-dialog__button--secondary {
+  background: var(--color-surface-raised);
+  color: var(--color-text);
+}
+
+.stash-dialog__button--primary {
+  background: var(--color-accent);
+  color: var(--color-background);
+  border-color: var(--color-accent);
+}
+
+@media (max-width: 600px) {
+  .stash-dialog__actions {
+    flex-direction: column-reverse;
+  }
+
+  .stash-dialog__button {
+    width: 100%;
+  }
 }
 </style>
