@@ -59,7 +59,7 @@
     "id": "extract_downed_at_lz",
     "weight": 4,
     "text": "Roomba Prime rolled onto the LZ at the worst possible moment. The floor is clean. The raider is not okay.",
-    "requires": { "phase": "EXTRACTING" },
+    "requires": { "phase": "EXTRACTING", "maxHp": 50 },
     "effects": { "hp": -50, "mood": -3, "forcePhase": "DOWNED" }
   },
   {

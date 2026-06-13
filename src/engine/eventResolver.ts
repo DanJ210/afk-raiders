@@ -64,6 +64,9 @@ const robotLoot = robots.flatMap(robot => robot.lootTable.map(item => toLootItem
 const loot = mergeLootTables([...baseLoot, ...robotLoot])
 
 export const HEALING_USE_HP_RATIO = 0.75
+const ROBOT_LETHAL_HP_RATIO = 0.5
+const ROBOT_NONLETHAL_MIN_HP_RATIO = 0.25
+const LETHAL_ROBOT_DEADLINESS: ReadonlySet<RobotEntry['deadliness']> = new Set(['nasty', 'deadly'])
 
 function clampMood(mood: number): number {
   return Math.max(-5, Math.min(5, mood))
@@ -289,6 +292,24 @@ function pickRobotLoot(robot: RobotEntry, rng: RNG): LootItem {
   return toLootItem(item, robot)
 }
 
+function canRobotEncounterBeLethal(state: GameState, robot: RobotEntry): boolean {
+  if (!LETHAL_ROBOT_DEADLINESS.has(robot.deadliness)) return false
+  if (state.raider.maxHp <= 0) return false
+  return state.raider.hp / state.raider.maxHp <= ROBOT_LETHAL_HP_RATIO
+}
+
+function applyRobotDamage(state: GameState, robot: RobotEntry, rawDamage: number): number {
+  if (state.raider.hp <= 0) return 0
+  if (state.raider.maxHp <= 0) return Math.max(0, state.raider.hp - rawDamage)
+  if (!canRobotEncounterBeLethal(state, robot)) {
+    const nonlethalFloor = state.raider.hp / state.raider.maxHp > ROBOT_LETHAL_HP_RATIO
+      ? Math.ceil(state.raider.maxHp * ROBOT_NONLETHAL_MIN_HP_RATIO)
+      : 1
+    return Math.max(nonlethalFloor, state.raider.hp - rawDamage)
+  }
+  return Math.max(0, state.raider.hp - rawDamage)
+}
+
 export interface RobotEncounterResult {
   state: GameState
   event: LogEvent
@@ -326,13 +347,15 @@ export function resolveRobotEncounter(
   }
 
   const damageMultiplier = Math.max(0, opts.damageMultiplier ?? 1)
-  const damage = Math.ceil(robot.menace * 5 * damageMultiplier)
+  const rawDamage = Math.ceil(robot.menace * 5 * damageMultiplier)
+  const hp = applyRobotDamage(state, robot, rawDamage)
+  const damage = state.raider.hp - hp
   return {
     state: {
       ...state,
       raider: {
         ...state.raider,
-        hp: Math.max(0, state.raider.hp - damage),
+        hp,
       },
     },
     event: {

@@ -133,12 +133,40 @@ describe('applyEffects — backpack item behavior', () => {
 
     expect(failed).not.toBeNull()
     expect(failed!.event.id).toBe('robot_tattletale_escaped')
-    expect(failed!.event.text).toContain('Took 105 damage')
-    expect(failed!.state.raider.hp).toBe(0)
+    expect(failed!.event.text).toContain('Took 75 damage')
+    expect(failed!.state.raider.hp).toBe(25)
 
     expect(defeated).not.toBeNull()
     expect(defeated!.event.id).toBe('robot_anxietick_defeated')
     expect(defeated!.state.raider.hp).toBe(100)
+  })
+
+  it('does not let a failed robot encounter down a full-health raider', () => {
+    const state = createInitialState(0)
+    const result = resolveRobotEncounter(state, 'roomba_prime', createRNG(1), 0, { damageMultiplier: 3 })
+
+    expect(result).not.toBeNull()
+    expect(result!.event.id).toBe('robot_roomba_prime_escaped')
+    expect(result!.event.text).toContain('Took 75 damage')
+    expect(result!.state.raider.hp).toBe(25)
+  })
+
+  it('only lets nasty and deadly robots down already-wounded raiders', () => {
+    const initial = createInitialState(0)
+    const wounded = {
+      ...initial,
+      raider: { ...initial.raider, hp: 40 },
+    }
+    const deadly = resolveRobotEncounter(wounded, 'roomba_prime', createRNG(1), 0, { damageMultiplier: 3 })
+    const moderate = resolveRobotEncounter(wounded, 'tattletale', createRNG(7), 0, { damageMultiplier: 7 })
+
+    expect(deadly).not.toBeNull()
+    expect(deadly!.event.id).toBe('robot_roomba_prime_escaped')
+    expect(deadly!.state.raider.hp).toBe(0)
+
+    expect(moderate).not.toBeNull()
+    expect(moderate!.event.id).toBe('robot_tattletale_escaped')
+    expect(moderate!.state.raider.hp).toBe(1)
   })
 
   it('finds a current-raid healing item without adding stash loot', () => {
