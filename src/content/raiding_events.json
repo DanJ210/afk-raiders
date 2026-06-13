@@ -114,7 +114,7 @@
   {
     "id": "streamer_encounter_burnt_peanut_slide",
     "weight": 6,
-    "text": "Ran into TheBurntPeanut sliding under a half-open shutter with three Tattletales behind him. He yelled, \"If I stop moving, the clip ends!\" Morale improved. Judgment did not.",
+    "text": "Ran into TheBurntPeanut sliding under a half-open shutter with three Tattletales behind him. He yelled, 'If I stop moving, the clip ends!' Morale improved. Judgment did not.",
     "requires": { "phase": "RAIDING" },
     "effects": { "mood": 2, "greedLevel": 4, "ratRating": 1 }
   },
