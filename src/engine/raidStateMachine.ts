@@ -54,7 +54,7 @@ export function tickPhase(
     }
     // Reset raid state when forced back to HUB (mirror of the natural-expiry path)
     if (forced === 'HUB') {
-      forcedRaid = { ...forcedRaid, backpack: [], backpackValue: 0, greedLevel: 0, forceExtract: false, zone: null, timeOfDay: null }
+      forcedRaid = { ...forcedRaid, backpack: [], healingItems: [], backpackValue: 0, greedLevel: 0, forceExtract: false, zone: null, timeOfDay: null }
     }
     return { raid: forcedRaid, transition }
   }
@@ -82,7 +82,7 @@ export function tickPhase(
 
   // Reset raid state when returning to HUB
   if (next === 'HUB') {
-    updatedRaid = { ...updatedRaid, backpack: [], backpackValue: 0, greedLevel: 0, forceExtract: false, zone: null, timeOfDay: null }
+    updatedRaid = { ...updatedRaid, backpack: [], healingItems: [], backpackValue: 0, greedLevel: 0, forceExtract: false, zone: null, timeOfDay: null }
   }
 
   // Pick a zone and time of day when deploying

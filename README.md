@@ -75,6 +75,7 @@ src/
 │   ├── extraction_events.json # LZ drama events
 │   ├── downed_events.json     # Death quip events
 │   ├── loot.json    # 12 loot items (several water bottle variants)
+│   ├── healing_items.json # Current-raid bandages
 │   ├── robots.json  # Anxieticks, Tattletales, Roomba Prime
 │   ├── zones.json   # Damp Battlegrounds
 │   └── flavor.json  # Slot-fill tables: gossip, death quips, hoarder justifications…

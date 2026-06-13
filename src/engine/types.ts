@@ -25,6 +25,12 @@ export interface EventTemplate extends ContentEntry {
     greedLevel?: number
     ratRating?: number
     forcePhase?: Phase
+    /** Robot id from robots.json. Triggers the placeholder robot combat roll. */
+    robotEncounter?: string
+    /** Multiplies menace-based robot damage on failed robot encounters. */
+    robotDamageMultiplier?: number
+    /** Finds a current-raid-only healing item from healing_items.json. */
+    healingItem?: boolean
   }
 }
 
@@ -40,6 +46,24 @@ export interface RobotEntry extends ContentEntry {
   name: string
   menace: number
   flavorLines: string[]
+  successText: string[]
+  lootTable: RobotLootItem[]
+}
+
+export interface RobotLootItem extends ContentEntry {
+  name: string
+  value: number
+  flavor?: string
+  /** Optional until robot loot gets full rarity tuning. Defaults from robot menace. */
+  rarity?: number
+}
+
+export interface HealingItem extends ContentEntry {
+  name: string
+  healAmount: number
+  flavor?: string
+  /** 1 = Common … 5 = Legendary (higher = rarer). */
+  rarity: number
 }
 
 export interface ZoneEntry extends ContentEntry {
@@ -69,10 +93,21 @@ export interface BackpackItem {
   quantity: number
 }
 
+export interface HealingItemStack {
+  itemId: string
+  name: string
+  healAmount: number
+  rarity: number
+  flavor?: string
+  quantity: number
+}
+
 export interface RaidState {
   zone: string | null
   timeOfDay: TimeOfDay | null
   backpack: BackpackItem[]
+  /** Current-raid-only healing consumables. Lost on death/extraction; never stored at home. */
+  healingItems: HealingItemStack[]
   backpackValue: number
   greedLevel: number   // 0–100; higher = more likely to push deeper and die
   phase: Phase

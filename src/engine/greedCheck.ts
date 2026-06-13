@@ -40,11 +40,28 @@ const ENCOURAGE_EXTRACT_PENALTY = 0.10  // courage boost makes extraction less l
 const SCOLD_EXTRACT_BONUS = 0.15        // scolding makes caution more likely
 const GREED_INCREMENT = 8               // how much greed rises each push-deeper
 
+function lowHpExtractionBonus(currentHp: number | undefined, maxHp: number | undefined, hasHealingItems: boolean): number {
+  if (currentHp === undefined || maxHp === undefined || maxHp <= 0 || hasHealingItems) return 0
+
+  const hpRatio = currentHp / maxHp
+  if (hpRatio <= 0.25) return 0.40
+  if (hpRatio <= 0.50) return 0.25
+  if (hpRatio <= 0.75) return 0.10
+  return 0
+}
+
 /** Run the Greed Check for one tick. Returns outcome + updated greed level. */
 export function runGreedCheck(
   raid: RaidState,
   rng: RNG,
-  opts: { encouraged: boolean; scolded: boolean; extractionPreference?: number },
+  opts: {
+    encouraged: boolean
+    scolded: boolean
+    extractionPreference?: number
+    currentHp?: number
+    maxHp?: number
+    hasHealingItems?: boolean
+  },
 ): GreedCheckResult {
   const { greedLevel, forceExtract } = raid
   const extractionPreference = opts.extractionPreference ?? 50
@@ -62,6 +79,7 @@ export function runGreedCheck(
   let extractChance = BASE_EXTRACT_CHANCE - greedLevel * GREED_EXTRACT_PENALTY + sliderModifier
   if (opts.encouraged) extractChance -= ENCOURAGE_EXTRACT_PENALTY
   if (opts.scolded) extractChance += SCOLD_EXTRACT_BONUS
+  extractChance += lowHpExtractionBonus(opts.currentHp, opts.maxHp, opts.hasHealingItems ?? false)
   extractChance = Math.min(0.80, Math.max(0.05, extractChance))
 
   // Calculate death probability (only kicks in above greed threshold)

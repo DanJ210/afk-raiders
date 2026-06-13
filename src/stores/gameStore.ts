@@ -48,6 +48,7 @@ function loadSave(): SaveData | null {
       coins: (data.state.coins ?? 0) + sale.coinsGained,
       raid: {
         ...data.state.raid,
+        healingItems: data.state.raid.healingItems ?? [],
         timeOfDay: data.state.raid.timeOfDay ?? null,
       },
     }

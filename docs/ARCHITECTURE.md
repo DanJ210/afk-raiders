@@ -32,6 +32,7 @@ afk-raiders/
 │   │   ├── extraction_events.json # LZ drama: failed/early extractions, ambushes
 │   │   ├── downed_events.json   # Death quips
 │   │   ├── loot.json            # 47 varieties of water bottle
+│   │   ├── healing_items.json   # Current-raid-only bandages
 │   │   ├── robots.json          # Anxieticks, Tattletales, Roomba Prime…
 │   │   ├── zones.json           # Damp Battlegrounds, etc.
 │   │   └── flavor.json          # Hub gossip, death quips, mood lines

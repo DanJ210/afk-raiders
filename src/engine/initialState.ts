@@ -24,6 +24,7 @@ export function createInitialState(now: number = Date.now()): GameState {
       zone: null,
       timeOfDay: null,
       backpack: [],
+      healingItems: [],
       backpackValue: 0,
       greedLevel: 0,
       phase: 'HUB',

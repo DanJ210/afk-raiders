@@ -6,11 +6,12 @@
  *   1. Named flavor tables in flavor.json  (e.g. {hub_gossip}, {death_quip})
  *   2. {mundane_item}  → random loot item name
  *   3. {water_item}    → random water-bottle loot item name
- *   4. {robot_flavor_<id>} → random flavor line from matching robot entry
- *   5. {count}         → random plausible water-bottle count (for flavor)
+ *   4. {healing_item} → random bandage name from healing_items.json
+ *   5. {robot_flavor_<id>} → random flavor line from matching robot entry
+ *   6. {count}         → random plausible water-bottle count (for flavor)
  */
 
-import type { EventTemplate, GameState, LogEvent, LootItem, Phase } from './types.js'
+import type { EventTemplate, GameState, HealingItem, HealingItemStack, LogEvent, LootItem, Phase, RobotEntry, RobotLootItem } from './types.js'
 import type { RNG } from './rng.js'
 import hubEventsData from '../content/hub_events.json'
 import deploymentEventsData from '../content/deployment_events.json'
@@ -18,6 +19,7 @@ import raidingEventsData from '../content/raiding_events.json'
 import extractionEventsData from '../content/extraction_events.json'
 import downedEventsData from '../content/downed_events.json'
 import lootData from '../content/loot.json'
+import healingItemsData from '../content/healing_items.json'
 import robotsData from '../content/robots.json'
 import flavorData from '../content/flavor.json'
 
@@ -29,9 +31,39 @@ const events = [
   ...extractionEventsData,
   ...downedEventsData,
 ] as EventTemplate[]
-const loot = lootData as LootItem[]
-const robots = robotsData as Array<{ id: string; weight: number; name: string; menace: number; flavorLines: string[] }>
+const baseLoot = lootData as LootItem[]
+const healingItems = healingItemsData as HealingItem[]
+const robots = robotsData as RobotEntry[]
 const flavor = flavorData as Record<string, Array<{ id: string; weight: number; text: string }>>
+
+function rarityFromMenace(menace: number): number {
+  return Math.max(1, Math.min(5, Math.ceil(menace / 2)))
+}
+
+function toLootItem(item: RobotLootItem, robot: RobotEntry): LootItem {
+  return {
+    ...item,
+    rarity: item.rarity ?? rarityFromMenace(robot.menace),
+  }
+}
+
+function mergeLootTables(items: LootItem[]): LootItem[] {
+  const merged = new Map<string, LootItem>()
+  for (const item of items) {
+    const existing = merged.get(item.id)
+    if (existing) {
+      merged.set(item.id, { ...existing, weight: existing.weight + item.weight })
+    } else {
+      merged.set(item.id, { ...item })
+    }
+  }
+  return [...merged.values()]
+}
+
+const robotLoot = robots.flatMap(robot => robot.lootTable.map(item => toLootItem(item, robot)))
+const loot = mergeLootTables([...baseLoot, ...robotLoot])
+
+export const HEALING_USE_HP_RATIO = 0.75
 
 /** Filter events valid for the current game context */
 function eligibleEvents(state: GameState): EventTemplate[] {
@@ -69,7 +101,7 @@ function fillSlots(text: string, rng: RNG): string {
       if (robot) return rng.pick(robot.flavorLines)
     }
 
-    // Mundane item slot — any loot item
+    // Mundane item slot — any loot item, including robot salvage
     if (slot === 'mundane_item') {
       const item = rng.weightedPick(loot)
       return item.name
@@ -82,6 +114,12 @@ function fillSlots(text: string, rng: RNG): string {
         return rng.weightedPick(waterItems).name
       }
       return rng.weightedPick(loot).name
+    }
+
+    // Healing item slot — current-raid-only bandages
+    if (slot === 'healing_item') {
+      const item = rng.weightedPick(healingItems)
+      return item.name
     }
 
     // Plausible water-bottle count for flavor
@@ -134,6 +172,165 @@ function addBackpackItem(
     ...raid,
     backpack,
     backpackValue: raid.backpackValue + item.value,
+  }
+}
+
+function addHealingItem(
+  raid: GameState['raid'],
+  item: HealingItem,
+): GameState['raid'] {
+  const existing = raid.healingItems.find(entry => entry.itemId === item.id)
+  const healingItems = existing
+    ? raid.healingItems.map(entry => (
+        entry.itemId === item.id
+          ? { ...entry, quantity: entry.quantity + 1 }
+          : entry
+      ))
+    : [...raid.healingItems, {
+        itemId: item.id,
+        name: item.name,
+        healAmount: item.healAmount,
+        rarity: item.rarity,
+        flavor: item.flavor,
+        quantity: 1,
+      }]
+
+  return { ...raid, healingItems }
+}
+
+function removeHealingItem(
+  raid: GameState['raid'],
+  item: HealingItemStack,
+): GameState['raid'] {
+  const healingItems = item.quantity <= 1
+    ? raid.healingItems.filter(entry => entry.itemId !== item.itemId)
+    : raid.healingItems.map(entry => (
+        entry.itemId === item.itemId
+          ? { ...entry, quantity: entry.quantity - 1 }
+          : entry
+      ))
+
+  return { ...raid, healingItems }
+}
+
+function pickBestHealingItem(items: HealingItemStack[], missingHp: number): HealingItemStack {
+  const sorted = [...items].sort((a, b) => a.healAmount - b.healAmount)
+  return sorted.find(item => item.healAmount >= missingHp) ?? sorted[sorted.length - 1]
+}
+
+export interface HealingItemResult {
+  state: GameState
+  event: LogEvent
+}
+
+/** Finds one bandage for this raid only. It is not backpack loot and never extracts home. */
+export function resolveHealingItemFind(
+  state: GameState,
+  rng: RNG,
+  now: number,
+): HealingItemResult {
+  const item = rng.weightedPick(healingItems)
+  return {
+    state: { ...state, raid: addHealingItem(state.raid, item) },
+    event: {
+      id: `healing_${item.id}_found`,
+      tick: state.tick,
+      timestamp: now,
+      text: `Found ${item.name}. Tucked it into the current-raid med pocket.`,
+      phase: state.raid.phase,
+    },
+  }
+}
+
+/** Uses one current-raid bandage if the raider is hurt and alive. */
+export function consumeHealingItemIfUseful(
+  state: GameState,
+  now: number,
+): HealingItemResult | null {
+  if (state.raid.phase === 'HUB' || state.raid.phase === 'DOWNED') return null
+  if (state.raider.hp <= 0 || state.raider.hp >= state.raider.maxHp) return null
+  if (state.raid.healingItems.length === 0) return null
+  if (state.raider.hp / state.raider.maxHp > HEALING_USE_HP_RATIO) return null
+
+  const missingHp = state.raider.maxHp - state.raider.hp
+  const item = pickBestHealingItem(state.raid.healingItems, missingHp)
+  const healed = Math.min(50, item.healAmount, missingHp)
+  const hp = Math.min(state.raider.maxHp, state.raider.hp + healed)
+
+  return {
+    state: {
+      ...state,
+      raider: { ...state.raider, hp },
+      raid: removeHealingItem(state.raid, item),
+    },
+    event: {
+      id: `healing_${item.itemId}_used`,
+      tick: state.tick,
+      timestamp: now,
+      text: `Used ${item.name}. Restored ${healed} HP. Medical dignity restored to acceptable levels.`,
+      phase: state.raid.phase,
+    },
+  }
+}
+
+function pickRobotLoot(robot: RobotEntry, rng: RNG): LootItem {
+  const item = rng.weightedPick(robot.lootTable)
+  return toLootItem(item, robot)
+}
+
+export interface RobotEncounterResult {
+  state: GameState
+  event: LogEvent
+}
+
+/**
+ * Placeholder robot combat: roll 1-10, beat menace to win. Future weapons can
+ * replace the roll/modifier here without changing event content.
+ */
+export function resolveRobotEncounter(
+  state: GameState,
+  robotId: string,
+  rng: RNG,
+  now: number,
+  opts: { damageMultiplier?: number } = {},
+): RobotEncounterResult | null {
+  const robot = robots.find(entry => entry.id === robotId)
+  if (!robot) return null
+
+  const roll = rng.int(1, 10)
+  if (roll > robot.menace) {
+    const item = pickRobotLoot(robot, rng)
+    const raid = addBackpackItem(state.raid, item)
+    const successText = rng.pick(robot.successText)
+    return {
+      state: { ...state, raid },
+      event: {
+        id: `robot_${robot.id}_defeated`,
+        tick: state.tick,
+        timestamp: now,
+        text: `${successText} Salvaged ${item.name}.`,
+        phase: state.raid.phase,
+      },
+    }
+  }
+
+  const damageMultiplier = Math.max(0, opts.damageMultiplier ?? 1)
+  const damage = Math.ceil(robot.menace * 5 * damageMultiplier)
+  return {
+    state: {
+      ...state,
+      raider: {
+        ...state.raider,
+        hp: Math.max(0, state.raider.hp - damage),
+      },
+    },
+    event: {
+      id: `robot_${robot.id}_escaped`,
+      tick: state.tick,
+      timestamp: now,
+      text: `${robot.name} won that exchange. Took ${damage} damage and ran away with the tactical urgency of someone who just learned a lesson.`,
+      phase: state.raid.phase,
+    },
   }
 }
 
@@ -230,4 +427,4 @@ export function resolveFlavorKey(key: string, rng: RNG): string {
 }
 
 /** Exported for content validation tests */
-export { events, flavor, loot, robots }
+export { events, flavor, healingItems, loot, robots }

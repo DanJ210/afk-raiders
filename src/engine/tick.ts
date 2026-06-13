@@ -18,7 +18,7 @@ import type { BackpackItem, GameState, LogEvent, TickResult } from './types.js'
 import type { RNG } from './rng.js'
 import { tickPhase } from './raidStateMachine.js'
 import { runGreedCheck } from './greedCheck.js'
-import { resolveEvent, resolveFlavorKey, applyEffects, events as allEvents } from './eventResolver.js'
+import { resolveEvent, resolveFlavorKey, applyEffects, consumeHealingItemIfUseful, resolveHealingItemFind, resolveRobotEncounter, events as allEvents } from './eventResolver.js'
 import { transferBackpackToHomeStash, HOME_STASH_ITEM_LIMIT } from './homeStash.js'
 
 /** Maximum log entries to keep in memory (avoids unbounded growth) */
@@ -114,6 +114,9 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
         encouraged: currentState.pendingEncourage,
         scolded: currentState.pendingScold,
         extractionPreference,
+        currentHp: currentState.raider.hp,
+        maxHp: currentState.raider.maxHp,
+        hasHealingItems: currentState.raid.healingItems.length > 0,
       },
     )
 
@@ -164,6 +167,23 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
     if (template) {
       currentState = applyEffects(currentState, template, rng)
 
+      if (template.effects?.healingItem) {
+        const healingFind = resolveHealingItemFind(currentState, rng, now)
+        currentState = healingFind.state
+        emitted.push(healingFind.event)
+      }
+
+      const robotId = template.effects?.robotEncounter
+      if (robotId) {
+        const robotResult = resolveRobotEncounter(currentState, robotId, rng, now, {
+          damageMultiplier: template.effects?.robotDamageMultiplier,
+        })
+        if (robotResult) {
+          currentState = robotResult.state
+          emitted.push(robotResult.event)
+        }
+      }
+
       // Some events (mostly extraction events) force a phase change:
       //  - EXTRACTING → HUB     = early successful extraction (loot goes home)
       //  - EXTRACTING → RAIDING = failed extraction (backpack kept, back to the zone)
@@ -195,6 +215,12 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
         }
       }
     }
+  }
+
+  const healingUse = consumeHealingItemIfUseful(currentState, now)
+  if (healingUse) {
+    currentState = healingUse.state
+    emitted.push(healingUse.event)
   }
 
   // ------------------------------------------------------------------

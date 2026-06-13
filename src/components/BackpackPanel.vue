@@ -14,6 +14,13 @@ const backpackItems = computed(() =>
   }),
 )
 
+const healingItems = computed(() =>
+  [...raid.value.healingItems].sort((a, b) => {
+    if (b.healAmount !== a.healAmount) return b.healAmount - a.healAmount
+    return a.name.localeCompare(b.name)
+  }),
+)
+
 function greedLabel(level: number): string {
   if (level < 20) return '😌 Chill'
   if (level < 40) return '🤑 Interested'
@@ -51,6 +58,18 @@ const greedClass = computed(() => {
       <span class="backpack-panel__greed-label" :class="greedClass">
         {{ greedLabel(raid.greedLevel) }}
       </span>
+    </div>
+
+    <div v-if="healingItems.length > 0" class="backpack-panel__meds">
+      <span class="backpack-panel__label">Field Meds</span>
+      <ul class="backpack-panel__med-list">
+        <li v-for="item in healingItems" :key="item.itemId" class="backpack-panel__med-item">
+          <span :class="rarityBarClass(item.rarity)" :title="rarityLabel(item.rarity)" aria-hidden="true" />
+          <span>{{ item.name }}</span>
+          <span>+{{ item.healAmount }} HP</span>
+          <span v-if="item.quantity > 1">x{{ item.quantity }}</span>
+        </li>
+      </ul>
     </div>
 
     <p v-if="raid.backpack.length === 0 && raid.phase === 'HUB'" class="backpack-panel__empty">
@@ -118,6 +137,35 @@ const greedClass = computed(() => {
   align-items: center;
   gap: 8px;
   margin-bottom: 10px;
+}
+
+.backpack-panel__meds {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.backpack-panel__med-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 0;
+  margin: 0;
+}
+
+.backpack-panel__med-item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  background: var(--color-surface-raised);
+  border-radius: 4px;
+  color: var(--color-text);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
 }
 
 .greed-bar {
