@@ -124,6 +124,7 @@ function sellSelectedItem() {
       aria-modal="true"
       aria-label="Sell stash item"
       @click.self="closeItemDetails"
+      @keydown.esc="closeItemDetails"
     >
       <div class="stash-dialog__card">
         <div class="stash-dialog__header">
