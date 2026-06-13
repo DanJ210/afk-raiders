@@ -6,6 +6,23 @@ export function getTotalItemCount(items: BackpackItem[]): number {
   return items.reduce((sum, item) => sum + item.quantity, 0)
 }
 
+/**
+ * Clamp a stash to the item limit (quantities count). Used as a save-load
+ * migration for stashes that grew while the limit was not enforced.
+ * Keeps earlier entries; trims quantity of the entry that crosses the cap.
+ */
+export function clampStashToLimit(items: BackpackItem[]): BackpackItem[] {
+  const clamped: BackpackItem[] = []
+  let remaining = HOME_STASH_ITEM_LIMIT
+  for (const item of items) {
+    if (remaining <= 0) break
+    const quantity = Math.min(item.quantity, remaining)
+    clamped.push({ ...item, quantity })
+    remaining -= quantity
+  }
+  return clamped
+}
+
 export function getTotalItemValue(items: BackpackItem[]): number {
   return items.reduce((sum, item) => sum + item.value * item.quantity, 0)
 }

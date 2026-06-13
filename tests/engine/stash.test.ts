@@ -13,6 +13,7 @@ import { processTick } from '../../src/engine/tick'
 import { createInitialState } from '../../src/engine/initialState'
 import { tickPhase } from '../../src/engine/raidStateMachine'
 import { events } from '../../src/engine/eventResolver'
+import { HOME_STASH_ITEM_LIMIT, clampStashToLimit } from '../../src/engine/homeStash'
 import type { BackpackItem, GameState, Phase } from '../../src/engine/types'
 
 const FIXED_SEED = 42
@@ -81,6 +82,33 @@ describe('home stash', () => {
     expect(next.raid.backpack).toHaveLength(0)
     expect(next.homeStash).toEqual(stash)
     expect(next.raider.deathCount).toBe(1)
+  })
+
+  it('enforces the stash item limit on extraction (quantities count toward it)', () => {
+    const nearFullStash = [makeItem({ quantity: HOME_STASH_ITEM_LIMIT - 2 })]
+    const state = makeState(
+      'EXTRACTING',
+      [makeItem({ quantity: 5 })], // only 2 fit
+      nearFullStash,
+    )
+    const { state: next, events: emitted } = processTick(state, createRNG(FIXED_SEED), 0)
+
+    expect(next.raid.phase).toBe('HUB')
+    const total = next.homeStash.reduce((s, i) => s + i.quantity, 0)
+    expect(total).toBe(HOME_STASH_ITEM_LIMIT)
+    // The overflow loss is narrated in the comms log
+    expect(emitted.some(e => e.id === 'stash_full_discard')).toBe(true)
+  })
+
+  it('clampStashToLimit trims over-limit saves', () => {
+    const oversized = [
+      makeItem({ quantity: HOME_STASH_ITEM_LIMIT }),
+      makeItem({ itemId: 'extra', name: 'Extra', quantity: 50 }),
+    ]
+    const clamped = clampStashToLimit(oversized)
+    const total = clamped.reduce((s, i) => s + i.quantity, 0)
+    expect(total).toBe(HOME_STASH_ITEM_LIMIT)
+    expect(clamped).toHaveLength(1)
   })
 })
 

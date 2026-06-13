@@ -19,6 +19,7 @@ import { processTick } from '../engine/tick.js'
 import { catchUp, TICK_INTERVAL_MS } from '../engine/catchUp.js'
 import { computeSignal, spendSignal } from '../engine/signal.js'
 import { createInitialState, SAVE_VERSION } from '../engine/initialState.js'
+import { clampStashToLimit } from '../engine/homeStash.js'
 import type { GameState, LogEvent } from '../engine/types.js'
 import type { AwaySummary } from '../engine/catchUp.js'
 import { useSettingsStore } from './settingsStore.js'
@@ -38,6 +39,8 @@ function loadSave(): SaveData | null {
     if (!raw) return null
     const data = JSON.parse(raw) as SaveData
     if (data.version !== SAVE_VERSION) return null
+    // Migration: stashes saved while the limit was not enforced may exceed it
+    data.state = { ...data.state, homeStash: clampStashToLimit(data.state.homeStash) }
     return data
   } catch {
     return null

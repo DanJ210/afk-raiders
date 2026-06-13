@@ -19,41 +19,44 @@ import type { RNG } from './rng.js'
 import { tickPhase } from './raidStateMachine.js'
 import { runGreedCheck } from './greedCheck.js'
 import { resolveEvent, resolveFlavorKey, applyEffects, events as allEvents } from './eventResolver.js'
+import { transferBackpackToHomeStash, HOME_STASH_ITEM_LIMIT } from './homeStash.js'
 
 /** Maximum log entries to keep in memory (avoids unbounded growth) */
 const MAX_LOG_SIZE = 200
 
 /**
- * Merge a raid backpack into the home stash. Duplicate itemIds stack their
- * quantities (shown in the UI as ×N with multiplied value). The stash never
- * empties except via selling (future mechanic).
+ * Apply successful-extraction bookkeeping: transfer loot home (respecting the
+ * stash item limit — quantities count toward it), heal up, count the win.
+ * Returns the new state plus how many items had to be abandoned because the
+ * stash was full, so the tick can narrate the tragedy.
  */
-function mergeIntoStash(stash: BackpackItem[], backpack: BackpackItem[]): BackpackItem[] {
-  const merged = [...stash]
-  for (const item of backpack) {
-    const existingIdx = merged.findIndex(i => i.itemId === item.itemId)
-    if (existingIdx >= 0) {
-      merged[existingIdx] = {
-        ...merged[existingIdx],
-        quantity: merged[existingIdx].quantity + item.quantity,
-      }
-    } else {
-      merged.push({ ...item })
-    }
+function applySuccessfulExtraction(
+  state: GameState,
+  extractedBackpack: BackpackItem[],
+): { state: GameState; discardedItemCount: number } {
+  const transfer = transferBackpackToHomeStash(state.homeStash, extractedBackpack)
+  return {
+    state: {
+      ...state,
+      raider: {
+        ...state.raider,
+        hp: state.raider.maxHp,
+        extractCount: state.raider.extractCount + 1,
+      },
+      homeStash: transfer.homeStash,
+    },
+    discardedItemCount: transfer.discardedItemCount,
   }
-  return merged
 }
 
-/** Apply successful-extraction bookkeeping: transfer loot home, heal up, count the win. */
-function applySuccessfulExtraction(state: GameState, extractedBackpack: BackpackItem[]): GameState {
+/** Comms line for loot lost to a full stash — the log IS the product. */
+function stashFullEvent(discarded: number, tick: number, now: number): LogEvent {
   return {
-    ...state,
-    raider: {
-      ...state.raider,
-      hp: state.raider.maxHp,
-      extractCount: state.raider.extractCount + 1,
-    },
-    homeStash: mergeIntoStash(state.homeStash, extractedBackpack),
+    id: 'stash_full_discard',
+    tick,
+    timestamp: now,
+    text: `Home stash is full (${HOME_STASH_ITEM_LIMIT}/${HOME_STASH_ITEM_LIMIT}). ${discarded} item${discarded === 1 ? '' : 's'} left on the doorstep. The doorstep seems pleased.`,
+    phase: 'HUB',
   }
 }
 
@@ -89,7 +92,11 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
           },
         }
       } else if (transition.from === 'EXTRACTING') {
-        currentState = applySuccessfulExtraction(currentState, state.raid.backpack)
+        const extraction = applySuccessfulExtraction(currentState, state.raid.backpack)
+        currentState = extraction.state
+        if (extraction.discardedItemCount > 0) {
+          emitted.push(stashFullEvent(extraction.discardedItemCount, state.tick, now))
+        }
       }
     }
   }
@@ -178,7 +185,11 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
           })
         }
         if (fromPhase === 'EXTRACTING' && forcedPhase === 'HUB') {
-          currentState = applySuccessfulExtraction(currentState, backpackBeforeForce)
+          const extraction = applySuccessfulExtraction(currentState, backpackBeforeForce)
+          currentState = extraction.state
+          if (extraction.discardedItemCount > 0) {
+            emitted.push(stashFullEvent(extraction.discardedItemCount, state.tick, now))
+          }
         }
       }
     }
