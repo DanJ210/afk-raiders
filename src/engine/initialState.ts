@@ -22,6 +22,7 @@ export function createInitialState(now: number = Date.now()): GameState {
     },
     raid: {
       zone: null,
+      timeOfDay: null,
       backpack: [],
       backpackValue: 0,
       greedLevel: 0,
@@ -32,6 +33,7 @@ export function createInitialState(now: number = Date.now()): GameState {
     signal: initialSignalState(now),
     log: [],
     homeStash: [],
+    coins: 0,
     pendingEncourage: false,
     pendingScold: false,
   }

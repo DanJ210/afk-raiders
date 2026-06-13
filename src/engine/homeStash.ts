@@ -10,50 +10,83 @@ export function getTotalItemValue(items: BackpackItem[]): number {
   return items.reduce((sum, item) => sum + item.value * item.quantity, 0)
 }
 
+export interface StashSellResult {
+  homeStash: BackpackItem[]
+  coinsGained: number
+  soldItemCount: number
+}
+
+/**
+ * Sell lowest-value items (per unit) until the stash fits the item limit.
+ * Nothing is ever deleted — overflow converts into coins at full item value.
+ * Also used as a save-load migration for over-limit stashes.
+ */
+export function sellStashOverflow(items: BackpackItem[]): StashSellResult {
+  const stash = items.map(item => ({ ...item }))
+  let overflow = getTotalItemCount(stash) - HOME_STASH_ITEM_LIMIT
+  let coinsGained = 0
+  let soldItemCount = 0
+
+  while (overflow > 0 && stash.length > 0) {
+    let lowestIdx = 0
+    for (let i = 1; i < stash.length; i++) {
+      if (stash[i].value < stash[lowestIdx].value) lowestIdx = i
+    }
+    const entry = stash[lowestIdx]
+    const unitsToSell = Math.min(entry.quantity, overflow)
+    coinsGained += unitsToSell * entry.value
+    soldItemCount += unitsToSell
+    overflow -= unitsToSell
+
+    if (unitsToSell === entry.quantity) {
+      stash.splice(lowestIdx, 1)
+    } else {
+      stash[lowestIdx] = { ...entry, quantity: entry.quantity - unitsToSell }
+    }
+  }
+
+  return { homeStash: stash, coinsGained, soldItemCount }
+}
+
 export interface HomeStashTransferResult {
   homeStash: BackpackItem[]
   transferredItemCount: number
-  discardedItemCount: number
+  coinsGained: number
+  soldItemCount: number
 }
 
+/**
+ * Merge a raid backpack into the home stash (duplicate itemIds stack their
+ * quantities). If the merged stash exceeds HOME_STASH_ITEM_LIMIT, the
+ * lowest-value items are auto-sold for coins to make room — incoming cheap
+ * loot may be sold immediately, but value is never lost.
+ */
 export function transferBackpackToHomeStash(
   homeStash: BackpackItem[],
   backpack: BackpackItem[],
 ): HomeStashTransferResult {
-  const updatedHomeStash = homeStash.map(item => ({ ...item }))
-  let remainingCapacity = Math.max(0, HOME_STASH_ITEM_LIMIT - getTotalItemCount(updatedHomeStash))
+  const merged = homeStash.map(item => ({ ...item }))
   let transferredItemCount = 0
-  let discardedItemCount = 0
 
   for (const item of backpack) {
-    if (remainingCapacity <= 0) {
-      discardedItemCount += item.quantity
-      continue
-    }
-
-    const quantityToTransfer = Math.min(item.quantity, remainingCapacity)
-    const existingIdx = updatedHomeStash.findIndex(entry => entry.itemId === item.itemId)
-
+    const existingIdx = merged.findIndex(entry => entry.itemId === item.itemId)
     if (existingIdx >= 0) {
-      updatedHomeStash[existingIdx] = {
-        ...updatedHomeStash[existingIdx],
-        quantity: updatedHomeStash[existingIdx].quantity + quantityToTransfer,
+      merged[existingIdx] = {
+        ...merged[existingIdx],
+        quantity: merged[existingIdx].quantity + item.quantity,
       }
     } else {
-      updatedHomeStash.push({
-        ...item,
-        quantity: quantityToTransfer,
-      })
+      merged.push({ ...item })
     }
-
-    transferredItemCount += quantityToTransfer
-    remainingCapacity -= quantityToTransfer
-    discardedItemCount += item.quantity - quantityToTransfer
+    transferredItemCount += item.quantity
   }
 
+  const sale = sellStashOverflow(merged)
+
   return {
-    homeStash: updatedHomeStash,
+    homeStash: sale.homeStash,
     transferredItemCount,
-    discardedItemCount,
+    coinsGained: sale.coinsGained,
+    soldItemCount: sale.soldItemCount,
   }
 }

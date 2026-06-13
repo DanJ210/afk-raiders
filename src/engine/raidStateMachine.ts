@@ -7,7 +7,17 @@
  * when a transition occurs, or null if no transition happened this tick.
  */
 
-import type { Phase, RaidState } from './types.js'
+import type { Phase, RaidState, TimeOfDay, ZoneEntry } from './types.js'
+import type { RNG } from './rng.js'
+import zonesData from '../content/zones.json'
+
+const zones = zonesData as ZoneEntry[]
+
+const TIME_OF_DAY_TABLE: Array<{ id: TimeOfDay; weight: number }> = [
+  { id: 'Day',        weight: 80 },
+  { id: 'Night',      weight: 30 },
+  { id: 'Stella Red', weight: 10 },
+]
 
 // Ticks each phase lasts before auto-transitioning (1 tick = 15s)
 export const PHASE_DURATIONS: Record<Phase, number> = {
@@ -28,6 +38,7 @@ export interface PhaseTransition {
 export function tickPhase(
   raid: RaidState,
   forced?: Phase,
+  rng?: RNG,
 ): { raid: RaidState; transition: PhaseTransition | null } {
   // Forced phase override (e.g. CALL_EXTRACT or death event)
   if (forced !== undefined && forced !== raid.phase) {
@@ -43,7 +54,7 @@ export function tickPhase(
     }
     // Reset raid state when forced back to HUB (mirror of the natural-expiry path)
     if (forced === 'HUB') {
-      forcedRaid = { ...forcedRaid, backpack: [], backpackValue: 0, greedLevel: 0, forceExtract: false }
+      forcedRaid = { ...forcedRaid, backpack: [], backpackValue: 0, greedLevel: 0, forceExtract: false, zone: null, timeOfDay: null }
     }
     return { raid: forcedRaid, transition }
   }
@@ -71,12 +82,14 @@ export function tickPhase(
 
   // Reset raid state when returning to HUB
   if (next === 'HUB') {
-    updatedRaid = { ...updatedRaid, backpack: [], backpackValue: 0, greedLevel: 0, forceExtract: false }
+    updatedRaid = { ...updatedRaid, backpack: [], backpackValue: 0, greedLevel: 0, forceExtract: false, zone: null, timeOfDay: null }
   }
 
-  // Pick a zone when deploying
+  // Pick a zone and time of day when deploying
   if (next === 'DEPLOYING') {
-    updatedRaid = { ...updatedRaid, zone: 'damp_battlegrounds' }
+    const zone = rng ? rng.weightedPick(zones).id : zones[0].id
+    const timeOfDay = rng ? rng.weightedPick(TIME_OF_DAY_TABLE).id : 'Day'
+    updatedRaid = { ...updatedRaid, zone, timeOfDay }
   }
 
   return { raid: updatedRaid, transition }

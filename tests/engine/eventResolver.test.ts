@@ -14,13 +14,13 @@ import { applyEffects } from '../../src/engine/eventResolver'
 import { createInitialState } from '../../src/engine/initialState'
 import type { EventTemplate } from '../../src/engine/types'
 
-// backpackValue=4 maps exclusively to water_bottle_tactical (the only item with value 4),
+// backpackValue=10 maps exclusively to golden_water_bottle (the only item with value 10),
 // so item selection is fully deterministic — no RNG variance.
 const LOOT_TEMPLATE: EventTemplate = {
   id: 'test_loot',
   weight: 1,
   text: 'You found something.',
-  effects: { backpackValue: 4 },
+  effects: { backpackValue: 10 },
 }
 
 const DAMAGE_TEMPLATE: EventTemplate = {
@@ -39,10 +39,10 @@ describe('applyEffects — backpack item behavior', () => {
 
     expect(result.raid.backpack).toHaveLength(1)
     const item = result.raid.backpack[0]
-    expect(item.itemId).toBe('water_bottle_tactical')
-    expect(item.name).toBe('tactical water bottle')
-    expect(item.value).toBe(4)
-    expect(item.rarity).toBe(3)
+    expect(item.itemId).toBe('golden_water_bottle')
+    expect(item.name).toBe('Golden Water Bottle')
+    expect(item.value).toBe(10)
+    expect(item.rarity).toBe(5)
     expect(item.quantity).toBe(1)
   })
 
@@ -56,7 +56,7 @@ describe('applyEffects — backpack item behavior', () => {
 
     const afterSecond = applyEffects(afterFirst, LOOT_TEMPLATE, rng)
     expect(afterSecond.raid.backpack).toHaveLength(1)
-    expect(afterSecond.raid.backpack[0].itemId).toBe('water_bottle_tactical')
+    expect(afterSecond.raid.backpack[0].itemId).toBe('golden_water_bottle')
     expect(afterSecond.raid.backpack[0].quantity).toBe(2)
   })
 
@@ -65,10 +65,10 @@ describe('applyEffects — backpack item behavior', () => {
     const rng = createRNG(42)
 
     const afterFirst = applyEffects(state, LOOT_TEMPLATE, rng)
-    expect(afterFirst.raid.backpackValue).toBe(4)
+    expect(afterFirst.raid.backpackValue).toBe(10)
 
     const afterSecond = applyEffects(afterFirst, LOOT_TEMPLATE, rng)
-    expect(afterSecond.raid.backpackValue).toBe(8)
+    expect(afterSecond.raid.backpackValue).toBe(20)
   })
 
   it('does not mutate the input state', () => {

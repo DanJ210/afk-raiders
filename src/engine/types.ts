@@ -47,6 +47,8 @@ export interface ZoneEntry extends ContentEntry {
   description: string
 }
 
+export type TimeOfDay = 'Day' | 'Night' | 'Stella Red'
+
 export interface FlavorTable {
   [tableKey: string]: Array<{ id: string; weight: number; text: string }>
 }
@@ -69,6 +71,7 @@ export interface BackpackItem {
 
 export interface RaidState {
   zone: string | null
+  timeOfDay: TimeOfDay | null
   backpack: BackpackItem[]
   backpackValue: number
   greedLevel: number   // 0–100; higher = more likely to push deeper and die
@@ -111,6 +114,8 @@ export interface GameState {
   signal: SignalState
   log: LogEvent[]
   homeStash: BackpackItem[]
+  /** Coin stash from auto-sold overflow loot — value is never deleted, only converted */
+  coins: number
   // Set by CALL_EXTRACT so the tick driver knows to nudge the next greed check
   pendingEncourage: boolean
   pendingScold: boolean

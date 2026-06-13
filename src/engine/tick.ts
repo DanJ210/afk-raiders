@@ -19,41 +19,46 @@ import type { RNG } from './rng.js'
 import { tickPhase } from './raidStateMachine.js'
 import { runGreedCheck } from './greedCheck.js'
 import { resolveEvent, resolveFlavorKey, applyEffects, events as allEvents } from './eventResolver.js'
+import { transferBackpackToHomeStash, HOME_STASH_ITEM_LIMIT } from './homeStash.js'
 
 /** Maximum log entries to keep in memory (avoids unbounded growth) */
 const MAX_LOG_SIZE = 200
 
 /**
- * Merge a raid backpack into the home stash. Duplicate itemIds stack their
- * quantities (shown in the UI as ×N with multiplied value). The stash never
- * empties except via selling (future mechanic).
+ * Apply successful-extraction bookkeeping: transfer loot home, heal up, count
+ * the win. If the stash overflows the item limit, the lowest-value items are
+ * auto-sold and their value is credited to the raider's coin stash — nothing
+ * is ever deleted. Returns sale info so the tick can narrate it.
  */
-function mergeIntoStash(stash: BackpackItem[], backpack: BackpackItem[]): BackpackItem[] {
-  const merged = [...stash]
-  for (const item of backpack) {
-    const existingIdx = merged.findIndex(i => i.itemId === item.itemId)
-    if (existingIdx >= 0) {
-      merged[existingIdx] = {
-        ...merged[existingIdx],
-        quantity: merged[existingIdx].quantity + item.quantity,
-      }
-    } else {
-      merged.push({ ...item })
-    }
+function applySuccessfulExtraction(
+  state: GameState,
+  extractedBackpack: BackpackItem[],
+): { state: GameState; coinsGained: number; soldItemCount: number } {
+  const transfer = transferBackpackToHomeStash(state.homeStash, extractedBackpack)
+  return {
+    state: {
+      ...state,
+      raider: {
+        ...state.raider,
+        hp: state.raider.maxHp,
+        extractCount: state.raider.extractCount + 1,
+      },
+      homeStash: transfer.homeStash,
+      coins: state.coins + transfer.coinsGained,
+    },
+    coinsGained: transfer.coinsGained,
+    soldItemCount: transfer.soldItemCount,
   }
-  return merged
 }
 
-/** Apply successful-extraction bookkeeping: transfer loot home, heal up, count the win. */
-function applySuccessfulExtraction(state: GameState, extractedBackpack: BackpackItem[]): GameState {
+/** Comms line for overflow loot auto-sold from a full stash — the log IS the product. */
+function stashSaleEvent(sold: number, coins: number, tick: number, now: number): LogEvent {
   return {
-    ...state,
-    raider: {
-      ...state.raider,
-      hp: state.raider.maxHp,
-      extractCount: state.raider.extractCount + 1,
-    },
-    homeStash: mergeIntoStash(state.homeStash, extractedBackpack),
+    id: 'stash_overflow_sale',
+    tick,
+    timestamp: now,
+    text: `Home stash hit ${HOME_STASH_ITEM_LIMIT} items. Auto-sold the ${sold} cheapest item${sold === 1 ? '' : 's'} for ${coins} coin${coins === 1 ? '' : 's'}. The Desperanza pawn guy didn't even haggle.`,
+    phase: 'HUB',
   }
 }
 
@@ -63,7 +68,7 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
   // ------------------------------------------------------------------
   // 1. Run phase state machine
   // ------------------------------------------------------------------
-  const { raid: nextRaid, transition } = tickPhase(state.raid)
+  const { raid: nextRaid, transition } = tickPhase(state.raid, undefined, rng)
   let currentState: GameState = { ...state, raid: nextRaid }
 
   if (transition) {
@@ -89,7 +94,11 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
           },
         }
       } else if (transition.from === 'EXTRACTING') {
-        currentState = applySuccessfulExtraction(currentState, state.raid.backpack)
+        const extraction = applySuccessfulExtraction(currentState, state.raid.backpack)
+        currentState = extraction.state
+        if (extraction.soldItemCount > 0) {
+          emitted.push(stashSaleEvent(extraction.soldItemCount, extraction.coinsGained, state.tick, now))
+        }
       }
     }
   }
@@ -178,7 +187,11 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
           })
         }
         if (fromPhase === 'EXTRACTING' && forcedPhase === 'HUB') {
-          currentState = applySuccessfulExtraction(currentState, backpackBeforeForce)
+          const extraction = applySuccessfulExtraction(currentState, backpackBeforeForce)
+          currentState = extraction.state
+          if (extraction.soldItemCount > 0) {
+            emitted.push(stashSaleEvent(extraction.soldItemCount, extraction.coinsGained, state.tick, now))
+          }
         }
       }
     }

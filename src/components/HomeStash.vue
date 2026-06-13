@@ -8,13 +8,28 @@ const store = useGameStore()
 
 const homeStash = computed(() => store.state.homeStash)
 
-const totalStashValue = computed(() => {
+/** Highest-value items at the top (per-unit value; line total breaks ties) */
+const sortedStash = computed(() =>
+  [...homeStash.value].sort(
+    (a, b) => b.value - a.value || b.value * b.quantity - a.value * a.quantity,
+  ),
+)
+
+/** Unsold item value currently in the stash. */
+const stashValue = computed(() => {
   return homeStash.value.reduce((sum, item) => sum + item.value * item.quantity, 0)
 })
+
+/** Value from overflow auto-sales. */
+const coinValue = computed(() => store.state.coins)
 
 const totalItemCount = computed(() => {
   return homeStash.value.reduce((sum, item) => sum + item.quantity, 0)
 })
+
+function formatNumber(value: number): string {
+  return value.toLocaleString('en-US')
+}
 
 function getCategoryEmoji(itemName: string): string {
   const lower = itemName.toLowerCase()
@@ -34,34 +49,36 @@ function getCategoryEmoji(itemName: string): string {
   <section class="home-stash" aria-label="Home Stash">
     <header class="home-stash__header">🏠 HOME STASH</header>
 
+    <div class="home-stash__stats">
+      <div class="home-stash__stat" title="Value of unsold items currently in the stash">
+        <span class="home-stash__stat-label">Stash Value</span>
+        <span class="home-stash__stat-value">{{ formatNumber(stashValue) }}</span>
+      </div>
+      <div class="home-stash__stat" title="Coins earned by auto-selling overflow items">
+        <span class="home-stash__stat-label">🪙 Coin Value</span>
+        <span class="home-stash__stat-value">{{ formatNumber(coinValue) }}</span>
+      </div>
+      <div class="home-stash__stat">
+        <span class="home-stash__stat-label">Items</span>
+        <span class="home-stash__stat-value">{{ totalItemCount }} / {{ HOME_STASH_ITEM_LIMIT }}</span>
+      </div>
+    </div>
+
     <div v-if="homeStash.length === 0" class="home-stash__empty">
       <p>No loot yet. Send the raider to bring treasures home.</p>
     </div>
 
-    <div v-else>
-      <div class="home-stash__stats">
-        <div class="home-stash__stat">
-          <span class="home-stash__stat-label">Total Value</span>
-          <span class="home-stash__stat-value">{{ totalStashValue }}</span>
+    <div v-else class="home-stash__items">
+      <div v-for="item in sortedStash" :key="item.itemId" class="stash-item">
+        <span class="stash-item__emoji">{{ getCategoryEmoji(item.name) }}</span>
+        <span :class="rarityBarClass(item.rarity)" :title="rarityLabel(item.rarity)">
+          <span class="stash-item__rarity-text">{{ rarityLabel(item.rarity) }}</span>
+        </span>
+        <div class="stash-item__content">
+          <span class="stash-item__name">{{ item.name }}</span>
+          <span class="stash-item__qty">×{{ item.quantity }}</span>
         </div>
-        <div class="home-stash__stat">
-          <span class="home-stash__stat-label">Items</span>
-          <span class="home-stash__stat-value">{{ totalItemCount }} / {{ HOME_STASH_ITEM_LIMIT }}</span>
-        </div>
-      </div>
-
-      <div class="home-stash__items">
-        <div v-for="item in homeStash" :key="item.itemId" class="stash-item">
-          <span class="stash-item__emoji">{{ getCategoryEmoji(item.name) }}</span>
-          <span :class="rarityBarClass(item.rarity)" :title="rarityLabel(item.rarity)">
-            <span class="stash-item__rarity-text">{{ rarityLabel(item.rarity) }}</span>
-          </span>
-          <div class="stash-item__content">
-            <span class="stash-item__name">{{ item.name }}</span>
-            <span class="stash-item__qty">×{{ item.quantity }}</span>
-          </div>
-          <span class="stash-item__value">{{ item.value * item.quantity }}</span>
-        </div>
+        <span class="stash-item__value">{{ item.value * item.quantity }}</span>
       </div>
     </div>
   </section>
@@ -88,7 +105,7 @@ function getCategoryEmoji(itemName: string): string {
 
 .home-stash__stats {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
   margin-bottom: 12px;
 }

@@ -13,6 +13,7 @@ import { processTick } from '../../src/engine/tick'
 import { createInitialState } from '../../src/engine/initialState'
 import { tickPhase } from '../../src/engine/raidStateMachine'
 import { events } from '../../src/engine/eventResolver'
+import { HOME_STASH_ITEM_LIMIT, sellStashOverflow } from '../../src/engine/homeStash'
 import type { BackpackItem, GameState, Phase } from '../../src/engine/types'
 
 const FIXED_SEED = 42
@@ -81,6 +82,68 @@ describe('home stash', () => {
     expect(next.raid.backpack).toHaveLength(0)
     expect(next.homeStash).toEqual(stash)
     expect(next.raider.deathCount).toBe(1)
+  })
+
+  it('auto-sells the lowest-value items when the stash overflows on extraction', () => {
+    // Stash nearly full of valuable items; incoming cheap loot overflows it
+    const nearFullStash = [
+      makeItem({ itemId: 'pricey', name: 'Pricey Thing', value: 10, quantity: HOME_STASH_ITEM_LIMIT - 2 }),
+    ]
+    const state = makeState(
+      'EXTRACTING',
+      [makeItem({ value: 1, quantity: 5 })], // 3 of these must be sold
+      nearFullStash,
+    )
+    const { state: next, events: emitted } = processTick(state, createRNG(FIXED_SEED), 0)
+
+    expect(next.raid.phase).toBe('HUB')
+    const total = next.homeStash.reduce((s, i) => s + i.quantity, 0)
+    expect(total).toBe(HOME_STASH_ITEM_LIMIT)
+    // The cheap incoming items were the ones sold (lowest value first)
+    const pricey = next.homeStash.find(i => i.itemId === 'pricey')
+    expect(pricey?.quantity).toBe(HOME_STASH_ITEM_LIMIT - 2)
+    const cheap = next.homeStash.find(i => i.itemId === 'water_bottle_basic')
+    expect(cheap?.quantity).toBe(2)
+    // Sale proceeds credited to the coin stash and narrated in the comms log
+    expect(next.coins).toBe(3)
+    expect(emitted.some(e => e.id === 'stash_overflow_sale')).toBe(true)
+  })
+
+  it('sells cheap stash items to make room for incoming valuable loot', () => {
+    const fullOfCheap = [
+      makeItem({ value: 1, quantity: HOME_STASH_ITEM_LIMIT }),
+    ]
+    const state = makeState(
+      'EXTRACTING',
+      [makeItem({ itemId: 'hans', name: 'Hans Gruber (alive)', value: 1000, rarity: 5, quantity: 2 })],
+      fullOfCheap,
+    )
+    const { state: next } = processTick(state, createRNG(FIXED_SEED), 0)
+
+    const total = next.homeStash.reduce((s, i) => s + i.quantity, 0)
+    expect(total).toBe(HOME_STASH_ITEM_LIMIT)
+    // The valuable incoming loot is kept; 2 cheap items were sold for coins
+    expect(next.homeStash.find(i => i.itemId === 'hans')?.quantity).toBe(2)
+    expect(next.homeStash.find(i => i.itemId === 'water_bottle_basic')?.quantity).toBe(HOME_STASH_ITEM_LIMIT - 2)
+    expect(next.coins).toBe(2)
+  })
+
+  it('sellStashOverflow converts over-limit saves into coins, lowest value first', () => {
+    const oversized = [
+      makeItem({ itemId: 'gold', name: 'Gold', value: 10, quantity: HOME_STASH_ITEM_LIMIT }),
+      makeItem({ itemId: 'junk', name: 'Junk', value: 1, quantity: 30 }),
+      makeItem({ itemId: 'mid', name: 'Mid', value: 5, quantity: 20 }),
+    ]
+    const result = sellStashOverflow(oversized)
+
+    const total = result.homeStash.reduce((s, i) => s + i.quantity, 0)
+    expect(total).toBe(HOME_STASH_ITEM_LIMIT)
+    expect(result.soldItemCount).toBe(50)
+    // All 30 junk (1c each) sold first, then 20 mid (5c each)
+    expect(result.coinsGained).toBe(30 * 1 + 20 * 5)
+    expect(result.homeStash.find(i => i.itemId === 'junk')).toBeUndefined()
+    expect(result.homeStash.find(i => i.itemId === 'mid')).toBeUndefined()
+    expect(result.homeStash.find(i => i.itemId === 'gold')?.quantity).toBe(HOME_STASH_ITEM_LIMIT)
   })
 })
 
