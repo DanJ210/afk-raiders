@@ -7,9 +7,12 @@ const store = useGameStore()
 const logEl = ref<HTMLElement | null>(null)
 const userScrolledDown = ref(false)
 const entries = computed(() => [...store.log].reverse())
-const hpPercent = computed(() =>
-  Math.round((store.raider.hp / store.raider.maxHp) * 100),
-)
+const hpPercent = computed(() => {
+  const maxHp = store.raider.maxHp
+  if (maxHp <= 0) return 0
+  const percent = (store.raider.hp / maxHp) * 100
+  return Math.max(0, Math.min(100, Math.round(percent)))
+})
 const hpClass = computed(() => {
   if (hpPercent.value > 60) return 'comms-log__hp-fill--good'
   if (hpPercent.value > 30) return 'comms-log__hp-fill--warning'
