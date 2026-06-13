@@ -17,7 +17,7 @@
   { "id": "half_empty_chips_bag",    "weight": 10, "rarity": 3, "name": "Half-Empty Bag of Chips",      "value": 1,  "flavor": "The chips are stale but the emotional value is high." },
   { "id": "mysterious_key",          "weight": 8,  "rarity": 4, "name": "Mysterious Key",               "value": 4,  "flavor": "It's heavy and cold. It doesn't fit any locks you can find. What could it open?" },
   { "id": "fuzzy_dice",              "weight": 5,  "rarity": 4, "name": "pair of fuzzy dice",           "value": 3,  "flavor": "Once hung in a car that drove past you every day. The car is gone but the vibes remain." },
-  { "id": "tabithas_phone",          "weight": 12, "rarity": 4, "name": "Tabitha's phone",              "value": 5,  "flavor": "The screen is cracked and it's locked. You can see multiple notification previews: 'Your late'" },
+  { "id": "tabithas_phone",          "weight": 8,  "rarity": 4, "name": "Tabitha's phone",              "value": 50,  "flavor": "The screen is cracked and it's locked. You can see multiple notification previews: 'Your late'" },
   { "id": "dirty_stripper_panties",  "weight": 1,  "rarity": 5, "name": "Dirty Stripper Panties",       "value": 100,  "flavor": "Damp and stained. From both holes. The ultimate loot." },
   { "id": "hans_gruber",             "weight": 1,  "rarity": 5, "name": "Hans Gruber (alive)",          "value": 1000, "flavor": "The legendary Hans Gruber. Tabitha lost him again..." }
 ]
