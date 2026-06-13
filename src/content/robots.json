@@ -3,36 +3,99 @@
     "id": "anxietick",
     "weight": 50,
     "name": "Anxietick",
+    "deadliness": "weak",
     "menace": 2,
     "flavorLines": [
       "skitters nervously and then freezes when you look at it",
       "makes a sound like a worried metronome",
       "approaches, reconsiders, approaches again",
       "trips over its own legs trying to be threatening"
-    ]
+    ],
+    "successText": [ "Well that tick needed to chill" ],
+    "lootTable": [
+      { "id": "anxietick_gear", "weight": 85, "name": "Anxietick Gear", "value": 5, "flavor": "A gear from an Anxietick. Still a little nervous." },
+      {
+        "id": "robot_alloy",
+        "weight": 1,
+        "name": "Robot Alloy",
+        "value": 20,
+        "flavor": "Standard metal"
+      }
+     ]
   },
   {
     "id": "tattletale",
     "weight": 35,
     "name": "Tattletale drone",
+    "deadliness": "moderate",
     "menace": 3,
     "flavorLines": [
       "broadcasts your location to everything in a 200-metre radius",
       "plays a cheerful jingle before alerting every robot in the zone",
       "hovers at eye level and judges you",
       "uploads your outfit choice to the robot network"
-    ]
+    ],
+    "successText": [ "The Tattletale drone's broadcast attracts a swarm of nearby robots. You defeat it and escape, but the zone is buzzing with activity." ],
+    "lootTable": [
+      { "id": "tattletale_circuit", "weight": 85, "name": "Tattletale Circuit", "value": 15, "flavor": "A circuit from a Tattletale drone. Still functional and mildly judgmental." },
+      {
+        "id": "robot_alloy",
+        "weight": 1,
+        "name": "Robot Alloy",
+        "value": 20,
+        "flavor": "Standard metal"
+      }
+     ]
+  },
+  {
+    "id": "shredder_dedder",
+    "weight": 25,
+    "name": "Shredder Dedder",
+    "deadliness": "nasty",
+    "menace": 7,
+    "flavorLines": [
+      "approached the LZ stealthily",
+      "a robot was waiting",
+      "it was surprised",
+      "we were surprised",
+      "it was a very polite surprise"
+    ],
+    "successText": [ "The Shredder Dedder's blade is still sharp but you are sharper. You take it apart and add the blade to your inventory." ],
+    "lootTable": [
+      { "id": "shredder_blade", "weight": 85, "name": "Shredder Blade", "value": 100, "flavor": "A blade from a Shredder Dedder. Still sharp and very dangerous." },
+      { "id": "robot_alloy", "weight": 100, "name": "Robot Alloy", "value": 20, "flavor": "Standard metal" }
+     ]
   },
   {
     "id": "roomba_prime",
     "weight": 15,
     "name": "Roomba Prime",
+    "deadliness": "deadly",
     "menace": 8,
     "flavorLines": [
       "vacuums aggressively in your direction",
       "has cleaned this floor fourteen times and will not tolerate intruders",
       "emits a high-pitched warning tone that is somehow worse than silence",
       "bumps into a wall, rights itself, and focuses entirely on you"
+    ],
+    "successText": [
+      "You manage to outmaneuver the Roomba Prime and disable it, it had a power button."
+    ],
+    "lootTable": [
+      {
+        "id": "roomba_battery",
+        "weight": 85,
+        "name": "Roomba Battery",
+        "value": 300,
+        "flavor": "A battery from a Roomba Prime. Still holds a charge. Probably not for long."
+      },
+      {
+        "id": "robot_alloy",
+        "weight": 1,
+        "name": "Robot Alloy",
+        "value": 20,
+        "flavor": "Standard metal"
+      }
     ]
   }
 ]

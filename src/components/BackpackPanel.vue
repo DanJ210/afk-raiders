@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { useGameStore } from '../stores/gameStore'
 import { rarityLabel, rarityBarClass } from '../utils/rarity'
+import type { HealingItemStack } from '../engine/types'
 
 const store = useGameStore()
 const raid = computed(() => store.raid)
@@ -14,12 +15,23 @@ const backpackItems = computed(() =>
   }),
 )
 
+const healingItems = computed(() =>
+  [...raid.value.healingItems].sort((a, b) => {
+    if (b.healAmount !== a.healAmount) return b.healAmount - a.healAmount
+    return a.name.localeCompare(b.name)
+  }),
+)
+
 function greedLabel(level: number): string {
   if (level < 20) return '😌 Chill'
   if (level < 40) return '🤑 Interested'
   if (level < 60) return '😤 Pushing It'
   if (level < 80) return '🚨 Reckless'
   return '☠️ DEATH WISH'
+}
+
+function moodGain(item: HealingItemStack): number {
+  return item.moodGain ?? Math.max(1, Math.min(4, item.rarity))
 }
 
 const greedClass = computed(() => {
@@ -51,6 +63,19 @@ const greedClass = computed(() => {
       <span class="backpack-panel__greed-label" :class="greedClass">
         {{ greedLabel(raid.greedLevel) }}
       </span>
+    </div>
+
+    <div v-if="healingItems.length > 0" class="backpack-panel__meds">
+      <span class="backpack-panel__label">Field Meds</span>
+      <ul class="backpack-panel__med-list">
+        <li v-for="item in healingItems" :key="item.itemId" class="backpack-panel__med-item">
+          <span :class="rarityBarClass(item.rarity)" :title="rarityLabel(item.rarity)" aria-hidden="true" />
+          <span>{{ item.name }}</span>
+          <span>+{{ item.healAmount }} HP</span>
+          <span>+{{ moodGain(item) }} Mood</span>
+          <span v-if="item.quantity > 1">x{{ item.quantity }}</span>
+        </li>
+      </ul>
     </div>
 
     <p v-if="raid.backpack.length === 0 && raid.phase === 'HUB'" class="backpack-panel__empty">
@@ -118,6 +143,35 @@ const greedClass = computed(() => {
   align-items: center;
   gap: 8px;
   margin-bottom: 10px;
+}
+
+.backpack-panel__meds {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.backpack-panel__med-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 0;
+  margin: 0;
+}
+
+.backpack-panel__med-item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto auto;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  background: var(--color-surface-raised);
+  border-radius: 4px;
+  color: var(--color-text);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
 }
 
 .greed-bar {

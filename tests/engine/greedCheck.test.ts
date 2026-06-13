@@ -14,7 +14,9 @@ import type { RaidState } from '../../src/engine/types'
 function makeRaid(overrides: Partial<RaidState> = {}): RaidState {
   return {
     zone: 'damp_battlegrounds',
+    timeOfDay: 'Day',
     backpack: [],
+    healingItems: [],
     backpackValue: 0,
     greedLevel: 0,
     phase: 'RAIDING',
@@ -89,5 +91,37 @@ describe('greedCheck', () => {
     }
     // If no push-deeper found in 100 rolls, fail
     throw new Error('No PUSH_DEEPER outcome found in 100 rolls')
+  })
+
+  it('low HP without bandages increases extraction rate', () => {
+    const baseline = countOutcomes(makeRaid({ greedLevel: 20 }), 500, { encouraged: false, scolded: false })
+    const wounded = countOutcomes(makeRaid({ greedLevel: 20 }), 500, {
+      encouraged: false,
+      scolded: false,
+      currentHp: 35,
+      maxHp: 100,
+      hasHealingItems: false,
+    })
+
+    expect(wounded.extract).toBeGreaterThan(baseline.extract)
+  })
+
+  it('low HP with bandages does not get the no-bandage extraction bonus', () => {
+    const woundedNoBandages = countOutcomes(makeRaid({ greedLevel: 20 }), 500, {
+      encouraged: false,
+      scolded: false,
+      currentHp: 35,
+      maxHp: 100,
+      hasHealingItems: false,
+    })
+    const woundedWithBandages = countOutcomes(makeRaid({ greedLevel: 20 }), 500, {
+      encouraged: false,
+      scolded: false,
+      currentHp: 35,
+      maxHp: 100,
+      hasHealingItems: true,
+    })
+
+    expect(woundedWithBandages.extract).toBeLessThan(woundedNoBandages.extract)
   })
 })

@@ -14,67 +14,81 @@
     "effects": { "backpackValue": 1, "mood": 1 }
   },
   {
-    "id": "robot_encounter_anxietick",
-    "weight": 22,
-    "text": "An Anxietick {robot_flavor_anxietick}. Hid behind a crate. It still managed to nick an ankle on its way past.",
+    "id": "loot_bandage",
+    "weight": 18,
+    "text": "Spotted medical supplies in a pouch labeled PROBABLY CLEAN.",
     "requires": { "phase": "RAIDING" },
-    "effects": { "mood": -1, "ratRating": 1, "hp": "-1d4" }
+    "effects": { "healingItem": true, "mood": 1 }
+  },
+  {
+    "id": "robot_encounter_anxietick",
+    "weight": 28,
+    "text": "An Anxietick {robot_flavor_anxietick}. Hid behind a crate. It made a thoughtful little lunge at ankle height.",
+    "requires": { "phase": "RAIDING" },
+    "effects": { "mood": -1, "ratRating": 1, "robotEncounter": "anxietick" }
   },
   {
     "id": "robot_encounter_anxietick_panic",
-    "weight": 3,
-    "text": "An Anxietick {robot_flavor_anxietick}. Panicked, sprinted, and discovered three separate sharp edges personally.",
+    "weight": 4,
+    "text": "An Anxietick {robot_flavor_anxietick}. Panicked, sprinted, and introduced itself to every nearby object at speed.",
     "requires": { "phase": "RAIDING" },
-    "effects": { "mood": -2, "ratRating": 2, "hp": "-8d25" }
+    "effects": { "mood": -2, "ratRating": 2, "robotEncounter": "anxietick", "robotDamageMultiplier": 2 }
   },
   {
     "id": "robot_encounter_anxietick_disaster",
     "weight": 1,
-    "text": "An Anxietick {robot_flavor_anxietick}. Fled straight into a catastrophic workplace-safety incident.",
+    "text": "An Anxietick {robot_flavor_anxietick}. It bolted toward a catastrophic workplace-safety incident that had your name on it.",
     "requires": { "phase": "RAIDING" },
-    "effects": { "mood": -3, "ratRating": 3, "hp": "-35d66" }
+    "effects": { "mood": -3, "ratRating": 3, "robotEncounter": "anxietick", "robotDamageMultiplier": 4 }
   },
   {
     "id": "robot_encounter_tattletale",
-    "weight": 18,
+    "weight": 16,
     "text": "A Tattletale drone {robot_flavor_tattletale}. Relocated at speed.",
     "requires": { "phase": "RAIDING" },
-    "effects": { "mood": -2, "ratRating": 2, "hp": "-3d8" }
+    "effects": { "mood": -2, "ratRating": 2, "robotEncounter": "tattletale" }
   },
   {
     "id": "robot_encounter_tattletale_crossfire",
     "weight": 5,
     "text": "A Tattletale drone {robot_flavor_tattletale}. Its broadcast brought immediate and extremely persuasive consequences.",
     "requires": { "phase": "RAIDING" },
-    "effects": { "mood": -3, "ratRating": 2, "hp": "-12d29" }
+    "effects": { "mood": -3, "ratRating": 2, "robotEncounter": "tattletale", "robotDamageMultiplier": 2.5 }
   },
   {
     "id": "robot_encounter_tattletale_cascade",
     "weight": 2,
     "text": "A Tattletale drone {robot_flavor_tattletale}. Entire zone joined the conversation. Medical review pending.",
     "requires": { "phase": "RAIDING" },
-    "effects": { "mood": -4, "ratRating": 3, "hp": "-35d66" }
+    "effects": { "mood": -4, "ratRating": 3, "robotEncounter": "tattletale", "robotDamageMultiplier": 4 }
   },
   {
     "id": "robot_encounter_roomba",
-    "weight": 8,
-    "text": "Roomba Prime {robot_flavor_roomba_prime}. Took significant damage avoiding it. The floor was very clean.",
+    "weight": 4,
+    "text": "Roomba Prime {robot_flavor_roomba_prime}. It tried to take significant pieces of you. The floor was very clean.",
     "requires": { "phase": "RAIDING", "minGreed": 20 },
-    "effects": { "mood": -3, "hp": "-15d21", "ratRating": 1 }
+    "effects": { "mood": -3, "ratRating": 1, "robotEncounter": "roomba_prime" }
   },
   {
     "id": "robot_encounter_roomba_grind",
-    "weight": 4,
+    "weight": 2,
     "text": "Roomba Prime {robot_flavor_roomba_prime}. It pursued with the confidence of a machine that has never known mercy.",
     "requires": { "phase": "RAIDING", "minGreed": 20 },
-    "effects": { "mood": -4, "hp": "-35d36", "ratRating": 2 }
+    "effects": { "mood": -5, "ratRating": 3, "robotEncounter": "roomba_prime", "robotDamageMultiplier": 1.75 }
   },
   {
     "id": "robot_encounter_roomba_cleanup",
-    "weight": 3,
+    "weight": 1,
     "text": "Roomba Prime {robot_flavor_roomba_prime}. Initiated full clean-up cycle. Handler is advised to begin paperwork.",
     "requires": { "phase": "RAIDING", "minGreed": 20 },
-    "effects": { "mood": -5, "hp": "-55d46", "ratRating": 3 }
+    "effects": { "mood": -5, "ratRating": 4, "robotEncounter": "roomba_prime", "robotDamageMultiplier": 3 }
+  },
+  {
+    "id": "robot_encounter_shredder_dedder",
+    "weight": 8,
+    "text": "A Shredder Dedder {robot_flavor_shredder_dedder}. Everyone involved suddenly remembered they had somewhere else to be.",
+    "requires": { "phase": "RAIDING", "minGreed": 20 },
+    "effects": { "mood": -5, "ratRating": 3, "robotEncounter": "shredder_dedder", "robotDamageMultiplier": 2.5 }
   },
   {
     "id": "locker_hide",
