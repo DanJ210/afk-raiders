@@ -22,7 +22,6 @@ import { createInitialState, SAVE_VERSION } from '../engine/initialState.js'
 import { sellStashOverflow } from '../engine/homeStash.js'
 import type { GameState, LogEvent } from '../engine/types.js'
 import type { AwaySummary } from '../engine/catchUp.js'
-import { useSettingsStore } from './settingsStore.js'
 
 const STORAGE_KEY = 'afk-raiders-save'
 
@@ -70,7 +69,6 @@ function persistSave(state: GameState, seed: number, lastTickAt: number) {
 export const useGameStore = defineStore('game', () => {
   const now = Date.now()
   const saved = loadSave()
-  const settings = useSettingsStore()
 
   // Seed is stable per save — derive from timestamp on first run
   const seedValue = ref<number>(saved?.seed ?? (now & 0xffffffff))
@@ -80,7 +78,7 @@ export const useGameStore = defineStore('game', () => {
   let awaySummaryData: AwaySummary | null = null
 
   if (saved) {
-    const catchUpResult = catchUp(saved.state, rng, saved.lastTickAt, now, settings.extractionPreference)
+    const catchUpResult = catchUp(saved.state, rng, saved.lastTickAt, now)
     initialState = catchUpResult.state
     if (catchUpResult.summary.ticksReplayed > 0) {
       awaySummaryData = catchUpResult.summary
@@ -104,7 +102,7 @@ export const useGameStore = defineStore('game', () => {
   // ------------------------------------------------------------------
   function tick() {
     const tickNow = Date.now()
-    const result = processTick(state.value, rng, tickNow, settings.extractionPreference)
+    const result = processTick(state.value, rng, tickNow)
     state.value = result.state
     lastTickAt.value = tickNow
     newEvents.value = result.events
@@ -123,7 +121,7 @@ export const useGameStore = defineStore('game', () => {
       hiddenAt = Date.now()
     } else {
       if (hiddenAt !== null) {
-        const result = catchUp(state.value, rng, hiddenAt, Date.now(), settings.extractionPreference)
+        const result = catchUp(state.value, rng, hiddenAt, Date.now())
         state.value = result.state
         if (result.summary.ticksReplayed > 0) {
           awaySummary.value = result.summary

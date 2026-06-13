@@ -11,8 +11,5 @@ export const useSettingsStore = defineStore('settings', () => {
   // Placeholder: log density ('full' | 'compact')
   const logDensity = ref<'full' | 'compact'>('full')
 
-  // Extraction preference slider: 0 = Safer (quick extract), 100 = Hoarder (max loot)
-  const extractionPreference = useLocalStorage('afk-settings-extraction-preference', 50)
-
-  return { reducedMotion, logDensity, extractionPreference }
+  return { reducedMotion, logDensity }
 })

@@ -38,16 +38,8 @@ Key docs — read these before making changes:
 ### Home Stash
 Items successfully extracted are automatically transferred from the raider's backpack to a persistent `homeStash` array on the GameState. This survives raids, deaths, and sessions. When working with extraction logic or inventory systems, always ensure loot is transferred during the EXTRACTING → HUB phase transition (see `src/engine/tick.ts` for the implementation pattern). The stash holds at most 120 items (`HOME_STASH_ITEM_LIMIT` in `src/engine/homeStash.ts`; quantities count toward the cap). Overflow is never deleted: the lowest-value items are auto-sold and their value is credited to `GameState.coins` (the raider's coin stash), narrated by a `stash_overflow_sale` comms event. The Home Stash UI lists items highest-value first, and separates unsold `Stash Value` from sold `Coin Value`.
 
-### Extraction Preference Slider
-Players control raid aggression via a slider (0-100) stored in `settingsStore` as `extractionPreference`:
-- **Safer (0):** Higher base extraction chance, greed grows faster
-- **Hoarder (100):** Lower extraction chance, greed grows slower
-- The slider affects `runGreedCheck()` in two ways:
-  1. Extract probability modifier: ±30% variance based on slider value
-  2. Greed accumulation rate: 0.5x to 1.5x multiplier
-- Low HP without any current-raid bandages increases extract probability so the raider tries to survive and cash out. If they do have bandages, this no-bandage extraction bonus is not applied.
-- Pass `extractionPreference` through `processTick()` and `catchUp()` functions
-- Use `ExtractionPreference.vue` and `HomeStash.vue` components as reference for UI patterns
+### Raid Pacing
+Raid aggression is autonomous; there is no extraction preference slider. `runGreedCheck()` uses fixed seeded probabilities so the Raider generally spends more time raiding before choosing to extract, while the 30-minute RAIDING phase timer still forces EXTRACTING when it expires. Low HP without any current-raid bandages increases extract probability so the raider tries to survive and cash out. If they do have bandages, this no-bandage extraction bonus is not applied.
 
 ### Raid Duration
 Max raid time is 120 ticks = 30 minutes at the 15 s tick cadence. Phase durations are defined in `src/engine/raidStateMachine.ts` as `PHASE_DURATIONS`: HUB ≤ 5 min (20 ticks), DEPLOYING 60 s (4 ticks, one-person tunnel pods), RAIDING ≤ 30 min (120 ticks), EXTRACTING ~60 s (4 ticks). When the raid timer expires the raider is forced into EXTRACTING. If HP reaches 0 in any phase the raider goes DOWNED, loses the backpack, and respawns in the HUB. Each phase has its own events file in `src/content/` (hub_events, deployment_events, raiding_events, extraction_events, downed_events).
