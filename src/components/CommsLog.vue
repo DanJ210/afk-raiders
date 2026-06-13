@@ -7,6 +7,14 @@ const store = useGameStore()
 const logEl = ref<HTMLElement | null>(null)
 const userScrolledDown = ref(false)
 const entries = computed(() => [...store.log].reverse())
+const hpPercent = computed(() =>
+  Math.round((store.raider.hp / store.raider.maxHp) * 100),
+)
+const hpClass = computed(() => {
+  if (hpPercent.value > 60) return 'comms-log__hp-fill--good'
+  if (hpPercent.value > 30) return 'comms-log__hp-fill--warning'
+  return 'comms-log__hp-fill--danger'
+})
 
 function formatTime(ts: number): string {
   const d = new Date(ts)
@@ -53,6 +61,20 @@ onMounted(scrollToTop)
       <span class="comms-log__icon">📻</span>
       <span class="comms-log__title">COMMS FEED</span>
     </header>
+    <div class="comms-log__mobile-health">
+      <span class="comms-log__hp-label">RAIDER HP</span>
+      <div
+        class="comms-log__hp-bar"
+        role="meter"
+        aria-label="Raider health"
+        :aria-valuemin="0"
+        :aria-valuemax="store.raider.maxHp"
+        :aria-valuenow="store.raider.hp"
+      >
+        <div class="comms-log__hp-fill" :class="hpClass" :style="{ width: hpPercent + '%' }" />
+      </div>
+      <span class="comms-log__hp-value">{{ store.raider.hp }}/{{ store.raider.maxHp }}</span>
+    </div>
     <div class="comms-log__tick-track" aria-hidden="true">
       <div
         :key="store.lastTickAt"
@@ -112,6 +134,46 @@ onMounted(scrollToTop)
   color: var(--color-accent);
 }
 
+.comms-log__mobile-health {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  background: var(--color-surface-raised);
+  border-bottom: 1px solid var(--color-border);
+  font-family: var(--font-mono);
+}
+
+.comms-log__hp-label,
+.comms-log__hp-value {
+  flex-shrink: 0;
+  color: var(--color-muted);
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+}
+
+.comms-log__hp-value {
+  color: var(--color-text);
+}
+
+.comms-log__hp-bar {
+  flex: 1;
+  height: 8px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.comms-log__hp-fill {
+  height: 100%;
+  transition: width 0.2s ease;
+}
+
+.comms-log__hp-fill--good { background: var(--color-success); }
+.comms-log__hp-fill--warning { background: var(--color-warning); }
+.comms-log__hp-fill--danger { background: var(--color-danger); }
+
 .comms-log__tick-track {
   height: 3px;
   background: var(--color-surface-raised);
@@ -131,6 +193,10 @@ onMounted(scrollToTop)
   .comms-log__tick-bar {
     animation: none;
     width: 100%;
+  }
+
+  .comms-log__hp-fill {
+    transition: none;
   }
 }
 
@@ -192,5 +258,11 @@ onMounted(scrollToTop)
   text-align: center;
   cursor: pointer;
   font-family: var(--font-mono);
+}
+
+@media (max-width: 600px) {
+  .comms-log__mobile-health {
+    display: flex;
+  }
 }
 </style>

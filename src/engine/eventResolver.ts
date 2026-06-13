@@ -66,6 +66,7 @@ const loot = mergeLootTables([...baseLoot, ...robotLoot])
 export const HEALING_USE_HP_RATIO = 0.75
 const ROBOT_LETHAL_HP_RATIO = 0.5
 const ROBOT_NONLETHAL_MIN_HP_RATIO = 0.25
+const ROBOT_DAMAGE_PER_MENACE = 3
 const LETHAL_ROBOT_DEADLINESS: ReadonlySet<RobotEntry['deadliness']> = new Set(['nasty', 'deadly'])
 
 function clampMood(mood: number): number {
@@ -347,7 +348,7 @@ export function resolveRobotEncounter(
   }
 
   const damageMultiplier = Math.max(0, opts.damageMultiplier ?? 1)
-  const rawDamage = Math.ceil(robot.menace * 5 * damageMultiplier)
+  const rawDamage = Math.ceil(robot.menace * ROBOT_DAMAGE_PER_MENACE * damageMultiplier)
   const hp = applyRobotDamage(state, robot, rawDamage)
   const damage = state.raider.hp - hp
   return {

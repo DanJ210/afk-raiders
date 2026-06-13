@@ -62,7 +62,7 @@ function stashSaleEvent(sold: number, coins: number, tick: number, now: number):
   }
 }
 
-export function processTick(state: GameState, rng: RNG, now: number = Date.now(), extractionPreference?: number): TickResult {
+export function processTick(state: GameState, rng: RNG, now: number = Date.now()): TickResult {
   const emitted: LogEvent[] = []
 
   // ------------------------------------------------------------------
@@ -113,7 +113,6 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
       {
         encouraged: currentState.pendingEncourage,
         scolded: currentState.pendingScold,
-        extractionPreference,
         currentHp: currentState.raider.hp,
         maxHp: currentState.raider.maxHp,
         hasHealingItems: currentState.raid.healingItems.length > 0,

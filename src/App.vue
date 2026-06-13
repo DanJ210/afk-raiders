@@ -6,7 +6,6 @@ import { zoneName } from './utils/zones'
 import CommsLog from './components/CommsLog.vue'
 import RaiderCard from './components/RaiderCard.vue'
 import BackpackPanel from './components/BackpackPanel.vue'
-import ExtractionPreference from './components/ExtractionPreference.vue'
 import HomeStash from './components/HomeStash.vue'
 import HandlerActions from './components/HandlerActions.vue'
 import AwaySummary from './components/AwaySummary.vue'
@@ -44,7 +43,6 @@ const showZoneStrip = computed(
       <aside class="app__sidebar">
         <RaiderCard />
         <BackpackPanel />
-        <ExtractionPreference />
         <HomeStash />
         <HandlerActions />
       </aside>
@@ -69,7 +67,6 @@ const showZoneStrip = computed(
 
       <section v-if="activeMobileTab === 'raider'" class="app__mobile-panel">
         <RaiderCard />
-        <ExtractionPreference />
         <HandlerActions />
       </section>
 

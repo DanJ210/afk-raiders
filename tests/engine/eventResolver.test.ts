@@ -121,8 +121,8 @@ describe('applyEffects — backpack item behavior', () => {
 
     expect(result).not.toBeNull()
     expect(result!.event.id).toBe('robot_roomba_prime_escaped')
-    expect(result!.event.text).toContain('Took 40 damage')
-    expect(result!.state.raider.hp).toBe(60)
+    expect(result!.event.text).toContain('Took 24 damage')
+    expect(result!.state.raider.hp).toBe(76)
     expect(result!.state.raid.backpack).toHaveLength(0)
   })
 
@@ -133,8 +133,8 @@ describe('applyEffects — backpack item behavior', () => {
 
     expect(failed).not.toBeNull()
     expect(failed!.event.id).toBe('robot_tattletale_escaped')
-    expect(failed!.event.text).toContain('Took 75 damage')
-    expect(failed!.state.raider.hp).toBe(25)
+    expect(failed!.event.text).toContain('Took 63 damage')
+    expect(failed!.state.raider.hp).toBe(37)
 
     expect(defeated).not.toBeNull()
     expect(defeated!.event.id).toBe('robot_anxietick_defeated')
@@ -147,8 +147,8 @@ describe('applyEffects — backpack item behavior', () => {
 
     expect(result).not.toBeNull()
     expect(result!.event.id).toBe('robot_roomba_prime_escaped')
-    expect(result!.event.text).toContain('Took 75 damage')
-    expect(result!.state.raider.hp).toBe(25)
+    expect(result!.event.text).toContain('Took 72 damage')
+    expect(result!.state.raider.hp).toBe(28)
   })
 
   it('only lets nasty and deadly robots down already-wounded raiders', () => {

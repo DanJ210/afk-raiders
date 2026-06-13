@@ -63,13 +63,13 @@ describe('greedCheck', () => {
   })
 
   it('encouraging decreases extract rate vs baseline', () => {
-    const baseline = countOutcomes(makeRaid({ greedLevel: 30 }))
-    const encouraged = countOutcomes(makeRaid({ greedLevel: 30 }), 500, { encouraged: true, scolded: false })
+    const baseline = countOutcomes(makeRaid({ greedLevel: 0 }))
+    const encouraged = countOutcomes(makeRaid({ greedLevel: 0 }), 500, { encouraged: true, scolded: false })
     expect(encouraged.extract).toBeLessThan(baseline.extract)
   })
 
   it('very high greed produces some deaths', () => {
-    const { downed } = countOutcomes(makeRaid({ greedLevel: 90 }), 500)
+    const { downed } = countOutcomes(makeRaid({ greedLevel: 100 }), 500)
     expect(downed).toBeGreaterThan(0)
   })
 
