@@ -9,7 +9,7 @@
  * Formula explanation:
  *
  *   baseExtractChance = 2%  (Raider's survival instinct, barely)
- *   greedPenalty      = greedLevel * 0.02   (each greed point makes extraction less likely)
+ *   greedPenalty      = greedLevel * 0.02%  (each greed point reduces extraction chance by 0.02 percentage points)
  *   extractChance     = clamp(baseExtractChance - greedPenalty, 1%, 80%)
  *
  *   deathChance starts at 0, grows with greedLevel:
