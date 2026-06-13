@@ -22,6 +22,7 @@ export function createInitialState(now: number = Date.now()): GameState {
     },
     raid: {
       zone: null,
+      timeOfDay: null,
       backpack: [],
       backpackValue: 0,
       greedLevel: 0,

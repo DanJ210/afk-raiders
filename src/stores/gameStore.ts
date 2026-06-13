@@ -46,6 +46,10 @@ function loadSave(): SaveData | null {
       ...data.state,
       homeStash: sale.homeStash,
       coins: (data.state.coins ?? 0) + sale.coinsGained,
+      raid: {
+        ...data.state.raid,
+        timeOfDay: data.state.raid.timeOfDay ?? null,
+      },
     }
     return data
   } catch {

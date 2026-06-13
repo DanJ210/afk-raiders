@@ -26,6 +26,7 @@ const mobileTabs: Array<{ id: MobileTabId; label: string; icon: string }> = [
 const activeMobileTab = ref<MobileTabId>('comms')
 
 const currentZoneName = computed(() => zoneName(store.raid.zone))
+const currentTimeOfDay = computed(() => store.raid.timeOfDay)
 const showZoneStrip = computed(
   () => store.phase === 'RAIDING' && currentZoneName.value !== null,
 )
@@ -55,7 +56,7 @@ const showZoneStrip = computed(
 
     <main v-else class="app__main-mobile">
       <div v-if="showZoneStrip" class="app__zone-strip">
-        📍 Zone: <strong>{{ currentZoneName }}</strong>
+        📍 Zone: <strong>{{ currentZoneName }}</strong><span v-if="currentTimeOfDay"> · <span class="app__zone-tod">{{ currentTimeOfDay }}</span></span>
       </div>
 
       <section v-if="activeMobileTab === 'comms'" class="app__mobile-panel app__mobile-panel--fill">
@@ -186,6 +187,10 @@ const showZoneStrip = computed(
 .app__zone-strip strong {
   color: var(--color-accent);
   font-weight: 700;
+}
+
+.app__zone-tod {
+  color: var(--color-muted);
 }
 
 .app__mobile-panel {

@@ -68,7 +68,7 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
   // ------------------------------------------------------------------
   // 1. Run phase state machine
   // ------------------------------------------------------------------
-  const { raid: nextRaid, transition } = tickPhase(state.raid)
+  const { raid: nextRaid, transition } = tickPhase(state.raid, undefined, rng)
   let currentState: GameState = { ...state, raid: nextRaid }
 
   if (transition) {

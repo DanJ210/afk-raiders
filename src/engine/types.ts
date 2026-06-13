@@ -47,6 +47,8 @@ export interface ZoneEntry extends ContentEntry {
   description: string
 }
 
+export type TimeOfDay = 'Day' | 'Night' | 'Stella Red'
+
 export interface FlavorTable {
   [tableKey: string]: Array<{ id: string; weight: number; text: string }>
 }
@@ -69,6 +71,7 @@ export interface BackpackItem {
 
 export interface RaidState {
   zone: string | null
+  timeOfDay: TimeOfDay | null
   backpack: BackpackItem[]
   backpackValue: number
   greedLevel: number   // 0–100; higher = more likely to push deeper and die
