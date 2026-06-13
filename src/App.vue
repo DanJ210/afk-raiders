@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useMediaQuery } from '@vueuse/core'
 import { useGameStore } from './stores/gameStore'
+import { zoneName } from './utils/zones'
 import CommsLog from './components/CommsLog.vue'
 import RaiderCard from './components/RaiderCard.vue'
 import BackpackPanel from './components/BackpackPanel.vue'
@@ -23,6 +24,11 @@ const mobileTabs: Array<{ id: MobileTabId; label: string; icon: string }> = [
 ]
 
 const activeMobileTab = ref<MobileTabId>('comms')
+
+const currentZoneName = computed(() => zoneName(store.raid.zone))
+const showZoneStrip = computed(
+  () => store.phase === 'RAIDING' && currentZoneName.value !== null,
+)
 </script>
 
 <template>
@@ -48,6 +54,10 @@ const activeMobileTab = ref<MobileTabId>('comms')
     </main>
 
     <main v-else class="app__main-mobile">
+      <div v-if="showZoneStrip" class="app__zone-strip">
+        📍 Zone: <strong>{{ currentZoneName }}</strong>
+      </div>
+
       <section v-if="activeMobileTab === 'comms'" class="app__mobile-panel app__mobile-panel--fill">
         <CommsLog />
       </section>
@@ -157,11 +167,30 @@ const activeMobileTab = ref<MobileTabId>('comms')
 .app__main-mobile {
   flex: 1;
   min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.app__zone-strip {
+  flex: none;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--color-muted);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  padding: 5px 10px;
+}
+
+.app__zone-strip strong {
+  color: var(--color-accent);
+  font-weight: 700;
 }
 
 .app__mobile-panel {
-  height: 100%;
   min-height: 0;
+  flex: 1;
   display: flex;
   flex-direction: column;
   gap: 10px;
