@@ -138,7 +138,7 @@ function sellSelectedItem() {
               </p>
             </div>
           </div>
-          <button type="button" class="stash-dialog__close" @click="closeItemDetails">✕</button>
+          <button type="button" class="stash-dialog__close" autofocus @click="closeItemDetails">✕</button>
         </div>
 
         <p class="stash-dialog__description">
