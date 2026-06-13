@@ -1,9 +1,9 @@
 [
   { "id": "water_bottle_classic",    "weight": 30, "rarity": 1, "name": "Water Bottle (Classic)",       "value": 10,  "flavor": "Warm. Slightly dented. Perfect." },
   { "id": "water_bottle_fancy",      "weight": 15, "rarity": 2, "name": "Water Bottle (Fancy Label)",   "value": 25,  "flavor": "Has a logo for a company that no longer exists. Collectible." },
-  { "id": "water_bottle_mystery",    "weight": 10, "rarity": 3, "name": "Water Bottle (Mystery Fluid)", "value": 35,  "flavor": "Not water. Maybe sports drink. Probably fine." },
-  { "id": "water_bottle_tactical",   "weight": 8,  "rarity": 3, "name": "Tactical Water Bottle",        "value": 40,  "flavor": "Has MOLLE attachments. Holds water AND attitude." },
-  { "id": "water_bottle_emotional",  "weight": 5,  "rarity": 4, "name": "Water Bottle (Half-Empty)",    "value": 100,  "flavor": "Someone left this. It's not your fault they're gone." },
+  { "id": "water_bottle_emotional",  "weight": 10, "rarity": 3, "name": "Water Bottle (Half-Empty)",    "value": 35,  "flavor": "Someone left this. It's not your fault they're gone." },
+  { "id": "water_bottle_tactical",   "weight": 8,  "rarity": 4, "name": "Tactical Water Bottle",        "value": 40,  "flavor": "Has MOLLE attachments. Holds water AND attitude." },
+  { "id": "water_bottle_mystery",    "weight": 5,  "rarity": 5, "name": "Water Bottle (Mystery Fluid)", "value": 90,  "flavor": "Moon water. Made with real cranks." },
   { "id": "expired_mre",             "weight": 20, "rarity": 2, "name": "Expired MRE",                  "value": 20,  "flavor": "Best before: a date that feels personal." },
   { "id": "left_boot",               "weight": 18, "rarity": 2, "name": "Left Boot",                    "value": 15,  "flavor": "Someone out there has the right one. The pair would be worth something." },
   { "id": "crumpled_memo",           "weight": 15, "rarity": 2, "name": "Crumpled Memo",                "value": 10,  "flavor": "Subject: MANDATORY FUN. The irony is not lost on you." },

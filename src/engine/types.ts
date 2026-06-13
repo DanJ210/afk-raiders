@@ -44,6 +44,7 @@ export interface LootItem extends ContentEntry {
 
 export interface RobotEntry extends ContentEntry {
   name: string
+  deadliness: 'weak' | 'moderate' | 'nasty' | 'deadly'
   menace: number
   flavorLines: string[]
   successText: string[]
@@ -61,6 +62,7 @@ export interface RobotLootItem extends ContentEntry {
 export interface HealingItem extends ContentEntry {
   name: string
   healAmount: number
+  moodGain: number
   flavor?: string
   /** 1 = Common … 5 = Legendary (higher = rarer). */
   rarity: number
@@ -97,6 +99,8 @@ export interface HealingItemStack {
   itemId: string
   name: string
   healAmount: number
+  /** Optional for backward compatibility with saved current-raid meds. */
+  moodGain?: number
   rarity: number
   flavor?: string
   quantity: number

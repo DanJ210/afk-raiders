@@ -35,6 +35,7 @@ function makeBandage(overrides: Partial<HealingItemStack> = {}): HealingItemStac
     itemId: 'bandage_white',
     name: 'White Bandage',
     healAmount: 5,
+    moodGain: 1,
     rarity: 1,
     quantity: 1,
     ...overrides,
@@ -157,14 +158,14 @@ describe('applyEffects — backpack item behavior', () => {
   it('uses the smallest current-raid bandage that covers missing HP once HP is low', () => {
     const state = {
       ...createInitialState(0),
-      raider: { ...createInitialState(0).raider, hp: 75 },
+      raider: { ...createInitialState(0).raider, hp: 75, mood: -2 },
       raid: {
         ...createInitialState(0).raid,
         phase: 'RAIDING' as const,
         healingItems: [
           makeBandage({ itemId: 'bandage_white', name: 'White Bandage', healAmount: 5, rarity: 1 }),
-          makeBandage({ itemId: 'bandage_blue', name: 'Blue Bandage', healAmount: 25, rarity: 3 }),
-          makeBandage({ itemId: 'bandage_purple', name: 'Purple Bandage', healAmount: 50, rarity: 4 }),
+          makeBandage({ itemId: 'bandage_blue', name: 'Blue Bandage', healAmount: 25, moodGain: 3, rarity: 3 }),
+          makeBandage({ itemId: 'bandage_purple', name: 'Purple Bandage', healAmount: 50, moodGain: 4, rarity: 4 }),
         ],
       },
     }
@@ -173,7 +174,9 @@ describe('applyEffects — backpack item behavior', () => {
 
     expect(result).not.toBeNull()
     expect(result!.event.id).toBe('healing_bandage_blue_used')
+    expect(result!.event.text).toContain('gained 3 mood')
     expect(result!.state.raider.hp).toBe(100)
+    expect(result!.state.raider.mood).toBe(1)
     expect(result!.state.raid.healingItems.map(item => item.itemId)).toEqual([
       'bandage_white',
       'bandage_purple',
@@ -210,6 +213,23 @@ describe('applyEffects — backpack item behavior', () => {
     expect(result).not.toBeNull()
     expect(result!.state.raider.hp).toBe(60)
     expect(result!.event.text).toContain('Restored 50 HP')
+  })
+
+  it('caps healing mood gains at the raider mood maximum', () => {
+    const state = {
+      ...createInitialState(0),
+      raider: { ...createInitialState(0).raider, hp: 50, mood: 4 },
+      raid: {
+        ...createInitialState(0).raid,
+        phase: 'RAIDING' as const,
+        healingItems: [makeBandage({ itemId: 'bandage_purple', name: 'Purple Bandage', healAmount: 50, moodGain: 4, rarity: 4 })],
+      },
+    }
+
+    const result = consumeHealingItemIfUseful(state, 0)
+
+    expect(result).not.toBeNull()
+    expect(result!.state.raider.mood).toBe(5)
   })
 
   it('cannot heal from home stash items without current-raid bandages', () => {

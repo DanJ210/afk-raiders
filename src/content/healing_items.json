@@ -5,6 +5,7 @@
     "rarity": 1,
     "name": "White Bandage",
     "healAmount": 5,
+    "moodGain": 1,
     "flavor": "A little strip of hope. Mostly adhesive."
   },
   {
@@ -13,6 +14,7 @@
     "rarity": 2,
     "name": "Green Bandage",
     "healAmount": 10,
+    "moodGain": 2,
     "flavor": "Better than white. Still applied with panic."
   },
   {
@@ -21,6 +23,7 @@
     "rarity": 3,
     "name": "Blue Bandage",
     "healAmount": 25,
+    "moodGain": 3,
     "flavor": "Professional-looking enough to inspire misplaced confidence."
   },
   {
@@ -29,6 +32,7 @@
     "rarity": 4,
     "name": "Purple Bandage",
     "healAmount": 50,
+    "moodGain": 4,
     "flavor": "Premium medical tape for premium mistakes."
   }
 ]

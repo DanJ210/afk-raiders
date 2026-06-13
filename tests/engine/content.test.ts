@@ -12,6 +12,13 @@ import baseLootData from '../../src/content/loot.json'
 
 const baseLoot = baseLootData as typeof loot
 
+const DEADLINESS_RANK = {
+  weak: 1,
+  moderate: 2,
+  nasty: 3,
+  deadly: 4,
+} as const
+
 // Known non-table slot names handled directly in fillSlots()
 const BUILT_IN_SLOTS = new Set(['mundane_item', 'water_item', 'healing_item', 'count'])
 
@@ -25,6 +32,25 @@ function isRobotFlavorSlot(slot: string): boolean {
 function extractSlots(text: string): string[] {
   const matches = text.matchAll(/\{([^}]+)\}/g)
   return [...matches].map(m => m[1])
+}
+
+function getRobotEncounterEvents(robotId: string) {
+  return events.filter(event => event.effects?.robotEncounter === robotId)
+}
+
+function getMaxFailureDamage(robotId: string): number {
+  const robot = robots.find(entry => entry.id === robotId)
+  expect(robot, `unknown robot "${robotId}"`).toBeDefined()
+
+  const maxMultiplier = Math.max(
+    ...getRobotEncounterEvents(robotId).map(event => event.effects?.robotDamageMultiplier ?? 1),
+  )
+
+  return Math.ceil(robot!.menace * 5 * maxMultiplier)
+}
+
+function getTotalEncounterWeight(robotId: string): number {
+  return getRobotEncounterEvents(robotId).reduce((sum, event) => sum + event.weight, 0)
 }
 
 describe('content validation', () => {
@@ -94,6 +120,45 @@ describe('content validation', () => {
           encounterRobotIds.has(robot.id),
           `robot "${robot.id}" has no encounter event`,
         ).toBe(true)
+      }
+    })
+
+    it('anxietick is the most abundant encounter robot', () => {
+      const anxietickWeight = getTotalEncounterWeight('anxietick')
+      for (const robot of robots.filter(robot => robot.id !== 'anxietick')) {
+        expect(
+          anxietickWeight,
+          `anxietick encounter weight should be greater than ${robot.id}`,
+        ).toBeGreaterThan(getTotalEncounterWeight(robot.id))
+      }
+    })
+
+    it('nasty and deadly robots only appear once greed has built up', () => {
+      for (const robot of robots) {
+        if (DEADLINESS_RANK[robot.deadliness] < DEADLINESS_RANK.nasty) continue
+
+        for (const event of getRobotEncounterEvents(robot.id)) {
+          expect(
+            event.requires?.minGreed ?? 0,
+            `high-tier robot event "${event.id}" should require greed`,
+          ).toBeGreaterThanOrEqual(20)
+        }
+      }
+    })
+
+    it('max failed-encounter damage rises with robot deadliness', () => {
+      const sorted = [...robots].sort(
+        (a, b) => DEADLINESS_RANK[a.deadliness] - DEADLINESS_RANK[b.deadliness],
+      )
+
+      for (let index = 1; index < sorted.length; index += 1) {
+        const previous = sorted[index - 1]
+        const current = sorted[index]
+
+        expect(
+          getMaxFailureDamage(current.id),
+          `${current.id} should be more dangerous than ${previous.id}`,
+        ).toBeGreaterThan(getMaxFailureDamage(previous.id))
       }
     })
 
@@ -221,10 +286,46 @@ describe('content validation', () => {
       }
     })
 
+    it('all robots have valid deadliness labels', () => {
+      for (const robot of robots) {
+        expect(
+          robot.deadliness in DEADLINESS_RANK,
+          `robot "${robot.id}" has invalid deadliness "${robot.deadliness}"`,
+        ).toBe(true)
+      }
+    })
+
+    it('current robot deadliness labels match the intended tier ladder', () => {
+      const labels = Object.fromEntries(robots.map(robot => [robot.id, robot.deadliness]))
+      expect(labels).toEqual({
+        anxietick: 'weak',
+        tattletale: 'moderate',
+        shredder_dedder: 'nasty',
+        roomba_prime: 'deadly',
+      })
+    })
+
     it('all robot menace values are on the placeholder 1-10 scale', () => {
       for (const robot of robots) {
         expect(robot.menace, `robot "${robot.id}" menace must be >= 1`).toBeGreaterThanOrEqual(1)
         expect(robot.menace, `robot "${robot.id}" menace must be <= 10`).toBeLessThanOrEqual(10)
+      }
+    })
+
+    it('robot menace rises and robot-table abundance falls with deadliness', () => {
+      for (const current of robots) {
+        for (const other of robots) {
+          if (DEADLINESS_RANK[current.deadliness] <= DEADLINESS_RANK[other.deadliness]) continue
+
+          expect(
+            current.menace,
+            `${current.id} should have higher menace than ${other.id}`,
+          ).toBeGreaterThan(other.menace)
+          expect(
+            current.weight,
+            `${current.id} should be less abundant than ${other.id}`,
+          ).toBeLessThan(other.weight)
+        }
       }
     })
 
@@ -252,10 +353,21 @@ describe('content validation', () => {
       })
     })
 
+    it('higher-tier bandages grant higher mood gains', () => {
+      const moodGains = Object.fromEntries(healingItems.map(item => [item.id, item.moodGain]))
+      expect(moodGains).toEqual({
+        bandage_white: 1,
+        bandage_green: 2,
+        bandage_blue: 3,
+        bandage_purple: 4,
+      })
+    })
+
     it('all healing item weights and rarities are valid', () => {
       for (const item of healingItems) {
         expect(item.weight, `healing item "${item.id}" has weight ${item.weight}`).toBeGreaterThan(0)
         expect(item.healAmount, `healing item "${item.id}" exceeds one-use heal cap`).toBeLessThanOrEqual(50)
+        expect(item.moodGain, `healing item "${item.id}" moodGain must be positive`).toBeGreaterThan(0)
         expect(item.rarity, `healing item "${item.id}" rarity must be >= 1`).toBeGreaterThanOrEqual(1)
         expect(item.rarity, `healing item "${item.id}" rarity must be <= 5`).toBeLessThanOrEqual(5)
       }

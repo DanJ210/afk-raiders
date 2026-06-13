@@ -65,6 +65,14 @@ const loot = mergeLootTables([...baseLoot, ...robotLoot])
 
 export const HEALING_USE_HP_RATIO = 0.75
 
+function clampMood(mood: number): number {
+  return Math.max(-5, Math.min(5, mood))
+}
+
+function healingMoodGain(item: HealingItemStack): number {
+  return item.moodGain ?? Math.max(1, Math.min(4, item.rarity))
+}
+
 /** Filter events valid for the current game context */
 function eligibleEvents(state: GameState): EventTemplate[] {
   const { raid } = state
@@ -190,6 +198,7 @@ function addHealingItem(
         itemId: item.id,
         name: item.name,
         healAmount: item.healAmount,
+        moodGain: item.moodGain,
         rarity: item.rarity,
         flavor: item.flavor,
         quantity: 1,
@@ -255,19 +264,21 @@ export function consumeHealingItemIfUseful(
   const missingHp = state.raider.maxHp - state.raider.hp
   const item = pickBestHealingItem(state.raid.healingItems, missingHp)
   const healed = Math.min(50, item.healAmount, missingHp)
+  const moodGain = healingMoodGain(item)
   const hp = Math.min(state.raider.maxHp, state.raider.hp + healed)
+  const mood = clampMood(state.raider.mood + moodGain)
 
   return {
     state: {
       ...state,
-      raider: { ...state.raider, hp },
+      raider: { ...state.raider, hp, mood },
       raid: removeHealingItem(state.raid, item),
     },
     event: {
       id: `healing_${item.itemId}_used`,
       tick: state.tick,
       timestamp: now,
-      text: `Used ${item.name}. Restored ${healed} HP. Medical dignity restored to acceptable levels.`,
+      text: `Used ${item.name}. Restored ${healed} HP and gained ${moodGain} mood. Medical dignity restored to acceptable levels.`,
       phase: state.raid.phase,
     },
   }
@@ -383,7 +394,7 @@ export function applyEffects(
   }
 
   if (effects.mood !== undefined) {
-    raider = { ...raider, mood: Math.max(-5, Math.min(5, raider.mood + effects.mood)) }
+    raider = { ...raider, mood: clampMood(raider.mood + effects.mood) }
   }
 
   if (effects.hp !== undefined) {

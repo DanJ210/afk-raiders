@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { useGameStore } from '../stores/gameStore'
 import { rarityLabel, rarityBarClass } from '../utils/rarity'
+import type { HealingItemStack } from '../engine/types'
 
 const store = useGameStore()
 const raid = computed(() => store.raid)
@@ -27,6 +28,10 @@ function greedLabel(level: number): string {
   if (level < 60) return '😤 Pushing It'
   if (level < 80) return '🚨 Reckless'
   return '☠️ DEATH WISH'
+}
+
+function moodGain(item: HealingItemStack): number {
+  return item.moodGain ?? Math.max(1, Math.min(4, item.rarity))
 }
 
 const greedClass = computed(() => {
@@ -67,6 +72,7 @@ const greedClass = computed(() => {
           <span :class="rarityBarClass(item.rarity)" :title="rarityLabel(item.rarity)" aria-hidden="true" />
           <span>{{ item.name }}</span>
           <span>+{{ item.healAmount }} HP</span>
+          <span>+{{ moodGain(item) }} Mood</span>
           <span v-if="item.quantity > 1">x{{ item.quantity }}</span>
         </li>
       </ul>
@@ -157,7 +163,7 @@ const greedClass = computed(() => {
 
 .backpack-panel__med-item {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  grid-template-columns: auto minmax(0, 1fr) auto auto auto;
   align-items: center;
   gap: 6px;
   padding: 6px 8px;

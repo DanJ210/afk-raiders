@@ -3,6 +3,7 @@
     "id": "anxietick",
     "weight": 50,
     "name": "Anxietick",
+    "deadliness": "weak",
     "menace": 2,
     "flavorLines": [
       "skitters nervously and then freezes when you look at it",
@@ -26,6 +27,7 @@
     "id": "tattletale",
     "weight": 35,
     "name": "Tattletale drone",
+    "deadliness": "moderate",
     "menace": 3,
     "flavorLines": [
       "broadcasts your location to everything in a 200-metre radius",
@@ -46,32 +48,10 @@
      ]
   },
   {
-    "id": "roomba_prime",
-    "weight": 15,
-    "name": "Roomba Prime",
-    "menace": 8,
-    "flavorLines": [
-      "vacuums aggressively in your direction",
-      "has cleaned this floor fourteen times and will not tolerate intruders",
-      "emits a high-pitched warning tone that is somehow worse than silence",
-      "bumps into a wall, rights itself, and focuses entirely on you"
-    ],
-    "successText": [ "You manage to outmaneuver the Roomba Prime and disable it, it had a power button." ],
-    "lootTable": [
-      { "id": "roomba_battery", "weight": 85, "name": "Roomba Battery", "value": 300, "flavor": "A battery from a Roomba Prime. Still holds a charge. Probably not for long." },
-      {
-        "id": "robot_alloy",
-        "weight": 1,
-        "name": "Robot Alloy",
-        "value": 20,
-        "flavor": "Standard metal"
-      }
-     ]
-  },
-  {
     "id": "shredder_dedder",
     "weight": 25,
     "name": "Shredder Dedder",
+    "deadliness": "nasty",
     "menace": 7,
     "flavorLines": [
       "approached the LZ stealthily",
@@ -85,5 +65,37 @@
       { "id": "shredder_blade", "weight": 85, "name": "Shredder Blade", "value": 100, "flavor": "A blade from a Shredder Dedder. Still sharp and very dangerous." },
       { "id": "robot_alloy", "weight": 100, "name": "Robot Alloy", "value": 20, "flavor": "Standard metal" }
      ]
+  },
+  {
+    "id": "roomba_prime",
+    "weight": 15,
+    "name": "Roomba Prime",
+    "deadliness": "deadly",
+    "menace": 8,
+    "flavorLines": [
+      "vacuums aggressively in your direction",
+      "has cleaned this floor fourteen times and will not tolerate intruders",
+      "emits a high-pitched warning tone that is somehow worse than silence",
+      "bumps into a wall, rights itself, and focuses entirely on you"
+    ],
+    "successText": [
+      "You manage to outmaneuver the Roomba Prime and disable it, it had a power button."
+    ],
+    "lootTable": [
+      {
+        "id": "roomba_battery",
+        "weight": 85,
+        "name": "Roomba Battery",
+        "value": 300,
+        "flavor": "A battery from a Roomba Prime. Still holds a charge. Probably not for long."
+      },
+      {
+        "id": "robot_alloy",
+        "weight": 1,
+        "name": "Robot Alloy",
+        "value": 20,
+        "flavor": "Standard metal"
+      }
+    ]
   }
 ]
