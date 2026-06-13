@@ -111,6 +111,8 @@ export interface GameState {
   signal: SignalState
   log: LogEvent[]
   homeStash: BackpackItem[]
+  /** Coin stash from auto-sold overflow loot — value is never deleted, only converted */
+  coins: number
   // Set by CALL_EXTRACT so the tick driver knows to nudge the next greed check
   pendingEncourage: boolean
   pendingScold: boolean

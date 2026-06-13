@@ -25,15 +25,15 @@ import { transferBackpackToHomeStash, HOME_STASH_ITEM_LIMIT } from './homeStash.
 const MAX_LOG_SIZE = 200
 
 /**
- * Apply successful-extraction bookkeeping: transfer loot home (respecting the
- * stash item limit — quantities count toward it), heal up, count the win.
- * Returns the new state plus how many items had to be abandoned because the
- * stash was full, so the tick can narrate the tragedy.
+ * Apply successful-extraction bookkeeping: transfer loot home, heal up, count
+ * the win. If the stash overflows the item limit, the lowest-value items are
+ * auto-sold and their value is credited to the raider's coin stash — nothing
+ * is ever deleted. Returns sale info so the tick can narrate it.
  */
 function applySuccessfulExtraction(
   state: GameState,
   extractedBackpack: BackpackItem[],
-): { state: GameState; discardedItemCount: number } {
+): { state: GameState; coinsGained: number; soldItemCount: number } {
   const transfer = transferBackpackToHomeStash(state.homeStash, extractedBackpack)
   return {
     state: {
@@ -44,18 +44,20 @@ function applySuccessfulExtraction(
         extractCount: state.raider.extractCount + 1,
       },
       homeStash: transfer.homeStash,
+      coins: state.coins + transfer.coinsGained,
     },
-    discardedItemCount: transfer.discardedItemCount,
+    coinsGained: transfer.coinsGained,
+    soldItemCount: transfer.soldItemCount,
   }
 }
 
-/** Comms line for loot lost to a full stash — the log IS the product. */
-function stashFullEvent(discarded: number, tick: number, now: number): LogEvent {
+/** Comms line for overflow loot auto-sold from a full stash — the log IS the product. */
+function stashSaleEvent(sold: number, coins: number, tick: number, now: number): LogEvent {
   return {
-    id: 'stash_full_discard',
+    id: 'stash_overflow_sale',
     tick,
     timestamp: now,
-    text: `Home stash is full (${HOME_STASH_ITEM_LIMIT}/${HOME_STASH_ITEM_LIMIT}). ${discarded} item${discarded === 1 ? '' : 's'} left on the doorstep. The doorstep seems pleased.`,
+    text: `Home stash hit ${HOME_STASH_ITEM_LIMIT} items. Auto-sold the ${sold} cheapest item${sold === 1 ? '' : 's'} for ${coins} coin${coins === 1 ? '' : 's'}. The Desperanza pawn guy didn't even haggle.`,
     phase: 'HUB',
   }
 }
@@ -94,8 +96,8 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
       } else if (transition.from === 'EXTRACTING') {
         const extraction = applySuccessfulExtraction(currentState, state.raid.backpack)
         currentState = extraction.state
-        if (extraction.discardedItemCount > 0) {
-          emitted.push(stashFullEvent(extraction.discardedItemCount, state.tick, now))
+        if (extraction.soldItemCount > 0) {
+          emitted.push(stashSaleEvent(extraction.soldItemCount, extraction.coinsGained, state.tick, now))
         }
       }
     }
@@ -187,8 +189,8 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
         if (fromPhase === 'EXTRACTING' && forcedPhase === 'HUB') {
           const extraction = applySuccessfulExtraction(currentState, backpackBeforeForce)
           currentState = extraction.state
-          if (extraction.discardedItemCount > 0) {
-            emitted.push(stashFullEvent(extraction.discardedItemCount, state.tick, now))
+          if (extraction.soldItemCount > 0) {
+            emitted.push(stashSaleEvent(extraction.soldItemCount, extraction.coinsGained, state.tick, now))
           }
         }
       }

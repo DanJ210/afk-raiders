@@ -32,6 +32,7 @@ export function createInitialState(now: number = Date.now()): GameState {
     signal: initialSignalState(now),
     log: [],
     homeStash: [],
+    coins: 0,
     pendingEncourage: false,
     pendingScold: false,
   }

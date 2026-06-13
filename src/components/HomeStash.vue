@@ -8,8 +8,19 @@ const store = useGameStore()
 
 const homeStash = computed(() => store.state.homeStash)
 
+/** Highest-value items at the top (per-unit value; line total breaks ties) */
+const sortedStash = computed(() =>
+  [...homeStash.value].sort(
+    (a, b) => b.value - a.value || b.value * b.quantity - a.value * a.quantity,
+  ),
+)
+
+/** Items + coins — the raider's total collected wealth. Auto-sales preserve it. */
 const totalStashValue = computed(() => {
-  return homeStash.value.reduce((sum, item) => sum + item.value * item.quantity, 0)
+  return (
+    homeStash.value.reduce((sum, item) => sum + item.value * item.quantity, 0) +
+    store.state.coins
+  )
 })
 
 const totalItemCount = computed(() => {
@@ -40,7 +51,7 @@ function getCategoryEmoji(itemName: string): string {
 
     <div v-else>
       <div class="home-stash__stats">
-        <div class="home-stash__stat">
+        <div class="home-stash__stat" title="Item value plus coins from auto-sold overflow loot">
           <span class="home-stash__stat-label">Total Value</span>
           <span class="home-stash__stat-value">{{ totalStashValue }}</span>
         </div>
@@ -51,7 +62,7 @@ function getCategoryEmoji(itemName: string): string {
       </div>
 
       <div class="home-stash__items">
-        <div v-for="item in homeStash" :key="item.itemId" class="stash-item">
+        <div v-for="item in sortedStash" :key="item.itemId" class="stash-item">
           <span class="stash-item__emoji">{{ getCategoryEmoji(item.name) }}</span>
           <span :class="rarityBarClass(item.rarity)" :title="rarityLabel(item.rarity)">
             <span class="stash-item__rarity-text">{{ rarityLabel(item.rarity) }}</span>

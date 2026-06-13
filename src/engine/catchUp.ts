@@ -60,7 +60,8 @@ export function catchUp(
   const before = {
     deathCount: state.raider.deathCount,
     extractCount: state.raider.extractCount,
-    stashValue: getTotalItemValue(state.homeStash),
+    // Coins count too: overflow loot auto-sells, converting item value to coins
+    stashValue: getTotalItemValue(state.homeStash) + state.coins,
   }
 
   let currentState = state
@@ -73,7 +74,10 @@ export function catchUp(
 
   const deaths = currentState.raider.deathCount - before.deathCount
   const extracts = currentState.raider.extractCount - before.extractCount
-  const itemsGained = Math.max(0, getTotalItemValue(currentState.homeStash) - before.stashValue)
+  const itemsGained = Math.max(
+    0,
+    getTotalItemValue(currentState.homeStash) + currentState.coins - before.stashValue,
+  )
 
   const lines = buildSummaryLines(ticksToReplay, deaths, extracts, itemsGained)
 
