@@ -23,7 +23,7 @@ const TIME_OF_DAY_TABLE: Array<{ id: TimeOfDay; weight: number }> = [
 export const PHASE_DURATIONS: Record<Phase, number> = {
   HUB: 20,         // 10 minutes max resting and prepping in Desperanza
   DEPLOYING: 4,    // 2 minutes riding a one-person pod through the tunnel system
-  RAIDING: 120,    // 60 minutes max looting; events can end it early (extract or death)
+  RAIDING: 120,    // 60 minutes max looting; ends via timer expiry, death, or CALL_EXTRACT
   EXTRACTING: 4,   // ~90s extraction window + final tick = calling the return shuttle (~2 minutes total)
   DOWNED: 2,       // death rattle flavor before respawning
 }
