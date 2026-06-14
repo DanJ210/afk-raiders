@@ -46,9 +46,9 @@ function lowHpExtractionBonus(currentHp: number | undefined, maxHp: number | und
   if (currentHp === undefined || maxHp === undefined || maxHp <= 0 || hasHealingItems) return 0
 
   const hpRatio = currentHp / maxHp
-  if (hpRatio <= 0.25) return 0.40
-  if (hpRatio <= 0.50) return 0.25
-  if (hpRatio <= 0.75) return 0.10
+  if (hpRatio <= 0.25) return 0.20
+  if (hpRatio <= 0.50) return 0.12
+  if (hpRatio <= 0.75) return 0.06
   return 0
 }
 

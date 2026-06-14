@@ -486,7 +486,8 @@
       "weight": 9,
       "text": "A Walker Texas Malfunction turned toward me very slowly. Too slowly.",
       "requires": {
-        "phase": "RAIDING"
+        "phase": "RAIDING",
+        "minGreed": 10
       },
       "effects": {
         "mood": -3,
@@ -561,7 +562,8 @@
       "weight": 9,
       "text": "A Walker Texas Malfunction sparked violently. I took that personally.",
       "requires": {
-        "phase": "RAIDING"
+        "phase": "RAIDING",
+        "minGreed": 10
       },
       "effects": {
         "mood": -2,
@@ -731,35 +733,35 @@
       "id": "encounter_passive_aggressor",
       "weight": 16,
       "text": "A Passive-Aggressor Drone {robot_flavor_passive_aggressor}. Did not fire. The judgment was worse.",
-      "requires": { "phase": "RAIDING" },
+      "requires": { "phase": "RAIDING", "minGreed": 10 },
       "effects": { "mood": -2, "ratRating": 1, "robotEncounter": "passive_aggressor" }
     },
     {
       "id": "encounter_seeker_validation",
       "weight": 14,
       "text": "A Seeker of Validation {robot_flavor_seeker_validation}. It hesitated mid-charge, waiting for feedback. I did not provide any.",
-      "requires": { "phase": "RAIDING" },
+      "requires": { "phase": "RAIDING", "minGreed": 15 },
       "effects": { "mood": -2, "robotEncounter": "seeker_validation" }
     },
     {
       "id": "encounter_harvester_annoyance",
       "weight": 14,
       "text": "A Harvester of Mild Annoyances {robot_flavor_harvester_annoyance}. Blocked every useful path while loudly collecting nothing.",
-      "requires": { "phase": "RAIDING" },
+      "requires": { "phase": "RAIDING", "minGreed": 10 },
       "effects": { "mood": -2, "ratRating": 1, "robotEncounter": "harvester_annoyance" }
     },
     {
       "id": "encounter_enforcer_inconvenience",
       "weight": 11,
       "text": "An Enforcer of Minor Inconveniences {robot_flavor_enforcer_inconvenience}. Technically following protocol. Technically.",
-      "requires": { "phase": "RAIDING" },
+      "requires": { "phase": "RAIDING", "minGreed": 15 },
       "effects": { "mood": -3, "robotEncounter": "enforcer_inconvenience" }
     },
     {
       "id": "encounter_enforcer_inconvenience_citation",
       "weight": 5,
       "text": "An Enforcer of Minor Inconveniences deployed suppressive fire. Mostly at the wrong targets. Including me.",
-      "requires": { "phase": "RAIDING" },
+      "requires": { "phase": "RAIDING", "minGreed": 20 },
       "effects": { "mood": -4, "ratRating": 2, "robotEncounter": "enforcer_inconvenience", "robotDamageMultiplier": 2.5 }
     },
     {
