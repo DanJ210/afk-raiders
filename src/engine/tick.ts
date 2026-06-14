@@ -6,7 +6,7 @@
  *
  * Tick flow:
  *   1. Tick phase counter; if transitioning apply transition event.
- *   2. If RAIDING, run the Greed Check to decide push-deeper / extract / downed.
+ *   2. If RAIDING, handle pacing controls (currently only CALL_EXTRACT).
  *   3. Resolve a flavor event for the current phase.
  *   4. Apply event effects. If HP hits 0, the raider goes DOWNED and returns
  *      home with nothing.
@@ -17,7 +17,6 @@
 import type { BackpackItem, GameState, LogEvent, TickResult } from './types.js'
 import type { RNG } from './rng.js'
 import { tickPhase } from './raidStateMachine.js'
-import { runGreedCheck } from './greedCheck.js'
 import { resolveEvent, resolveFlavorKey, applyEffects, consumeHealingItemIfUseful, resolveHealingItemFind, resolveRobotEncounter, events as allEvents } from './eventResolver.js'
 import { transferBackpackToHomeStash, HOME_STASH_ITEM_LIMIT } from './homeStash.js'
 
@@ -104,28 +103,19 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
   }
 
   // ------------------------------------------------------------------
-  // 2. Greed Check (RAIDING phase only, once per tick)
+  // 2. Raid pacing (RAIDING phase only)
   // ------------------------------------------------------------------
   if (currentState.raid.phase === 'RAIDING') {
-    const greedResult = runGreedCheck(
-      currentState.raid,
-      rng,
-      {
-        encouraged: currentState.pendingEncourage,
-        scolded: currentState.pendingScold,
-        currentHp: currentState.raider.hp,
-        maxHp: currentState.raider.maxHp,
-        hasHealingItems: currentState.raid.healingItems.length > 0,
-      },
-    )
-
-    // Update greed level
-    currentState = {
-      ...currentState,
-      raid: { ...currentState.raid, greedLevel: greedResult.newGreedLevel },
+    // Greed-driven branching is temporarily disabled.
+    // The raider keeps raiding until they die, the timer expires, or CALL_EXTRACT is used.
+    if (currentState.raid.greedLevel !== 0) {
+      currentState = {
+        ...currentState,
+        raid: { ...currentState.raid, greedLevel: 0 },
+      }
     }
 
-    if (greedResult.outcome === 'EXTRACT') {
+    if (currentState.raid.forceExtract) {
       const { raid: r2, transition: t2 } = tickPhase(
         { ...currentState.raid, forceExtract: false },
         'EXTRACTING',
@@ -140,20 +130,7 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
           phase: 'EXTRACTING',
         })
       }
-    } else if (greedResult.outcome === 'DOWNED') {
-      const { raid: r2, transition: t2 } = tickPhase(currentState.raid, 'DOWNED')
-      currentState = { ...currentState, raid: r2 }
-      if (t2) {
-        emitted.push({
-          id: 'phase_RAIDING_to_DOWNED',
-          tick: state.tick,
-          timestamp: now,
-          text: t2.eventText,
-          phase: 'DOWNED',
-        })
-      }
     }
-    // PUSH_DEEPER → stay in RAIDING (greedLevel already updated above)
   }
 
   // ------------------------------------------------------------------

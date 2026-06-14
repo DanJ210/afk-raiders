@@ -429,7 +429,7 @@ export function applyEffects(
   }
 
   if (effects.greedLevel !== undefined) {
-    raid = { ...raid, greedLevel: Math.min(100, Math.max(0, raid.greedLevel + effects.greedLevel)) }
+    raid = { ...raid, greedLevel: 0 }
   }
 
   if (effects.ratRating !== undefined) {
