@@ -533,7 +533,7 @@
     "id": "bomber_misread",
     "weight": 14,
     "name": "Bomber Who Misreads the Room",
-    "deadliness": "dangerous",
+    "deadliness": "nasty",
     "menace": 7,
     "flavorLines": [
       "charges in enthusiastically at the worst possible moment",
