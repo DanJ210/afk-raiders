@@ -639,7 +639,7 @@
     "id": "tank_overcompensation",
     "weight": 8,
     "name": "Tank of Overcompensation",
-    "deadliness": "extreme",
+    "deadliness": "deadly",
     "menace": 10,
     "flavorLines": [
       "fires missiles at anything that moves, including tumbleweeds",
