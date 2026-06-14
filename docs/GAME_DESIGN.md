@@ -57,6 +57,7 @@ Everything funny flows through an autoscrolling text feed:
 | Giant boss machine | **The Drama Queen** (monologues before attacking) |
 | Flooded dam map | **Damp Battlegrounds** |
 | Ruined city map | **Buried City (Now 30% More Buried)** |
+| Stella Camping Festival | **The Staycation Celebration** (raiders hide in lockers and tents instead of extracting) |
 | Safe pocket | **Emotional Support Pocket** |
 | Skill trees | **Cardio**, **Hoarding**, **Hiding in Lockers** |
 | A.R.C. acronym | **Aggressively Roaming Chassis** |
