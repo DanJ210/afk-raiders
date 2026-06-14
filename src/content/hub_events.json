@@ -54,5 +54,448 @@
     "text": "Visited the medbay. The medic sighed before even looking up. Patched and cleared for deployment.",
     "requires": { "phase": "HUB", "maxHp": 90 },
     "effects": { "hp": 10 }
+  },
+  {
+    "id": "hub_cafe_spill",
+    "weight": 12,
+    "text": "Spilled synth-coffee on my boots. The boots took it personally.",
+    "requires": {
+      "phase": "HUB"
+    },
+    "effects": {
+      "mood": -1
+    }
+  },
+  {
+    "id": "hub_terminal_error",
+    "weight": 14,
+    "text": "Mission terminal displayed an error message: 'No.'",
+    "requires": {
+      "phase": "HUB"
+    },
+    "effects": {}
+  },
+  {
+    "id": "hub_cot_springs",
+    "weight": 10,
+    "text": "Sat on a cot. The springs made a noise that sounded like judgment.",
+    "requires": {
+      "phase": "HUB"
+    },
+    "effects": {
+      "mood": -1
+    }
+  },
+  {
+    "id": "hub_cafe_line",
+    "weight": 15,
+    "text": "Waited in line at Speranza Café. The line did not move. Time lost meaning.",
+    "requires": {
+      "phase": "HUB"
+    },
+    "effects": {}
+  },
+  {
+    "id": "hub_locker_slam",
+    "weight": 11,
+    "text": "Closed my locker too hard. Someone three lockers down flinched.",
+    "requires": {
+      "phase": "HUB"
+    },
+    "effects": {}
+  },
+  {
+    "id": "hub_water_bottle_mystery",
+    "weight": 13,
+    "text": "Found a water bottle in my stash that I definitely did not put there.",
+    "requires": {
+      "phase": "HUB"
+    },
+    "effects": {}
+  },
+  {
+    "id": "hub_cafe_overheard",
+    "weight": 12,
+    "text": "Overheard someone bragging about a raid they clearly did not survive.",
+    "requires": {
+      "phase": "HUB"
+    },
+    "effects": {
+      "mood": 1
+    }
+  },
+  {
+    "id": "hub_terminal_fingerprint",
+    "weight": 9,
+    "text": "Tried to use the terminal. It asked for a fingerprint. I pretended not to hear it.",
+    "requires": {
+      "phase": "HUB"
+    },
+    "effects": {}
+  },
+  {
+    "id": "hub_cafe_sugar_packet",
+    "weight": 8,
+    "text": "Opened a sugar packet. It exploded like a tiny grenade.",
+    "requires": {
+      "phase": "HUB"
+    },
+    "effects": {
+      "mood": -1
+    }
+  },
+  {
+    "id": "hub_gear_recount",
+    "weight": 14,
+    "text": "Counted my ammo twice. Got two different numbers. Accepted my fate.",
+    "requires": {
+      "phase": "HUB"
+    },
+    "effects": {}
+  },
+  {
+    "id": "hub_cafe_table_wobble",
+    "weight": 10,
+    "text": "Sat at a café table. It wobbled violently. I wobbled with it.",
+    "requires": {
+      "phase": "HUB"
+    },
+    "effects": {}
+  },
+  {
+    "id": "hub_jukebox_static",
+    "weight": 12,
+    "text": "Jukebox switched to static mid-song. No one reacted. This is normal.",
+    "requires": {
+      "phase": "HUB"
+    },
+    "effects": {}
+  },
+  {
+    "id": "hub_cafe_silent_stare",
+    "weight": 11,
+    "text": "Locked eyes with another raider across the café. Neither of us blinked.",
+    "requires": {
+      "phase": "HUB"
+    },
+    "effects": {
+      "mood": 1
+    }
+  },
+  {
+    "id": "hub_terminal_scroll",
+    "weight": 13,
+    "text": "Scrolled through mission listings for 10 minutes. Picked the first one anyway.",
+    "requires": {
+      "phase": "HUB"
+    },
+    "effects": {}
+  },
+  {
+    "id": "hub_locker_stuck",
+    "weight": 9,
+    "text": "My locker jammed. I pretended I meant to leave it closed.",
+    "requires": {
+      "phase": "HUB"
+    },
+    "effects": {}
+  },
+  {
+    "id": "hub_cafe_spoon_bend",
+    "weight": 7,
+    "text": "Tried to stir my drink. The spoon bent. I took the hint.",
+    "requires": {
+      "phase": "HUB"
+    },
+    "effects": {
+      "mood": -1
+    }
+  },
+  {
+    "id": "hub_terminal_lore",
+    "weight": 10,
+    "text": "Terminal displayed a random lore fact. I pretended to care.",
+    "requires": {
+      "phase": "HUB"
+    },
+    "effects": {}
+  },
+  {
+    "id": "hub_cafe_sit_wrong",
+    "weight": 12,
+    "text": "Sat in a chair backwards to look cool. Immediately regretted it.",
+    "requires": {
+      "phase": "HUB"
+    },
+    "effects": {
+      "mood": -1
+    }
+  },
+  {
+    "id": "hub_cafe_sandwich",
+    "weight": 14,
+    "text": "Bought a sandwich. It tasted like disappointment and cardboard.",
+    "requires": {
+      "phase": "HUB"
+    },
+    "effects": {
+      "mood": -1
+    }
+  },
+  {
+    "id": "hub_terminal_queue",
+    "weight": 11,
+    "text": "Waited behind someone using the terminal. They were reading every word.",
+    "requires": {
+      "phase": "HUB"
+    },
+    "effects": {}
+  },
+  {
+    "id": "hub_cafe_laugh",
+    "weight": 10,
+    "text": "Someone laughed loudly in the café. Everyone stared like it was illegal.",
+    "requires": {
+      "phase": "HUB"
+    },
+    "effects": {
+      "mood": 1
+    }
+  },
+  {
+    "id": "hub_locker_echo",
+    "weight": 8,
+    "text": "Closed my locker and it echoed dramatically. Felt unintentionally cool.",
+    "requires": {
+      "phase": "HUB"
+    },
+    "effects": {
+      "mood": 1
+    }
+  },
+  {
+    "id": "hub_terminal_password",
+    "weight": 9,
+    "text": "Terminal asked for a password. I typed 'password'. It worked.",
+    "requires": {
+      "phase": "HUB"
+    },
+    "effects": {}
+  },
+  {
+    "id": "hub_cafe_sneeze",
+    "weight": 7,
+    "text": "Sneezed in the café. Three raiders ducked for cover.",
+    "requires": {
+      "phase": "HUB"
+    },
+    "effects": {}
+  },
+  {
+    "id": "hub_gear_repair_attempt",
+    "weight": 13,
+    "text": "Tried to repair my gear. Made it worse. Much worse.",
+    "requires": {
+      "phase": "HUB"
+    },
+    "effects": {
+      "mood": -2
+    }
+  },
+  {
+    "id": "hub_cafe_chair_scrape",
+    "weight": 10,
+    "text": "Pulled out a chair. It made the loudest noise imaginable.",
+    "requires": {
+      "phase": "HUB"
+    },
+    "effects": {}
+  },
+  {
+    "id": "hub_terminal_update",
+    "weight": 12,
+    "text": "Terminal began updating. Estimated time: 'Unknown'.",
+    "requires": {
+      "phase": "HUB"
+    },
+    "effects": {}
+  },
+  {
+    "id": "hub_cafe_awkward_wave",
+    "weight": 11,
+    "text": "Waved at someone who wasn’t waving at me. Continued waving anyway.",
+    "requires": {
+      "phase": "HUB"
+    },
+    "effects": {
+      "mood": -1
+    }
+  },
+  {
+    "id": "hub_locker_loot_shuffle",
+    "weight": 14,
+    "text": "Reorganized my locker. It is now worse than before.",
+    "requires": {
+      "phase": "HUB"
+    },
+    "effects": {}
+  },
+  {
+    "id": "hub_terminal_beep",
+    "weight": 9,
+    "text": "Terminal beeped loudly. I pretended it wasn’t my fault.",
+    "requires": {
+      "phase": "HUB"
+    },
+    "effects": {}
+  },
+  {
+    "id": "hub_cafe_cold_food",
+    "weight": 10,
+    "text": "Ordered hot food. It arrived cold. Classic.",
+    "requires": {
+      "phase": "HUB"
+    },
+    "effects": {
+      "mood": -1
+    }
+  },
+  {
+    "id": "hub_terminal_scroll_fail",
+    "weight": 8,
+    "text": "Tried to scroll the terminal with two fingers. It zoomed instead.",
+    "requires": {
+      "phase": "HUB"
+    },
+    "effects": {}
+  },
+  {
+    "id": "hub_cafe_spoon_drop",
+    "weight": 7,
+    "text": "Dropped my spoon. It rolled under someone else’s table. I left it there.",
+    "requires": {
+      "phase": "HUB"
+    },
+    "effects": {}
+  },
+  {
+    "id": "hub_locker_slam_echo",
+    "weight": 11,
+    "text": "Slammed my locker shut. It echoed like a dramatic movie moment.",
+    "requires": {
+      "phase": "HUB"
+    },
+    "effects": {
+      "mood": 1
+    }
+  },
+  {
+    "id": "hub_terminal_wrong_menu",
+    "weight": 12,
+    "text": "Accidentally opened the settings menu. Immediately panicked.",
+    "requires": {
+      "phase": "HUB"
+    },
+    "effects": {}
+  },
+  {
+    "id": "hub_cafe_stare",
+    "weight": 10,
+    "text": "Stared into my drink for too long. It stared back.",
+    "requires": {
+      "phase": "HUB"
+    },
+    "effects": {
+      "mood": -1
+    }
+  },
+  {
+    "id": "hub_terminal_click_spam",
+    "weight": 9,
+    "text": "Clicked the terminal too many times. It froze out of spite.",
+    "requires": {
+      "phase": "HUB"
+    },
+    "effects": {}
+  },
+  {
+    "id": "hub_cafe_sit_too_long",
+    "weight": 13,
+    "text": "Sat in the café long enough to forget why I came here.",
+    "requires": {
+      "phase": "HUB"
+    },
+    "effects": {}
+  },
+  {
+    "id": "hub_locker_loot_check",
+    "weight": 14,
+    "text": "Checked my locker for loot I knew wasn’t there. It still wasn’t there.",
+    "requires": {
+      "phase": "HUB"
+    },
+    "effects": {
+      "greedLevel": -1
+    }
+  },
+  {
+    "id": "hub_terminal_volume",
+    "weight": 8,
+    "text": "Terminal played a loud notification. Everyone glared at me.",
+    "requires": {
+      "phase": "HUB"
+    },
+    "effects": {}
+  },
+  {
+    "id": "hub_cafe_food_regret",
+    "weight": 12,
+    "text": "Ate something from the café menu labeled 'experimental'. Regretted everything.",
+    "requires": {
+      "phase": "HUB"
+    },
+    "effects": {
+      "mood": -2
+    }
+  },
+  {
+    "id": "hub_terminal_idle",
+    "weight": 10,
+    "text": "Stood at the terminal pretending to read while actually zoning out.",
+    "requires": {
+      "phase": "HUB"
+    },
+    "effects": {}
+  },
+  {
+    "id": "hub_cafe_awkward_smile",
+    "weight": 11,
+    "text": "Smiled at someone. They did not smile back. I am now deceased.",
+    "requires": {
+      "phase": "HUB"
+    },
+    "effects": {
+      "mood": -1
+    }
+  },
+  {
+    "id": "hub_locker_loot_dream",
+    "weight": 9,
+    "text": "Imagined my locker full of legendary loot. Opened it. Reality disagreed.",
+    "requires": {
+      "phase": "HUB"
+    },
+    "effects": {
+      "mood": -1
+    }
+  },
+  {
+    "id": "hub_terminal_tap",
+    "weight": 8,
+    "text": "Tapped the terminal screen harder. It did not help.",
+    "requires": {
+      "phase": "HUB"
+    },
+    "effects": {}
   }
 ]

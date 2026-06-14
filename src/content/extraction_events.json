@@ -82,5 +82,489 @@
     "text": "Extraction beacon active. Counting down. Three robots in pursuit. This is fine.",
     "requires": { "phase": "EXTRACTING" },
     "effects": { "hp": -5, "mood": -1 }
+  },
+  {
+    "id": "extract_signal_flare",
+    "weight": 18,
+    "text": "Fired a signal flare. Immediately regretted how visible it was.",
+    "requires": {
+      "phase": "EXTRACTION"
+    },
+    "effects": {
+      "mood": -1,
+      "robotAlert": 1
+    }
+  },
+  {
+    "id": "extract_last_second_loot",
+    "weight": 22,
+    "text": "Spotted last‑second loot near the LZ. Risked everything. Worth it? Debatable.",
+    "requires": {
+      "phase": "EXTRACTION",
+      "minGreed": 20
+    },
+    "effects": {
+      "greedLevel": 5,
+      "mood": 1
+    }
+  },
+  {
+    "id": "extract_anxietick_trip",
+    "weight": 12,
+    "text": "An Anxietick skittered across the LZ, panicked, and tripped over itself. I related.",
+    "requires": {
+      "phase": "EXTRACTION"
+    },
+    "effects": {
+      "mood": -1,
+      "robotEncounter": "anxietick"
+    }
+  },
+  {
+    "id": "extract_teammate_screaming",
+    "weight": 15,
+    "text": "Teammate screamed 'GO GO GO!' even though nothing was happening yet.",
+    "requires": {
+      "phase": "EXTRACTION"
+    },
+    "effects": {
+      "mood": -1
+    }
+  },
+  {
+    "id": "extract_tattletale_alert",
+    "weight": 10,
+    "text": "A Tattletale drone hovered in, played a cheerful jingle, and ruined everything.",
+    "requires": {
+      "phase": "EXTRACTION"
+    },
+    "effects": {
+      "mood": -3,
+      "robotAlert": 3,
+      "robotEncounter": "tattletale"
+    }
+  },
+  {
+    "id": "extract_crate_temptation",
+    "weight": 20,
+    "text": "Extraction was seconds away. Then I saw a crate. My brain made the wrong choice.",
+    "requires": {
+      "phase": "EXTRACTION",
+      "minGreed": 25
+    },
+    "effects": {
+      "greedLevel": 6,
+      "mood": -1
+    }
+  },
+  {
+    "id": "extract_roomba_prime_charge",
+    "weight": 8,
+    "text": "A Roomba Prime charged directly at me, determined to clean me off the map.",
+    "requires": {
+      "phase": "EXTRACTION"
+    },
+    "effects": {
+      "mood": -4,
+      "robotEncounter": "roomba_prime",
+      "robotDamageMultiplier": 2.0
+    }
+  },
+  {
+    "id": "extract_team_high_five",
+    "weight": 14,
+    "text": "Team executed a perfect mid‑extraction high‑five. Morale briefly skyrocketed.",
+    "requires": {
+      "phase": "EXTRACTION"
+    },
+    "effects": {
+      "mood": 3
+    }
+  },
+  {
+    "id": "extract_shredder_dedder_surprise",
+    "weight": 9,
+    "text": "A Shredder Dedder politely surprised us at the LZ. We were less polite.",
+    "requires": {
+      "phase": "EXTRACTION"
+    },
+    "effects": {
+      "mood": -3,
+      "robotEncounter": "shredder_dedder",
+      "robotDamageMultiplier": 2.5
+    }
+  },
+  {
+    "id": "extract_teammate_loot_drop",
+    "weight": 17,
+    "text": "Teammate dropped loot while sprinting to the LZ. I considered grabbing it. Considered.",
+    "requires": {
+      "phase": "EXTRACTION"
+    },
+    "effects": {
+      "greedLevel": 3,
+      "ratRating": 1
+    }
+  },
+  {
+    "id": "extract_smoke_everywhere",
+    "weight": 13,
+    "text": "Smoke filled the LZ. I pretended I knew where I was going.",
+    "requires": {
+      "phase": "EXTRACTION"
+    },
+    "effects": {
+      "mood": -2
+    }
+  },
+  {
+    "id": "extract_anxietick_blocking",
+    "weight": 11,
+    "text": "An Anxietick froze in the middle of the LZ like a terrified traffic cone.",
+    "requires": {
+      "phase": "EXTRACTION"
+    },
+    "effects": {
+      "mood": -1,
+      "robotEncounter": "anxietick"
+    }
+  },
+  {
+    "id": "extract_last_second_heroics",
+    "weight": 16,
+    "text": "Pulled off a last‑second heroic slide into the LZ. No one saw it.",
+    "requires": {
+      "phase": "EXTRACTION"
+    },
+    "effects": {
+      "mood": 2
+    }
+  },
+  {
+    "id": "extract_tattletale_judgment",
+    "weight": 10,
+    "text": "A Tattletale drone hovered at eye level and judged my extraction performance.",
+    "requires": {
+      "phase": "EXTRACTION"
+    },
+    "effects": {
+      "mood": -2,
+      "robotAlert": 2,
+      "robotEncounter": "tattletale"
+    }
+  },
+  {
+    "id": "extract_loot_fumble",
+    "weight": 18,
+    "text": "Fumbled loot while boarding. Pretended it was a tactical distraction.",
+    "requires": {
+      "phase": "EXTRACTION"
+    },
+    "effects": {
+      "mood": -1,
+      "ratRating": 1
+    }
+  },
+  {
+    "id": "extract_roomba_prime_block",
+    "weight": 7,
+    "text": "A Roomba Prime blocked the LZ like an angry floor guardian.",
+    "requires": {
+      "phase": "EXTRACTION"
+    },
+    "effects": {
+      "mood": -4,
+      "robotEncounter": "roomba_prime"
+    }
+  },
+  {
+    "id": "extract_team_cheer",
+    "weight": 15,
+    "text": "Team cheered as the dropship approached. For a moment, hope existed.",
+    "requires": {
+      "phase": "EXTRACTION"
+    },
+    "effects": {
+      "mood": 3
+    }
+  },
+  {
+    "id": "extract_shredder_dedder_polite",
+    "weight": 9,
+    "text": "A Shredder Dedder approached politely before trying to shred us impolitely.",
+    "requires": {
+      "phase": "EXTRACTION"
+    },
+    "effects": {
+      "mood": -3,
+      "robotEncounter": "shredder_dedder"
+    }
+  },
+  {
+    "id": "extract_greed_vs_survival",
+    "weight": 20,
+    "text": "Faced the eternal choice: extraction or one more crate. I chose poorly.",
+    "requires": {
+      "phase": "EXTRACTION",
+      "minGreed": 30
+    },
+    "effects": {
+      "greedLevel": 6,
+      "mood": -2
+    }
+  },
+  {
+    "id": "extract_teammate_push",
+    "weight": 12,
+    "text": "Teammate pushed me toward the LZ. Unsure if helpful or personal.",
+    "requires": {
+      "phase": "EXTRACTION"
+    },
+    "effects": {
+      "mood": -1
+    }
+  },
+  {
+    "id": "extract_anxietick_tripwire",
+    "weight": 10,
+    "text": "An Anxietick tripped over a root and accidentally revealed a hidden path.",
+    "requires": {
+      "phase": "EXTRACTION"
+    },
+    "effects": {
+      "mood": 1,
+      "robotEncounter": "anxietick"
+    }
+  },
+  {
+    "id": "extract_tattletale_broadcast",
+    "weight": 8,
+    "text": "A Tattletale drone broadcast my location with a cheerful melody.",
+    "requires": {
+      "phase": "EXTRACTION"
+    },
+    "effects": {
+      "mood": -3,
+      "robotAlert": 3,
+      "robotEncounter": "tattletale"
+    }
+  },
+  {
+    "id": "extract_roomba_prime_warning",
+    "weight": 7,
+    "text": "Roomba Prime emitted a high‑pitched warning tone. I emitted panic.",
+    "requires": {
+      "phase": "EXTRACTION"
+    },
+    "effects": {
+      "mood": -4,
+      "robotEncounter": "roomba_prime"
+    }
+  },
+  {
+    "id": "extract_shredder_dedder_shadow",
+    "weight": 9,
+    "text": "Saw the shadow of a Shredder Dedder before the robot. Terrifying.",
+    "requires": {
+      "phase": "EXTRACTION"
+    },
+    "effects": {
+      "mood": -3,
+      "robotEncounter": "shredder_dedder"
+    }
+  },
+  {
+    "id": "extract_team_hold_line",
+    "weight": 14,
+    "text": "Team held the line at the LZ. It was messy but heroic.",
+    "requires": {
+      "phase": "EXTRACTION"
+    },
+    "effects": {
+      "mood": 2
+    }
+  },
+  {
+    "id": "extract_loot_scatter",
+    "weight": 16,
+    "text": "Dropped my loot while sprinting. It scattered like my dignity.",
+    "requires": {
+      "phase": "EXTRACTION"
+    },
+    "effects": {
+      "mood": -2,
+      "ratRating": 2
+    }
+  },
+  {
+    "id": "extract_anxietick_hiding",
+    "weight": 11,
+    "text": "An Anxietick hid behind a rock. I hid behind the same rock.",
+    "requires": {
+      "phase": "EXTRACTION"
+    },
+    "effects": {
+      "mood": -1,
+      "robotEncounter": "anxietick"
+    }
+  },
+  {
+    "id": "extract_tattletale_upload",
+    "weight": 8,
+    "text": "Tattletale drone uploaded my panic to the robot network.",
+    "requires": {
+      "phase": "EXTRACTION"
+    },
+    "effects": {
+      "mood": -3,
+      "robotAlert": 2,
+      "robotEncounter": "tattletale"
+    }
+  },
+  {
+    "id": "extract_roomba_prime_bump",
+    "weight": 7,
+    "text": "Roomba Prime bumped into a wall, corrected itself, and charged at me with purpose.",
+    "requires": {
+      "phase": "EXTRACTION"
+    },
+    "effects": {
+      "mood": -4,
+      "robotEncounter": "roomba_prime"
+    }
+  },
+  {
+    "id": "extract_shredder_dedder_polite2",
+    "weight": 9,
+    "text": "A Shredder Dedder apologized before attacking. I accepted the apology and ran.",
+    "requires": {
+      "phase": "EXTRACTION"
+    },
+    "effects": {
+      "mood": -2,
+      "robotEncounter": "shredder_dedder"
+    }
+  },
+  {
+    "id": "extract_team_last_push",
+    "weight": 15,
+    "text": "Team made a final push to the LZ. It was chaotic but effective.",
+    "requires": {
+      "phase": "EXTRACTION"
+    },
+    "effects": {
+      "mood": 2
+    }
+  },
+  {
+    "id": "extract_loot_greed_overdrive",
+    "weight": 20,
+    "text": "Greed overpowered survival instincts. Again.",
+    "requires": {
+      "phase": "EXTRACTION",
+      "minGreed": 30
+    },
+    "effects": {
+      "greedLevel": 7,
+      "mood": -1
+    }
+  },
+  {
+    "id": "extract_anxietick_squeak",
+    "weight": 11,
+    "text": "An Anxietick squeaked nervously. I squeaked back.",
+    "requires": {
+      "phase": "EXTRACTION"
+    },
+    "effects": {
+      "mood": -1,
+      "robotEncounter": "anxietick"
+    }
+  },
+  {
+    "id": "extract_tattletale_jingle",
+    "weight": 8,
+    "text": "Tattletale drone played a cheerful jingle as it alerted everything nearby.",
+    "requires": {
+      "phase": "EXTRACTION"
+    },
+    "effects": {
+      "mood": -3,
+      "robotAlert": 3,
+      "robotEncounter": "tattletale"
+    }
+  },
+  {
+    "id": "extract_roomba_prime_spin",
+    "weight": 7,
+    "text": "Roomba Prime spun in place before charging. Terrifying warm‑up routine.",
+    "requires": {
+      "phase": "EXTRACTION"
+    },
+    "effects": {
+      "mood": -4,
+      "robotEncounter": "roomba_prime"
+    }
+  },
+  {
+    "id": "extract_shredder_dedder_wave",
+    "weight": 9,
+    "text": "A Shredder Dedder waved politely before trying to slice me in half.",
+    "requires": {
+      "phase": "EXTRACTION"
+    },
+    "effects": {
+      "mood": -3,
+      "robotEncounter": "shredder_dedder"
+    }
+  },
+  {
+    "id": "extract_team_success",
+    "weight": 18,
+    "text": "Team extracted successfully. Against all odds. Mostly our own odds.",
+    "requires": {
+      "phase": "EXTRACTION"
+    },
+    "effects": {
+      "mood": 4
+    }
+  },
+  {
+    "id": "extract_loot_last_grab",
+    "weight": 21,
+    "text": "Grabbed loot at the literal last second. Worth the screaming.",
+    "requires": {
+      "phase": "EXTRACTION",
+      "minGreed": 20
+    },
+    "effects": {
+      "greedLevel": 5,
+      "mood": 1
+    }
+  },
+  {
+    "id": "extract_anxietick_follow",
+    "weight": 10,
+    "text": "An Anxietick followed me to the LZ. I think it just wanted company.",
+    "requires": {
+      "phase": "EXTRACTION"
+    },
+    "effects": {
+      "mood": 1,
+      "robotEncounter": "anxietick"
+    }
+  },
+  {
+    "id": "extract_tattletale_final_blast",
+    "weight": 8,
+    "text": "Tattletale drone blasted my location one last time for good measure.",
+    "requires": {
+      "phase": "EXTRACTION"
+    },
+    "effects": {
+      "mood": -3,
+      "robotAlert": 2,
+      "robotEncounter": "tattletale"
+    }
   }
 ]
