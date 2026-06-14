@@ -11,7 +11,7 @@
   { "id": "loose_battery",           "weight": 20, "rarity": 2, "name": "Loose Battery (Maybe Charged)","value": 25,  "flavor": "Rattles hopefully. Approximately 40% of batteries are fine." },
   { "id": "broken_umbrella",         "weight": 10, "rarity": 3, "name": "Broken Umbrella",              "value": 15,  "flavor": "Two spokes missing. Still projects the right energy." },
   { "id": "novelty_mug",             "weight": 8,  "rarity": 3, "name": "Novelty Mug (World's Okayest Survivor)", "value": 25, "flavor": "Technically accurate." },
-  { "id": "golden_water_bottle",     "weight": 2,  "rarity": 5, "name": "Golden Water Bottle",          "value": 10, "flavor": "Solid gold. Terrible insulator. Priceless flex." },
+  { "id": "golden_water_bottle",     "weight": 2,  "rarity": 5, "name": "Golden Water Bottle",          "value": 500, "flavor": "Solid gold. Terrible insulator. Priceless flex." },
   { "id": "cursed_music_box",        "weight": 30, "rarity": 1, "name": "Cursed Music Box",             "value": 5,  "flavor": "Plays a haunting melody that reminds you of something you can't quite place." },
   { "id": "vintage_comic_book",      "weight": 15, "rarity": 2, "name": "Vintage Comic Book",           "value": 10,  "flavor": "Features a hero who fights robots. The cover is torn but the nostalgia is intact." },
   { "id": "half_empty_chips_bag",    "weight": 10, "rarity": 3, "name": "Half-Empty Bag of Chips",      "value": 15,  "flavor": "The chips are stale but the emotional value is high." },
@@ -19,5 +19,13 @@
   { "id": "fuzzy_dice",              "weight": 5,  "rarity": 4, "name": "Pair of Fuzzy Dice",           "value": 35,  "flavor": "Once hung in a car that drove past you every day. The car is gone but the vibes remain." },
   { "id": "tabithas_phone",          "weight": 8,  "rarity": 4, "name": "Tabitha's phone",              "value": 50,  "flavor": "The screen is cracked and it's locked. You can see multiple notification previews: 'You're two hours late'" },
   { "id": "dirty_stripper_panties",  "weight": 1,  "rarity": 5, "name": "Dirty Stripper Panties",       "value": 300,  "flavor": "Damp and stained. From both holes. The ultimate loot." },
-  { "id": "hans_gruber",             "weight": 1,  "rarity": 5, "name": "Hans Gruber (alive)",          "value": 1000, "flavor": "The legendary Hans Gruber. Tabitha lost him again..." }
+  { "id": "hans_gruber",             "weight": 1,  "rarity": 5, "name": "Hans Gruber (alive)",          "value": 1000, "flavor": "The legendary Hans Gruber. Tabitha lost him again..." },
+  {
+    "id": "new_guy",
+    "weight": 1,
+    "rarity": 5,
+    "name": "Another New Guy",
+    "value": 1000,
+    "flavor": "Yet another new name in her book..."
+  }
 ]
