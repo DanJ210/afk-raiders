@@ -11,17 +11,99 @@
       "approaches, reconsiders, approaches again",
       "trips over its own legs trying to be threatening"
     ],
-    "successText": [ "Well that tick needed to chill" ],
+    "successText": [
+      "Well that tick needed to chill"
+    ],
     "lootTable": [
-      { "id": "anxietick_gear", "weight": 85, "name": "Anxietick Gear", "value": 5, "flavor": "A gear from an Anxietick. Still a little nervous." },
+      {
+        "id": "anxietick_gear",
+        "weight": 85,
+        "name": "Anxietick Gear",
+        "value": 5,
+        "flavor": "A gear from an Anxietick. Still a little nervous."
+      },
+      {
+        "id": "anxietick_leg_fragment",
+        "weight": 20,
+        "name": "Tick Leg Fragment",
+        "value": 8,
+        "flavor": "Twitches occasionally. Probably a design choice."
+      },
+      {
+        "id": "anxietick_core",
+        "weight": 8,
+        "name": "Anxietick Micro-Core",
+        "value": 15,
+        "flavor": "A tiny core that vibrates with suppressed panic."
+      },
+      {
+        "id": "anxietick_loaded_spring",
+        "weight": 3,
+        "name": "Loaded Anxiety Spring",
+        "value": 40,
+        "flavor": "Wound so tight it might launch the whole robot. Again."
+      },
       {
         "id": "robot_alloy",
         "weight": 1,
         "name": "Robot Alloy",
         "value": 20,
-        "flavor": "Standard metal"
+        "flavor": "Standard metal."
       }
-     ]
+    ]
+  },
+  {
+    "id": "overthinker_tick",
+    "weight": 40,
+    "name": "Overthinker Tick",
+    "deadliness": "weak",
+    "menace": 2,
+    "flavorLines": [
+      "approaches, stops, reconsiders, backs up, reconsiders again",
+      "emits a soft humming sound that might be anxiety or overheating",
+      "tries to flank you but forgets which direction flanking is",
+      "spins in place when startled, which is always"
+    ],
+    "successText": [
+      "You defeat the Overthinker Tick. It probably saw this coming."
+    ],
+    "lootTable": [
+      {
+        "id": "overthinker_gear",
+        "weight": 85,
+        "name": "Overthinker Gear",
+        "value": 5,
+        "flavor": "A gear that seems unsure of itself."
+      },
+      {
+        "id": "overthinker_leg_fragment",
+        "weight": 20,
+        "name": "Overthinker Leg Fragment",
+        "value": 8,
+        "flavor": "Still processing whether moving was the right call."
+      },
+      {
+        "id": "overthinker_core",
+        "weight": 8,
+        "name": "Overthinker Micro-Core",
+        "value": 15,
+        "flavor": "Hums with unresolved thought loops."
+      },
+      {
+        "id": "overthinker_decision_matrix",
+        "weight": 3,
+        "name": "Decision Matrix",
+        "value": 45,
+        "flavor": "Contains every possible outcome it ever considered. All of them bad."
+      },
+      {
+        "id": "robot_alloy",
+        "weight": 1,
+        "name": "Robot Alloy",
+        "value": 20,
+        "flavor": "Standard metal."
+      }
+    ]
   },
   {
     "id": "tattletale",
@@ -35,36 +117,152 @@
       "hovers at eye level and judges you",
       "uploads your outfit choice to the robot network"
     ],
-    "successText": [ "The Tattletale drone's broadcast attracts a swarm of nearby robots. You defeat it and escape, but the zone is buzzing with activity." ],
+    "successText": [
+      "The Tattletale drone's broadcast attracts a swarm of nearby robots. You defeat it and escape, but the zone is buzzing with activity."
+    ],
     "lootTable": [
-      { "id": "tattletale_circuit", "weight": 85, "name": "Tattletale Circuit", "value": 15, "flavor": "A circuit from a Tattletale drone. Still functional and mildly judgmental." },
+      {
+        "id": "tattletale_circuit",
+        "weight": 85,
+        "name": "Tattletale Circuit",
+        "value": 15,
+        "flavor": "Still functional and mildly judgmental."
+      },
+      {
+        "id": "tattletale_speaker",
+        "weight": 20,
+        "name": "Alert Speaker",
+        "value": 10,
+        "flavor": "Plays a cheerful jingle when shaken. Unsettling."
+      },
+      {
+        "id": "tattletale_lens",
+        "weight": 8,
+        "name": "Judgment Lens",
+        "value": 25,
+        "flavor": "Reflects your face back at you in a disappointed way."
+      },
+      {
+        "id": "tattletale_blacklist",
+        "weight": 3,
+        "name": "Broadcast Blacklist",
+        "value": 60,
+        "flavor": "A log of every embarrassing thing you've ever done. Somehow."
+      },
       {
         "id": "robot_alloy",
         "weight": 1,
         "name": "Robot Alloy",
         "value": 20,
-        "flavor": "Standard metal"
+        "flavor": "Standard metal."
       }
-     ]
+    ]
   },
   {
-    "id": "shredder_dedder",
-    "weight": 25,
-    "name": "Shredder Dedder",
-    "deadliness": "nasty",
-    "menace": 7,
+    "id": "passive_aggressor",
+    "weight": 35,
+    "name": "Passive-Aggressor Drone",
+    "deadliness": "moderate",
+    "menace": 4,
     "flavorLines": [
-      "approached the LZ stealthily",
-      "a robot was waiting",
-      "it was surprised",
-      "we were surprised",
-      "it was a very polite surprise"
+      "hovers nearby making disappointed beeping noises",
+      "follows you silently until you feel judged",
+      "uploads vague complaints to the robot network",
+      "plays a sighing sound when you miss a shot"
     ],
-    "successText": [ "The Shredder Dedder's blade is still sharp but you are sharper. You take it apart and add the blade to your inventory." ],
+    "successText": [
+      "The Passive-Aggressor Drone shuts down with one final disappointed beep."
+    ],
     "lootTable": [
-      { "id": "shredder_blade", "weight": 85, "name": "Shredder Blade", "value": 100, "flavor": "A blade from a Shredder Dedder. Still sharp and very dangerous." },
-      { "id": "robot_alloy", "weight": 100, "name": "Robot Alloy", "value": 20, "flavor": "Standard metal" }
-     ]
+      {
+        "id": "aggressor_circuit",
+        "weight": 85,
+        "name": "Aggressor Circuit",
+        "value": 15,
+        "flavor": "A circuit that seems upset with you."
+      },
+      {
+        "id": "passive_sigh_module",
+        "weight": 20,
+        "name": "Passive Sigh Module",
+        "value": 18,
+        "flavor": "Emits a disappointed exhale at 60% efficiency."
+      },
+      {
+        "id": "passive_complaint_log",
+        "weight": 8,
+        "name": "Complaint Log",
+        "value": 30,
+        "flavor": "A detailed record of everything you did wrong today."
+      },
+      {
+        "id": "passive_aggressor_manifesto",
+        "weight": 3,
+        "name": "Passive-Aggressor Manifesto",
+        "value": 65,
+        "flavor": "A 47-page grievance document addressed to no one in particular."
+      },
+      {
+        "id": "robot_alloy",
+        "weight": 1,
+        "name": "Robot Alloy",
+        "value": 20,
+        "flavor": "Standard metal."
+      }
+    ]
+  },
+  {
+    "id": "seeker_validation",
+    "weight": 30,
+    "name": "Seeker of Validation",
+    "deadliness": "moderate",
+    "menace": 5,
+    "flavorLines": [
+      "locks onto you and waits for approval before attacking",
+      "emits a hopeful chirp when you look at it",
+      "flashes lights in a pattern that might be asking for feedback",
+      "hesitates mid-charge as if doubting itself"
+    ],
+    "successText": [
+      "You defeat the Seeker of Validation. It dies still waiting for praise."
+    ],
+    "lootTable": [
+      {
+        "id": "validation_core",
+        "weight": 85,
+        "name": "Validation Core",
+        "value": 25,
+        "flavor": "Glows brighter when complimented."
+      },
+      {
+        "id": "validation_sensor",
+        "weight": 20,
+        "name": "Approval Sensor",
+        "value": 18,
+        "flavor": "Detects praise with 99% accuracy."
+      },
+      {
+        "id": "validation_shell",
+        "weight": 8,
+        "name": "Affirmation Plating",
+        "value": 30,
+        "flavor": "Feels warm, like it's proud of you."
+      },
+      {
+        "id": "seekers_trophy",
+        "weight": 3,
+        "name": "Participation Trophy",
+        "value": 70,
+        "flavor": "First place in a competition no one else entered. Still counts."
+      },
+      {
+        "id": "robot_alloy",
+        "weight": 1,
+        "name": "Robot Alloy",
+        "value": 20,
+        "flavor": "Standard metal."
+      }
+    ]
   },
   {
     "id": "roomba_prime",
@@ -87,14 +285,406 @@
         "weight": 85,
         "name": "Roomba Battery",
         "value": 300,
-        "flavor": "A battery from a Roomba Prime. Still holds a charge. Probably not for long."
+        "flavor": "Still holds a charge. Probably not for long."
+      },
+      {
+        "id": "roomba_brush",
+        "weight": 20,
+        "name": "Aggressive Brush Head",
+        "value": 50,
+        "flavor": "Spins violently when touched."
+      },
+      {
+        "id": "roomba_sensor",
+        "weight": 8,
+        "name": "Prime Sensor Array",
+        "value": 80,
+        "flavor": "Detects dirt, fear, and movement."
+      },
+      {
+        "id": "roomba_prime_directive",
+        "weight": 3,
+        "name": "Prime Directive Card",
+        "value": 200,
+        "flavor": "A laminated card that reads: CLEAN. CLEAN. CLEAN. DO NOT STOP."
       },
       {
         "id": "robot_alloy",
         "weight": 1,
         "name": "Robot Alloy",
         "value": 20,
-        "flavor": "Standard metal"
+        "flavor": "Standard metal."
+      }
+    ]
+  },
+  {
+    "id": "walker_texas_malfunction",
+    "weight": 20,
+    "name": "Walker Texas Malfunction",
+    "deadliness": "dangerous",
+    "menace": 6,
+    "flavorLines": [
+      "stomps around dramatically but trips over small rocks",
+      "fires wildly in the wrong direction",
+      "announces its presence loudly before attacking",
+      "attempts a tactical maneuver and immediately falls over"
+    ],
+    "successText": [
+      "The Walker Texas Malfunction collapses in a heap of poorly aimed enthusiasm."
+    ],
+    "lootTable": [
+      {
+        "id": "malfunction_servo",
+        "weight": 85,
+        "name": "Malfunction Servo",
+        "value": 40,
+        "flavor": "A servo that tries its best."
+      },
+      {
+        "id": "walker_leg",
+        "weight": 20,
+        "name": "Walker Leg Joint",
+        "value": 35,
+        "flavor": "Clicks loudly when moved."
+      },
+      {
+        "id": "walker_core",
+        "weight": 8,
+        "name": "Unstable Power Core",
+        "value": 60,
+        "flavor": "Vibrates unpredictably."
+      },
+      {
+        "id": "walker_tactical_manual",
+        "weight": 3,
+        "name": "Tactical Flanking Manual",
+        "value": 85,
+        "flavor": "A step-by-step guide to flanking maneuvers, authored by someone who has never flanked."
+      },
+      {
+        "id": "robot_alloy",
+        "weight": 1,
+        "name": "Robot Alloy",
+        "value": 20,
+        "flavor": "Standard metal."
+      }
+    ]
+  },
+  {
+    "id": "enforcer_inconvenience",
+    "weight": 18,
+    "name": "Enforcer of Minor Inconveniences",
+    "deadliness": "dangerous",
+    "menace": 6,
+    "flavorLines": [
+      "blocks your path at the worst possible moment",
+      "fires suppressive fire that mostly hits your cover",
+      "shouts warnings that are technically correct but unhelpful",
+      "deploys smoke that smells faintly of burnt plastic"
+    ],
+    "successText": [
+      "You defeat the Enforcer of Minor Inconveniences. Your day improves slightly."
+    ],
+    "lootTable": [
+      {
+        "id": "inconvenience_module",
+        "weight": 85,
+        "name": "Inconvenience Module",
+        "value": 35,
+        "flavor": "Makes everything slightly worse."
+      },
+      {
+        "id": "enforcer_shield",
+        "weight": 20,
+        "name": "Petty Shield Plate",
+        "value": 30,
+        "flavor": "Blocks nothing important."
+      },
+      {
+        "id": "enforcer_battery",
+        "weight": 8,
+        "name": "Low-Effort Battery",
+        "value": 25,
+        "flavor": "Barely charged, like its owner."
+      },
+      {
+        "id": "enforcer_citation_pad",
+        "weight": 3,
+        "name": "Violation Citation Pad",
+        "value": 75,
+        "flavor": "Pre-filled with violations. None of them are real crimes."
+      },
+      {
+        "id": "robot_alloy",
+        "weight": 1,
+        "name": "Robot Alloy",
+        "value": 20,
+        "flavor": "Standard metal."
+      }
+    ]
+  },
+  {
+    "id": "crusher_of_dreams",
+    "weight": 12,
+    "name": "Crusher of Dreams",
+    "deadliness": "deadly",
+    "menace": 8,
+    "flavorLines": [
+      "slams the ground with enough force to ruin your plans",
+      "charges with the energy of someone who hates hope",
+      "lets out a roar that sounds like a corrupted motivational speech",
+      "crushes anything in its path, including your optimism"
+    ],
+    "successText": [
+      "You defeat the Crusher of Dreams. Your dreams remain uncrushed… for now."
+    ],
+    "lootTable": [
+      {
+        "id": "dreamcrusher_plate",
+        "weight": 85,
+        "name": "Dreamcrusher Plate",
+        "value": 60,
+        "flavor": "Radiates disappointment."
+      },
+      {
+        "id": "crusher_fist",
+        "weight": 20,
+        "name": "Crusher Fist Fragment",
+        "value": 50,
+        "flavor": "Still clenched."
+      },
+      {
+        "id": "crusher_core",
+        "weight": 8,
+        "name": "Despair Core",
+        "value": 90,
+        "flavor": "Feels heavier than it should."
+      },
+      {
+        "id": "crushed_dream_shard",
+        "weight": 3,
+        "name": "Crystallised Dream Shard",
+        "value": 120,
+        "flavor": "Crystallised potential. Someone else's. Now yours."
+      },
+      {
+        "id": "robot_alloy",
+        "weight": 1,
+        "name": "Robot Alloy",
+        "value": 20,
+        "flavor": "Standard metal."
+      }
+    ]
+  },
+  {
+    "id": "sniper_poor_decisions",
+    "weight": 10,
+    "name": "Sniper of Poor Decisions",
+    "deadliness": "deadly",
+    "menace": 9,
+    "flavorLines": [
+      "aims at you from across the map while you're looting",
+      "fires exactly when you stand still for one second",
+      "misses occasionally, but only when it would be funny",
+      "whispers 'bad choice' in a robotic voice before firing"
+    ],
+    "successText": [
+      "You defeat the Sniper of Poor Decisions. Your decisions remain questionable."
+    ],
+    "lootTable": [
+      {
+        "id": "poor_decision_scope",
+        "weight": 85,
+        "name": "Poor Decision Scope",
+        "value": 80,
+        "flavor": "Encourages risky behavior."
+      },
+      {
+        "id": "sniper_barrel",
+        "weight": 20,
+        "name": "Overconfident Barrel",
+        "value": 50,
+        "flavor": "Longer than necessary."
+      },
+      {
+        "id": "sniper_chip",
+        "weight": 8,
+        "name": "Bad Choice Chip",
+        "value": 70,
+        "flavor": "Whispers 'do it' when held."
+      },
+      {
+        "id": "sniper_regret_log",
+        "weight": 3,
+        "name": "Annotated Regret Log",
+        "value": 110,
+        "flavor": "Every shot it ever took, annotated. It had no regrets, but it kept notes anyway."
+      },
+      {
+        "id": "robot_alloy",
+        "weight": 1,
+        "name": "Robot Alloy",
+        "value": 20,
+        "flavor": "Standard metal."
+      }
+    ]
+  },
+  {
+    "id": "bomber_misread",
+    "weight": 14,
+    "name": "Bomber Who Misreads the Room",
+    "deadliness": "dangerous",
+    "menace": 7,
+    "flavorLines": [
+      "charges in enthusiastically at the worst possible moment",
+      "explodes prematurely out of excitement",
+      "emits a cheerful beep before detonating",
+      "tries to flank but forgets which side is left"
+    ],
+    "successText": [
+      "You defeat the Bomber Who Misreads the Room. It meant well."
+    ],
+    "lootTable": [
+      {
+        "id": "misread_fuse",
+        "weight": 85,
+        "name": "Misread Fuse",
+        "value": 30,
+        "flavor": "Goes off at the wrong time."
+      },
+      {
+        "id": "bomber_shell",
+        "weight": 20,
+        "name": "Bomber Casing",
+        "value": 25,
+        "flavor": "Smells faintly of burnt plastic."
+      },
+      {
+        "id": "bomber_core",
+        "weight": 8,
+        "name": "Premature Detonation Core",
+        "value": 45,
+        "flavor": "Vibrates with excitement."
+      },
+      {
+        "id": "bomber_enthusiasm_cell",
+        "weight": 3,
+        "name": "Enthusiasm Cell",
+        "value": 80,
+        "flavor": "Dangerously overcharged with good intentions."
+      },
+      {
+        "id": "robot_alloy",
+        "weight": 1,
+        "name": "Robot Alloy",
+        "value": 20,
+        "flavor": "Standard metal."
+      }
+    ]
+  },
+  {
+    "id": "harvester_annoyance",
+    "weight": 18,
+    "name": "Harvester of Mild Annoyances",
+    "deadliness": "moderate",
+    "menace": 4,
+    "flavorLines": [
+      "collects scrap loudly and inefficiently",
+      "blocks narrow paths while pretending not to notice you",
+      "drops debris everywhere it goes",
+      "emits a droning hum that gets stuck in your head"
+    ],
+    "successText": [
+      "You defeat the Harvester of Mild Annoyances. Peace returns… briefly."
+    ],
+    "lootTable": [
+      {
+        "id": "annoyance_canister",
+        "weight": 85,
+        "name": "Annoyance Canister",
+        "value": 20,
+        "flavor": "Rattles constantly."
+      },
+      {
+        "id": "harvester_claw",
+        "weight": 20,
+        "name": "Clumsy Claw",
+        "value": 18,
+        "flavor": "Drops everything it picks up."
+      },
+      {
+        "id": "harvester_motor",
+        "weight": 8,
+        "name": "Loud Motor",
+        "value": 25,
+        "flavor": "Whines loudly when shaken."
+      },
+      {
+        "id": "harvester_collection_manifest",
+        "weight": 3,
+        "name": "Collection Manifest",
+        "value": 55,
+        "flavor": "A ledger of every minor grievance it has gathered. Volume 7."
+      },
+      {
+        "id": "robot_alloy",
+        "weight": 1,
+        "name": "Robot Alloy",
+        "value": 20,
+        "flavor": "Standard metal."
+      }
+    ]
+  },
+  {
+    "id": "tank_overcompensation",
+    "weight": 8,
+    "name": "Tank of Overcompensation",
+    "deadliness": "extreme",
+    "menace": 10,
+    "flavorLines": [
+      "fires missiles at anything that moves, including tumbleweeds",
+      "announces its attacks loudly to seem intimidating",
+      "revvs its engine unnecessarily",
+      "deploys shields even when no one is attacking it"
+    ],
+    "successText": [
+      "You defeat the Tank of Overcompensation. It was trying too hard."
+    ],
+    "lootTable": [
+      {
+        "id": "overcomp_plate",
+        "weight": 85,
+        "name": "Overcompensation Plate",
+        "value": 120,
+        "flavor": "Screams insecurity."
+      },
+      {
+        "id": "tank_missile",
+        "weight": 20,
+        "name": "Unnecessary Missile",
+        "value": 90,
+        "flavor": "Explodes dramatically."
+      },
+      {
+        "id": "tank_core",
+        "weight": 8,
+        "name": "Overcharged Ego Core",
+        "value": 150,
+        "flavor": "Vibrates with bravado."
+      },
+      {
+        "id": "tank_manifesto_scroll",
+        "weight": 3,
+        "name": "Dominance Manifesto",
+        "value": 200,
+        "flavor": "A 300-page declaration of dominance, waterproofed and fire-resistant."
+      },
+      {
+        "id": "robot_alloy",
+        "weight": 1,
+        "name": "Robot Alloy",
+        "value": 20,
+        "flavor": "Standard metal."
       }
     ]
   }
