@@ -50,10 +50,10 @@ Robot encounter events in `src/content/raiding_events.json` use `effects.robotEn
 | Tier | Label | Robots |
 |------|-------|--------|
 | 1 (weakest) | `weak` | Anxietick (menace 2), Overthinker Tick (menace 2) |
-| 2 | `moderate` | Tattletale (menace 3), Passive Aggressor (menace 4), Seeker of Validation (menace 5), Harvester of Annoyances (menace 4) |
+| 2 | `moderate` | Tattletale drone (menace 3), Passive-Aggressor Drone (menace 4), Seeker of Validation (menace 5), Harvester of Mild Annoyances (menace 4) |
 | 3 | `dangerous` | Walker Texas Malfunction (menace 6), Enforcer of Minor Inconveniences (menace 6) |
-| 4 | `nasty` | Bomber of Misread Situations (menace 7) |
-| 5 (deadliest) | `deadly` | Roomba Prime (menace 8), Crusher of Dreams (menace 9), Sniper of Poor Decisions (menace 8), Tank of Overcompensation (menace 9) |
+| 4 | `nasty` | Bomber Who Misreads the Room (menace 7) |
+| 5 (deadliest) | `deadly` | Roomba Prime (menace 8), Crusher of Dreams (menace 8), Sniper of Poor Decisions (menace 9), Tank of Overcompensation (menace 10) |
 
 Only `nasty` and `deadly` robots can kill the raider (lethal encounters trigger only at ≤ 50% HP). `weak`, `moderate`, and `dangerous` robots are non-lethal: damage is capped so HP cannot drop to 0. High-tier robot encounter events (`nasty` and above) must include `"minGreed": 20` in their `requires` clause so they only appear after the raider has pushed deeper.
 
