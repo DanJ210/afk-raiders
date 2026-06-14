@@ -45,7 +45,19 @@ Raid aggression is autonomous; there is no extraction preference slider. `runGre
 Max raid time is 120 ticks = 30 minutes at the 15 s tick cadence. Phase durations are defined in `src/engine/raidStateMachine.ts` as `PHASE_DURATIONS`: HUB ≤ 5 min (20 ticks), DEPLOYING 60 s (4 ticks, one-person tunnel pods), RAIDING ≤ 30 min (120 ticks), EXTRACTING ~60 s (4 ticks). When the raid timer expires the raider is forced into EXTRACTING. If HP reaches 0 in any phase the raider goes DOWNED, loses the backpack, and respawns in the HUB. Each phase has its own events file in `src/content/` (hub_events, deployment_events, raiding_events, extraction_events, downed_events).
 
 ### Robot Encounters
-Robot encounter events in `src/content/raiding_events.json` use `effects.robotEncounter` to reference a robot ID from `src/content/robots.json`. Robots have a `deadliness` label (`weak`, `moderate`, `nasty`, `deadly`) that must match their menace, abundance, and encounter tuning: Anxietick < Tattletale < Seeker of Validation < Roomba Prime. `resolveRobotEncounter()` rolls 1-10 with the seeded RNG; if the roll is greater than the robot's `menace`, the raider defeats it, emits a `successText` line, and wins an item from that robot's `lootTable`. On failure, the raider takes damage based on menace and runs away. Rare event variants can set `effects.robotDamageMultiplier` to make failed encounters more dangerous or lethal; this multiplier only applies on failure, never when the robot is defeated. Robot loot is also included in the regular loot resolver pool alongside `loot.json`.
+Robot encounter events in `src/content/raiding_events.json` use `effects.robotEncounter` to reference a robot ID from `src/content/robots.json`. Robots have a `deadliness` label (`weak`, `moderate`, `dangerous`, `nasty`, `deadly`) that must match their menace, abundance, and encounter tuning. Valid deadliness tiers in ascending order:
+
+| Tier | Label | Robots |
+|------|-------|--------|
+| 1 (weakest) | `weak` | Anxietick (menace 2), Overthinker Tick (menace 2) |
+| 2 | `moderate` | Tattletale drone (menace 3), Passive-Aggressor Drone (menace 4), Seeker of Validation (menace 5), Harvester of Mild Annoyances (menace 4) |
+| 3 | `dangerous` | Walker Texas Malfunction (menace 6), Enforcer of Minor Inconveniences (menace 6) |
+| 4 | `nasty` | Bomber Who Misreads the Room (menace 7) |
+| 5 (deadliest) | `deadly` | Roomba Prime (menace 8), Crusher of Dreams (menace 8), Sniper of Poor Decisions (menace 9), Tank of Overcompensation (menace 10) |
+
+Only `nasty` and `deadly` robots can kill the raider (lethal encounters trigger only at ≤ 50% HP). `weak`, `moderate`, and `dangerous` robots are non-lethal: damage is capped so HP cannot drop to 0. High-tier robot encounter events (`nasty` and above) must include `"minGreed": 20` in their `requires` clause so they only appear after the raider has pushed deeper.
+
+`resolveRobotEncounter()` rolls 1-10 with the seeded RNG; if the roll is greater than the robot's `menace`, the raider defeats it, emits a `successText` line, and wins an item from that robot's `lootTable`. On failure, the raider takes damage based on menace and runs away. Rare event variants can set `effects.robotDamageMultiplier` to make failed encounters more dangerous or lethal; this multiplier only applies on failure, never when the robot is defeated. Robot loot is also included in the regular loot resolver pool alongside `loot.json`.
 
 ### Healing Items
 Bandages live in `src/content/healing_items.json` and are current-raid-only consumables, stored on `RaidState.healingItems`, not in the backpack or home stash. RAIDING events can use `effects.healingItem` to find one bandage. The engine automatically uses the smallest useful bandage when the raider is alive and HP is at or below 75%, capped at 50 HP per use: White +5, Green +10, Blue +25, Purple +50. Each bandage also has a `moodGain`, and higher-tier bandages grant more mood when consumed. The used bandage is removed from `RaidState.healingItems`. Healing items reset when the raid returns to HUB and are lost on death.
