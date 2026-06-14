@@ -162,9 +162,9 @@
     }
   },
   {
-    "id": "robot_encounter_shredder_dedder",
+    "id": "robot_encounter_bomber_misread",
     "weight": 8,
-    "text": "A Shredder Dedder {robot_flavor_shredder_dedder}. Everyone involved suddenly remembered they had somewhere else to be.",
+    "text": "A Bomber Who Misreads the Room {robot_flavor_bomber_misread}. Everyone involved suddenly remembered they had somewhere else to be.",
     "requires": {
       "phase": "RAIDING",
       "minGreed": 20
@@ -172,7 +172,7 @@
     "effects": {
       "mood": -5,
       "ratRating": 3,
-      "robotEncounter": "shredder_dedder",
+      "robotEncounter": "bomber_misread",
       "robotDamageMultiplier": 2.5
     }
   },
@@ -339,13 +339,14 @@
     {
       "id": "raid_robot_shadow",
       "weight": 10,
-      "text": "Saw a shadow before the robot. It was a Shredder Dedder. Terrifying.",
+      "text": "Saw a shadow before the robot. It was a Crusher of Dreams. Terrifying.",
       "requires": {
-        "phase": "RAIDING"
+        "phase": "RAIDING",
+        "minGreed": 20
       },
       "effects": {
         "mood": -4,
-        "robotEncounter": "shredder_dedder"
+        "robotEncounter": "crusher_of_dreams"
       }
     },
     {
@@ -390,7 +391,8 @@
       "weight": 11,
       "text": "Heard heavy footsteps. Not mine. Not good. Definitely a Roomba Prime.",
       "requires": {
-        "phase": "RAIDING"
+        "phase": "RAIDING",
+        "minGreed": 20
       },
       "effects": {
         "mood": -4,
@@ -475,7 +477,7 @@
     {
       "id": "raid_loot_behind_robot",
       "weight": 16,
-      "text": "Saw loot behind a Shredder Dedder. Considered my options. None were good.",
+      "text": "Saw loot behind a Bomber Who Misreads the Room. Considered my options. None were good.",
       "requires": {
         "phase": "RAIDING",
         "minGreed": 20
@@ -483,19 +485,19 @@
       "effects": {
         "greedLevel": 5,
         "mood": -2,
-        "robotEncounter": "shredder_dedder"
+        "robotEncounter": "bomber_misread"
       }
     },
     {
       "id": "raid_robot_turns_slowly",
       "weight": 9,
-      "text": "A Shredder Dedder turned toward me very slowly. Too slowly.",
+      "text": "A Walker Texas Malfunction turned toward me very slowly. Too slowly.",
       "requires": {
         "phase": "RAIDING"
       },
       "effects": {
         "mood": -3,
-        "robotEncounter": "shredder_dedder"
+        "robotEncounter": "walker_texas_malfunction"
       }
     },
     {
@@ -512,13 +514,14 @@
     {
       "id": "raid_robot_ambush",
       "weight": 7,
-      "text": "A Shredder Dedder ambushed us from behind a crate. I screamed internally.",
+      "text": "A Bomber Who Misreads the Room ambushed us from behind a crate. I screamed internally.",
       "requires": {
-        "phase": "RAIDING"
+        "phase": "RAIDING",
+        "minGreed": 20
       },
       "effects": {
         "mood": -4,
-        "robotEncounter": "shredder_dedder",
+        "robotEncounter": "bomber_misread",
         "robotDamageMultiplier": 2.5
       }
     },
@@ -540,7 +543,8 @@
       "weight": 8,
       "text": "A laser dot appeared on my chest. Roomba Prime was nearby. I chose not to investigate.",
       "requires": {
-        "phase": "RAIDING"
+        "phase": "RAIDING",
+        "minGreed": 20
       },
       "effects": {
         "mood": -4,
@@ -562,13 +566,13 @@
     {
       "id": "raid_robot_sparks",
       "weight": 9,
-      "text": "A Shredder Dedder sparked violently. I took that personally.",
+      "text": "A Walker Texas Malfunction sparked violently. I took that personally.",
       "requires": {
         "phase": "RAIDING"
       },
       "effects": {
         "mood": -2,
-        "robotEncounter": "shredder_dedder"
+        "robotEncounter": "walker_texas_malfunction"
       }
     },
     {
@@ -609,13 +613,15 @@
     {
       "id": "raid_robot_stare",
       "weight": 10,
-      "text": "A Shredder Dedder stared at me for a full five seconds. I blinked first.",
+      "text": "A Crusher of Dreams stared at me for a full five seconds. I blinked first.",
       "requires": {
-        "phase": "RAIDING"
+        "phase": "RAIDING",
+        "minGreed": 20
       },
       "effects": {
         "mood": -3,
-        "robotEncounter": "shredder_dedder"
+        "robotEncounter": "crusher_of_dreams",
+        "robotDamageMultiplier": 2.5
       }
     },
     {
@@ -659,7 +665,8 @@
       "weight": 9,
       "text": "A Roomba Prime appeared behind me silently. Too silently.",
       "requires": {
-        "phase": "RAIDING"
+        "phase": "RAIDING",
+        "minGreed": 20
       },
       "effects": {
         "mood": -4,
@@ -707,11 +714,89 @@
       "weight": 8,
       "text": "A Roomba Prime flew overhead. I froze like a malfunctioning toaster.",
       "requires": {
-        "phase": "RAIDING"
+        "phase": "RAIDING",
+        "minGreed": 20
       },
       "effects": {
         "mood": -4,
         "robotEncounter": "roomba_prime"
       }
+    },
+    {
+      "id": "encounter_overthinker_tick",
+      "weight": 22,
+      "text": "An Overthinker Tick {robot_flavor_overthinker_tick}. Eventually chose attack. Eventually.",
+      "requires": { "phase": "RAIDING" },
+      "effects": { "mood": -1, "robotEncounter": "overthinker_tick" }
+    },
+    {
+      "id": "encounter_overthinker_tick_spiral",
+      "weight": 8,
+      "text": "An Overthinker Tick {robot_flavor_overthinker_tick}. Considered every option. Chose all of them simultaneously.",
+      "requires": { "phase": "RAIDING" },
+      "effects": { "mood": -2, "ratRating": 1, "robotEncounter": "overthinker_tick", "robotDamageMultiplier": 2 }
+    },
+    {
+      "id": "encounter_passive_aggressor",
+      "weight": 16,
+      "text": "A Passive-Aggressor Drone {robot_flavor_passive_aggressor}. Did not fire. The judgment was worse.",
+      "requires": { "phase": "RAIDING" },
+      "effects": { "mood": -2, "ratRating": 1, "robotEncounter": "passive_aggressor" }
+    },
+    {
+      "id": "encounter_seeker_validation",
+      "weight": 14,
+      "text": "A Seeker of Validation {robot_flavor_seeker_validation}. It hesitated mid-charge, waiting for feedback. I did not provide any.",
+      "requires": { "phase": "RAIDING" },
+      "effects": { "mood": -2, "robotEncounter": "seeker_validation" }
+    },
+    {
+      "id": "encounter_harvester_annoyance",
+      "weight": 14,
+      "text": "A Harvester of Mild Annoyances {robot_flavor_harvester_annoyance}. Blocked every useful path while loudly collecting nothing.",
+      "requires": { "phase": "RAIDING" },
+      "effects": { "mood": -2, "ratRating": 1, "robotEncounter": "harvester_annoyance" }
+    },
+    {
+      "id": "encounter_enforcer_inconvenience",
+      "weight": 11,
+      "text": "An Enforcer of Minor Inconveniences {robot_flavor_enforcer_inconvenience}. Technically following protocol. Technically.",
+      "requires": { "phase": "RAIDING" },
+      "effects": { "mood": -3, "robotEncounter": "enforcer_inconvenience" }
+    },
+    {
+      "id": "encounter_enforcer_inconvenience_citation",
+      "weight": 5,
+      "text": "An Enforcer of Minor Inconveniences deployed suppressive fire. Mostly at the wrong targets. Including me.",
+      "requires": { "phase": "RAIDING" },
+      "effects": { "mood": -4, "ratRating": 2, "robotEncounter": "enforcer_inconvenience", "robotDamageMultiplier": 2.5 }
+    },
+    {
+      "id": "encounter_sniper_poor_decisions",
+      "weight": 5,
+      "text": "A Sniper of Poor Decisions {robot_flavor_sniper_poor_decisions}. It waited until I stopped moving. Classic.",
+      "requires": { "phase": "RAIDING", "minGreed": 20 },
+      "effects": { "mood": -5, "ratRating": 3, "robotEncounter": "sniper_poor_decisions", "robotDamageMultiplier": 2.5 }
+    },
+    {
+      "id": "encounter_sniper_poor_decisions_miss",
+      "weight": 3,
+      "text": "A Sniper of Poor Decisions missed me. Once. It did not miss again.",
+      "requires": { "phase": "RAIDING", "minGreed": 20 },
+      "effects": { "mood": -4, "robotEncounter": "sniper_poor_decisions" }
+    },
+    {
+      "id": "encounter_tank_overcompensation",
+      "weight": 4,
+      "text": "A Tank of Overcompensation {robot_flavor_tank_overcompensation}. It announced the attack several times. Still terrifying.",
+      "requires": { "phase": "RAIDING", "minGreed": 20 },
+      "effects": { "mood": -5, "ratRating": 3, "robotEncounter": "tank_overcompensation", "robotDamageMultiplier": 2.5 }
+    },
+    {
+      "id": "encounter_tank_overcompensation_revving",
+      "weight": 2,
+      "text": "A Tank of Overcompensation revved its engine unnecessarily before charging. The floor vibrated. So did I.",
+      "requires": { "phase": "RAIDING", "minGreed": 20 },
+      "effects": { "mood": -5, "robotEncounter": "tank_overcompensation" }
     }
 ]

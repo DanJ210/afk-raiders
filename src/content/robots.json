@@ -266,7 +266,7 @@
   },
   {
     "id": "roomba_prime",
-    "weight": 15,
+    "weight": 13,
     "name": "Roomba Prime",
     "deadliness": "deadly",
     "menace": 8,
@@ -319,7 +319,7 @@
   },
   {
     "id": "walker_texas_malfunction",
-    "weight": 20,
+    "weight": 17,
     "name": "Walker Texas Malfunction",
     "deadliness": "dangerous",
     "menace": 6,
@@ -342,7 +342,7 @@
       },
       {
         "id": "walker_leg",
-        "weight": 20,
+        "weight": 16,
         "name": "Walker Leg Joint",
         "value": 35,
         "flavor": "Clicks loudly when moved."
@@ -372,7 +372,7 @@
   },
   {
     "id": "enforcer_inconvenience",
-    "weight": 18,
+    "weight": 16,
     "name": "Enforcer of Minor Inconveniences",
     "deadliness": "dangerous",
     "menace": 6,

@@ -162,7 +162,8 @@
     "weight": 8,
     "text": "A Roomba Prime charged directly at me, determined to clean me off the map.",
     "requires": {
-      "phase": "EXTRACTION"
+      "phase": "EXTRACTION",
+      "minGreed": 20
     },
     "effects": {
       "mood": -4,
@@ -182,15 +183,16 @@
     }
   },
   {
-    "id": "extract_shredder_dedder_surprise",
+    "id": "extract_bomber_surprise",
     "weight": 9,
-    "text": "A Shredder Dedder politely surprised us at the LZ. We were less polite.",
+    "text": "A Bomber Who Misreads the Room enthusiastically surprised us at the LZ. We were less enthusiastic.",
     "requires": {
-      "phase": "EXTRACTION"
+      "phase": "EXTRACTION",
+      "minGreed": 20
     },
     "effects": {
       "mood": -3,
-      "robotEncounter": "shredder_dedder",
+      "robotEncounter": "bomber_misread",
       "robotDamageMultiplier": 2.5
     }
   },
@@ -270,7 +272,8 @@
     "weight": 7,
     "text": "A Roomba Prime blocked the LZ like an angry floor guardian.",
     "requires": {
-      "phase": "EXTRACTION"
+      "phase": "EXTRACTION",
+      "minGreed": 20
     },
     "effects": {
       "mood": -4,
@@ -289,15 +292,15 @@
     }
   },
   {
-    "id": "extract_shredder_dedder_polite",
+    "id": "extract_walker_stomps_in",
     "weight": 9,
-    "text": "A Shredder Dedder approached politely before trying to shred us impolitely.",
+    "text": "A Walker Texas Malfunction stomped in confidently before immediately tripping over the LZ beacon.",
     "requires": {
       "phase": "EXTRACTION"
     },
     "effects": {
       "mood": -3,
-      "robotEncounter": "shredder_dedder"
+      "robotEncounter": "walker_texas_malfunction"
     }
   },
   {
@@ -354,7 +357,8 @@
     "weight": 7,
     "text": "Roomba Prime emitted a high‑pitched warning tone. I emitted panic.",
     "requires": {
-      "phase": "EXTRACTION"
+      "phase": "EXTRACTION",
+      "minGreed": 20
     },
     "effects": {
       "mood": -4,
@@ -362,15 +366,16 @@
     }
   },
   {
-    "id": "extract_shredder_dedder_shadow",
+    "id": "extract_bomber_shadow",
     "weight": 9,
-    "text": "Saw the shadow of a Shredder Dedder before the robot. Terrifying.",
+    "text": "Saw the shadow of a Bomber Who Misreads the Room before the explosion. Less terrifying in theory, more in practice.",
     "requires": {
-      "phase": "EXTRACTION"
+      "phase": "EXTRACTION",
+      "minGreed": 20
     },
     "effects": {
       "mood": -3,
-      "robotEncounter": "shredder_dedder"
+      "robotEncounter": "bomber_misread"
     }
   },
   {
@@ -426,7 +431,8 @@
     "weight": 7,
     "text": "Roomba Prime bumped into a wall, corrected itself, and charged at me with purpose.",
     "requires": {
-      "phase": "EXTRACTION"
+      "phase": "EXTRACTION",
+      "minGreed": 20
     },
     "effects": {
       "mood": -4,
@@ -434,15 +440,16 @@
     }
   },
   {
-    "id": "extract_shredder_dedder_polite2",
+    "id": "extract_crusher_apologizes",
     "weight": 9,
-    "text": "A Shredder Dedder apologized before attacking. I accepted the apology and ran.",
+    "text": "A Crusher of Dreams apologized before attacking. I accepted the apology and ran.",
     "requires": {
-      "phase": "EXTRACTION"
+      "phase": "EXTRACTION",
+      "minGreed": 20
     },
     "effects": {
       "mood": -2,
-      "robotEncounter": "shredder_dedder"
+      "robotEncounter": "crusher_of_dreams"
     }
   },
   {
@@ -499,7 +506,8 @@
     "weight": 7,
     "text": "Roomba Prime spun in place before charging. Terrifying warm‑up routine.",
     "requires": {
-      "phase": "EXTRACTION"
+      "phase": "EXTRACTION",
+      "minGreed": 20
     },
     "effects": {
       "mood": -4,
@@ -507,15 +515,15 @@
     }
   },
   {
-    "id": "extract_shredder_dedder_wave",
+    "id": "extract_walker_announcement",
     "weight": 9,
-    "text": "A Shredder Dedder waved politely before trying to slice me in half.",
+    "text": "A Walker Texas Malfunction announced its attack loudly before tripping over itself. We still ran.",
     "requires": {
       "phase": "EXTRACTION"
     },
     "effects": {
       "mood": -3,
-      "robotEncounter": "shredder_dedder"
+      "robotEncounter": "walker_texas_malfunction"
     }
   },
   {
