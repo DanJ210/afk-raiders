@@ -429,7 +429,7 @@ export function applyEffects(
   }
 
   if (effects.greedLevel !== undefined) {
-    raid = { ...raid, greedLevel: 0 }
+    raid = { ...raid, greedLevel: Math.min(100, Math.max(0, raid.greedLevel + effects.greedLevel)) }
   }
 
   if (effects.ratRating !== undefined) {
@@ -463,3 +463,4 @@ export function resolveFlavorKey(key: string, rng: RNG): string {
 
 /** Exported for content validation tests */
 export { events, flavor, healingItems, loot, robots }
+

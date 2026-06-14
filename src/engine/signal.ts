@@ -19,6 +19,9 @@ export const SIGNAL_COSTS = {
   CALL_EXTRACT: 3,
 } as const
 
+/** How much greed a scold removes when consumed on the next raid tick. */
+export const SCOLD_GREED_REDUCTION = 12
+
 export type SignalAction = keyof typeof SIGNAL_COSTS
 
 /** Compute the current signal level based on elapsed time since last regen tick */
@@ -41,6 +44,11 @@ export function spendSignal(signal: SignalState, action: SignalAction): SignalSt
   const cost = SIGNAL_COSTS[action]
   if (signal.current < cost) return null
   return { ...signal, current: signal.current - cost }
+}
+
+/** Apply the scold action's greed reduction with floor at 0. */
+export function applyScoldGreedReduction(greedLevel: number): number {
+  return Math.max(0, greedLevel - SCOLD_GREED_REDUCTION)
 }
 
 /** Create the initial signal state */

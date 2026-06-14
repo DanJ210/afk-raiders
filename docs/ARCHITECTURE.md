@@ -79,7 +79,7 @@ Events may also set `"effects": { "forcePhase": "..." }` to force a phase change
 On every EXTRACTING → HUB transition (natural or event-forced), `processTick` merges the backpack into `state.homeStash` before the backpack resets. Duplicate item IDs stack quantities; the stash only ever shrinks via a future sell mechanic.
 
 ### 3. Signal as the only real input
-Signal regenerates (~1 per 10 min, capped 3–5). Encourage/Scold nudge hidden behavior weights; CALL EXTRACT (3 Signal) forces an extraction attempt. The UI exposes nothing else that affects the sim.
+Signal regenerates (~1 per 10 min, capped 3–5). Encourage/Scold nudge hidden behavior weights, and Scold also reduces current greed before the next greed check; CALL EXTRACT (3 Signal) forces an extraction attempt. The UI exposes nothing else that affects the sim.
 
 ### 4. State updates are immutable-style
 `processTick(state, rng)` returns `{ state: GameState, events: LogEvent[] }` without mutating its input. This keeps Pinia reactivity simple, enables snapshot tests, and makes catch-up a pure fold over ticks.
@@ -93,3 +93,4 @@ Signal regenerates (~1 per 10 min, capped 3–5). Encourage/Scold nudge hidden b
 - Fully client-side; no network calls, no accounts, no telemetry.
 - One raider, one zone, Encourage/Scold/CALL EXTRACT, offline catch-up, PWA installability.
 - localStorage persistence with a schema `version` field for future migrations.
+

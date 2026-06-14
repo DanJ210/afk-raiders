@@ -16,7 +16,7 @@ You are **not** the raider. You are their Handler back in the underground hub, w
 1. **Prep phase (hub):** Raider sells loot, buys questionable gear, eats expired MREs, gossips with NPCs.
 2. **Deploy:** Raider autonomously picks a zone and wanders it.
 3. **Raid events:** Loot finds, robot encounters, weather, meeting other AI raiders (alliance → inevitable betrayal).
-4. **The Greed Check™ (signature mechanic, temporarily disabled):** At intervals the Raider rolls to extract *or* push deeper for better loot. Backpack value rises → death risk rises. Pure dramatic tension, zero input required.
+4. **The Greed Check™ (signature mechanic):** At intervals the Raider rolls to extract *or* push deeper for better loot. Backpack value rises → death risk rises. Pure dramatic tension, zero input required.
 5. **Extract or die:** Extraction takes ~90 seconds, then a final beat to hit the big RETURN HOME button. During that window **extraction events** can fire — the shuttle may arrive early (instant success), the beacon may get jammed (back into the zone, backpack kept), or the raider may go down at the LZ (lose the bag). Death = lose the bag (keep the Emotional Support Pocket item), respawn in hub with a sheepish log entry. Repeat forever.
 
 ### The Home Stash
@@ -88,3 +88,4 @@ Everything funny flows through an autoscrolling text feed:
 
 ## 9. Legal Positioning
 Parody enjoys some protection, but we do **not** use the "ARC Raiders" trademark, logos, names, lore text, or assets — especially important for app-store distribution. Branding is original; positioning is "affectionate parody of extraction shooters" generally. All names in the parody table above are original to this project.
+

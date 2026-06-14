@@ -45,14 +45,15 @@ function simulateRaid(seed: number): RaidSimulationResult {
 }
 
 describe('raid balance', () => {
-  it('keeps raids running longer with greed-driven exits disabled', () => {
+  it('lands near the target extraction rate while giving raids room to breathe', () => {
     const outcomes = Array.from({ length: 200 }, (_, index) => simulateRaid(index + 1))
     const extracts = outcomes.filter(result => result.outcome === 'EXTRACTED').length
     const extractionRate = extracts / outcomes.length
     const averageRaidingTicks = outcomes.reduce((sum, result) => sum + result.raidingTicks, 0) / outcomes.length
 
-    expect(extractionRate).toBeGreaterThanOrEqual(0.85)
-    expect(averageRaidingTicks).toBeGreaterThanOrEqual(80)
-    expect(outcomes.every(result => result.raidingTicks >= 20)).toBe(true)
+    expect(extractionRate).toBeGreaterThanOrEqual(0.70)
+    expect(extractionRate).toBeLessThanOrEqual(0.80)
+    expect(averageRaidingTicks).toBeGreaterThanOrEqual(20)
   })
 })
+
