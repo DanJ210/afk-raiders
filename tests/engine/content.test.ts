@@ -300,7 +300,7 @@ describe('content validation', () => {
       expect(labels).toEqual({
         anxietick: 'weak',
         tattletale: 'moderate',
-        shredder_dedder: 'nasty',
+        walker_texas_malfunction: 'nasty',
         roomba_prime: 'deadly',
       })
     })
