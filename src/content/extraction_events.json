@@ -88,7 +88,7 @@
     "weight": 18,
     "text": "Fired a signal flare. Immediately regretted how visible it was.",
     "requires": {
-      "phase": "EXTRACTION"
+      "phase": "EXTRACTING"
     },
     "effects": {
       "mood": -1,
