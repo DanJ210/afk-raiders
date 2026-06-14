@@ -19,12 +19,12 @@ const TIME_OF_DAY_TABLE: Array<{ id: TimeOfDay; weight: number }> = [
   { id: 'Stella Red', weight: 10 },
 ]
 
-// Ticks each phase lasts before auto-transitioning (1 tick = 15s)
+// Ticks each phase lasts before auto-transitioning (1 tick = 30s)
 export const PHASE_DURATIONS: Record<Phase, number> = {
-  HUB: 20,         // 5 minutes max resting and prepping in Desperanza
-  DEPLOYING: 4,    // 60 seconds riding a one-person pod through the tunnel system
-  RAIDING: 120,    // 30 minutes max looting; events can end it early (extract or death)
-  EXTRACTING: 4,   // ~45s extraction window + final tick = calling the return shuttle (60s at 15s/tick)
+  HUB: 20,         // 10 minutes max resting and prepping in Desperanza
+  DEPLOYING: 4,    // 2 minutes riding a one-person pod through the tunnel system
+  RAIDING: 120,    // 60 minutes max looting; ends via timer expiry, death, or CALL_EXTRACT
+  EXTRACTING: 4,   // ~90s extraction window + final tick = calling the return shuttle (~2 minutes total)
   DOWNED: 2,       // death rattle flavor before respawning
 }
 
@@ -115,7 +115,7 @@ function phaseTransitionText(from: Phase, to: Phase): string {
   if (from === 'DEPLOYING' && to === 'RAIDING')
     return 'Pod doors hissed open. Zone is hot. Try not to die immediately.'
   if (from === 'RAIDING' && to === 'EXTRACTING')
-    return 'Extract beacon deployed. Shuttle ETA 45 seconds. Please be at the LZ.'
+    return 'Extract beacon deployed. Shuttle ETA about 90 seconds. Please be at the LZ.'
   if (from === 'RAIDING' && to === 'DOWNED')
     return "Raider is down. Emotional support pocket contents secured."
   if (from === 'EXTRACTING' && to === 'HUB')

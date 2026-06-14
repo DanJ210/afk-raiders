@@ -14,6 +14,8 @@ import {
   SIGNAL_CAP,
   SIGNAL_REGEN_MS,
   SIGNAL_COSTS,
+  SCOLD_GREED_REDUCTION,
+  applyScoldGreedReduction,
 } from '../../src/engine/signal'
 import type { SignalState } from '../../src/engine/types'
 
@@ -91,4 +93,13 @@ describe('signal', () => {
   it('SIGNAL_COSTS.CALL_EXTRACT is 3', () => {
     expect(SIGNAL_COSTS.CALL_EXTRACT).toBe(3)
   })
+
+  it('applyScoldGreedReduction reduces greed by configured amount', () => {
+    expect(applyScoldGreedReduction(30)).toBe(30 - SCOLD_GREED_REDUCTION)
+  })
+
+  it('applyScoldGreedReduction clamps greed at zero', () => {
+    expect(applyScoldGreedReduction(5)).toBe(0)
+  })
 })
+

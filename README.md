@@ -42,7 +42,7 @@ npm install
 npm run dev
 ```
 
-Open [http://localhost:5173](http://localhost:5173) — a tick fires every 5 seconds in dev mode. Watch the comms log.
+Open [http://localhost:5173](http://localhost:5173) — a tick fires every 30 seconds. Watch the comms log.
 
 ### Other scripts
 

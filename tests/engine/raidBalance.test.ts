@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { createInitialState } from '../../src/engine/initialState'
 import { processTick } from '../../src/engine/tick'
 import { createRNG } from '../../src/engine/rng'
+import { TICK_INTERVAL_MS } from '../../src/engine/catchUp'
 import type { GameState } from '../../src/engine/types'
 
 type RaidOutcome = 'EXTRACTED' | 'DOWNED'
@@ -30,11 +31,11 @@ function simulateRaid(seed: number): RaidSimulationResult {
   let state = createRaidStart()
   let raidingTicks = 0
 
-  for (let tick = 0; tick < 240; tick += 1) {
+  for (let tick = 0; tick < 1_200; tick += 1) {
     if (state.raid.phase === 'RAIDING') {
       raidingTicks += 1
     }
-    state = processTick(state, rng, tick * 15_000).state
+    state = processTick(state, rng, tick * TICK_INTERVAL_MS).state
 
     if (state.raider.extractCount > 0) return { outcome: 'EXTRACTED', raidingTicks }
     if (state.raider.deathCount > 0) return { outcome: 'DOWNED', raidingTicks }
@@ -55,3 +56,4 @@ describe('raid balance', () => {
     expect(averageRaidingTicks).toBeGreaterThanOrEqual(20)
   })
 })
+

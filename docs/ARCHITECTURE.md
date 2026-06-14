@@ -55,7 +55,7 @@ afk-raiders/
 
 ### 1. Seeded, deterministic ticks
 - Save format: `{ state, seed, lastTickAt }` (JSON in localStorage).
-- Tick cadence: one event roughly every 30–90 seconds of real time.
+- Tick cadence: one event every 30 seconds of real time.
 - On load, `catchUp()` replays elapsed ticks — **capped at ~8 hours** — then shows a "While you were away…" summary (e.g., "your raider died twice and befriended a vending machine").
 - Determinism makes catch-up cheap, bugs reproducible, and save-scumming pointless.
 - All engine randomness flows through the seeded RNG. `Math.random()` is banned in `src/engine/`.
@@ -73,13 +73,13 @@ Events are picked by context (zone, greed level, mood, HP) and fill `{slot}` pla
 ```
 Writing jokes never touches engine code — and this is the future community-content pipeline.
 
-Events may also set `"effects": { "forcePhase": "..." }` to force a phase change. This powers `extraction_events.json`: during the EXTRACTING window (~45s extraction + a final tick to call the return shuttle, 4 ticks total) events can make extraction fail (`forcePhase: "RAIDING"` — backpack kept), succeed early (`forcePhase: "HUB"` — loot transferred to the home stash), or end in tragedy (`forcePhase: "DOWNED"` — bag lost).
+Events may also set `"effects": { "forcePhase": "..." }` to force a phase change. This powers `extraction_events.json`: during the EXTRACTING window (~90s extraction + a final tick to call the return shuttle, 4 ticks total) events can make extraction fail (`forcePhase: "RAIDING"` — backpack kept), succeed early (`forcePhase: "HUB"` — loot transferred to the home stash), or end in tragedy (`forcePhase: "DOWNED"` — bag lost).
 
 ### Home stash transfer
 On every EXTRACTING → HUB transition (natural or event-forced), `processTick` merges the backpack into `state.homeStash` before the backpack resets. Duplicate item IDs stack quantities; the stash only ever shrinks via a future sell mechanic.
 
 ### 3. Signal as the only real input
-Signal regenerates (~1 per 10 min, capped 3–5). Encourage/Scold nudge hidden behavior weights; CALL EXTRACT (3 Signal) forces an extraction attempt. The UI exposes nothing else that affects the sim.
+Signal regenerates (~1 per 10 min, capped 3–5). Encourage/Scold nudge hidden behavior weights, and Scold also reduces current greed before the next greed check; CALL EXTRACT (3 Signal) forces an extraction attempt. The UI exposes nothing else that affects the sim.
 
 ### 4. State updates are immutable-style
 `processTick(state, rng)` returns `{ state: GameState, events: LogEvent[] }` without mutating its input. This keeps Pinia reactivity simple, enables snapshot tests, and makes catch-up a pure fold over ticks.
@@ -93,3 +93,4 @@ Signal regenerates (~1 per 10 min, capped 3–5). Encourage/Scold nudge hidden b
 - Fully client-side; no network calls, no accounts, no telemetry.
 - One raider, one zone, Encourage/Scold/CALL EXTRACT, offline catch-up, PWA installability.
 - localStorage persistence with a schema `version` field for future migrations.
+

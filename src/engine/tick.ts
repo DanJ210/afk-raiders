@@ -18,6 +18,7 @@ import type { BackpackItem, GameState, LogEvent, TickResult } from './types.js'
 import type { RNG } from './rng.js'
 import { tickPhase } from './raidStateMachine.js'
 import { runGreedCheck } from './greedCheck.js'
+import { applyScoldGreedReduction } from './signal.js'
 import { resolveEvent, resolveFlavorKey, applyEffects, consumeHealingItemIfUseful, resolveHealingItemFind, resolveRobotEncounter, events as allEvents } from './eventResolver.js'
 import { transferBackpackToHomeStash, HOME_STASH_ITEM_LIMIT } from './homeStash.js'
 
@@ -107,8 +108,15 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
   // 2. Greed Check (RAIDING phase only, once per tick)
   // ------------------------------------------------------------------
   if (currentState.raid.phase === 'RAIDING') {
+    const raidForGreedCheck = currentState.pendingScold
+      ? {
+          ...currentState.raid,
+          greedLevel: applyScoldGreedReduction(currentState.raid.greedLevel),
+        }
+      : currentState.raid
+
     const greedResult = runGreedCheck(
-      currentState.raid,
+      raidForGreedCheck,
       rng,
       {
         encouraged: currentState.pendingEncourage,
@@ -122,7 +130,7 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
     // Update greed level
     currentState = {
       ...currentState,
-      raid: { ...currentState.raid, greedLevel: greedResult.newGreedLevel },
+      raid: { ...raidForGreedCheck, greedLevel: greedResult.newGreedLevel },
     }
 
     if (greedResult.outcome === 'EXTRACT') {
@@ -153,7 +161,7 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
         })
       }
     }
-    // PUSH_DEEPER → stay in RAIDING (greedLevel already updated above)
+    // PUSH_DEEPER -> stay in RAIDING (greedLevel already updated above)
   }
 
   // ------------------------------------------------------------------
@@ -292,3 +300,4 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
     events: emitted,
   }
 }
+
