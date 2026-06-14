@@ -222,7 +222,7 @@
     "effects": {
       "greedLevel": 5
     }
-  },[
+  },
     {
       "id": "raid_trip_on_rock",
       "weight": 14,
