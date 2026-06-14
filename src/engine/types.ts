@@ -44,7 +44,7 @@ export interface LootItem extends ContentEntry {
 
 export interface RobotEntry extends ContentEntry {
   name: string
-  deadliness: 'weak' | 'moderate' | 'nasty' | 'deadly'
+  deadliness: 'weak' | 'moderate' | 'dangerous' | 'nasty' | 'deadly'
   menace: number
   flavorLines: string[]
   successText: string[]

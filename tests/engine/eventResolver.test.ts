@@ -14,13 +14,13 @@ import { applyEffects, consumeHealingItemIfUseful, resolveHealingItemFind, resol
 import { createInitialState } from '../../src/engine/initialState'
 import type { EventTemplate, HealingItemStack } from '../../src/engine/types'
 
-// backpackValue=1000 maps exclusively to hans_gruber,
+// backpackValue=500 maps exclusively to golden_water_bottle,
 // so item selection is fully deterministic — no RNG variance.
 const LOOT_TEMPLATE: EventTemplate = {
   id: 'test_loot',
   weight: 1,
   text: 'You found something.',
-  effects: { backpackValue: 1000 },
+  effects: { backpackValue: 500 },
 }
 
 const DAMAGE_TEMPLATE: EventTemplate = {
@@ -51,9 +51,9 @@ describe('applyEffects — backpack item behavior', () => {
 
     expect(result.raid.backpack).toHaveLength(1)
     const item = result.raid.backpack[0]
-    expect(item.itemId).toBe('hans_gruber')
-    expect(item.name).toBe('Hans Gruber (alive)')
-    expect(item.value).toBe(1000)
+    expect(item.itemId).toBe('golden_water_bottle')
+    expect(item.name).toBe('Golden Water Bottle')
+    expect(item.value).toBe(500)
     expect(item.rarity).toBe(5)
     expect(item.quantity).toBe(1)
   })
@@ -68,7 +68,7 @@ describe('applyEffects — backpack item behavior', () => {
 
     const afterSecond = applyEffects(afterFirst, LOOT_TEMPLATE, rng)
     expect(afterSecond.raid.backpack).toHaveLength(1)
-    expect(afterSecond.raid.backpack[0].itemId).toBe('hans_gruber')
+    expect(afterSecond.raid.backpack[0].itemId).toBe('golden_water_bottle')
     expect(afterSecond.raid.backpack[0].quantity).toBe(2)
   })
 
@@ -77,10 +77,10 @@ describe('applyEffects — backpack item behavior', () => {
     const rng = createRNG(42)
 
     const afterFirst = applyEffects(state, LOOT_TEMPLATE, rng)
-    expect(afterFirst.raid.backpackValue).toBe(1000)
+    expect(afterFirst.raid.backpackValue).toBe(500)
 
     const afterSecond = applyEffects(afterFirst, LOOT_TEMPLATE, rng)
-    expect(afterSecond.raid.backpackValue).toBe(2000)
+    expect(afterSecond.raid.backpackValue).toBe(1000)
   })
 
   it('does not mutate the input state', () => {
@@ -121,8 +121,8 @@ describe('applyEffects — backpack item behavior', () => {
 
     expect(result).not.toBeNull()
     expect(result!.event.id).toBe('robot_roomba_prime_escaped')
-    expect(result!.event.text).toContain('Took 24 damage')
-    expect(result!.state.raider.hp).toBe(76)
+    expect(result!.event.text).toContain('Took 16 damage')
+    expect(result!.state.raider.hp).toBe(84)
     expect(result!.state.raid.backpack).toHaveLength(0)
   })
 
@@ -133,8 +133,8 @@ describe('applyEffects — backpack item behavior', () => {
 
     expect(failed).not.toBeNull()
     expect(failed!.event.id).toBe('robot_tattletale_escaped')
-    expect(failed!.event.text).toContain('Took 63 damage')
-    expect(failed!.state.raider.hp).toBe(37)
+    expect(failed!.event.text).toContain('Took 42 damage')
+    expect(failed!.state.raider.hp).toBe(58)
 
     expect(defeated).not.toBeNull()
     expect(defeated!.event.id).toBe('robot_anxietick_defeated')
@@ -147,8 +147,8 @@ describe('applyEffects — backpack item behavior', () => {
 
     expect(result).not.toBeNull()
     expect(result!.event.id).toBe('robot_roomba_prime_escaped')
-    expect(result!.event.text).toContain('Took 72 damage')
-    expect(result!.state.raider.hp).toBe(28)
+    expect(result!.event.text).toContain('Took 48 damage')
+    expect(result!.state.raider.hp).toBe(52)
   })
 
   it('only lets nasty and deadly robots down already-wounded raiders', () => {

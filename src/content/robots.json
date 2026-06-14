@@ -321,7 +321,7 @@
     "id": "walker_texas_malfunction",
     "weight": 17,
     "name": "Walker Texas Malfunction",
-    "deadliness": "nasty",
+    "deadliness": "dangerous",
     "menace": 6,
     "flavorLines": [
       "stomps around dramatically but trips over small rocks",
@@ -374,7 +374,7 @@
     "id": "enforcer_inconvenience",
     "weight": 16,
     "name": "Enforcer of Minor Inconveniences",
-    "deadliness": "nasty",
+    "deadliness": "dangerous",
     "menace": 6,
     "flavorLines": [
       "blocks your path at the worst possible moment",
