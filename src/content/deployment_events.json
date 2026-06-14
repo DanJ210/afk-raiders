@@ -3,42 +3,547 @@
     "id": "deploy_pod_squeeze",
     "weight": 25,
     "text": "Sealed into a one-person tunnel pod. It is exactly one person sized. The backpack disagrees.",
-    "requires": { "phase": "DEPLOYING" },
+    "requires": {
+      "phase": "DEPLOYING"
+    },
     "effects": {}
   },
   {
     "id": "deploy_pod_launch",
     "weight": 25,
     "text": "Pod launched into the tunnel system. Acceleration: rude. Snacks: unsecured.",
-    "requires": { "phase": "DEPLOYING" },
-    "effects": { "mood": -1 }
+    "requires": {
+      "phase": "DEPLOYING"
+    },
+    "effects": {
+      "mood": -1
+    }
   },
   {
     "id": "deploy_tunnel_dark",
     "weight": 20,
     "text": "Hurtling through pitch-black tunnels. Something scraped the hull. The pod's speaker played a calming chime, badly.",
-    "requires": { "phase": "DEPLOYING" },
+    "requires": {
+      "phase": "DEPLOYING"
+    },
     "effects": {}
   },
   {
     "id": "deploy_pod_intercom",
     "weight": 15,
     "text": "The pod intercom crackled: 'Arrival in T-minus soon.' Reassuring. Specific.",
-    "requires": { "phase": "DEPLOYING" },
-    "effects": { "mood": 1 }
+    "requires": {
+      "phase": "DEPLOYING"
+    },
+    "effects": {
+      "mood": 1
+    }
   },
   {
     "id": "deploy_pod_neighbor",
     "weight": 15,
     "text": "Passed another pod going the opposite direction at speed. Brief eye contact through two layers of scratched plexiglass. A bond was formed.",
-    "requires": { "phase": "DEPLOYING" },
-    "effects": { "mood": 1 }
+    "requires": {
+      "phase": "DEPLOYING"
+    },
+    "effects": {
+      "mood": 1
+    }
   },
   {
     "id": "deploy_pod_regret",
     "weight": 15,
     "text": "Remembered the thing they forgot in Desperanza. The pod does not have a reverse gear. Noted for next time.",
-    "requires": { "phase": "DEPLOYING" },
-    "effects": { "mood": -1 }
+    "requires": {
+      "phase": "DEPLOYING"
+    },
+    "effects": {
+      "mood": -1
+    }
+  },
+  {
+    "id": "deploy_stretch",
+    "weight": 18,
+    "text": "Did a pre-deployment stretch. Felt surprisingly athletic for three seconds.",
+    "requires": {
+      "phase": "DEPLOYING"
+    },
+    "effects": {
+      "mood": 2
+    }
+  },
+  {
+    "id": "deploy_double_check",
+    "weight": 20,
+    "text": "Double-checked the deployment gear. Everything looked correct. Suspiciously correct.",
+    "requires": {
+      "phase": "DEPLOYMENT"
+    },
+    "effects": {
+      "mood": 1
+    }
+  },
+  {
+    "id": "deploy_team_nod",
+    "weight": 17,
+    "text": "Exchanged a confident nod with the team. Confidence was 40% real.",
+    "requires": {
+      "phase": "DEPLOYMENT"
+    },
+    "effects": {
+      "mood": 2
+    }
+  },
+  {
+    "id": "deploy_boot_tighten",
+    "weight": 14,
+    "text": "Tightened my boots. Felt ready for anything. Except robots. And running.",
+    "requires": {
+      "phase": "DEPLOYMENT"
+    },
+    "effects": {
+      "mood": 1
+    }
+  },
+  {
+    "id": "deploy_last_sip",
+    "weight": 12,
+    "text": "Took one last sip of synth-coffee. It tasted like bravery and battery acid.",
+    "requires": {
+      "phase": "DEPLOYMENT"
+    },
+    "effects": {
+      "mood": 1
+    }
+  },
+  {
+    "id": "deploy_team_sync",
+    "weight": 16,
+    "text": "Everyone synced their comms. No one admitted they forgot how to do it.",
+    "requires": {
+      "phase": "DEPLOYMENT"
+    },
+    "effects": {
+      "mood": 2
+    }
+  },
+  {
+    "id": "deploy_gloves_on",
+    "weight": 13,
+    "text": "Put on gloves dramatically. No one saw it, but I felt cool.",
+    "requires": {
+      "phase": "DEPLOYMENT"
+    },
+    "effects": {
+      "mood": 2
+    }
+  },
+  {
+    "id": "deploy_last_minute_adjust",
+    "weight": 15,
+    "text": "Adjusted my gear straps. They immediately felt worse. I pretended they didn’t.",
+    "requires": {
+      "phase": "DEPLOYMENT"
+    },
+    "effects": {
+      "mood": -1
+    }
+  },
+  {
+    "id": "deploy_team_joke",
+    "weight": 18,
+    "text": "Someone cracked a joke before deployment. It was terrible. Morale improved anyway.",
+    "requires": {
+      "phase": "DEPLOYMENT"
+    },
+    "effects": {
+      "mood": 3
+    }
+  },
+  {
+    "id": "deploy_visor_clean",
+    "weight": 11,
+    "text": "Cleaned my visor. Immediately smudged it again. Classic.",
+    "requires": {
+      "phase": "DEPLOYMENT"
+    },
+    "effects": {
+      "mood": 1
+    }
+  },
+  {
+    "id": "deploy_team_rollcall",
+    "weight": 14,
+    "text": "Roll call completed. Everyone answered with varying levels of enthusiasm.",
+    "requires": {
+      "phase": "DEPLOYMENT"
+    },
+    "effects": {
+      "mood": 1
+    }
+  },
+  {
+    "id": "deploy_last_second_snack",
+    "weight": 10,
+    "text": "Ate a quick snack before deploying. It was 80% crumbs.",
+    "requires": {
+      "phase": "DEPLOYMENT"
+    },
+    "effects": {
+      "mood": 2
+    }
+  },
+  {
+    "id": "deploy_helmet_tap",
+    "weight": 12,
+    "text": "Tapped my helmet twice for luck. Helmet responded with a hollow thunk.",
+    "requires": {
+      "phase": "DEPLOYMENT"
+    },
+    "effects": {
+      "mood": 1
+    }
+  },
+  {
+    "id": "deploy_team_pose",
+    "weight": 9,
+    "text": "Team struck a heroic pose for no reason. It helped.",
+    "requires": {
+      "phase": "DEPLOYMENT"
+    },
+    "effects": {
+      "mood": 3
+    }
+  },
+  {
+    "id": "deploy_check_pockets",
+    "weight": 13,
+    "text": "Checked my pockets. Found a snack wrapper and a single bullet. Good enough.",
+    "requires": {
+      "phase": "DEPLOYMENT"
+    },
+    "effects": {
+      "mood": 1
+    }
+  },
+  {
+    "id": "deploy_team_huddle",
+    "weight": 17,
+    "text": "Team huddle achieved. No strategy discussed. Still felt productive.",
+    "requires": {
+      "phase": "DEPLOYMENT"
+    },
+    "effects": {
+      "mood": 3
+    }
+  },
+  {
+    "id": "deploy_last_minute_doubt",
+    "weight": 8,
+    "text": "Had a brief moment of doubt. Ignored it successfully.",
+    "requires": {
+      "phase": "DEPLOYMENT"
+    },
+    "effects": {
+      "mood": -1
+    }
+  },
+  {
+    "id": "deploy_radio_check",
+    "weight": 15,
+    "text": "Performed a radio check. Heard my own voice echo back. Sounded heroic.",
+    "requires": {
+      "phase": "DEPLOYMENT"
+    },
+    "effects": {
+      "mood": 2
+    }
+  },
+  {
+    "id": "deploy_shoulder_pat",
+    "weight": 14,
+    "text": "Gave myself a reassuring shoulder pat. It helped more than expected.",
+    "requires": {
+      "phase": "DEPLOYMENT"
+    },
+    "effects": {
+      "mood": 2
+    }
+  },
+  {
+    "id": "deploy_team_sync_breath",
+    "weight": 10,
+    "text": "Team took a synchronized deep breath. Immediately coughed out of sync.",
+    "requires": {
+      "phase": "DEPLOYMENT"
+    },
+    "effects": {
+      "mood": 1
+    }
+  },
+  {
+    "id": "deploy_gear_click",
+    "weight": 12,
+    "text": "Heard a satisfying click while securing my gear. Confidence increased by 12%.",
+    "requires": {
+      "phase": "DEPLOYMENT"
+    },
+    "effects": {
+      "mood": 2
+    }
+  },
+  {
+    "id": "deploy_shoelace_check",
+    "weight": 11,
+    "text": "Checked my shoelaces. They were fine. I checked again anyway.",
+    "requires": {
+      "phase": "DEPLOYMENT"
+    },
+    "effects": {}
+  },
+  {
+    "id": "deploy_team_fistbump",
+    "weight": 16,
+    "text": "Team fist-bump executed flawlessly. Morale skyrocketed.",
+    "requires": {
+      "phase": "DEPLOYMENT"
+    },
+    "effects": {
+      "mood": 3
+    }
+  },
+  {
+    "id": "deploy_last_minute_sip",
+    "weight": 10,
+    "text": "Took a sip from my canteen. It was mostly backwash. Still refreshing.",
+    "requires": {
+      "phase": "DEPLOYMENT"
+    },
+    "effects": {
+      "mood": 1
+    }
+  },
+  {
+    "id": "deploy_gear_rattle",
+    "weight": 9,
+    "text": "Heard something rattle in my pack. Decided it was future-me’s problem.",
+    "requires": {
+      "phase": "DEPLOYMENT"
+    },
+    "effects": {}
+  },
+  {
+    "id": "deploy_team_pep",
+    "weight": 17,
+    "text": "Someone gave a pep talk. It was incoherent but inspiring.",
+    "requires": {
+      "phase": "DEPLOYMENT"
+    },
+    "effects": {
+      "mood": 3
+    }
+  },
+  {
+    "id": "deploy_helmet_fog",
+    "weight": 8,
+    "text": "Helmet fogged up immediately. Took it as a sign of enthusiasm.",
+    "requires": {
+      "phase": "DEPLOYMENT"
+    },
+    "effects": {
+      "mood": 1
+    }
+  },
+  {
+    "id": "deploy_team_ready_check",
+    "weight": 15,
+    "text": "Ready check completed. Everyone lied confidently.",
+    "requires": {
+      "phase": "DEPLOYMENT"
+    },
+    "effects": {
+      "mood": 2
+    }
+  },
+  {
+    "id": "deploy_last_minute_stretch",
+    "weight": 13,
+    "text": "Did one more stretch. Pulled something. Ignored it.",
+    "requires": {
+      "phase": "DEPLOYMENT"
+    },
+    "effects": {
+      "mood": -1
+    }
+  },
+  {
+    "id": "deploy_glove_snap",
+    "weight": 12,
+    "text": "Snapped my gloves dramatically. Felt like a professional.",
+    "requires": {
+      "phase": "DEPLOYMENT"
+    },
+    "effects": {
+      "mood": 2
+    }
+  },
+  {
+    "id": "deploy_team_lineup",
+    "weight": 14,
+    "text": "Team lined up perfectly. Immediately ruined the formation by fidgeting.",
+    "requires": {
+      "phase": "DEPLOYMENT"
+    },
+    "effects": {}
+  },
+  {
+    "id": "deploy_gear_weight_check",
+    "weight": 11,
+    "text": "Lifted my pack to gauge weight. It felt heavier than my hopes.",
+    "requires": {
+      "phase": "DEPLOYMENT"
+    },
+    "effects": {
+      "mood": -1
+    }
+  },
+  {
+    "id": "deploy_team_salute",
+    "weight": 10,
+    "text": "Someone saluted dramatically. No one knew why, but it felt right.",
+    "requires": {
+      "phase": "DEPLOYMENT"
+    },
+    "effects": {
+      "mood": 2
+    }
+  },
+  {
+    "id": "deploy_last_minute_checklist",
+    "weight": 15,
+    "text": "Reviewed the checklist. Skipped half of it. Felt efficient.",
+    "requires": {
+      "phase": "DEPLOYMENT"
+    },
+    "effects": {}
+  },
+  {
+    "id": "deploy_gear_shake",
+    "weight": 9,
+    "text": "Shook my pack to make sure nothing was loose. Everything was loose.",
+    "requires": {
+      "phase": "DEPLOYMENT"
+    },
+    "effects": {
+      "mood": -1
+    }
+  },
+  {
+    "id": "deploy_team_sync_step",
+    "weight": 13,
+    "text": "Team took the first step toward the dropship in perfect sync. Immediately lost sync.",
+    "requires": {
+      "phase": "DEPLOYMENT"
+    },
+    "effects": {
+      "mood": 1
+    }
+  },
+  {
+    "id": "deploy_helmet_tilt",
+    "weight": 8,
+    "text": "Tilted my helmet slightly to look cooler. It worked.",
+    "requires": {
+      "phase": "DEPLOYMENT"
+    },
+    "effects": {
+      "mood": 2
+    }
+  },
+  {
+    "id": "deploy_team_energy",
+    "weight": 16,
+    "text": "Team energy was high. Possibly too high. Someone was vibrating.",
+    "requires": {
+      "phase": "DEPLOYMENT"
+    },
+    "effects": {
+      "mood": 3
+    }
+  },
+  {
+    "id": "deploy_last_minute_breath",
+    "weight": 12,
+    "text": "Took one last deep breath. It tasted like dust and determination.",
+    "requires": {
+      "phase": "DEPLOYMENT"
+    },
+    "effects": {
+      "mood": 2
+    }
+  },
+  {
+    "id": "deploy_team_ready_pose",
+    "weight": 14,
+    "text": "Struck a ready pose. Immediately regretted how dramatic it was.",
+    "requires": {
+      "phase": "DEPLOYMENT"
+    },
+    "effects": {
+      "mood": 1
+    }
+  },
+  {
+    "id": "deploy_gear_final_check",
+    "weight": 15,
+    "text": "Final gear check complete. Everything was technically functional.",
+    "requires": {
+      "phase": "DEPLOYMENT"
+    },
+    "effects": {}
+  },
+  {
+    "id": "deploy_team_chant",
+    "weight": 10,
+    "text": "Someone started a team chant. It fell apart instantly but morale still rose.",
+    "requires": {
+      "phase": "DEPLOYMENT"
+    },
+    "effects": {
+      "mood": 3
+    }
+  },
+  {
+    "id": "deploy_last_minute_shoulder_roll",
+    "weight": 11,
+    "text": "Rolled my shoulders like a pro athlete. Felt like a pro athlete for 0.4 seconds.",
+    "requires": {
+      "phase": "DEPLOYMENT"
+    },
+    "effects": {
+      "mood": 2
+    }
+  },
+  {
+    "id": "deploy_team_awkward_wave",
+    "weight": 8,
+    "text": "Waved at another squad deploying. They waved back awkwardly.",
+    "requires": {
+      "phase": "DEPLOYMENT"
+    },
+    "effects": {
+      "mood": 1
+    }
+  },
+  {
+    "id": "deploy_gear_click_fail",
+    "weight": 7,
+    "text": "Tried to secure a strap. Missed the buckle entirely.",
+    "requires": {
+      "phase": "DEPLOYMENT"
+    },
+    "effects": {
+      "mood": -1
+    }
   }
 ]

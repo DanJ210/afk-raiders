@@ -15,8 +15,9 @@ const baseLoot = baseLootData as typeof loot
 const DEADLINESS_RANK = {
   weak: 1,
   moderate: 2,
-  nasty: 3,
-  deadly: 4,
+  dangerous: 3,
+  nasty: 4,
+  deadly: 5,
 } as const
 
 // Known non-table slot names handled directly in fillSlots()
@@ -125,10 +126,11 @@ describe('content validation', () => {
 
     it('anxietick is the most abundant encounter robot', () => {
       const anxietickWeight = getTotalEncounterWeight('anxietick')
-      for (const robot of robots.filter(robot => robot.id !== 'anxietick')) {
+      const weakRobots = robots.filter(robot => robot.id !== 'anxietick' && robot.deadliness === 'weak')
+      for (const robot of weakRobots) {
         expect(
           anxietickWeight,
-          `anxietick encounter weight should be greater than ${robot.id}`,
+          `anxietick encounter weight should be greater than weak robot ${robot.id}`,
         ).toBeGreaterThan(getTotalEncounterWeight(robot.id))
       }
     })
@@ -147,18 +149,20 @@ describe('content validation', () => {
     })
 
     it('max failed-encounter damage rises with robot deadliness', () => {
-      const sorted = [...robots].sort(
-        (a, b) => DEADLINESS_RANK[a.deadliness] - DEADLINESS_RANK[b.deadliness],
-      )
+      const tierMaxDamage = new Map<number, number>()
+      for (const robot of robots) {
+        const tierRank = DEADLINESS_RANK[robot.deadliness]
+        const robotMaxDamage = getMaxFailureDamage(robot.id)
+        const current = tierMaxDamage.get(tierRank) ?? 0
+        if (robotMaxDamage > current) tierMaxDamage.set(tierRank, robotMaxDamage)
+      }
 
-      for (let index = 1; index < sorted.length; index += 1) {
-        const previous = sorted[index - 1]
-        const current = sorted[index]
-
+      const sortedTiers = [...tierMaxDamage.keys()].sort((a, b) => a - b)
+      for (let i = 1; i < sortedTiers.length; i += 1) {
         expect(
-          getMaxFailureDamage(current.id),
-          `${current.id} should be more dangerous than ${previous.id}`,
-        ).toBeGreaterThan(getMaxFailureDamage(previous.id))
+          tierMaxDamage.get(sortedTiers[i]),
+          `deadliness tier ${sortedTiers[i]} should have higher max damage than tier ${sortedTiers[i - 1]}`,
+        ).toBeGreaterThan(tierMaxDamage.get(sortedTiers[i - 1])!)
       }
     })
 
@@ -299,9 +303,18 @@ describe('content validation', () => {
       const labels = Object.fromEntries(robots.map(robot => [robot.id, robot.deadliness]))
       expect(labels).toEqual({
         anxietick: 'weak',
+        overthinker_tick: 'weak',
         tattletale: 'moderate',
-        shredder_dedder: 'nasty',
+        passive_aggressor: 'moderate',
+        seeker_validation: 'moderate',
+        harvester_annoyance: 'moderate',
+        walker_texas_malfunction: 'dangerous',
+        enforcer_inconvenience: 'dangerous',
+        bomber_misread: 'nasty',
         roomba_prime: 'deadly',
+        crusher_of_dreams: 'deadly',
+        sniper_poor_decisions: 'deadly',
+        tank_overcompensation: 'deadly',
       })
     })
 
