@@ -27,6 +27,13 @@ Loot that makes it home goes into the **Stash** — a persistent collection that
 - Duplicate items stack with a ×2 / ×3 quantity multiplier, and their displayed value is multiplied accordingly.
 - The in-raid backpack resets if the raider dies or fails to extract — the stash is untouched.
 
+### Secret Hidden Pocket (parody safe pocket)
+The Raider has one manual **Secret Hidden Pocket** slot per raid:
+- The player must manually pick an item from the current raid backpack; it is never auto-assigned.
+- The slot can be changed or cleared at any time during the active raid.
+- On failures that clear the backpack (for example DOWNED outcomes), exactly one unit of the selected item is transferred safely to Home Stash.
+- On successful extraction, normal extraction transfer already keeps everything, so the pocket provides no extra duplicate item.
+
 ## 3. The Handler (player) — Signal
 The only player resource. Regenerates ~1 per 10 minutes, capped at 5.
 - **Ready Up! (2 Signal):** In HUB only. Immediately starts DEPLOYING.
@@ -74,7 +81,7 @@ Everything funny flows through an autoscrolling text feed:
 
 ## 7. Data Model (MVP)
 - **Raider** — stats, mood, Rat Rating, skills
-- **Raid** — zone, time-of-day, tick count, backpack contents/value, greed level, phase
+- **Raid** — zone, time-of-day, tick count, backpack contents/value, greed level, phase, optional manual Secret Hidden Pocket selection
 - **Home Stash** — persistent extracted loot; stacks duplicates (×N), capped at 120 items with overflow auto-sold into coins
 - **Coins** — accumulated value from stash overflow auto-sales
 - **EventLog** — the comms feed entries
