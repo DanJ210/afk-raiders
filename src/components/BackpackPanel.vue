@@ -40,6 +40,13 @@ const greedClass = computed(() => {
   if (g < 70) return 'greed--mid'
   return 'greed--high'
 })
+
+const canApplyHealing = computed(() =>
+  raid.value.phase !== 'HUB' &&
+  raid.value.phase !== 'DOWNED' &&
+  store.raider.hp > 0 &&
+  store.raider.hp < store.raider.maxHp,
+)
 </script>
 
 <template>
@@ -74,6 +81,14 @@ const greedClass = computed(() => {
           <span>+{{ item.healAmount }} HP</span>
           <span>+{{ moodGain(item) }} Mood</span>
           <span v-if="item.quantity > 1">x{{ item.quantity }}</span>
+          <button
+            type="button"
+            class="backpack-panel__med-use"
+            :disabled="!canApplyHealing"
+            @click="store.applyHealingItem(item.itemId)"
+          >
+            Apply
+          </button>
         </li>
       </ul>
     </div>
@@ -163,7 +178,7 @@ const greedClass = computed(() => {
 
 .backpack-panel__med-item {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto auto auto;
+  grid-template-columns: auto minmax(0, 1fr) auto auto auto auto;
   align-items: center;
   gap: 6px;
   padding: 6px 8px;
@@ -172,6 +187,27 @@ const greedClass = computed(() => {
   color: var(--color-text);
   font-family: var(--font-mono);
   font-size: 0.72rem;
+}
+
+.backpack-panel__med-use {
+  border: 1px solid var(--color-accent);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--color-accent);
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  padding: 2px 8px;
+  cursor: pointer;
+}
+
+.backpack-panel__med-use:hover:not(:disabled) {
+  background: var(--color-accent);
+  color: var(--color-bg);
+}
+
+.backpack-panel__med-use:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 .greed-bar {

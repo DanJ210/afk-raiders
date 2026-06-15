@@ -64,7 +64,6 @@ function mergeLootTables(items: LootItem[]): LootItem[] {
 const robotLoot = robots.flatMap(robot => robot.lootTable.map(item => toLootItem(item, robot)))
 const loot = mergeLootTables([...baseLoot, ...robotLoot])
 
-export const HEALING_USE_HP_RATIO = 0.75
 const ROBOT_LETHAL_HP_RATIO = 0.5
 const ROBOT_NONLETHAL_MIN_HP_RATIO = 0.25
 const ROBOT_DAMAGE_PER_MENACE = 2
@@ -279,11 +278,6 @@ function removeHealingItem(
   return { ...raid, healingItems }
 }
 
-function pickBestHealingItem(items: HealingItemStack[], missingHp: number): HealingItemStack {
-  const sorted = [...items].sort((a, b) => a.healAmount - b.healAmount)
-  return sorted.find(item => item.healAmount >= missingHp) ?? sorted[sorted.length - 1]
-}
-
 export interface HealingItemResult {
   state: GameState
   event: LogEvent
@@ -308,18 +302,19 @@ export function resolveHealingItemFind(
   }
 }
 
-/** Uses one current-raid bandage if the raider is hurt and alive. */
-export function consumeHealingItemIfUseful(
+/** Uses one specific current-raid bandage if the raider is hurt and alive. */
+export function consumeHealingItem(
   state: GameState,
+  itemId: string,
   now: number,
 ): HealingItemResult | null {
   if (state.raid.phase === 'HUB' || state.raid.phase === 'DOWNED') return null
   if (state.raider.hp <= 0 || state.raider.hp >= state.raider.maxHp) return null
   if (state.raid.healingItems.length === 0) return null
-  if (state.raider.hp / state.raider.maxHp > HEALING_USE_HP_RATIO) return null
 
+  const item = state.raid.healingItems.find(entry => entry.itemId === itemId)
+  if (!item) return null
   const missingHp = state.raider.maxHp - state.raider.hp
-  const item = pickBestHealingItem(state.raid.healingItems, missingHp)
   const healed = Math.min(50, item.healAmount, missingHp)
   const moodGain = healingMoodGain(item)
   const hp = Math.min(state.raider.maxHp, state.raider.hp + healed)
@@ -523,4 +518,3 @@ export function resolveFlavorKey(key: string, rng: RNG): string {
 
 /** Exported for content validation tests */
 export { events, flavor, healingItems, loot, robots }
-

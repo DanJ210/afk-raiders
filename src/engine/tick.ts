@@ -19,7 +19,7 @@ import type { RNG } from './rng.js'
 import { tickPhase } from './raidStateMachine.js'
 import { runGreedCheck } from './greedCheck.js'
 import { applyScoldGreedReduction } from './signal.js'
-import { resolveEvent, resolveFlavorKey, applyEffects, consumeHealingItemIfUseful, resolveHealingItemFind, resolveRobotEncounter, events as allEvents } from './eventResolver.js'
+import { resolveEvent, resolveFlavorKey, applyEffects, resolveHealingItemFind, resolveRobotEncounter, events as allEvents } from './eventResolver.js'
 import { transferBackpackToHomeStash, HOME_STASH_ITEM_LIMIT } from './homeStash.js'
 
 /** Maximum log entries to keep in memory (avoids unbounded growth) */
@@ -222,12 +222,6 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
         }
       }
     }
-  }
-
-  const healingUse = consumeHealingItemIfUseful(currentState, now)
-  if (healingUse) {
-    currentState = healingUse.state
-    emitted.push(healingUse.event)
   }
 
   // ------------------------------------------------------------------
