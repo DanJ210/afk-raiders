@@ -23,6 +23,7 @@ import { tickPhase } from '../engine/raidStateMachine.js'
 import { sellItemFromHomeStash, sellStashOverflow } from '../engine/homeStash.js'
 import { consumeHealingItem } from '../engine/eventResolver.js'
 import { appendLogEntries } from '../engine/log.js'
+import { createInitialLifetimeStats, recordHealingItemUse } from '../engine/stats.js'
 import type { GameState, LogEvent } from '../engine/types.js'
 import type { AwaySummary } from '../engine/catchUp.js'
 
@@ -49,6 +50,7 @@ function loadSave(): SaveData | null {
       ...loadedState,
       homeStash: sale.homeStash,
       coins: (loadedState.coins ?? 0) + sale.coinsGained,
+      stats: loadedState.stats ?? createInitialLifetimeStats(),
       raid: {
         ...loadedState.raid,
         healingItems: loadedState.raid.healingItems ?? [],
@@ -212,6 +214,7 @@ export const useGameStore = defineStore('game', () => {
     const log = appendLogEntries(state.value.log, [healingUse.event])
     state.value = {
       ...healingUse.state,
+      stats: recordHealingItemUse(healingUse.state.stats, itemId),
       log,
     }
     newEvents.value = [healingUse.event]

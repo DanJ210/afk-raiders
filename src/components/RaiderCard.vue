@@ -5,6 +5,7 @@ import { zoneName } from '../utils/zones'
 
 const store = useGameStore()
 const raider = computed(() => store.raider)
+const lifetimeStats = computed(() => store.state.stats)
 const currentZoneName = computed(() => zoneName(store.raid.zone))
 const showCurrentZone = computed(() => store.phase === 'RAIDING' && currentZoneName.value !== null)
 
@@ -59,6 +60,42 @@ const hpClass = computed(() => {
   if (hpPercent.value > 30) return 'hp-bar--warning'
   return 'hp-bar--danger'
 })
+
+function prettyId(id: string): string {
+  return id
+    .split('_')
+    .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ')
+}
+
+const extractZoneRows = computed(() =>
+  Object.entries(lifetimeStats.value.extracts.byZone).sort((a, b) => b[1] - a[1]),
+)
+
+const deathZoneRows = computed(() =>
+  Object.entries(lifetimeStats.value.deaths.byZone).sort((a, b) => b[1] - a[1]),
+)
+
+const extractZoneTimeRows = computed(() =>
+  Object.entries(lifetimeStats.value.extracts.byZoneAndTime).sort((a, b) => b[1] - a[1]),
+)
+
+const deathZoneTimeRows = computed(() =>
+  Object.entries(lifetimeStats.value.deaths.byZoneAndTime).sort((a, b) => b[1] - a[1]),
+)
+
+const robotRows = computed(() =>
+  Object.entries(lifetimeStats.value.robotDefeats).sort((a, b) => b[1] - a[1]),
+)
+
+const healingRows = computed(() =>
+  Object.entries(lifetimeStats.value.healingItemsUsed.byItem).sort((a, b) => b[1] - a[1]),
+)
+
+function parseZoneTimeKey(key: string): { zoneId: string; timeOfDay: string } {
+  const [zoneId, timeOfDay] = key.split('__')
+  return { zoneId, timeOfDay }
+}
 </script>
 
 <template>
@@ -118,6 +155,60 @@ const hpClass = computed(() => {
         <span title="Extractions">✅ {{ raider.extractCount }}</span>
         <span title="Deaths">💀 {{ raider.deathCount }}</span>
       </div>
+
+      <details class="raider-card__history" open>
+        <summary>Lifetime Stats</summary>
+
+        <div class="raider-card__history-grid">
+          <div class="raider-card__history-section">
+            <h4>Outcomes</h4>
+            <p>Extracts: {{ lifetimeStats.extracts.total }} | Deaths: {{ lifetimeStats.deaths.total }}</p>
+          </div>
+
+          <div class="raider-card__history-section" v-if="extractZoneRows.length > 0 || deathZoneRows.length > 0">
+            <h4>By Zone</h4>
+            <ul>
+              <li v-for="[zoneId, count] in extractZoneRows" :key="`extract-zone-${zoneId}`">
+                ✅ {{ zoneName(zoneId) ?? prettyId(zoneId) }}: {{ count }}
+              </li>
+              <li v-for="[zoneId, count] in deathZoneRows" :key="`death-zone-${zoneId}`">
+                💀 {{ zoneName(zoneId) ?? prettyId(zoneId) }}: {{ count }}
+              </li>
+            </ul>
+          </div>
+
+          <div class="raider-card__history-section" v-if="extractZoneTimeRows.length > 0 || deathZoneTimeRows.length > 0">
+            <h4>By Zone + Time</h4>
+            <ul>
+              <li v-for="[key, count] in extractZoneTimeRows" :key="`extract-zone-time-${key}`">
+                ✅ {{ zoneName(parseZoneTimeKey(key).zoneId) ?? prettyId(parseZoneTimeKey(key).zoneId) }} ({{ parseZoneTimeKey(key).timeOfDay }}): {{ count }}
+              </li>
+              <li v-for="[key, count] in deathZoneTimeRows" :key="`death-zone-time-${key}`">
+                💀 {{ zoneName(parseZoneTimeKey(key).zoneId) ?? prettyId(parseZoneTimeKey(key).zoneId) }} ({{ parseZoneTimeKey(key).timeOfDay }}): {{ count }}
+              </li>
+            </ul>
+          </div>
+
+          <div class="raider-card__history-section" v-if="robotRows.length > 0">
+            <h4>Robots Defeated</h4>
+            <ul>
+              <li v-for="[robotId, count] in robotRows" :key="`robot-${robotId}`">
+                🤖 {{ prettyId(robotId) }}: {{ count }}
+              </li>
+            </ul>
+          </div>
+
+          <div class="raider-card__history-section" v-if="lifetimeStats.healingItemsUsed.total > 0">
+            <h4>Healing Items Used</h4>
+            <p>Total uses: {{ lifetimeStats.healingItemsUsed.total }}</p>
+            <ul>
+              <li v-for="[itemId, count] in healingRows" :key="`healing-${itemId}`">
+                🩹 {{ prettyId(itemId) }}: {{ count }}
+              </li>
+            </ul>
+          </div>
+        </div>
+      </details>
     </div>
   </section>
 </template>
@@ -247,6 +338,55 @@ const hpClass = computed(() => {
   font-family: var(--font-mono);
   color: var(--color-muted);
   margin-top: 4px;
+}
+
+.raider-card__history {
+  margin-top: 8px;
+  border-top: 1px solid var(--color-border);
+  padding-top: 8px;
+}
+
+.raider-card__history summary {
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--color-muted);
+  margin-bottom: 6px;
+}
+
+.raider-card__history-grid {
+  display: grid;
+  gap: 8px;
+}
+
+.raider-card__history-section h4 {
+  margin: 0 0 4px;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  color: var(--color-accent);
+}
+
+.raider-card__history-section p {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--color-muted);
+}
+
+.raider-card__history-section ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.raider-card__history-section li {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--color-text);
 }
 
 @keyframes pulse {
