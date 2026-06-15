@@ -37,6 +37,5 @@ export function createInitialState(now: number = Date.now()): GameState {
     coins: 0,
     pendingEncourage: false,
     pendingScold: false,
-    pendingReadyUp: false,
   }
 }

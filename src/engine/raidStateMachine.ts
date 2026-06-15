@@ -19,6 +19,12 @@ const TIME_OF_DAY_TABLE: Array<{ id: TimeOfDay; weight: number; dangerLevel: Dan
   { id: 'Stella Red', weight: 10, dangerLevel: 'High' },
 ]
 
+function enterDeploying(raid: RaidState, rng?: RNG): RaidState {
+  const zone = rng ? rng.weightedPick(zones).id : zones[0].id
+  const timeOfDay = rng ? rng.weightedPick(TIME_OF_DAY_TABLE).id : 'Day'
+  return { ...raid, zone, timeOfDay }
+}
+
 // Ticks each phase lasts before auto-transitioning (1 tick = 30s)
 export const PHASE_DURATIONS: Record<Phase, number> = {
   HUB: 20,         // 10 minutes max resting and prepping in Desperanza
@@ -60,6 +66,9 @@ export function tickPhase(
     if (forced === 'DOWNED') {
       forcedRaid = { ...forcedRaid, healingItems: [] }
     }
+    if (forced === 'DEPLOYING') {
+      forcedRaid = enterDeploying(forcedRaid, rng)
+    }
     return { raid: forcedRaid, transition }
   }
 
@@ -91,9 +100,7 @@ export function tickPhase(
 
   // Pick a zone and time of day when deploying
   if (next === 'DEPLOYING') {
-    const zone = rng ? rng.weightedPick(zones).id : zones[0].id
-    const timeOfDay = rng ? rng.weightedPick(TIME_OF_DAY_TABLE).id : 'Day'
-    updatedRaid = { ...updatedRaid, zone, timeOfDay }
+    updatedRaid = enterDeploying(updatedRaid, rng)
   }
 
   return { raid: updatedRaid, transition }

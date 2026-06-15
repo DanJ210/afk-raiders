@@ -41,16 +41,16 @@ function loadSave(): SaveData | null {
     if (data.version !== SAVE_VERSION) return null
     // Migration: older saves lack coins, and stashes saved while the limit
     // was not enforced may exceed it — sell the overflow rather than delete it.
-    const sale = sellStashOverflow(data.state.homeStash)
+    const { pendingReadyUp: _pendingReadyUp, ...loadedState } = data.state as GameState & { pendingReadyUp?: boolean }
+    const sale = sellStashOverflow(loadedState.homeStash)
     data.state = {
-      ...data.state,
+      ...loadedState,
       homeStash: sale.homeStash,
-      coins: (data.state.coins ?? 0) + sale.coinsGained,
-      pendingReadyUp: data.state.pendingReadyUp ?? false,
+      coins: (loadedState.coins ?? 0) + sale.coinsGained,
       raid: {
-        ...data.state.raid,
-        healingItems: data.state.raid.healingItems ?? [],
-        timeOfDay: data.state.raid.timeOfDay ?? null,
+        ...loadedState.raid,
+        healingItems: loadedState.raid.healingItems ?? [],
+        timeOfDay: loadedState.raid.timeOfDay ?? null,
       },
     }
     return data
