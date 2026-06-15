@@ -21,9 +21,13 @@ afk-raiders/
 │   ├── engine/                  # Pure TS, no framework imports
 │   │   ├── rng.ts               # Seeded RNG (mulberry32) — determinism
 │   │   ├── tick.ts              # processTick(state, rng) → { state, events }
-│   │   ├── raidStateMachine.ts  # HUB → DEPLOY → RAID → EXTRACT/DOWNED
+│   │   ├── raidStateMachine.ts  # HUB → DEPLOYING → RAIDING → EXTRACTING/DOWNED
 │   │   ├── greedCheck.ts        # The signature mechanic
 │   │   ├── eventResolver.ts     # Weighted event tables by context
+│   │   ├── timeProfiles.ts      # Day/Night/Stella Red risk/reward tuning
+│   │   ├── signal.ts            # Signal regen + spend rules
+│   │   ├── homeStash.ts         # Stash transfer and overflow auto-sell
+│   │   ├── stats.ts             # Lifetime stat aggregation helpers
 │   │   └── catchUp.ts           # Fast-forward elapsed ticks on app open
 │   ├── content/                 # The comedy lives here, as data
 │   │   ├── hub_events.json      # Desperanza rest & prep (≤5 min)
@@ -44,9 +48,8 @@ afk-raiders/
 │   │   ├── RaiderCard.vue       # Stats, mood, Rat Rating
 │   │   ├── BackpackPanel.vue
 │   │   ├── HomeStash.vue        # Persistent stash — extracted loot, ×N stacking
-│   │   ├── HandlerActions.vue   # Encourage / Scold / Signal meter
-│   │   ├── HubView.vue
-│   │   └── RaidView.vue
+│   │   ├── HandlerActions.vue   # Ready Up / Encourage / Scold / CALL EXTRACT
+│   │   └── AwaySummary.vue
 │   └── App.vue
 └── tests/engine/                # Snapshot sims: seed X → identical story
 ```
@@ -80,11 +83,28 @@ Events may also gate themselves by `requires.timeOfDay` (`Day`, `Night`, or `Ste
 ### Home stash transfer
 On every EXTRACTING → HUB transition (natural or event-forced), `processTick` merges the backpack into `state.homeStash` before the backpack resets. Duplicate item IDs stack quantities; the stash only ever shrinks via a future sell mechanic.
 
-### 3. Signal as the only real input
-Signal regenerates (~1 per 10 min, capped 3–5). Encourage/Scold nudge hidden behavior weights, and Scold also reduces current greed before the next greed check; CALL EXTRACT (3 Signal) forces an extraction attempt. The UI exposes nothing else that affects the sim.
+The stash has an enforced item cap (`HOME_STASH_ITEM_LIMIT`). Overflow is auto-sold by lowest value first and credited to `state.coins` so item value is preserved.
 
-### 4. State updates are immutable-style
+### 3. Signal as the only real input
+Signal regenerates (~1 per 10 min, capped at 5). Ready Up (2 Signal) starts DEPLOYING from HUB, Encourage/Scold (1 each) nudge hidden behavior weights, and Scold also reduces current greed before the next greed check; CALL EXTRACT (3 Signal) forces an extraction attempt. During RAIDING only one action may be pending at a time.
+
+### 4. Lifetime stat collection
+`GameState.stats` tracks long-lived outcomes: extraction/death totals and context (zone + zone/time), robot defeats, and healing item usage.
+
+Save migration in `gameStore.ts` backfills missing legacy stats from pre-existing `raider.extractCount` and `raider.deathCount` so historical totals remain consistent.
+
+### 5. State updates are immutable-style
 `processTick(state, rng)` returns `{ state: GameState, events: LogEvent[] }` without mutating its input. This keeps Pinia reactivity simple, enables snapshot tests, and makes catch-up a pure fold over ticks.
+
+### 6. Phase timings and timeout behavior
+- Tick cadence remains 30 seconds.
+- `HUB`: 20 ticks (10 minutes)
+- `DEPLOYING`: 4 ticks (2 minutes)
+- `RAIDING`: 60 ticks (30 minutes)
+- `EXTRACTING`: 4 ticks (~2 minutes)
+- `DOWNED`: 2 ticks
+
+If RAIDING time expires without extracting, natural transition goes to DOWNED (zone nuke failure), not EXTRACTING.
 
 ## Testing strategy
 - **Engine unit tests (Vitest):** given a fixed seed and starting state, assert the exact event sequence (snapshot tests).
@@ -93,6 +113,6 @@ Signal regenerates (~1 per 10 min, capped 3–5). Encourage/Scold nudge hidden b
 
 ## MVP boundaries (phase 1)
 - Fully client-side; no network calls, no accounts, no telemetry.
-- One raider, one zone, Encourage/Scold/CALL EXTRACT, offline catch-up, PWA installability.
+- One raider, one zone pool, Ready Up/Encourage/Scold/CALL EXTRACT, offline catch-up, PWA installability.
 - localStorage persistence with a schema `version` field for future migrations.
 

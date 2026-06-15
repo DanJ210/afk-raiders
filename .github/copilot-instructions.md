@@ -39,10 +39,24 @@ Key docs — read these before making changes:
 Items successfully extracted are automatically transferred from the raider's backpack to a persistent `homeStash` array on the GameState. This survives raids, deaths, and sessions. When working with extraction logic or inventory systems, always ensure loot is transferred during the EXTRACTING → HUB phase transition (see `src/engine/tick.ts` for the implementation pattern). The stash holds at most 120 items (`HOME_STASH_ITEM_LIMIT` in `src/engine/homeStash.ts`; quantities count toward the cap). Overflow is never deleted: the lowest-value items are auto-sold and their value is credited to `GameState.coins` (the raider's coin stash), narrated by a `stash_overflow_sale` comms event. The Home Stash UI lists items highest-value first, and separates unsold `Stash Value` from sold `Coin Value`.
 
 ### Raid Pacing
-Raid aggression is autonomous; there is no extraction preference slider. `runGreedCheck()` uses fixed seeded probabilities so the Raider generally spends more time raiding before choosing to extract, while the 60-minute RAIDING phase timer still forces EXTRACTING when it expires. Low HP without any current-raid bandages increases extract probability so the raider tries to survive and cash out. If they do have bandages, this no-bandage extraction bonus is not applied. Scolding also reduces current greed before the next greed check, giving the Handler a direct way to cool risky behavior.
+Raid aggression is autonomous; there is no extraction preference slider. `runGreedCheck()` uses fixed seeded probabilities so the Raider generally spends more time raiding before choosing to extract. Low HP without any current-raid bandages increases extract probability so the raider tries to survive and cash out. If they do have bandages, this no-bandage extraction bonus is not applied. Scolding also reduces current greed before the next greed check, giving the Handler a direct way to cool risky behavior.
+
+During RAIDING, only one Handler action can be pending at a time (`pendingEncourage`, `pendingScold`, or `forceExtract`). When any pending action is set, raid action buttons should remain disabled until the next simulation tick consumes the pending action and logs feedback.
+
+`Signal` is capped at 5 and currently supports these action costs in `src/engine/signal.ts`: `READY_UP` = 2, `ENCOURAGE` = 1, `SCOLD` = 1, `CALL_EXTRACT` = 3.
 
 ### Raid Duration
-Max raid time is 120 ticks = 60 minutes at the 30 s tick cadence. Phase durations are defined in `src/engine/raidStateMachine.ts` as `PHASE_DURATIONS`: HUB ≤ 10 min (20 ticks), DEPLOYING 2 min (4 ticks, one-person tunnel pods), RAIDING ≤ 60 min (120 ticks), EXTRACTING ~2 min (4 ticks). When the raid timer expires the raider is forced into EXTRACTING. If HP reaches 0 in any phase the raider goes DOWNED, loses the backpack, and respawns in the HUB. Each phase has its own events file in `src/content/` (hub_events, deployment_events, raiding_events, extraction_events, downed_events).
+Max raid time is 60 ticks = 30 minutes at the 30 s tick cadence. Phase durations are defined in `src/engine/raidStateMachine.ts` as `PHASE_DURATIONS`: HUB ≤ 10 min (20 ticks), DEPLOYING 2 min (4 ticks, one-person tunnel pods), RAIDING ≤ 30 min (60 ticks), EXTRACTING ~2 min (4 ticks), DOWNED 1 min (2 ticks). When the raid timer expires while still in RAIDING, the natural transition is DOWNED (zone nuke failure), not EXTRACTING. If HP reaches 0 in any non-HUB phase the raider goes DOWNED, loses the backpack, and respawns in the HUB. Each phase has its own events file in `src/content/` (hub_events, deployment_events, raiding_events, extraction_events, downed_events).
+
+`Ready Up!` is a HUB-only Handler action that spends signal and forces an immediate transition to `DEPLOYING`.
+
+### Lifetime Stats
+`GameState.stats` stores lifetime metrics independent of the in-raid snapshot:
+- Extracts and deaths (total + by zone + by zone/time-of-day)
+- Robot defeats by robot id
+- Healing item usage (total + by item id)
+
+On save migration for older profiles that predate `state.stats`, initialize missing lifetime totals from existing `raider.extractCount` and `raider.deathCount` so legacy player history stays consistent. Leave zone/time breakdown maps empty during this backfill.
 
 ### Robot Encounters
 Robot encounter events in `src/content/raiding_events.json` use `effects.robotEncounter` to reference a robot ID from `src/content/robots.json`. Robots have a `deadliness` label (`weak`, `moderate`, `dangerous`, `nasty`, `deadly`) that must match their menace, abundance, and encounter tuning. Valid deadliness tiers in ascending order:
