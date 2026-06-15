@@ -98,6 +98,11 @@ export function tickPhase(
     updatedRaid = { ...updatedRaid, backpack: [], healingItems: [], backpackValue: 0, greedLevel: 0, forceExtract: false, zone: null, timeOfDay: null }
   }
 
+  // Healing items are lost on death — clear on natural DOWNED transitions too.
+  if (next === 'DOWNED') {
+    updatedRaid = { ...updatedRaid, healingItems: [] }
+  }
+
   // Pick a zone and time of day when deploying
   if (next === 'DEPLOYING') {
     updatedRaid = enterDeploying(updatedRaid, rng)
