@@ -31,8 +31,9 @@ export type SignalAction = keyof typeof SIGNAL_COSTS
 export function computeSignal(signal: SignalState, now: number): SignalState {
   // While full, don't bank regen time; keep baseline at "now".
   if (signal.current >= SIGNAL_CAP) {
-    if (signal.lastRegenAt === now) return signal
-    return { ...signal, lastRegenAt: now }
+    const normalizedCurrent = Math.min(signal.current, SIGNAL_CAP)
+    if (normalizedCurrent === signal.current && signal.lastRegenAt === now) return signal
+    return { ...signal, current: normalizedCurrent, lastRegenAt: now }
   }
 
   const elapsed = now - signal.lastRegenAt
