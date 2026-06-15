@@ -85,6 +85,8 @@ On every EXTRACTING → HUB transition (natural or event-forced), `processTick` 
 
 The stash has an enforced item cap (`HOME_STASH_ITEM_LIMIT`). Overflow items are auto-sold by lowest value first, and their value is converted to `state.coins` with a narrated `stash_overflow_sale` comms line. (Manual selling/trading is a future hub mechanic.)
 
+`RaidState` also includes an optional manual `hiddenPocket` selection (the parody safe pocket). The UI (`BackpackPanel.vue`) explicitly sets/changes/clears this slot from current backpack items. On backpack-loss failures (DOWNED → HUB), the engine transfers exactly one unit of the selected pocket item into home stash before normal reset bookkeeping.
+
 ### 3. Signal as the only real input
 Signal regenerates (~1 per 10 min, capped at 5). Ready Up (2) starts DEPLOYING from HUB, Encourage/Scold (1 each) nudge hidden behavior weights, and Scold also reduces current greed before the next greed check; CALL EXTRACT (3) forces an extraction attempt. During RAIDING only one action may be queued at a time, so action buttons lock until the next tick applies the pending action.
 
