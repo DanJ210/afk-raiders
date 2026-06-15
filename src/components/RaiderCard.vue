@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { useNow } from '@vueuse/core'
 import { useGameStore } from '../stores/gameStore'
 import { zoneName } from '../utils/zones'
 import { TICK_INTERVAL_MS } from '../engine/catchUp'
@@ -9,7 +10,14 @@ const raider = computed(() => store.raider)
 const currentZoneName = computed(() => zoneName(store.raid.zone))
 const showCurrentZone = computed(() => store.phase === 'RAIDING' && currentZoneName.value !== null)
 const showRaidTimer = computed(() => store.phase === 'RAIDING')
-const raidTimerText = computed(() => formatDuration(store.raid.phaseTicksRemaining * TICK_INTERVAL_MS))
+const now = useNow({ interval: 1000 })
+const raidTimerMs = computed(() => {
+  if (store.phase !== 'RAIDING') return 0
+  const phaseRemainingMs = store.raid.phaseTicksRemaining * TICK_INTERVAL_MS
+  const elapsedSinceLastTick = Math.max(0, now.value.getTime() - store.lastTickAt)
+  return Math.max(0, phaseRemainingMs - elapsedSinceLastTick)
+})
+const raidTimerText = computed(() => formatDuration(raidTimerMs.value))
 
 const editingName = ref(false)
 const nameInput = ref('')
