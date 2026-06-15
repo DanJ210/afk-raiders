@@ -97,6 +97,8 @@ describe('deterministic snapshot', () => {
       ...createInitialState(0),
       raid: {
         ...createInitialState(0).raid,
+        zone: 'damp_battlegrounds',
+        timeOfDay: 'Night' as const,
         phase: 'EXTRACTING' as const,
         phaseTicksRemaining: 1,
         backpack: [
@@ -125,6 +127,9 @@ describe('deterministic snapshot', () => {
       },
     ])
     expect(result.state.raider.extractCount).toBe(1)
+    expect(result.state.stats.extracts.total).toBe(1)
+    expect(result.state.stats.extracts.byZone.damp_battlegrounds).toBe(1)
+    expect(result.state.stats.extracts.byZoneAndTime['damp_battlegrounds__Night']).toBe(1)
   })
 
   it('downs the raider when HP reaches 0, losing the backpack', () => {
@@ -143,6 +148,8 @@ describe('deterministic snapshot', () => {
       ],
       raid: {
         ...initial.raid,
+        zone: 'damp_battlegrounds',
+        timeOfDay: 'Night' as const,
         phase: 'DEPLOYING' as const,
         phaseTicksRemaining: 2,
         greedLevel: 0,
@@ -177,6 +184,9 @@ describe('deterministic snapshot', () => {
     expect(downedState.homeStash).toEqual(stashBefore)
     expect(downedState.raider.hp).toBe(downedState.raider.maxHp)
     expect(downedState.raider.deathCount).toBe(deathsBefore + 1)
+    expect(downedState.stats.deaths.total).toBe(1)
+    expect(downedState.stats.deaths.byZone.damp_battlegrounds).toBe(1)
+    expect(downedState.stats.deaths.byZoneAndTime['damp_battlegrounds__Night']).toBe(1)
   })
 
   it('saves exactly one hidden-pocket item when a failed raid clears the backpack', () => {

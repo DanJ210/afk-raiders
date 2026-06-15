@@ -23,7 +23,8 @@ import { tickPhase } from '../engine/raidStateMachine.js'
 import { sellItemFromHomeStash, sellStashOverflow } from '../engine/homeStash.js'
 import { consumeHealingItem } from '../engine/eventResolver.js'
 import { appendLogEntries } from '../engine/log.js'
-import type { BackpackItem, GameState, LogEvent } from '../engine/types.js'
+import { createInitialLifetimeStats, recordHealingItemUse } from '../engine/stats.js'
+import type { GameState, LogEvent, BackpackItem, RaiderLifetimeStats } from '../engine/types.js'
 import type { AwaySummary } from '../engine/catchUp.js'
 
 const STORAGE_KEY = 'afk-raiders-save'
@@ -33,6 +34,21 @@ interface SaveData {
   seed: number
   lastTickAt: number
   version: number
+}
+
+function seedLegacyLifetimeStats(state: GameState): RaiderLifetimeStats {
+  const seeded = createInitialLifetimeStats()
+  return {
+    ...seeded,
+    extracts: {
+      ...seeded.extracts,
+      total: Math.max(0, state.raider.extractCount ?? 0),
+    },
+    deaths: {
+      ...seeded.deaths,
+      total: Math.max(0, state.raider.deathCount ?? 0),
+    },
+  }
 }
 
 function loadSave(): SaveData | null {
@@ -49,6 +65,7 @@ function loadSave(): SaveData | null {
       ...loadedState,
       homeStash: sale.homeStash,
       coins: (loadedState.coins ?? 0) + sale.coinsGained,
+      stats: loadedState.stats ?? seedLegacyLifetimeStats(loadedState),
       raid: {
         ...loadedState.raid,
         hiddenPocket: loadedState.raid.hiddenPocket ?? null,
@@ -219,6 +236,7 @@ export const useGameStore = defineStore('game', () => {
     const log = appendLogEntries(state.value.log, [healingUse.event])
     state.value = {
       ...healingUse.state,
+      stats: recordHealingItemUse(healingUse.state.stats, itemId),
       log,
     }
     newEvents.value = [healingUse.event]

@@ -22,6 +22,7 @@ import { applyScoldGreedReduction } from './signal.js'
 import { resolveEvent, resolveFlavorKey, applyEffects, resolveHealingItemFind, resolveRobotEncounter, events as allEvents } from './eventResolver.js'
 import { transferBackpackToHomeStash, HOME_STASH_ITEM_LIMIT } from './homeStash.js'
 import { appendLogEntries } from './log.js'
+import { recordOutcome, recordRobotDefeat } from './stats.js'
 
 /**
  * Apply successful-extraction bookkeeping: transfer loot home, heal up, count
@@ -32,6 +33,7 @@ import { appendLogEntries } from './log.js'
 function applySuccessfulExtraction(
   state: GameState,
   extractedBackpack: BackpackItem[],
+  context: { zone: string | null; timeOfDay: GameState['raid']['timeOfDay'] },
 ): { state: GameState; coinsGained: number; soldItemCount: number } {
   const transfer = transferBackpackToHomeStash(state.homeStash, extractedBackpack)
   return {
@@ -42,6 +44,7 @@ function applySuccessfulExtraction(
         hp: state.raider.maxHp,
         extractCount: state.raider.extractCount + 1,
       },
+      stats: recordOutcome(state.stats, 'extracts', context.zone, context.timeOfDay),
       homeStash: transfer.homeStash,
       coins: state.coins + transfer.coinsGained,
     },
@@ -138,6 +141,7 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
             hp: recovery.state.raider.maxHp,
             deathCount: recovery.state.raider.deathCount + 1,
           },
+          stats: recordOutcome(currentState.stats, 'deaths', state.raid.zone, state.raid.timeOfDay),
         }
         if (recovery.saved && recovery.savedItemName) {
           emitted.push(hiddenPocketSavedEvent(recovery.savedItemName, state.tick, now))
@@ -146,7 +150,10 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
           emitted.push(stashSaleEvent(recovery.soldItemCount, recovery.coinsGained, state.tick, now))
         }
       } else if (transition.from === 'EXTRACTING') {
-        const extraction = applySuccessfulExtraction(currentState, state.raid.backpack)
+        const extraction = applySuccessfulExtraction(currentState, state.raid.backpack, {
+          zone: state.raid.zone,
+          timeOfDay: state.raid.timeOfDay,
+        })
         currentState = extraction.state
         if (extraction.soldItemCount > 0) {
           emitted.push(stashSaleEvent(extraction.soldItemCount, extraction.coinsGained, state.tick, now))
@@ -238,6 +245,12 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
         })
         if (robotResult) {
           currentState = robotResult.state
+          if (robotResult.event.id.endsWith('_defeated')) {
+            currentState = {
+              ...currentState,
+              stats: recordRobotDefeat(currentState.stats, robotId),
+            }
+          }
           emitted.push(robotResult.event)
         }
       }
@@ -250,6 +263,8 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
       if (forcedPhase && forcedPhase !== currentState.raid.phase) {
         const fromPhase = currentState.raid.phase
         const backpackBeforeForce = currentState.raid.backpack
+        const zoneBeforeForce = currentState.raid.zone
+        const timeOfDayBeforeForce = currentState.raid.timeOfDay
         const { raid: forcedRaid, transition: forcedTransition } = tickPhase(
           currentState.raid,
           forcedPhase,
@@ -265,7 +280,10 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
           })
         }
         if (fromPhase === 'EXTRACTING' && forcedPhase === 'HUB') {
-          const extraction = applySuccessfulExtraction(currentState, backpackBeforeForce)
+          const extraction = applySuccessfulExtraction(currentState, backpackBeforeForce, {
+            zone: zoneBeforeForce,
+            timeOfDay: timeOfDayBeforeForce,
+          })
           currentState = extraction.state
           if (extraction.soldItemCount > 0) {
             emitted.push(stashSaleEvent(extraction.soldItemCount, extraction.coinsGained, state.tick, now))

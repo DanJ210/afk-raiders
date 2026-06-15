@@ -81,9 +81,9 @@ Events may also set `"effects": { "forcePhase": "..." }` to force a phase change
 Events may also gate themselves by `requires.timeOfDay` (`Day`, `Night`, or `Stella Red`). The engine applies the matching time-of-day profile in `src/engine/timeProfiles.ts`: Day has lower loot value and rarity bias, Night raises loot upside and robot/extraction pressure, and Stella Red has the highest loot ceiling with the harshest robot and LZ risk. These profiles are the economy guardrail for risk/reward tuning.
 
 ### Home stash transfer
-On every EXTRACTING → HUB transition (natural or event-forced), `processTick` merges the backpack into `state.homeStash` before the backpack resets. Duplicate item IDs stack quantities; the stash only ever shrinks via a future sell mechanic.
+On every EXTRACTING → HUB transition (natural or event-forced), `processTick` merges the backpack into `state.homeStash` before the backpack resets. Duplicate item IDs stack quantities.
 
-The stash has an enforced item cap (`HOME_STASH_ITEM_LIMIT`). Overflow items are auto-sold by lowest value first, and their value is converted to `state.coins` with a narrated `stash_overflow_sale` comms line.
+The stash has an enforced item cap (`HOME_STASH_ITEM_LIMIT`). Overflow items are auto-sold by lowest value first, and their value is converted to `state.coins` with a narrated `stash_overflow_sale` comms line. (Manual selling/trading is a future hub mechanic.)
 
 `RaidState` also includes an optional manual `hiddenPocket` selection (the parody safe pocket). The UI (`BackpackPanel.vue`) explicitly sets/changes/clears this slot from current backpack items. On backpack-loss failures (DOWNED → HUB), the engine transfers exactly one unit of the selected pocket item into home stash before normal reset bookkeeping.
 
