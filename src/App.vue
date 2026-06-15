@@ -17,9 +17,9 @@ type MobileTabId = 'comms' | 'stash' | 'raider' | 'raid'
 
 const mobileTabs: Array<{ id: MobileTabId; label: string; icon: string }> = [
   { id: 'comms', label: 'Comms Feed', icon: '📻' },
-  { id: 'stash', label: 'Home Stash', icon: '🏠' },
-  { id: 'raider', label: 'Raider', icon: '🧍' },
   { id: 'raid', label: 'Current Raid', icon: '🎒' },
+  { id: 'raider', label: 'Raider', icon: '🧍' },
+  { id: 'stash', label: 'Home Stash', icon: '🏠' },
 ]
 
 const activeMobileTab = ref<MobileTabId>('comms')
