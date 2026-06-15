@@ -10,6 +10,7 @@ const canEncourage = computed(() => currentSignal.value >= SIGNAL_COSTS.ENCOURAG
 const canReadyUp = computed(() => currentSignal.value >= SIGNAL_COSTS.READY_UP)
 const canScold = computed(() => currentSignal.value >= SIGNAL_COSTS.SCOLD)
 const canCallExtract = computed(() => currentSignal.value >= SIGNAL_COSTS.CALL_EXTRACT)
+const isActionLocked = computed(() => store.hasPendingHandlerAction)
 </script>
 
 <template>
@@ -24,6 +25,7 @@ const canCallExtract = computed(() => currentSignal.value >= SIGNAL_COSTS.CALL_E
         aria-hidden="true"
       >●</span>
       <span class="signal-meter__count">{{ currentSignal }}/{{ SIGNAL_CAP }}</span>
+      <span v-if="isActionLocked" class="signal-meter__pending">Action pending...</span>
     </div>
 
     <div class="handler-actions__buttons">
@@ -39,7 +41,7 @@ const canCallExtract = computed(() => currentSignal.value >= SIGNAL_COSTS.CALL_E
 
       <button
         class="action-btn action-btn--encourage"
-        :disabled="!canEncourage || store.phase !== 'RAIDING'"
+        :disabled="!canEncourage || store.phase !== 'RAIDING' || isActionLocked"
         @click="store.encourage()"
       >
         <span class="action-btn__icon">📣</span>
@@ -49,7 +51,7 @@ const canCallExtract = computed(() => currentSignal.value >= SIGNAL_COSTS.CALL_E
 
       <button
         class="action-btn action-btn--scold"
-        :disabled="!canScold || store.phase !== 'RAIDING'"
+        :disabled="!canScold || store.phase !== 'RAIDING' || isActionLocked"
         @click="store.scold()"
       >
         <span class="action-btn__icon">🔇</span>
@@ -59,7 +61,7 @@ const canCallExtract = computed(() => currentSignal.value >= SIGNAL_COSTS.CALL_E
 
       <button
         class="action-btn action-btn--extract"
-        :disabled="!canCallExtract || store.phase !== 'RAIDING'"
+        :disabled="!canCallExtract || store.phase !== 'RAIDING' || isActionLocked"
         @click="store.callExtract()"
       >
         <span class="action-btn__icon">🚨</span>
@@ -72,10 +74,14 @@ const canCallExtract = computed(() => currentSignal.value >= SIGNAL_COSTS.CALL_E
 
 <style scoped>
 .handler-actions {
+  display: flex;
+  flex-direction: column;
   background: var(--color-surface);
   border-radius: 8px;
   border: 1px solid var(--color-border);
   padding: 14px;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .handler-actions__header {
@@ -110,17 +116,27 @@ const canCallExtract = computed(() => currentSignal.value >= SIGNAL_COSTS.CALL_E
   margin-left: 4px;
 }
 
+.signal-meter__pending {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--color-accent);
+}
+
 .handler-actions__buttons {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 2px;
 }
 
 .action-btn {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 14px;
+  padding: 9px 12px;
   border-radius: 6px;
   border: 1px solid var(--color-border);
   background: var(--color-surface-raised);
@@ -161,5 +177,32 @@ const canCallExtract = computed(() => currentSignal.value >= SIGNAL_COSTS.CALL_E
 .action-btn--extract:hover:not(:disabled) {
   background: var(--color-danger);
   color: var(--color-bg);
+}
+
+@media (max-width: 600px) {
+  .handler-actions {
+    padding: 10px;
+  }
+
+  .handler-actions__header {
+    margin-bottom: 8px;
+  }
+
+  .signal-meter {
+    margin-bottom: 10px;
+  }
+
+  .handler-actions__buttons {
+    gap: 6px;
+  }
+
+  .action-btn {
+    padding: 8px 10px;
+    font-size: 0.8rem;
+  }
+
+  .action-btn__cost {
+    font-size: 0.7rem;
+  }
 }
 </style>

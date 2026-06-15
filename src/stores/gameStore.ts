@@ -96,6 +96,9 @@ export const useGameStore = defineStore('game', () => {
   const raider = computed(() => state.value.raider)
   const raid = computed(() => state.value.raid)
   const signal = computed(() => computeSignal(state.value.signal, Date.now()))
+  const hasPendingHandlerAction = computed(
+    () => state.value.pendingEncourage || state.value.pendingScold || state.value.raid.forceExtract,
+  )
   const log = computed(() => state.value.log)
   const newEvents = ref<LogEvent[]>([])
 
@@ -141,6 +144,7 @@ export const useGameStore = defineStore('game', () => {
   // ------------------------------------------------------------------
   function encourage() {
     if (state.value.raid.phase !== 'RAIDING') return
+    if (hasPendingHandlerAction.value) return
     const updated = spendSignal(computeSignal(state.value.signal, Date.now()), 'ENCOURAGE')
     if (!updated) return
     state.value = {
@@ -153,6 +157,7 @@ export const useGameStore = defineStore('game', () => {
 
   function scold() {
     if (state.value.raid.phase !== 'RAIDING') return
+    if (hasPendingHandlerAction.value) return
     const updated = spendSignal(computeSignal(state.value.signal, Date.now()), 'SCOLD')
     if (!updated) return
     state.value = {
@@ -192,6 +197,7 @@ export const useGameStore = defineStore('game', () => {
 
   function callExtract() {
     if (state.value.raid.phase !== 'RAIDING') return
+    if (hasPendingHandlerAction.value) return
     const updated = spendSignal(computeSignal(state.value.signal, Date.now()), 'CALL_EXTRACT')
     if (!updated) return
     state.value = {
@@ -247,6 +253,7 @@ export const useGameStore = defineStore('game', () => {
     raider,
     raid,
     signal,
+    hasPendingHandlerAction,
     log,
     newEvents,
     lastTickAt,
