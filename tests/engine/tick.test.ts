@@ -179,6 +179,57 @@ describe('deterministic snapshot', () => {
     expect(downedState.raider.deathCount).toBe(deathsBefore + 1)
   })
 
+  it('saves exactly one hidden-pocket item when a failed raid clears the backpack', () => {
+    const initial = createInitialState(0)
+    const state = {
+      ...initial,
+      raider: { ...initial.raider, hp: 0 },
+      raid: {
+        ...initial.raid,
+        phase: 'RAIDING' as const,
+        phaseTicksRemaining: 2,
+        backpack: [
+          {
+            itemId: 'water_bottle',
+            name: 'Water Bottle',
+            value: 5,
+            rarity: 1,
+            quantity: 4,
+          },
+        ],
+        hiddenPocket: {
+          itemId: 'water_bottle',
+          name: 'Water Bottle',
+          value: 5,
+          rarity: 1,
+        },
+        backpackValue: 20,
+      },
+    }
+
+    const rng = createRNG(FIXED_SEED)
+    const firstTick = processTick(state, rng, 0)
+    expect(firstTick.state.raid.phase).toBe('DOWNED')
+
+    let downedState = firstTick.state
+    for (let i = 0; i < 5 && downedState.raid.phase !== 'HUB'; i++) {
+      downedState = processTick(downedState, rng, i * 5000 + 1000).state
+    }
+
+    expect(downedState.raid.phase).toBe('HUB')
+    expect(downedState.raid.backpack).toEqual([])
+    expect(downedState.raid.hiddenPocket).toBeNull()
+    expect(downedState.homeStash).toEqual([
+      {
+        itemId: 'water_bottle',
+        name: 'Water Bottle',
+        value: 5,
+        rarity: 1,
+        quantity: 1,
+      },
+    ])
+  })
+
   it('downs the raider when the raid timer expires before extraction', () => {
     const rng = createRNG(FIXED_SEED)
     const initial = createInitialState(0)

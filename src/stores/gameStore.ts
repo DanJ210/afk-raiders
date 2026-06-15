@@ -23,7 +23,7 @@ import { tickPhase } from '../engine/raidStateMachine.js'
 import { sellItemFromHomeStash, sellStashOverflow } from '../engine/homeStash.js'
 import { consumeHealingItem } from '../engine/eventResolver.js'
 import { appendLogEntries } from '../engine/log.js'
-import type { GameState, LogEvent } from '../engine/types.js'
+import type { BackpackItem, GameState, LogEvent } from '../engine/types.js'
 import type { AwaySummary } from '../engine/catchUp.js'
 
 const STORAGE_KEY = 'afk-raiders-save'
@@ -51,6 +51,7 @@ function loadSave(): SaveData | null {
       coins: (loadedState.coins ?? 0) + sale.coinsGained,
       raid: {
         ...loadedState.raid,
+        hiddenPocket: loadedState.raid.hiddenPocket ?? null,
         healingItems: loadedState.raid.healingItems ?? [],
         timeOfDay: loadedState.raid.timeOfDay ?? null,
       },
@@ -224,6 +225,33 @@ export const useGameStore = defineStore('game', () => {
     persistSave(state.value, rng.getSeed(), lastTickAt.value)
   }
 
+  function setHiddenPocketItem(itemId: string) {
+    if (state.value.raid.phase === 'HUB' || state.value.raid.phase === 'DOWNED') return
+    const sourceItem = state.value.raid.backpack.find(item => item.itemId === itemId)
+    if (!sourceItem || sourceItem.quantity <= 0) return
+
+    state.value = {
+      ...state.value,
+      raid: {
+        ...state.value.raid,
+        hiddenPocket: toHiddenPocketItem(sourceItem),
+      },
+    }
+    persistSave(state.value, rng.getSeed(), lastTickAt.value)
+  }
+
+  function clearHiddenPocketItem() {
+    if (state.value.raid.hiddenPocket === null) return
+    state.value = {
+      ...state.value,
+      raid: {
+        ...state.value.raid,
+        hiddenPocket: null,
+      },
+    }
+    persistSave(state.value, rng.getSeed(), lastTickAt.value)
+  }
+
   function resetSave() {
     localStorage.removeItem(STORAGE_KEY)
     const freshNow = Date.now()
@@ -279,6 +307,8 @@ export const useGameStore = defineStore('game', () => {
     readyUp,
     callExtract,
     applyHealingItem,
+    setHiddenPocketItem,
+    clearHiddenPocketItem,
     sellHomeStashItem,
     resetSave,
     dismissAwaySummary,
@@ -286,3 +316,13 @@ export const useGameStore = defineStore('game', () => {
     RAIDER_NAME_MAX_LENGTH,
   }
 })
+
+function toHiddenPocketItem(item: BackpackItem) {
+  return {
+    itemId: item.itemId,
+    name: item.name,
+    value: item.value,
+    rarity: item.rarity,
+    flavor: item.flavor,
+  }
+}

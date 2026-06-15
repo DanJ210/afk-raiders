@@ -108,10 +108,20 @@ export interface HealingItemStack {
   quantity: number
 }
 
+export interface HiddenPocketItem {
+  itemId: string
+  name: string
+  value: number
+  rarity: number
+  flavor?: string
+}
+
 export interface RaidState {
   zone: string | null
   timeOfDay: TimeOfDay | null
   backpack: BackpackItem[]
+  /** Optional manually-selected single item saved on backpack-loss failures. */
+  hiddenPocket: HiddenPocketItem | null
   /** Current-raid-only healing consumables. Lost on death/extraction; never stored at home. */
   healingItems: HealingItemStack[]
   backpackValue: number

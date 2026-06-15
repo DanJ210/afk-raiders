@@ -1,18 +1,23 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { ref } from 'vue'
 import { useGameStore } from '../stores/gameStore'
 import { rarityLabel, rarityBarClass } from '../utils/rarity'
 import type { HealingItemStack } from '../engine/types'
 
 const store = useGameStore()
 const raid = computed(() => store.raid)
+const hiddenPocket = computed(() => raid.value.hiddenPocket)
+const selectedBackpackItemId = ref<string | null>(null)
 
 const backpackItems = computed(() =>
-  [...raid.value.backpack].sort((a, b) => {
+  [...raid.value.backpack]
+    .filter(item => item.itemId !== hiddenPocket.value?.itemId)
+    .sort((a, b) => {
     if (b.rarity !== a.rarity) return b.rarity - a.rarity
     if (b.value !== a.value) return b.value - a.value
     return a.name.localeCompare(b.name)
-  }),
+    }),
 )
 
 const healingItems = computed(() =>
@@ -47,6 +52,48 @@ const canApplyHealing = computed(() =>
   store.raider.hp > 0 &&
   store.raider.hp < store.raider.maxHp,
 )
+
+const canManageHiddenPocket = computed(() =>
+  raid.value.phase !== 'HUB' && raid.value.phase !== 'DOWNED',
+)
+
+function isPocketed(itemId: string): boolean {
+  return hiddenPocket.value?.itemId === itemId
+}
+
+const selectedBackpackItem = computed(() => {
+  if (!selectedBackpackItemId.value) return null
+  return raid.value.backpack.find(item => item.itemId === selectedBackpackItemId.value) ?? null
+})
+
+const selectedBackpackItemTotalValue = computed(() =>
+  selectedBackpackItem.value ? selectedBackpackItem.value.value * selectedBackpackItem.value.quantity : 0,
+)
+
+const canSaveToPocket = computed(() =>
+  !!selectedBackpackItem.value &&
+  !isPocketed(selectedBackpackItem.value.itemId) &&
+  canManageHiddenPocket.value,
+)
+
+function openBackpackItemDetails(itemId: string) {
+  selectedBackpackItemId.value = itemId
+}
+
+function closeBackpackItemDetails() {
+  selectedBackpackItemId.value = null
+}
+
+function saveSelectedItemToPocket() {
+  if (!selectedBackpackItem.value || !canManageHiddenPocket.value) return
+  store.setHiddenPocketItem(selectedBackpackItem.value.itemId)
+  closeBackpackItemDetails()
+}
+
+function removePocketItem() {
+  if (!hiddenPocket.value || !canManageHiddenPocket.value) return
+  store.clearHiddenPocketItem()
+}
 </script>
 
 <template>
@@ -93,6 +140,29 @@ const canApplyHealing = computed(() =>
       </ul>
     </div>
 
+    <div class="backpack-panel__hidden-pocket">
+      <div class="backpack-panel__hidden-pocket-header">
+        <span class="backpack-panel__label">Secret Hidden Pocket</span>
+        <button
+          v-if="hiddenPocket"
+          type="button"
+          class="backpack-panel__hidden-pocket-clear"
+          :disabled="!canManageHiddenPocket"
+          @click="store.clearHiddenPocketItem()"
+        >
+          Remove
+        </button>
+      </div>
+      <p v-if="!hiddenPocket" class="backpack-panel__hidden-pocket-empty">
+        Empty. Pick 1 backpack item to save if the raid fails.
+      </p>
+      <div v-else class="backpack-panel__hidden-pocket-item">
+        <span :class="rarityBarClass(hiddenPocket.rarity)" :title="rarityLabel(hiddenPocket.rarity)" aria-hidden="true" />
+        <span class="backpack-panel__hidden-pocket-name">{{ hiddenPocket.name }}</span>
+        <span class="backpack-panel__hidden-pocket-meta">Value {{ hiddenPocket.value }}</span>
+      </div>
+    </div>
+
     <p v-if="raid.backpack.length === 0 && raid.phase === 'HUB'" class="backpack-panel__empty">
       Backpack empty. Ready for terrible decisions.
     </p>
@@ -101,7 +171,16 @@ const canApplyHealing = computed(() =>
     </p>
 
     <ul v-else class="backpack-panel__items">
-      <li v-for="item in backpackItems" :key="item.itemId" class="backpack-panel__item">
+      <li
+        v-for="item in backpackItems"
+        :key="item.itemId"
+        class="backpack-panel__item backpack-panel__item--clickable"
+        role="button"
+        tabindex="0"
+        @click="openBackpackItemDetails(item.itemId)"
+        @keydown.enter.prevent="openBackpackItemDetails(item.itemId)"
+        @keydown.space.prevent="openBackpackItemDetails(item.itemId)"
+      >
         <div class="backpack-panel__item-main">
           <span :class="rarityBarClass(item.rarity)" :title="rarityLabel(item.rarity)" aria-hidden="true" />
           <span class="backpack-panel__item-name">{{ item.name }}</span>
@@ -114,6 +193,60 @@ const canApplyHealing = computed(() =>
         <p v-if="item.flavor" class="backpack-panel__item-flavor">{{ item.flavor }}</p>
       </li>
     </ul>
+
+    <div
+      v-if="selectedBackpackItem"
+      class="stash-dialog"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Secret Hidden Pocket"
+      @click.self="closeBackpackItemDetails"
+      @keydown.esc="closeBackpackItemDetails"
+    >
+      <div class="stash-dialog__card">
+        <div class="stash-dialog__header">
+          <div class="stash-dialog__title">
+            <span class="stash-dialog__emoji">🕳️</span>
+            <div>
+              <h3 class="stash-dialog__name">{{ selectedBackpackItem.name }}</h3>
+              <p class="stash-dialog__meta">
+                {{ rarityLabel(selectedBackpackItem.rarity) }} · ×{{ selectedBackpackItem.quantity }} ·
+                {{ selectedBackpackItemTotalValue }} value
+              </p>
+            </div>
+          </div>
+          <button type="button" class="stash-dialog__close" autofocus @click="closeBackpackItemDetails">✕</button>
+        </div>
+
+        <p class="stash-dialog__description">
+          {{ selectedBackpackItem.flavor || 'No description available.' }}
+        </p>
+
+        <div class="stash-dialog__actions">
+          <button type="button" class="stash-dialog__button stash-dialog__button--secondary" @click="closeBackpackItemDetails">
+            Cancel
+          </button>
+          <button
+            v-if="hiddenPocket && hiddenPocket.itemId === selectedBackpackItem.itemId"
+            type="button"
+            class="stash-dialog__button stash-dialog__button--secondary"
+            :disabled="!canManageHiddenPocket"
+            @click="removePocketItem(); closeBackpackItemDetails()"
+          >
+            Remove From Secret Pocket
+          </button>
+          <button
+            v-else
+            type="button"
+            class="stash-dialog__button stash-dialog__button--primary"
+            :disabled="!canSaveToPocket"
+            @click="saveSelectedItemToPocket"
+          >
+            {{ hiddenPocket ? 'Replace Secret Pocket Item' : 'Save In Secret Pocket' }}
+          </button>
+        </div>
+      </div>
+    </div>
   </section>
 </template>
 
@@ -123,6 +256,10 @@ const canApplyHealing = computed(() =>
   border-radius: 8px;
   border: 1px solid var(--color-border);
   padding: 14px;
+  display: flex;
+  flex-direction: column;
+  max-height: 400px;
+  min-height: 0;
 }
 
 .backpack-panel__header {
@@ -210,6 +347,73 @@ const canApplyHealing = computed(() =>
   cursor: not-allowed;
 }
 
+.backpack-panel__hidden-pocket {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 10px;
+  padding: 10px;
+  border: 1px solid color-mix(in oklab, var(--color-accent-secondary) 70%, var(--color-border));
+  border-radius: 6px;
+  background:
+    linear-gradient(135deg, rgb(255 255 255 / 2%), rgb(0 0 0 / 8%)),
+    var(--color-surface-raised);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 3%);
+}
+
+.backpack-panel__hidden-pocket-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.backpack-panel__hidden-pocket-clear {
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--color-muted);
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  padding: 2px 8px;
+  cursor: pointer;
+}
+
+.backpack-panel__hidden-pocket-clear:hover:not(:disabled) {
+  border-color: var(--color-danger);
+  color: var(--color-danger);
+}
+
+.backpack-panel__hidden-pocket-clear:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.backpack-panel__hidden-pocket-empty {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--color-accent-secondary);
+  font-style: italic;
+}
+
+.backpack-panel__hidden-pocket-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--color-text);
+}
+
+.backpack-panel__hidden-pocket-name {
+  flex: 1;
+}
+
+.backpack-panel__hidden-pocket-meta {
+  color: var(--color-accent-secondary);
+}
+
 .greed-bar {
   flex: 1;
   height: 8px;
@@ -248,6 +452,10 @@ const canApplyHealing = computed(() =>
   margin: 12px 0 0;
   display: grid;
   gap: 8px;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+  padding-right: 2px;
 }
 
 .backpack-panel__item {
@@ -255,6 +463,16 @@ const canApplyHealing = computed(() =>
   border-radius: 6px;
   background: var(--color-surface-raised);
   padding: 8px 10px;
+}
+
+.backpack-panel__item--clickable {
+  cursor: pointer;
+}
+
+.backpack-panel__item--clickable:hover,
+.backpack-panel__item--clickable:focus-visible {
+  border-color: var(--color-accent);
+  outline: none;
 }
 
 .backpack-panel__item-main,
@@ -286,5 +504,111 @@ const canApplyHealing = computed(() =>
   margin: 6px 0 0;
   font-style: italic;
   line-height: 1.4;
+}
+
+.stash-dialog {
+  position: fixed;
+  inset: 0;
+  background: rgb(5 10 16 / 78%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 50;
+}
+
+.stash-dialog__card {
+  width: min(100%, 420px);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  padding: 16px;
+  box-shadow: 0 16px 40px rgb(0 0 0 / 35%);
+}
+
+.stash-dialog__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.stash-dialog__title {
+  display: flex;
+  gap: 10px;
+  min-width: 0;
+}
+
+.stash-dialog__emoji {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.stash-dialog__name {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--color-text);
+}
+
+.stash-dialog__meta {
+  margin: 4px 0 0;
+  color: var(--color-muted);
+  font-size: 0.75rem;
+  font-family: var(--font-mono);
+}
+
+.stash-dialog__close {
+  border: 0;
+  background: transparent;
+  color: var(--color-muted);
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.stash-dialog__description {
+  margin: 14px 0 0;
+  color: var(--color-text);
+  line-height: 1.5;
+}
+
+.stash-dialog__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.stash-dialog__button {
+  border-radius: 6px;
+  padding: 10px 14px;
+  font-family: var(--font-mono);
+  cursor: pointer;
+  border: 1px solid var(--color-border);
+}
+
+.stash-dialog__button--secondary {
+  background: var(--color-surface-raised);
+  color: var(--color-text);
+}
+
+.stash-dialog__button--primary {
+  background: var(--color-accent);
+  color: var(--color-bg);
+  border-color: var(--color-accent);
+}
+
+.stash-dialog__button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (max-width: 600px) {
+  .stash-dialog__actions {
+    flex-direction: column-reverse;
+  }
+
+  .stash-dialog__button {
+    width: 100%;
+  }
 }
 </style>
