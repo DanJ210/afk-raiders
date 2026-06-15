@@ -81,9 +81,9 @@ Events may also set `"effects": { "forcePhase": "..." }` to force a phase change
 Events may also gate themselves by `requires.timeOfDay` (`Day`, `Night`, or `Stella Red`). The engine applies the matching time-of-day profile in `src/engine/timeProfiles.ts`: Day has lower loot value and rarity bias, Night raises loot upside and robot/extraction pressure, and Stella Red has the highest loot ceiling with the harshest robot and LZ risk. These profiles are the economy guardrail for risk/reward tuning.
 
 ### Home stash transfer
-On every EXTRACTING → HUB transition (natural or event-forced), `processTick` merges the backpack into `state.homeStash` before the backpack resets. Duplicate item IDs stack quantities; the stash only ever shrinks via a future sell mechanic.
+On every EXTRACTING → HUB transition (natural or event-forced), `processTick` merges the backpack into `state.homeStash` before the backpack resets. Duplicate item IDs stack quantities.
 
-The stash has an enforced item cap (`HOME_STASH_ITEM_LIMIT`). Overflow items are auto-sold by lowest value first, and their value is converted to `state.coins` with a narrated `stash_overflow_sale` comms line.
+The stash has an enforced item cap (`HOME_STASH_ITEM_LIMIT`). Overflow items are auto-sold by lowest value first, and their value is converted to `state.coins` with a narrated `stash_overflow_sale` comms line. (Manual selling/trading is a future hub mechanic.)
 
 ### 3. Signal as the only real input
 Signal regenerates (~1 per 10 min, capped at 5). Ready Up (2) starts DEPLOYING from HUB, Encourage/Scold (1 each) nudge hidden behavior weights, and Scold also reduces current greed before the next greed check; CALL EXTRACT (3) forces an extraction attempt. During RAIDING only one action may be queued at a time, so action buttons lock until the next tick applies the pending action.
