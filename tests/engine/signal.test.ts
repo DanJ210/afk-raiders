@@ -54,12 +54,24 @@ describe('signal', () => {
     expect(updated.current).toBe(SIGNAL_CAP)
   })
 
-  it('advances lastRegenAt by consumed regen ticks only', () => {
+  it('resets lastRegenAt to now when regen reaches cap', () => {
     const s = makeSignal(SIGNAL_CAP - 1, 0)
     // Enough time for 3 ticks but only 1 is consumable (cap = 5, current = 4)
     const updated = computeSignal(s, 3 * SIGNAL_REGEN_MS)
     expect(updated.current).toBe(SIGNAL_CAP)
-    expect(updated.lastRegenAt).toBe(SIGNAL_REGEN_MS)  // advanced by 1 tick only
+    expect(updated.lastRegenAt).toBe(3 * SIGNAL_REGEN_MS)
+  })
+
+  it('does not immediately refill after spending when signal was full for a long time', () => {
+    const now = 100 * SIGNAL_REGEN_MS
+    const fullForAWhile = makeSignal(SIGNAL_CAP, 0)
+
+    const normalized = computeSignal(fullForAWhile, now)
+    const spent = spendSignal(normalized, 'ENCOURAGE')
+    expect(spent).not.toBeNull()
+
+    const afterSpend = computeSignal(spent!, now)
+    expect(afterSpend.current).toBe(SIGNAL_CAP - SIGNAL_COSTS.ENCOURAGE)
   })
 
   it('spendSignal deducts cost for ENCOURAGE', () => {

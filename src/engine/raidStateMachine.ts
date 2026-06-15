@@ -29,7 +29,7 @@ function enterDeploying(raid: RaidState, rng?: RNG): RaidState {
 export const PHASE_DURATIONS: Record<Phase, number> = {
   HUB: 20,         // 10 minutes max resting and prepping in Desperanza
   DEPLOYING: 4,    // 2 minutes riding a one-person pod through the tunnel system
-  RAIDING: 120,    // 60 minutes max looting; ends via timer expiry, death, or CALL_EXTRACT
+  RAIDING: 60,     // 60 ticks = 30 minutes max looting at 30s cadence; timer expiry means the zone gets nuked
   EXTRACTING: 4,   // ~90s extraction window + final tick = calling the return shuttle (~2 minutes total)
   DOWNED: 2,       // death rattle flavor before respawning
 }
@@ -98,6 +98,11 @@ export function tickPhase(
     updatedRaid = { ...updatedRaid, backpack: [], healingItems: [], backpackValue: 0, greedLevel: 0, forceExtract: false, zone: null, timeOfDay: null }
   }
 
+  // Healing items are lost on death — clear on natural DOWNED transitions too.
+  if (next === 'DOWNED') {
+    updatedRaid = { ...updatedRaid, healingItems: [] }
+  }
+
   // Pick a zone and time of day when deploying
   if (next === 'DEPLOYING') {
     updatedRaid = enterDeploying(updatedRaid, rng)
@@ -110,7 +115,7 @@ function nextPhase(current: Phase): Phase {
   switch (current) {
     case 'HUB':        return 'DEPLOYING'
     case 'DEPLOYING':  return 'RAIDING'
-    case 'RAIDING':    return 'EXTRACTING' // raid timer expired — forced to extract with whatever they have
+    case 'RAIDING':    return 'DOWNED' // raid timer expired before extraction; the nuke hits
     case 'EXTRACTING': return 'HUB'
     case 'DOWNED':     return 'HUB'
   }
