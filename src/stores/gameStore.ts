@@ -19,6 +19,7 @@ import { processTick } from '../engine/tick.js'
 import { catchUp, TICK_INTERVAL_MS } from '../engine/catchUp.js'
 import { computeSignal, spendSignal } from '../engine/signal.js'
 import { createInitialState, SAVE_VERSION } from '../engine/initialState.js'
+import { tickPhase } from '../engine/raidStateMachine.js'
 import { sellItemFromHomeStash, sellStashOverflow } from '../engine/homeStash.js'
 import type { GameState, LogEvent } from '../engine/types.js'
 import type { AwaySummary } from '../engine/catchUp.js'
@@ -45,6 +46,7 @@ function loadSave(): SaveData | null {
       ...data.state,
       homeStash: sale.homeStash,
       coins: (data.state.coins ?? 0) + sale.coinsGained,
+      pendingReadyUp: data.state.pendingReadyUp ?? false,
       raid: {
         ...data.state.raid,
         healingItems: data.state.raid.healingItems ?? [],
@@ -161,6 +163,33 @@ export const useGameStore = defineStore('game', () => {
     persistSave(state.value, rng.getSeed(), lastTickAt.value)
   }
 
+  function readyUp() {
+    if (state.value.raid.phase !== 'HUB') return
+    const actionNow = Date.now()
+    const updated = spendSignal(computeSignal(state.value.signal, actionNow), 'READY_UP')
+    if (!updated) return
+
+    const { raid: deployingRaid, transition } = tickPhase(state.value.raid, 'DEPLOYING', rng)
+    if (!transition) return
+
+    state.value = {
+      ...state.value,
+      signal: updated,
+      raid: deployingRaid,
+      log: [
+        ...state.value.log,
+        {
+          id: `phase_${transition.from}_to_${transition.to}`,
+          tick: state.value.tick,
+          timestamp: actionNow,
+          text: transition.eventText,
+          phase: transition.to,
+        },
+      ],
+    }
+    persistSave(state.value, rng.getSeed(), lastTickAt.value)
+  }
+
   function callExtract() {
     if (state.value.raid.phase !== 'RAIDING') return
     const updated = spendSignal(computeSignal(state.value.signal, Date.now()), 'CALL_EXTRACT')
@@ -224,6 +253,7 @@ export const useGameStore = defineStore('game', () => {
     awaySummary,
     encourage,
     scold,
+    readyUp,
     callExtract,
     sellHomeStashItem,
     resetSave,

@@ -5,6 +5,7 @@
  * Actions and their costs:
  *   ENCOURAGE    → 1 Signal
  *   SCOLD        → 1 Signal
+ *   READY_UP     → 2 Signal
  *   CALL_EXTRACT → 3 Signal
  */
 
@@ -16,11 +17,13 @@ export const SIGNAL_REGEN_MS = 10 * 60 * 1000  // 10 minutes in ms
 export const SIGNAL_COSTS = {
   ENCOURAGE: 1,
   SCOLD: 1,
+  READY_UP: 2,
   CALL_EXTRACT: 3,
 } as const
 
 /** How much greed a scold removes when consumed on the next raid tick. */
 export const SCOLD_GREED_REDUCTION = 12
+export const ENCOURAGE_GREED_INCREASE = 8
 
 export type SignalAction = keyof typeof SIGNAL_COSTS
 
@@ -49,6 +52,10 @@ export function spendSignal(signal: SignalState, action: SignalAction): SignalSt
 /** Apply the scold action's greed reduction with floor at 0. */
 export function applyScoldGreedReduction(greedLevel: number): number {
   return Math.max(0, greedLevel - SCOLD_GREED_REDUCTION)
+}
+
+export function applyEncourageGreedIncrease(greedLevel: number): number {
+  return Math.min(100, greedLevel + ENCOURAGE_GREED_INCREASE)
 }
 
 /** Create the initial signal state */

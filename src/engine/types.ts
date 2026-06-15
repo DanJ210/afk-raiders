@@ -158,6 +158,8 @@ export interface GameState {
   // Set by CALL_EXTRACT so the tick driver knows to nudge the next greed check
   pendingEncourage: boolean
   pendingScold: boolean
+  // Ready-up state to allow instant deployment on the next tick after a HUB arrival, instead of waiting through the DEPLOYING phase; also used to trigger the "Ready!" UI state
+  pendingReadyUp: boolean
 }
 
 // ---------------------------------------------------------------------------

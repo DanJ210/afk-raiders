@@ -13,10 +13,10 @@ import zonesData from '../content/zones.json'
 
 const zones = zonesData as ZoneEntry[]
 
-const TIME_OF_DAY_TABLE: Array<{ id: TimeOfDay; weight: number }> = [
-  { id: 'Day',        weight: 80 },
-  { id: 'Night',      weight: 30 },
-  { id: 'Stella Red', weight: 10 },
+const TIME_OF_DAY_TABLE: Array<{ id: TimeOfDay; weight: number; dangerLevel: string }> = [
+  { id: 'Day',        weight: 80, dangerLevel: 'Low' },
+  { id: 'Night',      weight: 30, dangerLevel: 'Medium' },
+  { id: 'Stella Red', weight: 10, dangerLevel: 'High' },
 ]
 
 // Ticks each phase lasts before auto-transitioning (1 tick = 30s)
