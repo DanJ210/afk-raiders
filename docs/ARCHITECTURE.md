@@ -31,7 +31,7 @@ afk-raiders/
 │   │   ├── raiding_events.json  # Looting, robots, greed (≤30 min)
 │   │   ├── extraction_events.json # LZ drama: failed/early extractions, ambushes
 │   │   ├── downed_events.json   # Death quips
-│   │   ├── loot.json            # 47 varieties of water bottle
+│   │   ├── loot.json            # Many varietys of comedy and parody loot based on ARC Raiders
 │   │   ├── healing_items.json   # Current-raid-only bandages
 │   │   ├── robots.json          # Anxieticks, Tattletales, Roomba Prime…
 │   │   ├── zones.json           # Damp Battlegrounds, etc.
