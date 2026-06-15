@@ -29,7 +29,7 @@ function enterDeploying(raid: RaidState, rng?: RNG): RaidState {
 export const PHASE_DURATIONS: Record<Phase, number> = {
   HUB: 20,         // 10 minutes max resting and prepping in Desperanza
   DEPLOYING: 4,    // 2 minutes riding a one-person pod through the tunnel system
-  RAIDING: 60,     // 30 minutes max looting; timer expiry means the zone gets nuked
+  RAIDING: 60,     // 60 ticks = 30 minutes max looting at 30s cadence; timer expiry means the zone gets nuked
   EXTRACTING: 4,   // ~90s extraction window + final tick = calling the return shuttle (~2 minutes total)
   DOWNED: 2,       // death rattle flavor before respawning
 }
