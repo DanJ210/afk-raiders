@@ -31,7 +31,7 @@ afk-raiders/
 │   │   ├── raiding_events.json  # Looting, robots, greed (≤30 min)
 │   │   ├── extraction_events.json # LZ drama: failed/early extractions, ambushes
 │   │   ├── downed_events.json   # Death quips
-│   │   ├── loot.json            # 47 varieties of water bottle
+│   │   ├── loot.json            # Many varieties of original comedy/parody loot items
 │   │   ├── healing_items.json   # Current-raid-only bandages
 │   │   ├── robots.json          # Anxieticks, Tattletales, Roomba Prime…
 │   │   ├── zones.json           # Damp Battlegrounds, etc.
@@ -74,6 +74,8 @@ Events are picked by context (zone, greed level, mood, HP) and fill `{slot}` pla
 Writing jokes never touches engine code — and this is the future community-content pipeline.
 
 Events may also set `"effects": { "forcePhase": "..." }` to force a phase change. This powers `extraction_events.json`: during the EXTRACTING window (~90s extraction + a final tick to call the return shuttle, 4 ticks total) events can make extraction fail (`forcePhase: "RAIDING"` — backpack kept), succeed early (`forcePhase: "HUB"` — loot transferred to the home stash), or end in tragedy (`forcePhase: "DOWNED"` — bag lost).
+
+Events may also gate themselves by `requires.timeOfDay` (`Day`, `Night`, or `Stella Red`). The engine applies the matching time-of-day profile in `src/engine/timeProfiles.ts`: Day has lower loot value and rarity bias, Night raises loot upside and robot/extraction pressure, and Stella Red has the highest loot ceiling with the harshest robot and LZ risk. These profiles are the economy guardrail for risk/reward tuning.
 
 ### Home stash transfer
 On every EXTRACTING → HUB transition (natural or event-forced), `processTick` merges the backpack into `state.homeStash` before the backpack resets. Duplicate item IDs stack quantities; the stash only ever shrinks via a future sell mechanic.

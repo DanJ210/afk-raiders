@@ -300,4 +300,3 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
     events: emitted,
   }
 }
-

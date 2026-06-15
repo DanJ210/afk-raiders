@@ -103,6 +103,36 @@ describe('applyEffects — backpack item behavior', () => {
     expect(result1.raider.hp).toBeGreaterThanOrEqual(86)
   })
 
+  it('scales loot value by time-of-day profile', () => {
+    const initial = createInitialState(0)
+    const template: EventTemplate = {
+      id: 'test_time_loot',
+      weight: 1,
+      text: 'You found something timely.',
+      effects: { backpackValue: 100 },
+    }
+
+    const day = applyEffects(
+      { ...initial, raid: { ...initial.raid, timeOfDay: 'Day' } },
+      template,
+      createRNG(1),
+    )
+    const night = applyEffects(
+      { ...initial, raid: { ...initial.raid, timeOfDay: 'Night' } },
+      template,
+      createRNG(1),
+    )
+    const stellaRed = applyEffects(
+      { ...initial, raid: { ...initial.raid, timeOfDay: 'Stella Red' } },
+      template,
+      createRNG(1),
+    )
+
+    expect(day.raid.backpackValue).toBe(85)
+    expect(night.raid.backpackValue).toBe(120)
+    expect(stellaRed.raid.backpackValue).toBe(155)
+  })
+
   it('defeats a robot when the combat roll beats menace and awards robot loot', () => {
     const state = createInitialState(0)
     const result = resolveRobotEncounter(state, 'anxietick', createRNG(1), 0)
@@ -124,6 +154,27 @@ describe('applyEffects — backpack item behavior', () => {
     expect(result!.event.text).toContain('Took 16 damage')
     expect(result!.state.raider.hp).toBe(84)
     expect(result!.state.raid.backpack).toHaveLength(0)
+  })
+
+  it('scales failed robot damage by time-of-day profile', () => {
+    const initial = createInitialState(0)
+    const night = resolveRobotEncounter(
+      { ...initial, raid: { ...initial.raid, timeOfDay: 'Night' } },
+      'roomba_prime',
+      createRNG(1),
+      0,
+    )
+    const stellaRed = resolveRobotEncounter(
+      { ...initial, raid: { ...initial.raid, timeOfDay: 'Stella Red' } },
+      'roomba_prime',
+      createRNG(1),
+      0,
+    )
+
+    expect(night).not.toBeNull()
+    expect(stellaRed).not.toBeNull()
+    expect(night!.state.raider.hp).toBe(81)
+    expect(stellaRed!.state.raider.hp).toBe(78)
   })
 
   it('applies encounter-specific damage multipliers only on failed robot encounters', () => {

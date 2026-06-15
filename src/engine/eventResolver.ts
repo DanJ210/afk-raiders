@@ -22,6 +22,7 @@ import lootData from '../content/loot.json'
 import healingItemsData from '../content/healing_items.json'
 import robotsData from '../content/robots.json'
 import flavorData from '../content/flavor.json'
+import { getTimeOfDayProfile, rarityWeight, type TimeOfDayProfile } from './timeProfiles.js'
 
 // One events file per phase: HUB, DEPLOYING, RAIDING, EXTRACTING, DOWNED
 const events = [
@@ -87,12 +88,57 @@ function eligibleEvents(state: GameState): EventTemplate[] {
       const phases: Phase[] = Array.isArray(r.phase) ? r.phase : [r.phase]
       if (!phases.includes(raid.phase)) return false
     }
+    if (r.timeOfDay) {
+      if (!raid.timeOfDay) return false
+      const times = Array.isArray(r.timeOfDay) ? r.timeOfDay : [r.timeOfDay]
+      if (!times.includes(raid.timeOfDay)) return false
+    }
     if (r.minGreed !== undefined && raid.greedLevel < r.minGreed) return false
     if (r.maxGreed !== undefined && raid.greedLevel > r.maxGreed) return false
     if (r.minHp !== undefined && state.raider.hp < r.minHp) return false
     if (r.maxHp !== undefined && state.raider.hp > r.maxHp) return false
     return true
   })
+}
+
+function isNegativeHpEffect(hp: number | string | undefined): boolean {
+  if (hp === undefined) return false
+  if (typeof hp === 'number') return hp < 0
+  return hp.trim().startsWith('-')
+}
+
+function isRiskyExtractionEvent(template: EventTemplate): boolean {
+  const effects = template.effects
+  if (!effects) return false
+  return effects.forcePhase === 'RAIDING' ||
+    effects.forcePhase === 'DOWNED' ||
+    effects.robotEncounter !== undefined ||
+    isNegativeHpEffect(effects.hp)
+}
+
+function isSafeExtractionEvent(template: EventTemplate): boolean {
+  const effects = template.effects
+  if (!effects) return false
+  return effects.forcePhase === 'HUB' || (!isRiskyExtractionEvent(template) && (effects.mood ?? 0) > 0)
+}
+
+function adjustedEventWeight(template: EventTemplate, state: GameState): number {
+  const profile = getTimeOfDayProfile(state.raid.timeOfDay)
+  let weight = template.weight
+
+  if (template.effects?.robotEncounter) {
+    weight *= profile.robotEncounterWeightMultiplier
+  }
+
+  if (state.raid.phase === 'EXTRACTING') {
+    if (isRiskyExtractionEvent(template)) {
+      weight *= profile.extractionRiskEventWeightMultiplier
+    } else if (isSafeExtractionEvent(template)) {
+      weight *= profile.extractionSafeEventWeightMultiplier
+    }
+  }
+
+  return Math.max(0.001, weight)
 }
 
 /** Fill {slot} placeholders in a template string */
@@ -144,20 +190,27 @@ function fillSlots(text: string, rng: RNG): string {
   })
 }
 
-function pickLootItemForValue(targetValue: number, rng: RNG): LootItem {
+function weightedLootPick(items: LootItem[], rng: RNG, profile: TimeOfDayProfile): LootItem {
+  return rng.weightedPick(items.map(item => ({
+    ...item,
+    weight: item.weight * rarityWeight(profile, item.rarity),
+  })))
+}
+
+function pickLootItemForValue(targetValue: number, rng: RNG, profile: TimeOfDayProfile): LootItem {
   const exactMatches = loot.filter(item => item.value === targetValue)
   if (exactMatches.length > 0) {
-    return rng.weightedPick(exactMatches)
+    return weightedLootPick(exactMatches, rng, profile)
   }
 
   const lowerMatches = loot.filter(item => item.value <= targetValue)
   if (lowerMatches.length > 0) {
     const highestValue = Math.max(...lowerMatches.map(item => item.value))
     const bestMatches = lowerMatches.filter(item => item.value === highestValue)
-    return rng.weightedPick(bestMatches)
+    return weightedLootPick(bestMatches, rng, profile)
   }
 
-  return rng.weightedPick(loot)
+  return weightedLootPick(loot, rng, profile)
 }
 
 function addBackpackItem(
@@ -347,7 +400,8 @@ export function resolveRobotEncounter(
     }
   }
 
-  const damageMultiplier = Math.max(0, opts.damageMultiplier ?? 1)
+  const profile = getTimeOfDayProfile(state.raid.timeOfDay)
+  const damageMultiplier = Math.max(0, (opts.damageMultiplier ?? 1) * profile.robotFailureDamageMultiplier)
   const rawDamage = Math.ceil(robot.menace * ROBOT_DAMAGE_PER_MENACE * damageMultiplier)
   const hp = applyRobotDamage(state, robot, rawDamage)
   const damage = state.raider.hp - hp
@@ -378,7 +432,11 @@ export function resolveEvent(
   const eligible = eligibleEvents(state)
   if (eligible.length === 0) return null
 
-  const template = rng.weightedPick(eligible)
+  const weightedEligible = eligible.map(template => ({
+    ...template,
+    weight: adjustedEventWeight(template, state),
+  }))
+  const template = rng.weightedPick(weightedEligible)
   const text = fillSlots(template.text, rng)
 
   return {
@@ -406,11 +464,13 @@ export function applyEffects(
       ? parseDice(effects.backpackValue, rng)
       : effects.backpackValue
     if (delta > 0) {
-      const item = pickLootItemForValue(delta, rng)
+      const profile = getTimeOfDayProfile(raid.timeOfDay)
+      const profiledDelta = Math.max(1, Math.round(delta * profile.lootValueMultiplier))
+      const item = pickLootItemForValue(profiledDelta, rng, profile)
       raid = addBackpackItem(raid, item)
       raid = {
         ...raid,
-        backpackValue: Math.max(0, raid.backpackValue + (delta - item.value)),
+        backpackValue: Math.max(0, raid.backpackValue + (profiledDelta - item.value)),
       }
     } else {
       raid = { ...raid, backpackValue: Math.max(0, raid.backpackValue + delta) }
