@@ -2,11 +2,14 @@
 import { computed, ref } from 'vue'
 import { useGameStore } from '../stores/gameStore'
 import { zoneName } from '../utils/zones'
+import { TICK_INTERVAL_MS } from '../engine/catchUp'
 
 const store = useGameStore()
 const raider = computed(() => store.raider)
 const currentZoneName = computed(() => zoneName(store.raid.zone))
 const showCurrentZone = computed(() => store.phase === 'RAIDING' && currentZoneName.value !== null)
+const showRaidTimer = computed(() => store.phase === 'RAIDING')
+const raidTimerText = computed(() => formatDuration(store.raid.phaseTicksRemaining * TICK_INTERVAL_MS))
 
 const editingName = ref(false)
 const nameInput = ref('')
@@ -48,6 +51,13 @@ function moodLabel(mood: number): string {
   if (mood === 0) return '😐 Neutral'
   if (mood >= -2) return '😒 Grumpy'
   return '😩 Demoralized'
+}
+
+function formatDuration(ms: number): string {
+  const totalSeconds = Math.max(0, Math.floor(ms / 1000))
+  const minutes = Math.floor(totalSeconds / 60)
+  const seconds = totalSeconds % 60
+  return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
 }
 
 const hpPercent = computed(() =>
@@ -105,6 +115,11 @@ const hpClass = computed(() => {
       <div v-if="showCurrentZone" class="raider-card__stat">
         <span class="raider-card__stat-label">Zone</span>
         <span class="raider-card__stat-value">{{ currentZoneName }}</span>
+      </div>
+
+      <div v-if="showRaidTimer" class="raider-card__stat">
+        <span class="raider-card__stat-label">Zone Nuke In</span>
+        <span class="raider-card__stat-value raider-card__timer">{{ raidTimerText }}</span>
       </div>
 
       <div class="raider-card__stat">
@@ -220,6 +235,11 @@ const hpClass = computed(() => {
 
 .raider-card__rat-rating {
   color: var(--color-accent-secondary);
+}
+
+.raider-card__timer {
+  color: var(--color-danger);
+  font-weight: 700;
 }
 
 .hp-bar {
