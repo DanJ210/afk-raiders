@@ -7,6 +7,7 @@ const store = useGameStore()
 
 const currentSignal = computed(() => store.signal.current)
 const canEncourage = computed(() => currentSignal.value >= SIGNAL_COSTS.ENCOURAGE)
+const canReadyUp = computed(() => currentSignal.value >= SIGNAL_COSTS.READY_UP)
 const canScold = computed(() => currentSignal.value >= SIGNAL_COSTS.SCOLD)
 const canCallExtract = computed(() => currentSignal.value >= SIGNAL_COSTS.CALL_EXTRACT)
 </script>
@@ -26,6 +27,16 @@ const canCallExtract = computed(() => currentSignal.value >= SIGNAL_COSTS.CALL_E
     </div>
 
     <div class="handler-actions__buttons">
+      <button
+        class="action-btn action-btn--ready-up"
+        :disabled="!canReadyUp || store.phase !== 'HUB'"
+        @click="store.readyUp()"
+      >
+        <span class="action-btn__icon">🎮</span>
+        <span class="action-btn__label">Ready Up!</span>
+        <span class="action-btn__cost">{{ SIGNAL_COSTS.READY_UP }}📶</span>
+      </button>
+
       <button
         class="action-btn action-btn--encourage"
         :disabled="!canEncourage || store.phase !== 'RAIDING'"

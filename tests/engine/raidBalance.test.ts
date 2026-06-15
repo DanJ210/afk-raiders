@@ -45,15 +45,14 @@ function simulateRaid(seed: number): RaidSimulationResult {
 }
 
 describe('raid balance', () => {
-  it('lands near the target extraction rate while giving raids room to breathe', () => {
+  it('keeps extraction rates moderate without automatic bandage use', () => {
     const outcomes = Array.from({ length: 200 }, (_, index) => simulateRaid(index + 1))
     const extracts = outcomes.filter(result => result.outcome === 'EXTRACTED').length
     const extractionRate = extracts / outcomes.length
     const averageRaidingTicks = outcomes.reduce((sum, result) => sum + result.raidingTicks, 0) / outcomes.length
 
-    expect(extractionRate).toBeGreaterThanOrEqual(0.70)
-    expect(extractionRate).toBeLessThanOrEqual(0.80)
+    expect(extractionRate).toBeGreaterThanOrEqual(0.55)
+    expect(extractionRate).toBeLessThanOrEqual(0.70)
     expect(averageRaidingTicks).toBeGreaterThanOrEqual(20)
   })
 })
-

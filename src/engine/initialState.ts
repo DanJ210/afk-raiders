@@ -11,7 +11,7 @@ export function createInitialState(now: number = Date.now()): GameState {
     version: SAVE_VERSION,
     tick: 0,
     raider: {
-      name: 'Raider Dave',
+      name: 'Raider Danakin',
       hp: 100,
       maxHp: 100,
       mood: 0,

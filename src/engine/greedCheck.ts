@@ -35,9 +35,9 @@ export interface GreedCheckResult {
 const BASE_EXTRACT_CHANCE = 0.02
 const MIN_EXTRACT_CHANCE = 0.01
 const MAX_EXTRACT_CHANCE = 0.80
-const GREED_EXTRACT_PENALTY = 0.0002  // per greed point (0–100 scale)
+const GREED_EXTRACT_PENALTY = 0.0002    // per greed point (0–100 scale)
 const GREED_DEATH_THRESHOLD = 95
-const GREED_DEATH_RATE = 0.001        // per greed point above threshold
+const GREED_DEATH_RATE = 0.001          // per greed point above threshold
 const ENCOURAGE_EXTRACT_PENALTY = 0.10  // courage boost makes extraction less likely
 const SCOLD_EXTRACT_BONUS = 0.15        // scolding makes caution more likely
 const GREED_INCREMENT = 8               // how much greed rises each push-deeper

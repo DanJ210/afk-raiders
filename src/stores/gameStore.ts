@@ -19,7 +19,10 @@ import { processTick } from '../engine/tick.js'
 import { catchUp, TICK_INTERVAL_MS } from '../engine/catchUp.js'
 import { computeSignal, spendSignal } from '../engine/signal.js'
 import { createInitialState, SAVE_VERSION } from '../engine/initialState.js'
+import { tickPhase } from '../engine/raidStateMachine.js'
 import { sellItemFromHomeStash, sellStashOverflow } from '../engine/homeStash.js'
+import { consumeHealingItem } from '../engine/eventResolver.js'
+import { appendLogEntries } from '../engine/log.js'
 import type { GameState, LogEvent } from '../engine/types.js'
 import type { AwaySummary } from '../engine/catchUp.js'
 
@@ -40,15 +43,16 @@ function loadSave(): SaveData | null {
     if (data.version !== SAVE_VERSION) return null
     // Migration: older saves lack coins, and stashes saved while the limit
     // was not enforced may exceed it — sell the overflow rather than delete it.
-    const sale = sellStashOverflow(data.state.homeStash)
+    const { pendingReadyUp: _pendingReadyUp, ...loadedState } = data.state as GameState & { pendingReadyUp?: boolean }
+    const sale = sellStashOverflow(loadedState.homeStash)
     data.state = {
-      ...data.state,
+      ...loadedState,
       homeStash: sale.homeStash,
-      coins: (data.state.coins ?? 0) + sale.coinsGained,
+      coins: (loadedState.coins ?? 0) + sale.coinsGained,
       raid: {
-        ...data.state.raid,
-        healingItems: data.state.raid.healingItems ?? [],
-        timeOfDay: data.state.raid.timeOfDay ?? null,
+        ...loadedState.raid,
+        healingItems: loadedState.raid.healingItems ?? [],
+        timeOfDay: loadedState.raid.timeOfDay ?? null,
       },
     }
     return data
@@ -161,6 +165,33 @@ export const useGameStore = defineStore('game', () => {
     persistSave(state.value, rng.getSeed(), lastTickAt.value)
   }
 
+  function readyUp() {
+    if (state.value.raid.phase !== 'HUB') return
+    const actionNow = Date.now()
+    const updated = spendSignal(computeSignal(state.value.signal, actionNow), 'READY_UP')
+    if (!updated) return
+
+    const { raid: deployingRaid, transition } = tickPhase(state.value.raid, 'DEPLOYING', rng)
+    if (!transition) return
+
+    state.value = {
+      ...state.value,
+      signal: updated,
+      raid: deployingRaid,
+      log: [
+        ...state.value.log,
+        {
+          id: `phase_${transition.from}_to_${transition.to}`,
+          tick: state.value.tick,
+          timestamp: actionNow,
+          text: transition.eventText,
+          phase: transition.to,
+        },
+      ],
+    }
+    persistSave(state.value, rng.getSeed(), lastTickAt.value)
+  }
+
   function callExtract() {
     if (state.value.raid.phase !== 'RAIDING') return
     const updated = spendSignal(computeSignal(state.value.signal, Date.now()), 'CALL_EXTRACT')
@@ -170,6 +201,20 @@ export const useGameStore = defineStore('game', () => {
       signal: updated,
       raid: { ...state.value.raid, forceExtract: true },
     }
+    persistSave(state.value, rng.getSeed(), lastTickAt.value)
+  }
+
+  function applyHealingItem(itemId: string) {
+    const actionNow = Date.now()
+    const healingUse = consumeHealingItem(state.value, itemId, actionNow)
+    if (!healingUse) return
+
+    const log = appendLogEntries(state.value.log, [healingUse.event])
+    state.value = {
+      ...healingUse.state,
+      log,
+    }
+    newEvents.value = [healingUse.event]
     persistSave(state.value, rng.getSeed(), lastTickAt.value)
   }
 
@@ -224,7 +269,9 @@ export const useGameStore = defineStore('game', () => {
     awaySummary,
     encourage,
     scold,
+    readyUp,
     callExtract,
+    applyHealingItem,
     sellHomeStashItem,
     resetSave,
     dismissAwaySummary,

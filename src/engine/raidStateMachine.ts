@@ -7,17 +7,23 @@
  * when a transition occurs, or null if no transition happened this tick.
  */
 
-import type { Phase, RaidState, TimeOfDay, ZoneEntry } from './types.js'
+import type { DangerLevel, Phase, RaidState, TimeOfDay, ZoneEntry } from './types.js'
 import type { RNG } from './rng.js'
 import zonesData from '../content/zones.json'
 
 const zones = zonesData as ZoneEntry[]
 
-const TIME_OF_DAY_TABLE: Array<{ id: TimeOfDay; weight: number }> = [
-  { id: 'Day',        weight: 80 },
-  { id: 'Night',      weight: 30 },
-  { id: 'Stella Red', weight: 10 },
+const TIME_OF_DAY_TABLE: Array<{ id: TimeOfDay; weight: number; dangerLevel: DangerLevel }> = [
+  { id: 'Day',        weight: 80, dangerLevel: 'Low' },
+  { id: 'Night',      weight: 30, dangerLevel: 'Medium' },
+  { id: 'Stella Red', weight: 10, dangerLevel: 'High' },
 ]
+
+function enterDeploying(raid: RaidState, rng?: RNG): RaidState {
+  const zone = rng ? rng.weightedPick(zones).id : zones[0].id
+  const timeOfDay = rng ? rng.weightedPick(TIME_OF_DAY_TABLE).id : 'Day'
+  return { ...raid, zone, timeOfDay }
+}
 
 // Ticks each phase lasts before auto-transitioning (1 tick = 30s)
 export const PHASE_DURATIONS: Record<Phase, number> = {
@@ -60,6 +66,9 @@ export function tickPhase(
     if (forced === 'DOWNED') {
       forcedRaid = { ...forcedRaid, healingItems: [] }
     }
+    if (forced === 'DEPLOYING') {
+      forcedRaid = enterDeploying(forcedRaid, rng)
+    }
     return { raid: forcedRaid, transition }
   }
 
@@ -91,9 +100,7 @@ export function tickPhase(
 
   // Pick a zone and time of day when deploying
   if (next === 'DEPLOYING') {
-    const zone = rng ? rng.weightedPick(zones).id : zones[0].id
-    const timeOfDay = rng ? rng.weightedPick(TIME_OF_DAY_TABLE).id : 'Day'
-    updatedRaid = { ...updatedRaid, zone, timeOfDay }
+    updatedRaid = enterDeploying(updatedRaid, rng)
   }
 
   return { raid: updatedRaid, transition }

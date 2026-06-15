@@ -62,17 +62,17 @@ const showZoneStrip = computed(
         <CommsLog />
       </section>
 
-      <section v-if="activeMobileTab === 'stash'" class="app__mobile-panel app__mobile-panel--fill">
-        <HomeStash />
+      <section v-if="activeMobileTab === 'raid'" class="app__mobile-panel app__mobile-panel--fill">
+        <BackpackPanel />
       </section>
 
-      <section v-if="activeMobileTab === 'raider'" class="app__mobile-panel">
+      <section v-if="activeMobileTab === 'raider'" class="app__mobile-panel app__mobile-panel--fill">
         <RaiderCard />
         <HandlerActions />
       </section>
 
-      <section v-if="activeMobileTab === 'raid'" class="app__mobile-panel app__mobile-panel--fill">
-        <BackpackPanel />
+      <section v-if="activeMobileTab === 'stash'" class="app__mobile-panel app__mobile-panel--fill">
+        <HomeStash />
       </section>
     </main>
 
