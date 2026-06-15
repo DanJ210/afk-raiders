@@ -4,6 +4,10 @@ import { tickPhase, PHASE_DURATIONS } from '../../src/engine/raidStateMachine'
 import { createRNG } from '../../src/engine/rng'
 
 describe('raidStateMachine', () => {
+  it('uses a 30 minute raiding timer at 30 second tick cadence', () => {
+    expect(PHASE_DURATIONS.RAIDING).toBe(60)
+  })
+
   it('assigns zone and time of day when HUB naturally expires into DEPLOYING', () => {
     const initial = createInitialState(0)
     const result = tickPhase(

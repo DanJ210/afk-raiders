@@ -3,6 +3,7 @@ import { createInitialState } from '../../src/engine/initialState'
 import { processTick } from '../../src/engine/tick'
 import { createRNG } from '../../src/engine/rng'
 import { TICK_INTERVAL_MS } from '../../src/engine/catchUp'
+import { PHASE_DURATIONS } from '../../src/engine/raidStateMachine'
 import type { GameState } from '../../src/engine/types'
 
 type RaidOutcome = 'EXTRACTED' | 'DOWNED'
@@ -21,7 +22,7 @@ function createRaidStart(): GameState {
       zone: 'damp_battlegrounds',
       timeOfDay: 'Day',
       phase: 'RAIDING',
-      phaseTicksRemaining: 120,
+      phaseTicksRemaining: PHASE_DURATIONS.RAIDING,
     },
   }
 }
@@ -56,4 +57,3 @@ describe('raid balance', () => {
     expect(averageRaidingTicks).toBeGreaterThanOrEqual(20)
   })
 })
-

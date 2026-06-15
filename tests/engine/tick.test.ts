@@ -179,7 +179,7 @@ describe('deterministic snapshot', () => {
     expect(downedState.raider.deathCount).toBe(deathsBefore + 1)
   })
 
-  it('forces extraction when the raid timer expires', () => {
+  it('downs the raider when the raid timer expires before extraction', () => {
     const rng = createRNG(FIXED_SEED)
     const initial = createInitialState(0)
     const state = {
@@ -193,8 +193,8 @@ describe('deterministic snapshot', () => {
     }
 
     const result = processTick(state, rng, 0)
-    // The expiring raid timer must push the raider into EXTRACTING (never straight home)
-    expect(result.events.some(e => e.id === 'phase_RAIDING_to_EXTRACTING')).toBe(true)
+    expect(result.state.raid.phase).toBe('DOWNED')
+    expect(result.events.some(e => e.id === 'phase_RAIDING_to_DOWNED')).toBe(true)
   })
 
   it('stacks extracted quantities into existing stash entries', () => {

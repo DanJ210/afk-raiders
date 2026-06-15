@@ -73,11 +73,15 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
   let currentState: GameState = { ...state, raid: nextRaid }
 
   if (transition) {
+    const transitionText =
+      transition.from === 'RAIDING' && transition.to === 'DOWNED'
+        ? 'Raid timer hit zero. Zone nuke confirmed. Raider was still in the blast radius.'
+        : transition.eventText
     emitted.push({
       id: `phase_${transition.from}_to_${transition.to}`,
       tick: state.tick,
       timestamp: now,
-      text: transition.eventText,
+      text: transitionText,
       phase: transition.to,
     })
 
