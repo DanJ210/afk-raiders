@@ -191,12 +191,11 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
           damageMultiplier: template.effects?.robotDamageMultiplier,
         })
         if (robotResult) {
-          const defeatMatch = robotResult.event.id.match(/^robot_(.+)_defeated$/)
           currentState = robotResult.state
-          if (defeatMatch) {
+          if (robotResult.event.id.endsWith('_defeated')) {
             currentState = {
               ...currentState,
-              stats: recordRobotDefeat(currentState.stats, defeatMatch[1]),
+              stats: recordRobotDefeat(currentState.stats, robotId),
             }
           }
           emitted.push(robotResult.event)
