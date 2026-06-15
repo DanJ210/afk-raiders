@@ -22,11 +22,11 @@ import { createInitialState, SAVE_VERSION } from '../engine/initialState.js'
 import { tickPhase } from '../engine/raidStateMachine.js'
 import { sellItemFromHomeStash, sellStashOverflow } from '../engine/homeStash.js'
 import { consumeHealingItem } from '../engine/eventResolver.js'
+import { appendLogEntries } from '../engine/log.js'
 import type { GameState, LogEvent } from '../engine/types.js'
 import type { AwaySummary } from '../engine/catchUp.js'
 
 const STORAGE_KEY = 'afk-raiders-save'
-const MAX_LOG_SIZE = 200
 
 interface SaveData {
   state: GameState
@@ -209,7 +209,7 @@ export const useGameStore = defineStore('game', () => {
     const healingUse = consumeHealingItem(state.value, itemId, actionNow)
     if (!healingUse) return
 
-    const log = [...state.value.log, healingUse.event].slice(-MAX_LOG_SIZE)
+    const log = appendLogEntries(state.value.log, [healingUse.event])
     state.value = {
       ...healingUse.state,
       log,

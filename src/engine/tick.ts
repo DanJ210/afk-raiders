@@ -21,9 +21,7 @@ import { runGreedCheck } from './greedCheck.js'
 import { applyScoldGreedReduction } from './signal.js'
 import { resolveEvent, resolveFlavorKey, applyEffects, resolveHealingItemFind, resolveRobotEncounter, events as allEvents } from './eventResolver.js'
 import { transferBackpackToHomeStash, HOME_STASH_ITEM_LIMIT } from './homeStash.js'
-
-/** Maximum log entries to keep in memory (avoids unbounded growth) */
-const MAX_LOG_SIZE = 200
+import { appendLogEntries } from './log.js'
 
 /**
  * Apply successful-extraction bookkeeping: transfer loot home, heal up, count
@@ -283,7 +281,7 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
   // ------------------------------------------------------------------
   // 5. Finalize: increment tick, append events to log
   // ------------------------------------------------------------------
-  const newLog = [...currentState.log, ...emitted].slice(-MAX_LOG_SIZE)
+  const newLog = appendLogEntries(currentState.log, emitted)
 
   return {
     state: {
