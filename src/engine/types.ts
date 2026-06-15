@@ -133,6 +133,22 @@ export interface RaiderStats {
   extractCount: number
 }
 
+export interface OutcomeContextStats {
+  total: number
+  byZone: Record<string, number>
+  byZoneAndTime: Record<string, number>
+}
+
+export interface RaiderLifetimeStats {
+  extracts: OutcomeContextStats
+  deaths: OutcomeContextStats
+  robotDefeats: Record<string, number>
+  healingItemsUsed: {
+    total: number
+    byItem: Record<string, number>
+  }
+}
+
 export interface SignalState {
   current: number
   cap: number
@@ -157,6 +173,7 @@ export interface GameState {
   homeStash: BackpackItem[]
   /** Coin stash from auto-sold overflow loot — value is never deleted, only converted */
   coins: number
+  stats: RaiderLifetimeStats
   // Set by CALL_EXTRACT so the tick driver knows to nudge the next greed check
   pendingEncourage: boolean
   pendingScold: boolean
