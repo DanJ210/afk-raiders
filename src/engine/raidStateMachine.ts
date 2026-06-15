@@ -7,13 +7,13 @@
  * when a transition occurs, or null if no transition happened this tick.
  */
 
-import type { Phase, RaidState, TimeOfDay, ZoneEntry } from './types.js'
+import type { DangerLevel, Phase, RaidState, TimeOfDay, ZoneEntry } from './types.js'
 import type { RNG } from './rng.js'
 import zonesData from '../content/zones.json'
 
 const zones = zonesData as ZoneEntry[]
 
-const TIME_OF_DAY_TABLE: Array<{ id: TimeOfDay; weight: number; dangerLevel: string }> = [
+const TIME_OF_DAY_TABLE: Array<{ id: TimeOfDay; weight: number; dangerLevel: DangerLevel }> = [
   { id: 'Day',        weight: 80, dangerLevel: 'Low' },
   { id: 'Night',      weight: 30, dangerLevel: 'Medium' },
   { id: 'Stella Red', weight: 10, dangerLevel: 'High' },

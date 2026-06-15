@@ -13,6 +13,7 @@ export interface EventTemplate extends ContentEntry {
   text: string
   requires?: {
     phase?: Phase | Phase[]
+    timeOfDay?: TimeOfDay | TimeOfDay[]
     minGreed?: number
     maxGreed?: number
     minHp?: number
@@ -74,6 +75,7 @@ export interface ZoneEntry extends ContentEntry {
 }
 
 export type TimeOfDay = 'Day' | 'Night' | 'Stella Red'
+export type DangerLevel = 'Low' | 'Medium' | 'High'
 
 export interface FlavorTable {
   [tableKey: string]: Array<{ id: string; weight: number; text: string }>

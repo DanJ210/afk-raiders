@@ -9,6 +9,7 @@
 import { describe, it, expect } from 'vitest'
 import { events, flavor, healingItems, loot, robots } from '../../src/engine/eventResolver'
 import baseLootData from '../../src/content/loot.json'
+import type { Phase, TimeOfDay } from '../../src/engine/types'
 
 const baseLoot = baseLootData as typeof loot
 
@@ -22,6 +23,8 @@ const DEADLINESS_RANK = {
 
 // Known non-table slot names handled directly in fillSlots()
 const BUILT_IN_SLOTS = new Set(['mundane_item', 'water_item', 'healing_item', 'count'])
+const VALID_PHASES = new Set<Phase>(['HUB', 'DEPLOYING', 'RAIDING', 'EXTRACTING', 'DOWNED'])
+const VALID_TIMES_OF_DAY = new Set<TimeOfDay>(['Day', 'Night', 'Stella Red'])
 
 // Robot flavor slots: {robot_flavor_<robotId>}
 function isRobotFlavorSlot(slot: string): boolean {
@@ -66,6 +69,24 @@ describe('content validation', () => {
       const ids = events.map(e => e.id)
       const unique = new Set(ids)
       expect(unique.size).toBe(ids.length)
+    })
+
+    it('all phase and time-of-day requirements are valid', () => {
+      for (const event of events) {
+        const phases = event.requires?.phase === undefined
+          ? []
+          : Array.isArray(event.requires.phase) ? event.requires.phase : [event.requires.phase]
+        const timesOfDay = event.requires?.timeOfDay === undefined
+          ? []
+          : Array.isArray(event.requires.timeOfDay) ? event.requires.timeOfDay : [event.requires.timeOfDay]
+
+        for (const phase of phases) {
+          expect(VALID_PHASES.has(phase), `event "${event.id}" has invalid phase "${phase}"`).toBe(true)
+        }
+        for (const timeOfDay of timesOfDay) {
+          expect(VALID_TIMES_OF_DAY.has(timeOfDay), `event "${event.id}" has invalid timeOfDay "${timeOfDay}"`).toBe(true)
+        }
+      }
     })
 
     it('all {slot} placeholders resolve to a known source', () => {
