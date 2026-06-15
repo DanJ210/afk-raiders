@@ -247,4 +247,33 @@ describe('deterministic snapshot', () => {
       },
     ])
   })
+
+  it('does not auto-use bandages during ticks', () => {
+    const rng = createRNG(FIXED_SEED)
+    const initial = createInitialState(0)
+    const state = {
+      ...initial,
+      raider: { ...initial.raider, hp: 50 },
+      raid: {
+        ...initial.raid,
+        phase: 'RAIDING' as const,
+        phaseTicksRemaining: 120,
+        healingItems: [
+          {
+            itemId: 'bandage_purple',
+            name: 'Purple Bandage',
+            healAmount: 50,
+            moodGain: 4,
+            rarity: 4,
+            quantity: 1,
+          },
+        ],
+      },
+    }
+
+    const result = processTick(state, rng, 0)
+    expect(result.state.raider.hp).toBeLessThanOrEqual(50)
+    expect(result.state.raid.healingItems).toHaveLength(1)
+    expect(result.events.some(e => e.id === 'healing_bandage_purple_used')).toBe(false)
+  })
 })
