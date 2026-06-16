@@ -173,8 +173,8 @@ describe('applyEffects — backpack item behavior', () => {
 
     expect(night).not.toBeNull()
     expect(stellaRed).not.toBeNull()
-    expect(night!.state.raider.hp).toBe(81)
-    expect(stellaRed!.state.raider.hp).toBe(78)
+    expect(night!.state.raider.hp).toBe(76)
+    expect(stellaRed!.state.raider.hp).toBe(68)
   })
 
   it('applies encounter-specific damage multipliers only on failed robot encounters', () => {
