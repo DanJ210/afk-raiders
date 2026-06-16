@@ -25,8 +25,8 @@ import { appendLogEntries } from './log.js'
 import { recordOutcome, recordRobotDefeat } from './stats.js'
 import { advanceShieldRecharge } from './shields.js'
 
-const LOOT_BONUS_HEALING_ITEM_CHANCE = 1 // 20% chance to find a healing item on any loot event, independent of normal loot rolls
-const LOOT_BONUS_SHIELD_RECHARGER_CHANCE = 1 // 15% chance to find a shield recharger on any loot event, independent of normal loot rolls
+const LOOT_BONUS_HEALING_ITEM_CHANCE = 0.2 // 20% chance to find a healing item on any loot event, independent of normal loot rolls
+const LOOT_BONUS_SHIELD_RECHARGER_CHANCE = 0.15 // 15% chance to find a shield recharger on any loot event, independent of normal loot rolls
 
 /**
  * Apply successful-extraction bookkeeping: transfer loot home, heal up, count
