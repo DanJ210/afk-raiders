@@ -422,7 +422,7 @@ export function consumeShieldRecharger(
 
   const eventText = start.completedImmediately
     ? `Used ${item.name}. Restored ${start.startedCharge} shield charge instantly. Confidence field humming again.`
-    : `Used ${item.name}. Shield recharge started and will fill over ${start.raid.activeShieldRecharge?.totalTicks ?? Math.max(1, Math.floor(item.applyTicks ?? 5))} ticks. The slider is doing tiny heroic work.`
+    : `Used ${item.name}. Shield recharge started and will fill over ${start.raid.activeShieldRecharge!.totalTicks} ticks. The slider is doing tiny heroic work.`
 
   return {
     state: {
