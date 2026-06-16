@@ -36,6 +36,18 @@
     }
   },
   {
+    "id": "loot_shield_recharger",
+    "weight": 12,
+    "text": "Found a shield recharger in a crate labeled ELECTRICAL MAYBE. That's either useful or a personality test.",
+    "requires": {
+      "phase": "RAIDING"
+    },
+    "effects": {
+      "shieldRecharger": true,
+      "mood": 1
+    }
+  },
+  {
     "id": "robot_encounter_anxietick",
     "weight": 28,
     "text": "An Anxietick {robot_flavor_anxietick}. Hid behind a crate. It made a thoughtful little lunge at ankle height.",

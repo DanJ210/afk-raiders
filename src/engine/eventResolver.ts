@@ -11,7 +11,7 @@
  *   6. {count}         → random plausible water-bottle count (for flavor)
  */
 
-import type { EventTemplate, GameState, HealingItem, HealingItemStack, LogEvent, LootItem, Phase, RobotEntry, RobotLootItem } from './types.js'
+import type { EventTemplate, GameState, HealingItem, HealingItemStack, LogEvent, LootItem, Phase, RobotEntry, RobotLootItem, ShieldRechargerItem } from './types.js'
 import type { RNG } from './rng.js'
 import hubEventsData from '../content/hub_events.json'
 import deploymentEventsData from '../content/deployment_events.json'
@@ -20,9 +20,11 @@ import extractionEventsData from '../content/extraction_events.json'
 import downedEventsData from '../content/downed_events.json'
 import lootData from '../content/loot.json'
 import healingItemsData from '../content/healing_items.json'
+import shieldRechargersData from '../content/shield_rechargers.json'
 import robotsData from '../content/robots.json'
 import flavorData from '../content/flavor.json'
 import { getTimeOfDayProfile, rarityWeight, type TimeOfDayProfile } from './timeProfiles.js'
+import { applyShieldedDamage, startShieldRecharge } from './shields.js'
 
 // One events file per phase: HUB, DEPLOYING, RAIDING, EXTRACTING, DOWNED
 const events = [
@@ -34,6 +36,7 @@ const events = [
 ] as EventTemplate[]
 const baseLoot = lootData as LootItem[]
 const healingItems = healingItemsData as HealingItem[]
+const shieldRechargers = shieldRechargersData as ShieldRechargerItem[]
 const robots = robotsData as RobotEntry[]
 const flavor = flavorData as Record<string, Array<{ id: string; weight: number; text: string }>>
 
@@ -214,9 +217,15 @@ function pickLootItemForValue(targetValue: number, rng: RNG, profile: TimeOfDayP
 
 function addBackpackItem(
   raid: GameState['raid'],
-  item: LootItem,
+  item: LootItem | ShieldRechargerItem,
 ): GameState['raid'] {
   const existing = raid.backpack.find(entry => entry.itemId === item.id)
+  const extraFields = 'chargeAmount' in item
+    ? {
+        kind: 'shield_recharger' as const,
+        shieldChargeAmount: item.chargeAmount,
+      }
+    : {}
   const backpack = existing
     ? raid.backpack.map(entry => (
         entry.itemId === item.id
@@ -230,12 +239,37 @@ function addBackpackItem(
         rarity: item.rarity,
         flavor: item.flavor,
         quantity: 1,
+        ...extraFields,
       }]
 
   return {
     ...raid,
     backpack,
     backpackValue: raid.backpackValue + item.value,
+  }
+}
+
+function removeBackpackItem(
+  raid: GameState['raid'],
+  itemId: string,
+): GameState['raid'] {
+  const current = raid.backpack.find(entry => entry.itemId === itemId)
+  if (!current) return raid
+
+  const backpack = current.quantity <= 1
+    ? raid.backpack.filter(entry => entry.itemId !== itemId)
+    : raid.backpack.map(entry => (
+        entry.itemId === itemId
+          ? { ...entry, quantity: entry.quantity - 1 }
+          : entry
+      ))
+
+  return {
+    ...raid,
+    backpack,
+    hiddenPocket: current.quantity <= 1 && raid.hiddenPocket?.itemId === itemId
+      ? null
+      : raid.hiddenPocket,
   }
 }
 
@@ -283,6 +317,11 @@ export interface HealingItemResult {
   event: LogEvent
 }
 
+export interface BackpackConsumableResult {
+  state: GameState
+  event: LogEvent
+}
+
 /** Finds one bandage for this raid only. It is not backpack loot and never extracts home. */
 export function resolveHealingItemFind(
   state: GameState,
@@ -297,6 +336,24 @@ export function resolveHealingItemFind(
       tick: state.tick,
       timestamp: now,
       text: `Found ${item.name}. Tucked it into the current-raid med pocket.`,
+      phase: state.raid.phase,
+    },
+  }
+}
+
+export function resolveShieldRechargerFind(
+  state: GameState,
+  rng: RNG,
+  now: number,
+): BackpackConsumableResult {
+  const item = rng.weightedPick(shieldRechargers)
+  return {
+    state: { ...state, raid: addBackpackItem(state.raid, item) },
+    event: {
+      id: `shield_recharger_${item.id}_found`,
+      tick: state.tick,
+      timestamp: now,
+      text: `Found ${item.name}. Into the backpack it goes for a future defensive emergency.`,
       phase: state.raid.phase,
     },
   }
@@ -336,6 +393,53 @@ export function consumeHealingItem(
   }
 }
 
+export function consumeShieldRecharger(
+  state: GameState,
+  itemId: string,
+  now: number,
+): BackpackConsumableResult | null {
+  if (state.raid.phase === 'HUB' || state.raid.phase === 'DOWNED') return null
+  if (!state.raid.shield || state.raid.shield.durability <= 0) return null
+  if (state.raid.shield.charge >= state.raid.shield.maxCharge) return null
+  if (state.raid.activeShieldRecharge) return null
+
+  const item = state.raid.backpack.find(entry => entry.itemId === itemId)
+  if (!item || item.kind !== 'shield_recharger' || !item.shieldChargeAmount) return null
+
+  const start = startShieldRecharge(state.raid, {
+    itemId: item.itemId,
+    name: item.name,
+    chargeAmount: item.shieldChargeAmount,
+    applyTicks: item.applyTicks,
+  })
+  if (start.startedCharge <= 0) return null
+
+  const baseRaid = {
+    ...removeBackpackItem(start.raid, item.itemId),
+    backpackValue: Math.max(0, state.raid.backpackValue - item.value),
+  }
+
+  const eventText = start.completedImmediately
+    ? `Used ${item.name}. Restored ${start.startedCharge} shield charge instantly. Confidence field humming again.`
+    : `Used ${item.name}. Shield recharge started and will fill over ${Math.max(1, Math.floor(item.applyTicks ?? 5))} ticks. The slider is doing tiny heroic work.`
+
+  return {
+    state: {
+      ...state,
+      raid: baseRaid,
+    },
+    event: {
+      id: start.completedImmediately
+        ? `shield_recharger_${item.itemId}_used`
+        : `shield_recharger_${item.itemId}_started`,
+      tick: state.tick,
+      timestamp: now,
+      text: eventText,
+      phase: state.raid.phase,
+    },
+  }
+}
+
 function pickRobotLoot(robot: RobotEntry, rng: RNG): LootItem {
   const item = rng.weightedPick(robot.lootTable)
   return toLootItem(item, robot)
@@ -347,16 +451,37 @@ function canRobotEncounterBeLethal(state: GameState, robot: RobotEntry): boolean
   return state.raider.hp / state.raider.maxHp <= ROBOT_LETHAL_HP_RATIO
 }
 
-function applyRobotDamage(state: GameState, robot: RobotEntry, rawDamage: number): number {
-  if (state.raider.hp <= 0) return 0
-  if (state.raider.maxHp <= 0) return Math.max(0, state.raider.hp - rawDamage)
+function applyRobotDamage(
+  state: GameState,
+  robot: RobotEntry,
+  rawDamage: number,
+): { raider: GameState['raider']; raid: GameState['raid']; damage: number } {
+  if (state.raider.hp <= 0) {
+    return { raider: state.raider, raid: state.raid, damage: 0 }
+  }
+
+  const shielded = applyShieldedDamage(state.raider, state.raid, rawDamage)
+  if (state.raider.maxHp <= 0) {
+    return {
+      raider: shielded.raider,
+      raid: shielded.raid,
+      damage: state.raider.hp - shielded.raider.hp,
+    }
+  }
+
+  let hp = shielded.raider.hp
   if (!canRobotEncounterBeLethal(state, robot)) {
     const nonlethalFloor = state.raider.hp / state.raider.maxHp > ROBOT_LETHAL_HP_RATIO
       ? Math.ceil(state.raider.maxHp * ROBOT_NONLETHAL_MIN_HP_RATIO)
       : 1
-    return Math.max(nonlethalFloor, state.raider.hp - rawDamage)
+    hp = Math.max(nonlethalFloor, hp)
   }
-  return Math.max(0, state.raider.hp - rawDamage)
+
+  return {
+    raider: { ...shielded.raider, hp },
+    raid: shielded.raid,
+    damage: state.raider.hp - hp,
+  }
 }
 
 export interface RobotEncounterResult {
@@ -398,21 +523,18 @@ export function resolveRobotEncounter(
   const profile = getTimeOfDayProfile(state.raid.timeOfDay)
   const damageMultiplier = Math.max(0, (opts.damageMultiplier ?? 1) * profile.robotFailureDamageMultiplier)
   const rawDamage = Math.ceil(robot.menace * ROBOT_DAMAGE_PER_MENACE * damageMultiplier)
-  const hp = applyRobotDamage(state, robot, rawDamage)
-  const damage = state.raider.hp - hp
+  const damageResult = applyRobotDamage(state, robot, rawDamage)
   return {
     state: {
       ...state,
-      raider: {
-        ...state.raider,
-        hp,
-      },
+      raider: damageResult.raider,
+      raid: damageResult.raid,
     },
     event: {
       id: `robot_${robot.id}_escaped`,
       tick: state.tick,
       timestamp: now,
-      text: `${robot.name} won that exchange. Took ${damage} damage and ran away with the tactical urgency of someone who just learned a lesson.`,
+      text: `${robot.name} won that exchange. Took ${damageResult.damage} damage and ran away with the tactical urgency of someone who just learned a lesson.`,
       phase: state.raid.phase,
     },
   }
@@ -480,7 +602,13 @@ export function applyEffects(
     const delta = typeof effects.hp === 'string'
       ? parseDice(effects.hp, rng)
       : effects.hp
-    raider = { ...raider, hp: Math.max(0, Math.min(raider.maxHp, raider.hp + delta)) }
+    if (delta < 0) {
+      const shielded = applyShieldedDamage(raider, raid, Math.abs(delta))
+      raider = shielded.raider
+      raid = shielded.raid
+    } else {
+      raider = { ...raider, hp: Math.max(0, Math.min(raider.maxHp, raider.hp + delta)) }
+    }
   }
 
   if (effects.greedLevel !== undefined) {
@@ -517,4 +645,4 @@ export function resolveFlavorKey(key: string, rng: RNG): string {
 }
 
 /** Exported for content validation tests */
-export { events, flavor, healingItems, loot, robots }
+export { events, flavor, healingItems, loot, robots, shieldRechargers }

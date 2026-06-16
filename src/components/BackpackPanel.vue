@@ -3,17 +3,21 @@ import { computed } from 'vue'
 import { ref } from 'vue'
 import { useGameStore } from '../stores/gameStore'
 import { rarityLabel, rarityBarClass } from '../utils/rarity'
-import type { HealingItemStack } from '../engine/types'
+import type { BackpackItem, HealingItemStack } from '../engine/types'
 
 const store = useGameStore()
 const raid = computed(() => store.raid)
 const hiddenPocket = computed(() => raid.value.hiddenPocket)
+const shield = computed(() => raid.value.shield)
 const selectedBackpackItemId = ref<string | null>(null)
 
 const backpackItems = computed(() =>
   [...raid.value.backpack]
     .filter(item => item.itemId !== hiddenPocket.value?.itemId)
     .sort((a, b) => {
+    if ((b.kind === 'shield_recharger') !== (a.kind === 'shield_recharger')) {
+      return b.kind === 'shield_recharger' ? 1 : -1
+    }
     if (b.rarity !== a.rarity) return b.rarity - a.rarity
     if (b.value !== a.value) return b.value - a.value
     return a.name.localeCompare(b.name)
@@ -39,6 +43,10 @@ function moodGain(item: HealingItemStack): number {
   return item.moodGain ?? Math.max(1, Math.min(4, item.rarity))
 }
 
+function isShieldRecharger(item: BackpackItem | null): item is BackpackItem & { kind: 'shield_recharger'; shieldChargeAmount: number } {
+  return item?.kind === 'shield_recharger' && typeof item.shieldChargeAmount === 'number'
+}
+
 const greedClass = computed(() => {
   const g = raid.value.greedLevel
   if (g < 40) return 'greed--low'
@@ -55,6 +63,15 @@ const canApplyHealing = computed(() =>
 
 const canManageHiddenPocket = computed(() =>
   raid.value.phase !== 'HUB' && raid.value.phase !== 'DOWNED',
+)
+
+const canApplyShieldCharge = computed(() =>
+  raid.value.phase !== 'HUB' &&
+  raid.value.phase !== 'DOWNED' &&
+  raid.value.activeShieldRecharge === null &&
+  shield.value !== null &&
+  shield.value.durability > 0 &&
+  shield.value.charge < shield.value.maxCharge,
 )
 
 function isPocketed(itemId: string): boolean {
@@ -76,6 +93,10 @@ const canSaveToPocket = computed(() =>
   canManageHiddenPocket.value,
 )
 
+const canApplySelectedShieldRecharger = computed(() =>
+  isShieldRecharger(selectedBackpackItem.value) && canApplyShieldCharge.value,
+)
+
 function openBackpackItemDetails(itemId: string) {
   selectedBackpackItemId.value = itemId
 }
@@ -93,6 +114,12 @@ function saveSelectedItemToPocket() {
 function removePocketItem() {
   if (!hiddenPocket.value || !canManageHiddenPocket.value) return
   store.clearHiddenPocketItem()
+}
+
+function applySelectedShieldRecharger() {
+  if (!isShieldRecharger(selectedBackpackItem.value) || !canApplyShieldCharge.value) return
+  store.applyShieldRecharger(selectedBackpackItem.value.itemId)
+  closeBackpackItemDetails()
 }
 </script>
 
@@ -188,6 +215,7 @@ function removePocketItem() {
         </div>
         <div class="backpack-panel__item-sub">
           <span>Value {{ item.value }}</span>
+          <span v-if="item.kind === 'shield_recharger'">+{{ item.shieldChargeAmount }} Shield</span>
           <span v-if="item.quantity > 1">x{{ item.quantity }}</span>
         </div>
         <p v-if="item.flavor" class="backpack-panel__item-flavor">{{ item.flavor }}</p>
@@ -222,9 +250,21 @@ function removePocketItem() {
           {{ selectedBackpackItem.flavor || 'No description available.' }}
         </p>
 
+        <p v-if="selectedBackpackItem.kind === 'shield_recharger'" class="stash-dialog__description stash-dialog__description--utility">
+          Restores {{ selectedBackpackItem.shieldChargeAmount }} shield charge when applied from the backpack.
+        </p>
+
         <div class="stash-dialog__actions">
           <button type="button" class="stash-dialog__button stash-dialog__button--secondary" @click="closeBackpackItemDetails">
             Cancel
+          </button>
+          <button
+            v-if="canApplySelectedShieldRecharger"
+            type="button"
+            class="stash-dialog__button stash-dialog__button--primary"
+            @click="applySelectedShieldRecharger"
+          >
+            Apply Shield Recharger
           </button>
           <button
             v-if="hiddenPocket && hiddenPocket.itemId === selectedBackpackItem.itemId"
@@ -494,6 +534,10 @@ function removePocketItem() {
   font-size: 0.72rem;
   color: var(--color-muted);
   font-family: var(--font-mono);
+}
+
+.stash-dialog__description--utility {
+  color: var(--color-accent);
 }
 
 .backpack-panel__item-sub {

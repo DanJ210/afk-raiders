@@ -10,6 +10,7 @@
 import type { DangerLevel, Phase, RaidState, TimeOfDay, ZoneEntry } from './types.js'
 import type { RNG } from './rng.js'
 import zonesData from '../content/zones.json'
+import { createStarterShieldState } from './shields.js'
 
 const zones = zonesData as ZoneEntry[]
 
@@ -60,11 +61,14 @@ export function tickPhase(
     }
     // Reset raid state when forced back to HUB (mirror of the natural-expiry path)
     if (forced === 'HUB') {
-      forcedRaid = { ...forcedRaid, backpack: [], hiddenPocket: null, healingItems: [], backpackValue: 0, greedLevel: 0, forceExtract: false, zone: null, timeOfDay: null }
+      forcedRaid = { ...forcedRaid, activeShieldRecharge: null, shield: createStarterShieldState(), backpack: [], hiddenPocket: null, healingItems: [], backpackValue: 0, greedLevel: 0, forceExtract: false, zone: null, timeOfDay: null }
     }
     // Healing items are lost on death — clear immediately so they aren't visible during DOWNED phase
     if (forced === 'DOWNED') {
-      forcedRaid = { ...forcedRaid, healingItems: [] }
+      forcedRaid = { ...forcedRaid, activeShieldRecharge: null, healingItems: [] }
+    }
+    if (forced === 'EXTRACTING') {
+      forcedRaid = { ...forcedRaid, activeShieldRecharge: null }
     }
     if (forced === 'DEPLOYING') {
       forcedRaid = enterDeploying(forcedRaid, rng)
@@ -95,12 +99,16 @@ export function tickPhase(
 
   // Reset raid state when returning to HUB
   if (next === 'HUB') {
-    updatedRaid = { ...updatedRaid, backpack: [], hiddenPocket: null, healingItems: [], backpackValue: 0, greedLevel: 0, forceExtract: false, zone: null, timeOfDay: null }
+    updatedRaid = { ...updatedRaid, activeShieldRecharge: null, shield: createStarterShieldState(), backpack: [], hiddenPocket: null, healingItems: [], backpackValue: 0, greedLevel: 0, forceExtract: false, zone: null, timeOfDay: null }
   }
 
   // Healing items are lost on death — clear on natural DOWNED transitions too.
   if (next === 'DOWNED') {
-    updatedRaid = { ...updatedRaid, healingItems: [] }
+    updatedRaid = { ...updatedRaid, activeShieldRecharge: null, healingItems: [] }
+  }
+
+  if (next === 'EXTRACTING') {
+    updatedRaid = { ...updatedRaid, activeShieldRecharge: null }
   }
 
   // Pick a zone and time of day when deploying

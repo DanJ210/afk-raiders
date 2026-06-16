@@ -4,10 +4,13 @@ import { useNow } from '@vueuse/core'
 import { useGameStore } from '../stores/gameStore'
 import { zoneName } from '../utils/zones'
 import { TICK_INTERVAL_MS } from '../engine/catchUp'
+import { hasActiveShield } from '../engine/shields'
 
 const store = useGameStore()
 const raider = computed(() => store.raider)
 const lifetimeStats = computed(() => store.state.stats)
+const shield = computed(() => store.raid.shield)
+const activeShieldRecharge = computed(() => store.raid.activeShieldRecharge)
 const currentZoneName = computed(() => zoneName(store.raid.zone))
 const showCurrentZone = computed(() => store.phase === 'RAIDING' && currentZoneName.value !== null)
 const showRaidTimer = computed(() => store.phase === 'RAIDING')
@@ -77,6 +80,33 @@ const hpClass = computed(() => {
   if (hpPercent.value > 60) return 'hp-bar--good'
   if (hpPercent.value > 30) return 'hp-bar--warning'
   return 'hp-bar--danger'
+})
+
+const shieldPercent = computed(() => {
+  if (!shield.value || shield.value.maxCharge <= 0) return 0
+  return Math.round((shield.value.charge / shield.value.maxCharge) * 100)
+})
+
+const shieldClass = computed(() => {
+  if (!shield.value || shield.value.durability <= 0) return 'shield-bar--broken'
+  if (shieldPercent.value > 60) return 'shield-bar--strong'
+  if (shieldPercent.value > 30) return 'shield-bar--warning'
+  return 'shield-bar--weak'
+})
+
+const shieldStatus = computed(() => {
+  if (!shield.value) return 'No Shield'
+  if (shield.value.durability <= 0) return 'Broken'
+  if (!hasActiveShield(shield.value)) return 'Depleted'
+  if (activeShieldRecharge.value) return 'Recharging'
+  return `${Math.round(shield.value.mitigation * 100)}% mitigation`
+})
+
+const shieldRechargeProgress = computed(() => {
+  const active = activeShieldRecharge.value
+  if (!active || active.totalTicks <= 0) return 0
+  const completedTicks = active.totalTicks - active.ticksRemaining
+  return Math.max(0, Math.min(100, Math.round((completedTicks / active.totalTicks) * 100)))
 })
 
 function prettyId(id: string): string {
@@ -150,6 +180,31 @@ function parseZoneTimeKey(key: string): { zoneId: string; timeOfDay: string } {
           <div class="hp-bar__fill" :class="hpClass" :style="{ width: hpPercent + '%' }" />
         </div>
         <span class="raider-card__stat-value">{{ raider.hp }}/{{ raider.maxHp }}</span>
+      </div>
+
+      <div v-if="shield" class="raider-card__stat raider-card__stat--shield">
+        <div
+          class="shield-bar"
+          role="progressbar"
+          aria-valuemin="0"
+          :aria-valuenow="shield.charge"
+          :aria-valuemax="shield.maxCharge"
+        >
+          <div class="shield-bar__fill" :class="shieldClass" :style="{ width: shieldPercent + '%' }" />
+        </div>
+        <span class="raider-card__stat-value">{{ shield.charge }}/{{ shield.maxCharge }}</span>
+        <span class="raider-card__stat-label">Shield</span>
+        <span class="raider-card__stat-value">{{ shieldStatus }}</span>
+        <span class="raider-card__stat-value">Durability {{ Math.round(shield.durability) }}%</span>
+        <div v-if="activeShieldRecharge" class="shield-recharge">
+          <div class="shield-recharge__header">
+            <span class="raider-card__stat-label">Recharge</span>
+            <span class="raider-card__stat-value">{{ activeShieldRecharge.name }} · {{ activeShieldRecharge.totalTicks - activeShieldRecharge.ticksRemaining }}/{{ activeShieldRecharge.totalTicks }} ticks</span>
+          </div>
+          <div class="shield-recharge__bar" role="progressbar" aria-valuemin="0" :aria-valuenow="shieldRechargeProgress" aria-valuemax="100">
+            <div class="shield-recharge__fill" :style="{ width: shieldRechargeProgress + '%' }" />
+          </div>
+        </div>
       </div>
 
       <div class="raider-card__stat">
@@ -317,6 +372,70 @@ function parseZoneTimeKey(key: string): { zoneId: string; timeOfDay: string } {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.raider-card__stat--shield {
+  flex-wrap: wrap;
+}
+
+.shield-bar {
+  flex: 1;
+  min-width: 120px;
+  height: 10px;
+  background: var(--color-border-subtle);
+  border-radius: 999px;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+}
+
+.shield-bar__fill {
+  height: 100%;
+  transition: width 0.2s ease;
+}
+
+.shield-bar--strong {
+  background: linear-gradient(90deg, #4b9ef0, #7b9ef0);
+}
+
+.shield-bar--warning {
+  background: linear-gradient(90deg, #4b9ef0, #f0c84b);
+}
+
+.shield-bar--weak {
+  background: linear-gradient(90deg, #4b9ef0, #f05a5a);
+}
+
+.shield-bar--broken {
+  background: linear-gradient(90deg, #44485f, #666);
+}
+
+.shield-recharge {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+}
+
+.shield-recharge__header {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.shield-recharge__bar {
+  height: 8px;
+  background: var(--color-border-subtle);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.shield-recharge__fill {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, #4b9ef0, #7b9ef0, #f0c84b);
+  transition: width 0.25s ease;
 }
 
 .raider-card__stat-label {
