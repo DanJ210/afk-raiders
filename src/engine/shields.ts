@@ -1,7 +1,7 @@
 import type { RaidState, RaiderStats, ShieldState } from './types.js'
 
 export const STARTER_SHIELD_ID = 'makeshift_confidence_shield'
-// AFK Raiders sees many more shield-draining hits per raid than ARC-style PvP,
+// AFK Raiders sees many more shield-draining hits per raid than typical PvP tuning,
 // so a full drain only costs 10 durability to keep starter shields from breaking too quickly.
 const FULL_SHIELD_DURABILITY_WEAR = 10
 
