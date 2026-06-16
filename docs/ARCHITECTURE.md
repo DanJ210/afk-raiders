@@ -27,6 +27,7 @@ afk-raiders/
 │   │   ├── timeProfiles.ts      # Day/Night/Stella Red risk/reward tuning
 │   │   ├── signal.ts            # Signal regen + spend rules
 │   │   ├── homeStash.ts         # Stash transfer and overflow auto-sell
+│   │   ├── stats.ts             # Lifetime stat aggregation helpers
 │   │   ├── log.ts               # Centralized log append/capping
 │   │   └── catchUp.ts           # Fast-forward elapsed ticks on app open
 │   ├── content/                 # The comedy lives here, as data
@@ -88,9 +89,14 @@ The stash has an enforced item cap (`HOME_STASH_ITEM_LIMIT`). Overflow items are
 `RaidState` also includes an optional manual `hiddenPocket` selection (the parody safe pocket). The UI (`BackpackPanel.vue`) explicitly sets/changes/clears this slot from current backpack items. On backpack-loss failures (DOWNED → HUB), the engine transfers exactly one unit of the selected pocket item into home stash before normal reset bookkeeping.
 
 ### 3. Signal as the only real input
-Signal regenerates (~1 per 10 min, capped at 5). Ready Up (2) starts DEPLOYING from HUB, Encourage/Scold (1 each) nudge hidden behavior weights, and Scold also reduces current greed before the next greed check; CALL EXTRACT (3) forces an extraction attempt. During RAIDING only one action may be queued at a time, so action buttons lock until the next tick applies the pending action.
+Signal regenerates (~1 per 10 min, capped at 5). Ready Up (2 Signal) starts DEPLOYING from HUB, Encourage/Scold (1 each) nudge hidden behavior weights, and Scold also reduces current greed before the next greed check; CALL EXTRACT (3 Signal) forces an extraction attempt. During RAIDING only one action may be queued at a time, so action buttons lock until the next tick applies the pending action.
 
-### 4. Phase timings and failure states
+### 4. Lifetime stat collection
+`GameState.stats` tracks long-lived outcomes: extraction/death totals and context (zone + zone/time), robot defeats, and healing item usage.
+
+Save migration in `gameStore.ts` backfills missing legacy stats from pre-existing `raider.extractCount` and `raider.deathCount` so historical totals remain consistent.
+
+### 5. Phase timings and failure states
 - Tick cadence remains 30 seconds.
 - `HUB`: 20 ticks (10 minutes)
 - `DEPLOYING`: 4 ticks (2 minutes)
@@ -100,8 +106,18 @@ Signal regenerates (~1 per 10 min, capped at 5). Ready Up (2) starts DEPLOYING f
 
 When RAIDING time expires without extraction, the next natural transition is DOWNED (zone nuke failure), not EXTRACTING.
 
-### 5. State updates are immutable-style
+### 6. State updates are immutable-style
 `processTick(state, rng)` returns `{ state: GameState, events: LogEvent[] }` without mutating its input. This keeps Pinia reactivity simple, enables snapshot tests, and makes catch-up a pure fold over ticks.
+
+### 7. Phase timings and timeout behavior
+- Tick cadence remains 30 seconds.
+- `HUB`: 20 ticks (10 minutes)
+- `DEPLOYING`: 4 ticks (2 minutes)
+- `RAIDING`: 60 ticks (30 minutes)
+- `EXTRACTING`: 4 ticks (~2 minutes)
+- `DOWNED`: 2 ticks
+
+If RAIDING time expires without extracting, natural transition goes to DOWNED (zone nuke failure), not EXTRACTING.
 
 ## Testing strategy
 - **Engine unit tests (Vitest):** given a fixed seed and starting state, assert the exact event sequence (snapshot tests).

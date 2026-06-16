@@ -14,17 +14,17 @@ You are **not** the raider. You are their Handler back in the underground hub, w
 
 ## 2. Core Loop
 1. **Prep phase (hub):** Raider sells loot, buys questionable gear, eats expired MREs, gossips with NPCs.
-2. **Deploy:** Raider autonomously picks a zone and time-of-day profile (Day / Night / Stella Red).
+2. **Deploy:** Raider autonomously picks a zone and a time-of-day profile (Day / Night / Stella Red).
 3. **Raid events:** Loot finds, robot encounters, weather, meeting other AI raiders (alliance → inevitable betrayal). Time-of-day profile controls both upside (loot value/rarity) and risk (robot pressure/extraction danger).
 4. **The Greed Check™ (signature mechanic):** At intervals the Raider rolls to extract *or* push deeper for better loot. Backpack value rises → death risk rises. Pure dramatic tension, zero input required.
-5. **Extract or die:** Extraction takes ~90 seconds, then a final beat to hit the big RETURN HOME button. During that window **extraction events** can fire — the shuttle may arrive early (instant success), the beacon may get jammed (back into the zone, backpack kept), or the raider may go down at the LZ (lose the bag). Death = lose the bag (keep the Emotional Support Pocket item), respawn in hub with a sheepish log entry. If the raid timer reaches zero while still in RAIDING, the zone nuke lands and the raider goes DOWNED.
+5. **Extract or die:** Extraction takes ~90 seconds, then a final beat to hit the big RETURN HOME button. During that window **extraction events** can fire — the shuttle may arrive early (instant success), the beacon may get jammed (back into the zone, backpack kept), or the raider may go down at the LZ (lose the bag). If the raider stays in RAIDING until the timer expires, they go DOWNED (zone nuke failure).  Death = lose the bag (keep the Emotional Support Pocket item), respawn in hub with a sheepish log entry. If the raid timer reaches zero while still in RAIDING, the zone nuke lands and the raider goes DOWNED.
 
 ### The Home Stash
 Loot that makes it home goes into the **Stash** — a persistent collection that survives raids, deaths, and sessions:
 - On successful extraction the raider's backpack is transferred into the stash.
-- The stash has a 120-item cap (quantities count toward the cap).
-- Overflow is never deleted: lowest-value items are auto-sold and converted into coin value.
-- Duplicate items stack with a ×2 / ×3 quantity multiplier, and their displayed value is multiplied accordingly.
+- The stash has a hard cap of 120 total items (quantity counts).
+- Overflow is auto-sold by lowest value first and credited as coins (value is never deleted).
+- Duplicate items stack with a ×N quantity multiplier, and their displayed value is multiplied accordingly.
 - The in-raid backpack resets if the raider dies or fails to extract — the stash is untouched.
 
 ### Secret Hidden Pocket (parody safe pocket)
@@ -36,11 +36,11 @@ The Raider has one manual **Secret Hidden Pocket** slot per raid:
 
 ## 3. The Handler (player) — Signal
 The only player resource. Regenerates ~1 per 10 minutes, capped at 5.
-- **Ready Up! (2 Signal):** In HUB only. Immediately starts DEPLOYING.
+- **Ready Up! (2 Signal):** HUB-only action that immediately starts DEPLOYING.
 - **Encourage (1 Signal):** Radio a motivational cliché ("You miss 100% of the loot you don't grab"). Nudges hidden behavior weights toward boldness.
 - **Scold (1 Signal):** Revoke snack privileges. Raider sulks but plays safer.
 - **CALL EXTRACT (3 Signal):** Force an extraction attempt. The panic button.
-- During RAIDING, only one Handler action is queued per tick. Once an action is sent, raid action buttons lock until the next simulation tick applies it.
+- During RAIDING, only one handler action can be pending at a time; raid action buttons stay locked until the next tick consumes it.
 - Possible later: ping a loot stash, bless a piece of gear.
 
 Keeping input this thin is the point — it must remain firmly zero-player.
@@ -84,6 +84,7 @@ Everything funny flows through an autoscrolling text feed:
 - **Raid** — zone, time-of-day, tick count, backpack contents/value, greed level, phase, optional manual Secret Hidden Pocket selection
 - **Home Stash** — persistent extracted loot; stacks duplicates (×N), capped at 120 items with overflow auto-sold into coins
 - **Coins** — accumulated value from stash overflow auto-sales
+- **Lifetime Stats** — extracts/deaths totals and context breakdowns, robot defeats, healing usage
 - **EventLog** — the comms feed entries
 - **Inventory / Gear** — hub stash, equipped items
 - **Quest** — active parody quests
@@ -92,7 +93,7 @@ Everything funny flows through an autoscrolling text feed:
 ## 8. Roadmap
 | Phase | Scope |
 |---|---|
-| **1 — MVP (the toy)** | One raider, one zone, tick engine, comms log, loot/greed/extract loop, Ready Up/Encourage/Scold/CALL EXTRACT, offline catch-up, PWA. **Ship when the log alone makes people laugh.** |
+| **1 — MVP (the toy)** | One raider, one zone pool, tick engine, comms log, loot/greed/extract loop, Ready Up/Encourage/Scold/CALL EXTRACT, offline catch-up, PWA. **Ship when the log alone makes people laugh.** |
 | **2 — Depth** | More zones, robot bestiary, quests, traders, gear-crafting parody, achievements, The Wipe |
 | **3 — Social** | Accounts, leaderboards ("Most Water Bottles"), spectate friends' raiders, squads |
 | **4 — Native** | Capacitor builds, push notifications, app store release |
