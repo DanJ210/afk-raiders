@@ -32,6 +32,8 @@ export interface EventTemplate extends ContentEntry {
     robotDamageMultiplier?: number
     /** Finds a current-raid-only healing item from healing_items.json. */
     healingItem?: boolean
+    /** Finds a manual-use shield recharger and adds it to the backpack. */
+    shieldRecharger?: boolean
   }
 }
 
@@ -69,6 +71,17 @@ export interface HealingItem extends ContentEntry {
   rarity: number
 }
 
+export interface ShieldRechargerItem extends ContentEntry {
+  name: string
+  value: number
+  chargeAmount: number
+  /** Number of ticks the recharge animation should take. 0 = instant. */
+  applyTicks?: number
+  flavor?: string
+  /** 1 = Common … 5 = Legendary (higher = rarer). */
+  rarity: number
+}
+
 export interface ZoneEntry extends ContentEntry {
   name: string
   description: string
@@ -87,6 +100,19 @@ export interface FlavorTable {
 
 export type Phase = 'HUB' | 'DEPLOYING' | 'RAIDING' | 'EXTRACTING' | 'DOWNED'
 
+export type BackpackItemKind = 'loot' | 'shield_recharger'
+
+export interface ShieldState {
+  shieldId: string
+  name: string
+  maxCharge: number
+  charge: number
+  /** Fractional mitigation from 0 to 1 (for example, 0.4 = 40% damage reduction) while active. */
+  mitigation: number
+  /** 0-100; broken shields do not mitigate until a future repair system exists. */
+  durability: number
+}
+
 export interface BackpackItem {
   itemId: string
   name: string
@@ -95,6 +121,10 @@ export interface BackpackItem {
   rarity: number
   flavor?: string
   quantity: number
+  kind?: BackpackItemKind
+  shieldChargeAmount?: number
+  /** Number of ticks the recharge animation should take when this is a shield recharger. */
+  applyTicks?: number
 }
 
 export interface HealingItemStack {
@@ -116,9 +146,20 @@ export interface HiddenPocketItem {
   flavor?: string
 }
 
+export interface ActiveShieldRecharge {
+  itemId: string
+  name: string
+  totalCharge: number
+  chargeRemaining: number
+  totalTicks: number
+  ticksRemaining: number
+}
+
 export interface RaidState {
   zone: string | null
   timeOfDay: TimeOfDay | null
+  shield: ShieldState | null
+  activeShieldRecharge: ActiveShieldRecharge | null
   backpack: BackpackItem[]
   /** Optional manually-selected single item saved on backpack-loss failures. */
   hiddenPocket: HiddenPocketItem | null

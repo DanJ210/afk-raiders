@@ -19,10 +19,11 @@ import type { RNG } from './rng.js'
 import { tickPhase } from './raidStateMachine.js'
 import { runGreedCheck } from './greedCheck.js'
 import { applyScoldGreedReduction } from './signal.js'
-import { resolveEvent, resolveFlavorKey, applyEffects, resolveHealingItemFind, resolveRobotEncounter, events as allEvents } from './eventResolver.js'
+import { resolveEvent, resolveFlavorKey, applyEffects, resolveHealingItemFind, resolveRobotEncounter, resolveShieldRechargerFind, events as allEvents } from './eventResolver.js'
 import { transferBackpackToHomeStash, HOME_STASH_ITEM_LIMIT } from './homeStash.js'
 import { appendLogEntries } from './log.js'
 import { recordOutcome, recordRobotDefeat } from './stats.js'
+import { advanceShieldRecharge } from './shields.js'
 
 /**
  * Apply successful-extraction bookkeeping: transfer loot home, heal up, count
@@ -166,6 +167,19 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
   // 2. Greed Check (RAIDING phase only, once per tick)
   // ------------------------------------------------------------------
   if (currentState.raid.phase === 'RAIDING') {
+    const shieldRechargeBefore = currentState.raid.activeShieldRecharge
+    const shieldRechargeResult = advanceShieldRecharge(currentState.raid)
+    currentState = { ...currentState, raid: shieldRechargeResult.raid }
+    if (shieldRechargeResult.completed && shieldRechargeResult.chargeApplied > 0) {
+      emitted.push({
+        id: `shield_recharger_${shieldRechargeBefore?.itemId ?? 'completed'}_completed`,
+        tick: state.tick,
+        timestamp: now,
+        text: `Shield recharge completed. ${shieldRechargeBefore?.name ?? 'The shield recharger'} finished its ${shieldRechargeBefore?.totalTicks ?? 5}-tick crawl.`,
+        phase: currentState.raid.phase,
+      })
+    }
+
     const raidForGreedCheck = currentState.pendingScold
       ? {
           ...currentState.raid,
@@ -236,6 +250,12 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
         const healingFind = resolveHealingItemFind(currentState, rng, now)
         currentState = healingFind.state
         emitted.push(healingFind.event)
+      }
+
+      if (template.effects?.shieldRecharger) {
+        const rechargerFind = resolveShieldRechargerFind(currentState, rng, now)
+        currentState = rechargerFind.state
+        emitted.push(rechargerFind.event)
       }
 
       const robotId = template.effects?.robotEncounter

@@ -26,6 +26,7 @@ afk-raiders/
 │   │   ├── eventResolver.ts     # Weighted event tables by context
 │   │   ├── timeProfiles.ts      # Day/Night/Stella Red risk/reward tuning
 │   │   ├── signal.ts            # Signal regen + spend rules
+│   │   ├── shields.ts           # Shared shield damage + recharge rules
 │   │   ├── homeStash.ts         # Stash transfer and overflow auto-sell
 │   │   ├── stats.ts             # Lifetime stat aggregation helpers
 │   │   ├── log.ts               # Centralized log append/capping
@@ -38,6 +39,7 @@ afk-raiders/
 │   │   ├── downed_events.json   # Death quips
 │   │   ├── loot.json            # Many varieties of original comedy/parody loot items
 │   │   ├── healing_items.json   # Current-raid-only bandages
+│   │   ├── shield_rechargers.json # Manual-use backpack shield consumables
 │   │   ├── robots.json          # Anxieticks, Tattletales, Roomba Prime…
 │   │   ├── zones.json           # Damp Battlegrounds, etc.
 │   │   └── flavor.json          # Hub gossip, death quips, mood lines
@@ -87,6 +89,14 @@ On every EXTRACTING → HUB transition (natural or event-forced), `processTick` 
 The stash has an enforced item cap (`HOME_STASH_ITEM_LIMIT`). Overflow items are auto-sold by lowest value first, and their value is converted to `state.coins` with a narrated `stash_overflow_sale` comms line. (Manual selling/trading is a future hub mechanic.)
 
 `RaidState` also includes an optional manual `hiddenPocket` selection (the parody safe pocket). The UI (`BackpackPanel.vue`) explicitly sets/changes/clears this slot from current backpack items. On backpack-loss failures (DOWNED → HUB), the engine transfers exactly one unit of the selected pocket item into home stash before normal reset bookkeeping.
+
+### Shield layer
+`RaidState.shield` stores the current shield snapshot for the active raid. Shield damage rules live in `src/engine/shields.ts` so all incoming damage uses one deterministic calculation path. Negative HP event effects and failed robot encounters both route through the same helper.
+
+Shield rechargers are intentionally different from bandages:
+- Bandages live in `RaidState.healingItems` and never extract.
+- Shield rechargers live in `RaidState.backpack` with backpack-item metadata, are manual-use only, and extract if unused.
+- HUB currently restores shield charge and durability to full starter values; loadout/store systems are the future hook for persisted shield state.
 
 ### 3. Signal as the only real input
 Signal regenerates (~1 per 10 min, capped at 5). Ready Up (2 Signal) starts DEPLOYING from HUB, Encourage/Scold (1 each) nudge hidden behavior weights, and Scold also reduces current greed before the next greed check; CALL EXTRACT (3 Signal) forces an extraction attempt. During RAIDING only one action may be queued at a time, so action buttons lock until the next tick applies the pending action.

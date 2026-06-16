@@ -34,6 +34,21 @@ The Raider has one manual **Secret Hidden Pocket** slot per raid:
 - On failures that clear the backpack (for example DOWNED outcomes), exactly one unit of the selected item is transferred safely to Home Stash.
 - On successful extraction, normal extraction transfer already keeps everything, so the pocket provides no extra duplicate item.
 
+### Shields
+The Raider now starts each raid with a basic **Makeshift Confidence Shield** layered on top of the normal health system:
+- Shields mitigate incoming damage while they still have both charge and durability.
+- Shields are not extra HP; they reduce the HP damage taken from a hit while spending shield charge.
+- Shield durability wears down as shield charge is spent.
+- For the MVP, returning to the HUB restores the starter shield to full charge and durability.
+- In future phases, a loadout and store loop can decide which shield is equipped and how it persists.
+
+### Shield Rechargers
+Shield rechargers are manual-use backpack loot found during RAIDING:
+- They drop into the normal current-raid backpack, not the separate field-meds pocket.
+- The player must manually apply them from the backpack UI.
+- Rechargers restore shield charge only; they do not repair shield durability.
+- If unused, they extract into Home Stash like normal backpack loot.
+
 ## 3. The Handler (player) — Signal
 The only player resource. Regenerates ~1 per 10 minutes, capped at 5.
 - **Ready Up! (2 Signal):** HUB-only action that immediately starts DEPLOYING.
@@ -85,6 +100,7 @@ Everything funny flows through an autoscrolling text feed:
 - **Home Stash** — persistent extracted loot; stacks duplicates (×N), capped at 120 items with overflow auto-sold into coins
 - **Coins** — accumulated value from stash overflow auto-sales
 - **Lifetime Stats** — extracts/deaths totals and context breakdowns, robot defeats, healing usage
+- **Shield Layer** — current raid shield state (starter shield for now)
 - **EventLog** — the comms feed entries
 - **Inventory / Gear** — hub stash, equipped items
 - **Quest** — active parody quests

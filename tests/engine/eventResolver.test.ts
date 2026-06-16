@@ -10,7 +10,7 @@
 
 import { describe, it, expect } from 'vitest'
 import { createRNG } from '../../src/engine/rng'
-import { applyEffects, consumeHealingItem, resolveHealingItemFind, resolveRobotEncounter } from '../../src/engine/eventResolver'
+import { applyEffects, consumeHealingItem, consumeShieldRecharger, resolveHealingItemFind, resolveRobotEncounter, resolveShieldRechargerFind } from '../../src/engine/eventResolver'
 import { createInitialState } from '../../src/engine/initialState'
 import type { EventTemplate, HealingItemStack } from '../../src/engine/types'
 
@@ -28,6 +28,13 @@ const DAMAGE_TEMPLATE: EventTemplate = {
   weight: 1,
   text: 'You found something sharp.',
   effects: { hp: '-5d10' },
+}
+
+const FIXED_DAMAGE_TEMPLATE: EventTemplate = {
+  id: 'test_fixed_damage',
+  weight: 1,
+  text: 'You found something aggressively harmful.',
+  effects: { hp: -20 },
 }
 
 function makeBandage(overrides: Partial<HealingItemStack> = {}): HealingItemStack {
@@ -133,6 +140,36 @@ describe('applyEffects — backpack item behavior', () => {
     expect(stellaRed.raid.backpackValue).toBe(155)
   })
 
+  it('routes negative HP effects through shield mitigation', () => {
+    const initial = createInitialState(0)
+    const result = applyEffects(initial, FIXED_DAMAGE_TEMPLATE, createRNG(1))
+
+    expect(result.raider.hp).toBe(88)
+    expect(result.raid.shield?.charge).toBe(20)
+    expect(result.raid.shield?.durability).toBe(90)
+  })
+
+  it('still mitigates a full hit when the shield only has 1 charge left', () => {
+    const initial = createInitialState(0)
+    const state = {
+      ...initial,
+      raid: {
+        ...initial.raid,
+        shield: {
+          ...initial.raid.shield!,
+          charge: 1,
+          durability: 82.5,
+        },
+      },
+    }
+
+    const result = applyEffects(state, { ...FIXED_DAMAGE_TEMPLATE, effects: { hp: -35 } }, createRNG(1))
+
+    expect(result.raider.hp).toBe(79)
+    expect(result.raid.shield?.charge).toBe(0)
+    expect(result.raid.shield?.durability).toBe(82)
+  })
+
   it('defeats a robot when the combat roll beats menace and awards robot loot', () => {
     const state = createInitialState(0)
     const result = resolveRobotEncounter(state, 'anxietick', createRNG(1), 0)
@@ -151,8 +188,9 @@ describe('applyEffects — backpack item behavior', () => {
 
     expect(result).not.toBeNull()
     expect(result!.event.id).toBe('robot_roomba_prime_escaped')
-    expect(result!.event.text).toContain('Took 16 damage')
-    expect(result!.state.raider.hp).toBe(84)
+    expect(result!.event.text).toContain('Took 10 damage')
+    expect(result!.state.raider.hp).toBe(90)
+    expect(result!.state.raid.shield?.charge).toBe(24)
     expect(result!.state.raid.backpack).toHaveLength(0)
   })
 
@@ -184,8 +222,8 @@ describe('applyEffects — backpack item behavior', () => {
 
     expect(failed).not.toBeNull()
     expect(failed!.event.id).toBe('robot_tattletale_escaped')
-    expect(failed!.event.text).toContain('Took 42 damage')
-    expect(failed!.state.raider.hp).toBe(58)
+    expect(failed!.event.text).toContain('Took 26 damage')
+    expect(failed!.state.raider.hp).toBe(74)
 
     expect(defeated).not.toBeNull()
     expect(defeated!.event.id).toBe('robot_anxietick_defeated')
@@ -198,8 +236,8 @@ describe('applyEffects — backpack item behavior', () => {
 
     expect(result).not.toBeNull()
     expect(result!.event.id).toBe('robot_roomba_prime_escaped')
-    expect(result!.event.text).toContain('Took 48 damage')
-    expect(result!.state.raider.hp).toBe(52)
+    expect(result!.event.text).toContain('Took 29 damage')
+    expect(result!.state.raider.hp).toBe(71)
   })
 
   it('only lets nasty and deadly robots down already-wounded raiders', () => {
@@ -213,11 +251,11 @@ describe('applyEffects — backpack item behavior', () => {
 
     expect(deadly).not.toBeNull()
     expect(deadly!.event.id).toBe('robot_roomba_prime_escaped')
-    expect(deadly!.state.raider.hp).toBe(0)
+    expect(deadly!.state.raider.hp).toBe(11)
 
     expect(moderate).not.toBeNull()
     expect(moderate!.event.id).toBe('robot_tattletale_escaped')
-    expect(moderate!.state.raider.hp).toBe(1)
+    expect(moderate!.state.raider.hp).toBe(14)
   })
 
   it('finds a current-raid healing item without adding stash loot', () => {
@@ -232,6 +270,179 @@ describe('applyEffects — backpack item behavior', () => {
     expect(result.state.raid.healingItems).toHaveLength(1)
     expect(result.state.raid.backpack).toHaveLength(0)
     expect(result.state.homeStash).toHaveLength(0)
+  })
+
+  it('finds a shield recharger as backpack loot', () => {
+    const state = {
+      ...createInitialState(0),
+      raid: { ...createInitialState(0).raid, phase: 'RAIDING' as const },
+    }
+
+    const result = resolveShieldRechargerFind(state, createRNG(1), 0)
+
+    expect(result.event.id).toMatch(/^shield_recharger_.*_found$/)
+    expect(result.state.raid.backpack).toHaveLength(1)
+    expect(result.state.raid.backpack[0].kind).toBe('shield_recharger')
+    expect(result.state.raid.backpack[0].shieldChargeAmount).toBeGreaterThan(0)
+  })
+
+  it('preserves shield recharger applyTicks when found', () => {
+    const state = {
+      ...createInitialState(0),
+      raid: { ...createInitialState(0).raid, phase: 'RAIDING' as const },
+    }
+    const fakeRng = {
+      weightedPick: () => ({
+        id: 'instant_cell',
+        weight: 1,
+        rarity: 4,
+        name: 'Instant Cell',
+        value: 50,
+        chargeAmount: 30,
+        applyTicks: 0,
+      }),
+    } as unknown as Parameters<typeof resolveShieldRechargerFind>[1]
+
+    const result = resolveShieldRechargerFind(state, fakeRng, 0)
+
+    expect(result.state.raid.backpack).toHaveLength(1)
+    expect(result.state.raid.backpack[0].applyTicks).toBe(0)
+  })
+
+  it('uses a backpack shield recharger to restore shield charge', () => {
+    const initial = createInitialState(0)
+    const state = {
+      ...initial,
+      raid: {
+        ...initial.raid,
+        phase: 'RAIDING' as const,
+        shield: {
+          ...initial.raid.shield!,
+          charge: 5,
+          durability: 80,
+        },
+        backpack: [
+          {
+            itemId: 'panic_capacitor',
+            name: 'Panic Capacitor',
+            value: 70,
+            rarity: 4,
+            quantity: 1,
+            kind: 'shield_recharger' as const,
+            shieldChargeAmount: 50,
+          },
+        ],
+        backpackValue: 70,
+      },
+    }
+
+    const result = consumeShieldRecharger(state, 'panic_capacitor', 0)
+
+    expect(result).not.toBeNull()
+    expect(result!.event.id).toBe('shield_recharger_panic_capacitor_started')
+    expect(result!.state.raid.shield?.charge).toBe(5)
+    expect(result!.state.raid.shield?.durability).toBe(80)
+    expect(result!.state.raid.backpack).toEqual([])
+    expect(result!.state.raid.backpackValue).toBe(0)
+    expect(result!.state.raid.activeShieldRecharge).toMatchObject({
+      itemId: 'panic_capacitor',
+      chargeRemaining: 50,
+      totalTicks: 5,
+      ticksRemaining: 5,
+    })
+  })
+
+  it('supports future instant shield rechargers', () => {
+    const initial = createInitialState(0)
+    const state = {
+      ...initial,
+      raid: {
+        ...initial.raid,
+        phase: 'RAIDING' as const,
+        shield: {
+          ...initial.raid.shield!,
+          charge: 5,
+          durability: 80,
+        },
+        backpack: [
+          {
+            itemId: 'flash_cell',
+            name: 'Flash Cell',
+            value: 55,
+            rarity: 4,
+            quantity: 1,
+            kind: 'shield_recharger' as const,
+            shieldChargeAmount: 35,
+            applyTicks: 0,
+          },
+        ],
+        backpackValue: 55,
+      },
+    }
+
+    const result = consumeShieldRecharger(state, 'flash_cell', 0)
+
+    expect(result).not.toBeNull()
+    expect(result!.event.id).toBe('shield_recharger_flash_cell_used')
+    expect(result!.state.raid.shield?.charge).toBe(40)
+    expect(result!.state.raid.activeShieldRecharge).toBeNull()
+    expect(result!.state.raid.backpack).toEqual([])
+    expect(result!.state.raid.backpackValue).toBe(0)
+  })
+
+  it('cannot use a shield recharger at full charge', () => {
+    const initial = createInitialState(0)
+    const state = {
+      ...initial,
+      raid: {
+        ...initial.raid,
+        phase: 'RAIDING' as const,
+        backpack: [
+          {
+            itemId: 'fizz_cell',
+            name: 'Fizz Cell',
+            value: 12,
+            rarity: 1,
+            quantity: 1,
+            kind: 'shield_recharger' as const,
+            shieldChargeAmount: 20,
+          },
+        ],
+        backpackValue: 12,
+      },
+    }
+
+    expect(consumeShieldRecharger(state, 'fizz_cell', 0)).toBeNull()
+  })
+
+  it('cannot use a shield recharger outside RAIDING', () => {
+    const initial = createInitialState(0)
+    const state = {
+      ...initial,
+      raid: {
+        ...initial.raid,
+        phase: 'DEPLOYING' as const,
+        shield: {
+          ...initial.raid.shield!,
+          charge: 5,
+          durability: 80,
+        },
+        backpack: [
+          {
+            itemId: 'fizz_cell',
+            name: 'Fizz Cell',
+            value: 12,
+            rarity: 1,
+            quantity: 1,
+            kind: 'shield_recharger' as const,
+            shieldChargeAmount: 20,
+          },
+        ],
+        backpackValue: 12,
+      },
+    }
+
+    expect(consumeShieldRecharger(state, 'fizz_cell', 0)).toBeNull()
   })
 
   it('uses the selected current-raid bandage', () => {

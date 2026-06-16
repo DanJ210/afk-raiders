@@ -337,4 +337,44 @@ describe('deterministic snapshot', () => {
     expect(result.state.raid.healingItems).toHaveLength(1)
     expect(result.events.some(e => e.id === 'healing_bandage_purple_used')).toBe(false)
   })
+
+  it('extracts unused shield rechargers into the home stash like other backpack loot', () => {
+    const rng = createRNG(FIXED_SEED)
+    const initial = createInitialState(0)
+    const state = {
+      ...initial,
+      raid: {
+        ...initial.raid,
+        phase: 'EXTRACTING' as const,
+        phaseTicksRemaining: 1,
+        backpack: [
+          {
+            itemId: 'fizz_cell',
+            name: 'Fizz Cell',
+            value: 12,
+            rarity: 1,
+            quantity: 2,
+            kind: 'shield_recharger' as const,
+            shieldChargeAmount: 20,
+          },
+        ],
+        backpackValue: 24,
+      },
+    }
+
+    const result = processTick(state, rng, 0)
+
+    expect(result.state.raid.phase).toBe('HUB')
+    expect(result.state.homeStash).toEqual([
+      {
+        itemId: 'fizz_cell',
+        name: 'Fizz Cell',
+        value: 12,
+        rarity: 1,
+        quantity: 2,
+        kind: 'shield_recharger',
+        shieldChargeAmount: 20,
+      },
+    ])
+  })
 })
