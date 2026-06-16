@@ -54,6 +54,12 @@ function apply(itemId: string) {
   margin-bottom: 10px;
 }
 
+.backpack-panel__label {
+  font-size: 0.75rem;
+  color: var(--color-muted);
+  font-family: var(--font-mono);
+}
+
 .field-meds__list {
   list-style: none;
   display: flex;
