@@ -21,10 +21,7 @@ const raidTimerMs = computed(() => {
   return Math.max(0, phaseRemainingMs - elapsedSinceLastTick)
 })
 const raidTimerText = computed(() => formatDuration(raidTimerMs.value))
-const raidShield = computed(() => {
-  const raidRecord = store.raid as unknown as Record<string, unknown>
-  return raidRecord.shield
-})
+const raidShield = computed(() => store.raid.shield)
 
 const editingName = ref(false)
 const nameInput = ref('')
