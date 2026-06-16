@@ -15,7 +15,6 @@ const selectedBackpackItemId = ref<string | null>(null)
 
 const backpackItems = computed(() =>
   [...raid.value.backpack]
-    .filter(item => item.itemId !== hiddenPocket.value?.itemId && item.kind !== 'shield_recharger')
     .sort((a, b) => {
     if (b.rarity !== a.rarity) return b.rarity - a.rarity
     if (b.value !== a.value) return b.value - a.value

@@ -89,6 +89,10 @@ const shieldRechargeProgress = computed(() => {
 
 <template>
   <div class="shield-bar" :class="{ 'shield-bar--compact': compact }">
+    <p v-if="recharge" class="shield-bar__recharge-note">
+      Shield is still recharging...
+    </p>
+
     <div class="shield-bar__row">
       <span class="shield-bar__label">{{ label ?? 'Shield' }}</span>
       <div
@@ -138,6 +142,13 @@ const shieldRechargeProgress = computed(() => {
   gap: 8px;
   min-width: 0;
   width: 100%;
+}
+
+.shield-bar__recharge-note {
+  margin: 0;
+  font-size: 0.68rem;
+  color: var(--color-accent);
+  font-family: var(--font-mono);
 }
 
 .shield-bar__details-row {
