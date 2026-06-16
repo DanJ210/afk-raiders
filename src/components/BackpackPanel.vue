@@ -452,6 +452,7 @@ function removePocketItem() {
   margin: 12px 0 0;
   display: grid;
   gap: 8px;
+  align-content: start;
   overflow-y: auto;
   flex: 1;
   min-height: 0;
