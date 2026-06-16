@@ -6,7 +6,7 @@ import { PHASE_DURATIONS } from './raidStateMachine.js'
 import { createInitialLifetimeStats } from './stats.js'
 import { createStarterShieldState } from './shields.js'
 
-export const SAVE_VERSION = 1
+export const SAVE_VERSION = 2
 
 export function createInitialState(now: number = Date.now()): GameState {
   return {
