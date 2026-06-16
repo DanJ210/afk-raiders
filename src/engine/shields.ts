@@ -1,6 +1,9 @@
 import type { RaidState, RaiderStats, ShieldState } from './types.js'
 
 export const STARTER_SHIELD_ID = 'makeshift_confidence_shield'
+// AFK Raiders sees many more shield-draining hits per raid than typical PvP tuning,
+// so a full drain only costs 10 durability to keep starter shields from breaking too quickly.
+const FULL_SHIELD_DURABILITY_WEAR = 10
 
 export function createStarterShieldState(): ShieldState {
   return {
@@ -9,6 +12,18 @@ export function createStarterShieldState(): ShieldState {
     maxCharge: 40,
     charge: 40,
     mitigation: 0.4,
+    durability: 100,
+  }
+}
+
+export function restoreShieldAtHub(shield: ShieldState | null): ShieldState {
+  if (shield === null) {
+    return createStarterShieldState()
+  }
+
+  return {
+    ...shield,
+    charge: shield.maxCharge,
     durability: 100,
   }
 }
@@ -72,7 +87,7 @@ export function applyShieldedDamage(
   const chargeLost = Math.min(shield.charge, damage)
   const durabilityLost = Math.min(
     shield.durability,
-    Number(((chargeLost / shield.maxCharge) * 20).toFixed(2)),
+    Number(((chargeLost / shield.maxCharge) * FULL_SHIELD_DURABILITY_WEAR).toFixed(2)),
   )
   const hp = Math.max(0, raider.hp - hpDamage)
 

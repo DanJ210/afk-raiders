@@ -2,8 +2,10 @@
 import { computed } from 'vue'
 import { ref } from 'vue'
 import { useGameStore } from '../stores/gameStore'
+import FieldMedsPanel from './FieldMedsPanel.vue'
+import ShieldRechargersPanel from './ShieldRechargersPanel.vue'
 import { rarityLabel, rarityBarClass } from '../utils/rarity'
-import type { BackpackItem, HealingItemStack } from '../engine/types'
+import type { BackpackItem } from '../engine/types'
 
 const store = useGameStore()
 const raid = computed(() => store.raid)
@@ -14,10 +16,8 @@ const selectedBackpackItemId = ref<string | null>(null)
 const backpackItems = computed(() =>
   [...raid.value.backpack]
     .filter(item => item.itemId !== hiddenPocket.value?.itemId)
+    .filter(item => !isShieldRecharger(item))
     .sort((a, b) => {
-    if ((b.kind === 'shield_recharger') !== (a.kind === 'shield_recharger')) {
-      return b.kind === 'shield_recharger' ? 1 : -1
-    }
     if (b.rarity !== a.rarity) return b.rarity - a.rarity
     if (b.value !== a.value) return b.value - a.value
     return a.name.localeCompare(b.name)
@@ -31,16 +31,23 @@ const healingItems = computed(() =>
   }),
 )
 
+const shieldRechargerItems = computed(() =>
+  [...raid.value.backpack]
+    .filter(item => item.itemId !== hiddenPocket.value?.itemId)
+    .filter(isShieldRecharger)
+    .sort((a, b) => {
+      if (b.shieldChargeAmount !== a.shieldChargeAmount) return b.shieldChargeAmount - a.shieldChargeAmount
+      if (b.rarity !== a.rarity) return b.rarity - a.rarity
+      return a.name.localeCompare(b.name)
+    }),
+)
+
 function greedLabel(level: number): string {
   if (level < 20) return '😌 Chill'
   if (level < 40) return '🤑 Interested'
   if (level < 60) return '😤 Pushing It'
   if (level < 80) return '🚨 Reckless'
   return '☠️ DEATH WISH'
-}
-
-function moodGain(item: HealingItemStack): number {
-  return item.moodGain ?? Math.max(1, Math.min(4, item.rarity))
 }
 
 function isShieldRecharger(item: BackpackItem | null): item is BackpackItem & { kind: 'shield_recharger'; shieldChargeAmount: number } {
@@ -92,8 +99,8 @@ const canSaveToPocket = computed(() =>
   canManageHiddenPocket.value,
 )
 
-const canApplySelectedShieldRecharger = computed(() =>
-  isShieldRecharger(selectedBackpackItem.value) && canApplyShieldCharge.value,
+const canApplyAnyShieldRecharger = computed(() =>
+  canApplyShieldCharge.value && shieldRechargerItems.value.length > 0,
 )
 
 function openBackpackItemDetails(itemId: string) {
@@ -115,10 +122,9 @@ function removePocketItem() {
   store.clearHiddenPocketItem()
 }
 
-function applySelectedShieldRecharger() {
-  if (!isShieldRecharger(selectedBackpackItem.value) || !canApplyShieldCharge.value) return
-  store.applyShieldRecharger(selectedBackpackItem.value.itemId)
-  closeBackpackItemDetails()
+function applyShieldRecharger(itemId: string) {
+  if (!canApplyShieldCharge.value) return
+  store.applyShieldRecharger(itemId)
 }
 </script>
 
@@ -145,26 +151,17 @@ function applySelectedShieldRecharger() {
       </span>
     </div>
 
-    <div v-if="healingItems.length > 0" class="backpack-panel__meds">
-      <span class="backpack-panel__label">Field Meds</span>
-      <ul class="backpack-panel__med-list">
-        <li v-for="item in healingItems" :key="item.itemId" class="backpack-panel__med-item">
-          <span :class="rarityBarClass(item.rarity)" :title="rarityLabel(item.rarity)" aria-hidden="true" />
-          <span>{{ item.name }}</span>
-          <span>+{{ item.healAmount }} HP</span>
-          <span>+{{ moodGain(item) }} Mood</span>
-          <span v-if="item.quantity > 1">x{{ item.quantity }}</span>
-          <button
-            type="button"
-            class="backpack-panel__med-use"
-            :disabled="!canApplyHealing"
-            @click="store.applyHealingItem(item.itemId)"
-          >
-            Apply
-          </button>
-        </li>
-      </ul>
-    </div>
+    <FieldMedsPanel
+      :items="healingItems"
+      :can-apply="canApplyHealing"
+      @apply="store.applyHealingItem"
+    />
+
+    <ShieldRechargersPanel
+      :items="shieldRechargerItems"
+      :can-apply="canApplyAnyShieldRecharger"
+      @apply="applyShieldRecharger"
+    />
 
     <div class="backpack-panel__hidden-pocket">
       <div class="backpack-panel__hidden-pocket-header">
@@ -258,14 +255,6 @@ function applySelectedShieldRecharger() {
             Cancel
           </button>
           <button
-            v-if="canApplySelectedShieldRecharger"
-            type="button"
-            class="stash-dialog__button stash-dialog__button--primary"
-            @click="applySelectedShieldRecharger"
-          >
-            Apply Shield Recharger
-          </button>
-          <button
             v-if="hiddenPocket && hiddenPocket.itemId === selectedBackpackItem.itemId"
             type="button"
             class="stash-dialog__button stash-dialog__button--secondary"
@@ -334,56 +323,6 @@ function applySelectedShieldRecharger() {
   align-items: center;
   gap: 8px;
   margin-bottom: 10px;
-}
-
-.backpack-panel__meds {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-bottom: 10px;
-}
-
-.backpack-panel__med-list {
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  padding: 0;
-  margin: 0;
-}
-
-.backpack-panel__med-item {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto auto auto auto;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 8px;
-  background: var(--color-surface-raised);
-  border-radius: 4px;
-  color: var(--color-text);
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-}
-
-.backpack-panel__med-use {
-  border: 1px solid var(--color-accent);
-  border-radius: 4px;
-  background: transparent;
-  color: var(--color-accent);
-  font-family: var(--font-mono);
-  font-size: 0.68rem;
-  padding: 2px 8px;
-  cursor: pointer;
-}
-
-.backpack-panel__med-use:hover:not(:disabled) {
-  background: var(--color-accent);
-  color: var(--color-bg);
-}
-
-.backpack-panel__med-use:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
 }
 
 .backpack-panel__hidden-pocket {

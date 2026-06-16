@@ -146,7 +146,7 @@ describe('applyEffects — backpack item behavior', () => {
 
     expect(result.raider.hp).toBe(88)
     expect(result.raid.shield?.charge).toBe(20)
-    expect(result.raid.shield?.durability).toBe(90)
+    expect(result.raid.shield?.durability).toBe(95)
   })
 
   it('still mitigates a full hit when the shield only has 1 charge left', () => {
@@ -167,7 +167,7 @@ describe('applyEffects — backpack item behavior', () => {
 
     expect(result.raider.hp).toBe(79)
     expect(result.raid.shield?.charge).toBe(0)
-    expect(result.raid.shield?.durability).toBe(82)
+    expect(result.raid.shield?.durability).toBe(82.25)
   })
 
   it('defeats a robot when the combat roll beats menace and awards robot loot', () => {
@@ -211,8 +211,8 @@ describe('applyEffects — backpack item behavior', () => {
 
     expect(night).not.toBeNull()
     expect(stellaRed).not.toBeNull()
-    expect(night!.state.raider.hp).toBe(76)
-    expect(stellaRed!.state.raider.hp).toBe(68)
+    expect(night!.state.raider.hp).toBe(85)
+    expect(stellaRed!.state.raider.hp).toBe(80)
   })
 
   it('applies encounter-specific damage multipliers only on failed robot encounters', () => {

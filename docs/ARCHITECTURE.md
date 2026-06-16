@@ -83,6 +83,8 @@ Events may also set `"effects": { "forcePhase": "..." }` to force a phase change
 
 Events may also gate themselves by `requires.timeOfDay` (`Day`, `Night`, or `Stella Red`). The engine applies the matching time-of-day profile in `src/engine/timeProfiles.ts`: Day has lower loot value and rarity bias, Night raises loot upside and robot/extraction pressure, and Stella Red has the highest loot ceiling with the harshest robot and LZ risk. These profiles are the economy guardrail for risk/reward tuning.
 
+When an event awards backpack loot (`effects.backpackValue` producing a positive loot add), `processTick()` performs two additional independent consumable bonus rolls: one for a healing item and one for a shield recharger. This allows a single loot event to grant normal loot plus either or both consumable types.
+
 ### Home stash transfer
 On every EXTRACTING → HUB transition (natural or event-forced), `processTick` merges the backpack into `state.homeStash` before the backpack resets. Duplicate item IDs stack quantities.
 
@@ -96,7 +98,8 @@ The stash has an enforced item cap (`HOME_STASH_ITEM_LIMIT`). Overflow items are
 Shield rechargers are intentionally different from bandages:
 - Bandages live in `RaidState.healingItems` and never extract.
 - Shield rechargers live in `RaidState.backpack` with backpack-item metadata, are manual-use only, and extract if unused.
-- HUB currently restores shield charge and durability to full starter values; loadout/store systems are the future hook for persisted shield state.
+- HUB currently restores the equipped shield to full charge and 100% durability; loadout/store systems are the future hook for persisted shield state.
+- `src/content/healing_items.json` and `src/content/shield_rechargers.json` are still required: they define weighted type selection for consumables awarded by both dedicated event effects and loot-bonus rolls.
 
 ### 3. Signal as the only real input
 Signal regenerates (~1 per 10 min, capped at 5). Ready Up (2 Signal) starts DEPLOYING from HUB, Encourage/Scold (1 each) nudge hidden behavior weights, and Scold also reduces current greed before the next greed check; CALL EXTRACT (3 Signal) forces an extraction attempt. During RAIDING only one action may be queued at a time, so action buttons lock until the next tick applies the pending action.

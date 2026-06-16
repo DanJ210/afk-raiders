@@ -41,10 +41,10 @@ const showZoneStrip = computed(
 
     <main v-if="!isMobile" class="app__main">
       <aside class="app__sidebar">
+        <HandlerActions />
         <RaiderCard />
         <BackpackPanel />
         <HomeStash />
-        <HandlerActions />
       </aside>
 
       <div class="app__log">
@@ -66,8 +66,8 @@ const showZoneStrip = computed(
       </section>
 
       <section v-if="activeMobileTab === 'raider'" class="app__mobile-panel app__mobile-panel--fill">
-        <RaiderCard />
         <HandlerActions />
+        <RaiderCard />
       </section>
 
       <section v-if="activeMobileTab === 'stash'" class="app__mobile-panel app__mobile-panel--fill">
