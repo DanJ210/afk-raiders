@@ -107,7 +107,7 @@ export interface ShieldState {
   name: string
   maxCharge: number
   charge: number
-  /** 0-1 percent reduction applied to incoming damage while active. */
+  /** Fractional mitigation from 0 to 1 (for example, 0.4 = 40% damage reduction) while active. */
   mitigation: number
   /** 0-100; broken shields do not mitigate until a future repair system exists. */
   durability: number

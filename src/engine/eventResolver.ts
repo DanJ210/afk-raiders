@@ -224,6 +224,7 @@ function addBackpackItem(
     ? {
         kind: 'shield_recharger' as const,
         shieldChargeAmount: item.chargeAmount,
+        applyTicks: item.applyTicks,
       }
     : {}
   const backpack = existing
@@ -398,7 +399,7 @@ export function consumeShieldRecharger(
   itemId: string,
   now: number,
 ): BackpackConsumableResult | null {
-  if (state.raid.phase === 'HUB' || state.raid.phase === 'DOWNED') return null
+  if (state.raid.phase !== 'RAIDING') return null
   if (!state.raid.shield || state.raid.shield.durability <= 0) return null
   if (state.raid.shield.charge >= state.raid.shield.maxCharge) return null
   if (state.raid.activeShieldRecharge) return null
@@ -421,7 +422,7 @@ export function consumeShieldRecharger(
 
   const eventText = start.completedImmediately
     ? `Used ${item.name}. Restored ${start.startedCharge} shield charge instantly. Confidence field humming again.`
-    : `Used ${item.name}. Shield recharge started and will fill over ${Math.max(1, Math.floor(item.applyTicks ?? 5))} ticks. The slider is doing tiny heroic work.`
+    : `Used ${item.name}. Shield recharge started and will fill over ${start.raid.activeShieldRecharge?.totalTicks ?? Math.max(1, Math.floor(item.applyTicks ?? 5))} ticks. The slider is doing tiny heroic work.`
 
   return {
     state: {

@@ -175,7 +175,7 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
         id: `shield_recharger_${shieldRechargeBefore?.itemId ?? 'completed'}_completed`,
         tick: state.tick,
         timestamp: now,
-        text: `Shield recharge completed. ${shieldRechargeBefore?.name ?? 'The shield recharger'} finished its five-tick crawl.`,
+        text: `Shield recharge completed. ${shieldRechargeBefore?.name ?? 'The shield recharger'} finished its ${shieldRechargeBefore?.totalTicks ?? 5}-tick crawl.`,
         phase: currentState.raid.phase,
       })
     }

@@ -66,8 +66,7 @@ const canManageHiddenPocket = computed(() =>
 )
 
 const canApplyShieldCharge = computed(() =>
-  raid.value.phase !== 'HUB' &&
-  raid.value.phase !== 'DOWNED' &&
+  raid.value.phase === 'RAIDING' &&
   raid.value.activeShieldRecharge === null &&
   shield.value !== null &&
   shield.value.durability > 0 &&
