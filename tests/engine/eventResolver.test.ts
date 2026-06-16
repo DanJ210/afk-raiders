@@ -286,6 +286,29 @@ describe('applyEffects — backpack item behavior', () => {
     expect(result.state.raid.backpack[0].shieldChargeAmount).toBeGreaterThan(0)
   })
 
+  it('preserves shield recharger applyTicks when found', () => {
+    const state = {
+      ...createInitialState(0),
+      raid: { ...createInitialState(0).raid, phase: 'RAIDING' as const },
+    }
+    const fakeRng = {
+      weightedPick: () => ({
+        id: 'instant_cell',
+        weight: 1,
+        rarity: 4,
+        name: 'Instant Cell',
+        value: 50,
+        chargeAmount: 30,
+        applyTicks: 0,
+      }),
+    } as unknown as Parameters<typeof resolveShieldRechargerFind>[1]
+
+    const result = resolveShieldRechargerFind(state, fakeRng, 0)
+
+    expect(result.state.raid.backpack).toHaveLength(1)
+    expect(result.state.raid.backpack[0].applyTicks).toBe(0)
+  })
+
   it('uses a backpack shield recharger to restore shield charge', () => {
     const initial = createInitialState(0)
     const state = {
@@ -374,6 +397,36 @@ describe('applyEffects — backpack item behavior', () => {
       raid: {
         ...initial.raid,
         phase: 'RAIDING' as const,
+        backpack: [
+          {
+            itemId: 'fizz_cell',
+            name: 'Fizz Cell',
+            value: 12,
+            rarity: 1,
+            quantity: 1,
+            kind: 'shield_recharger' as const,
+            shieldChargeAmount: 20,
+          },
+        ],
+        backpackValue: 12,
+      },
+    }
+
+    expect(consumeShieldRecharger(state, 'fizz_cell', 0)).toBeNull()
+  })
+
+  it('cannot use a shield recharger outside RAIDING', () => {
+    const initial = createInitialState(0)
+    const state = {
+      ...initial,
+      raid: {
+        ...initial.raid,
+        phase: 'DEPLOYING' as const,
+        shield: {
+          ...initial.raid.shield!,
+          charge: 5,
+          durability: 80,
+        },
         backpack: [
           {
             itemId: 'fizz_cell',
