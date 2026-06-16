@@ -10,7 +10,7 @@
 import type { DangerLevel, Phase, RaidState, TimeOfDay, ZoneEntry } from './types.js'
 import type { RNG } from './rng.js'
 import zonesData from '../content/zones.json'
-import { createStarterShieldState } from './shields.js'
+import { restoreShieldAtHub } from './shields.js'
 
 const zones = zonesData as ZoneEntry[]
 
@@ -61,7 +61,7 @@ export function tickPhase(
     }
     // Reset raid state when forced back to HUB (mirror of the natural-expiry path)
     if (forced === 'HUB') {
-      forcedRaid = { ...forcedRaid, activeShieldRecharge: null, shield: createStarterShieldState(), backpack: [], hiddenPocket: null, healingItems: [], backpackValue: 0, greedLevel: 0, forceExtract: false, zone: null, timeOfDay: null }
+      forcedRaid = { ...forcedRaid, activeShieldRecharge: null, shield: restoreShieldAtHub(forcedRaid.shield), backpack: [], hiddenPocket: null, healingItems: [], backpackValue: 0, greedLevel: 0, forceExtract: false, zone: null, timeOfDay: null }
     }
     // Healing items are lost on death — clear immediately so they aren't visible during DOWNED phase
     if (forced === 'DOWNED') {
@@ -99,7 +99,7 @@ export function tickPhase(
 
   // Reset raid state when returning to HUB
   if (next === 'HUB') {
-    updatedRaid = { ...updatedRaid, activeShieldRecharge: null, shield: createStarterShieldState(), backpack: [], hiddenPocket: null, healingItems: [], backpackValue: 0, greedLevel: 0, forceExtract: false, zone: null, timeOfDay: null }
+    updatedRaid = { ...updatedRaid, activeShieldRecharge: null, shield: restoreShieldAtHub(updatedRaid.shield), backpack: [], hiddenPocket: null, healingItems: [], backpackValue: 0, greedLevel: 0, forceExtract: false, zone: null, timeOfDay: null }
   }
 
   // Healing items are lost on death — clear on natural DOWNED transitions too.

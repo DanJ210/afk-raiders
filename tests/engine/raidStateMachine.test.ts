@@ -59,4 +59,41 @@ describe('raidStateMachine', () => {
     expect(result.raid.phase).toBe('DOWNED')
     expect(result.raid.healingItems).toEqual([])
   })
+
+  it('fully repairs and refills the current shield when returning to HUB', () => {
+    const initial = createInitialState(0)
+    const result = tickPhase({
+      ...initial.raid,
+      phase: 'EXTRACTING',
+      phaseTicksRemaining: 1,
+      shield: {
+        shieldId: 'salvaged_plate_wall',
+        name: 'Salvaged Plate Wall',
+        maxCharge: 70,
+        charge: 12,
+        mitigation: 0.55,
+        durability: 34.5,
+      },
+      activeShieldRecharge: {
+        itemId: 'panic_capacitor',
+        name: 'Panic Capacitor',
+        totalCharge: 40,
+        chargeRemaining: 16,
+        totalTicks: 5,
+        ticksRemaining: 2,
+      },
+    })
+
+    expect(result.transition?.to).toBe('HUB')
+    expect(result.raid.phase).toBe('HUB')
+    expect(result.raid.activeShieldRecharge).toBeNull()
+    expect(result.raid.shield).toEqual({
+      shieldId: 'salvaged_plate_wall',
+      name: 'Salvaged Plate Wall',
+      maxCharge: 70,
+      charge: 70,
+      mitigation: 0.55,
+      durability: 100,
+    })
+  })
 })

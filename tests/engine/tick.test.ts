@@ -3,9 +3,10 @@
  * Fixed seed + fresh state → run N ticks → assert the event id sequence is stable.
  */
 
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { createRNG } from '../../src/engine/rng'
-import { processTick } from '../../src/engine/tick'
+import type { RNG } from '../../src/engine/rng'
+import { maybeAwardLootBonusConsumables, processTick } from '../../src/engine/tick'
 import { createInitialState } from '../../src/engine/initialState'
 
 const FIXED_SEED = 42
@@ -25,6 +26,68 @@ function runTicks(n: number, seed = FIXED_SEED) {
 }
 
 describe('deterministic snapshot', () => {
+  it('can award both a healing item and shield recharger as independent loot bonuses', () => {
+    const initial = createInitialState(0)
+    const state = {
+      ...initial,
+      raid: {
+        ...initial.raid,
+        phase: 'RAIDING' as const,
+      },
+    }
+
+    const fakeRng = {
+      next: vi
+        .fn<() => number>()
+        .mockReturnValueOnce(0.01)
+        .mockReturnValueOnce(0.01),
+      weightedPick: <T,>(items: readonly T[]) => items[0],
+      pick: <T,>(items: readonly T[]) => items[0],
+      int: () => 1,
+      clone: () => { throw new Error('unused in test') },
+      getSeed: () => 0,
+    } as unknown as RNG
+
+    const result = maybeAwardLootBonusConsumables(state, fakeRng, 0)
+
+    expect(result.state.raid.healingItems).toHaveLength(1)
+    expect(result.state.raid.backpack).toHaveLength(1)
+    expect(result.state.raid.backpack[0].kind).toBe('shield_recharger')
+    expect(result.events).toHaveLength(2)
+    expect(result.events[0].id).toMatch(/^healing_.*_found$/)
+    expect(result.events[1].id).toMatch(/^shield_recharger_.*_found$/)
+  })
+
+  it('rolls healing and shield recharger loot bonuses independently', () => {
+    const initial = createInitialState(0)
+    const state = {
+      ...initial,
+      raid: {
+        ...initial.raid,
+        phase: 'RAIDING' as const,
+      },
+    }
+
+    const fakeRng = {
+      next: vi
+        .fn<() => number>()
+        .mockReturnValueOnce(0.99)
+        .mockReturnValueOnce(0.01),
+      weightedPick: <T,>(items: readonly T[]) => items[0],
+      pick: <T,>(items: readonly T[]) => items[0],
+      int: () => 1,
+      clone: () => { throw new Error('unused in test') },
+      getSeed: () => 0,
+    } as unknown as RNG
+
+    const result = maybeAwardLootBonusConsumables(state, fakeRng, 0)
+
+    expect(result.state.raid.healingItems).toHaveLength(0)
+    expect(result.state.raid.backpack).toHaveLength(1)
+    expect(result.events).toHaveLength(1)
+    expect(result.events[0].id).toMatch(/^shield_recharger_.*_found$/)
+  })
+
   it('produces the same event sequence for the same seed', () => {
     const { allEvents: run1 } = runTicks(20)
     const { allEvents: run2 } = runTicks(20)

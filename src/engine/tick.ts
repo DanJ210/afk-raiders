@@ -25,6 +25,9 @@ import { appendLogEntries } from './log.js'
 import { recordOutcome, recordRobotDefeat } from './stats.js'
 import { advanceShieldRecharge } from './shields.js'
 
+const LOOT_BONUS_HEALING_ITEM_CHANCE = 1 // 20% chance to find a healing item on any loot event, independent of normal loot rolls
+const LOOT_BONUS_SHIELD_RECHARGER_CHANCE = 1 // 15% chance to find a shield recharger on any loot event, independent of normal loot rolls
+
 /**
  * Apply successful-extraction bookkeeping: transfer loot home, heal up, count
  * the win. If the stash overflows the item limit, the lowest-value items are
@@ -73,6 +76,37 @@ function hiddenPocketSavedEvent(itemName: string, tick: number, now: number): Lo
     text: `Secret Hidden Pocket check: 1x ${itemName} made it home. Very legal, totally declared.`,
     phase: 'HUB',
   }
+}
+
+function totalBackpackQuantity(backpack: BackpackItem[]): number {
+  return backpack.reduce((sum, item) => sum + item.quantity, 0)
+}
+
+export function maybeAwardLootBonusConsumables(
+  state: GameState,
+  rng: RNG,
+  now: number,
+): { state: GameState; events: LogEvent[] } {
+  if (state.raid.phase !== 'RAIDING') {
+    return { state, events: [] }
+  }
+
+  let nextState = state
+  const bonusEvents: LogEvent[] = []
+
+  if (rng.next() < LOOT_BONUS_HEALING_ITEM_CHANCE) {
+    const healingFind = resolveHealingItemFind(nextState, rng, now)
+    nextState = healingFind.state
+    bonusEvents.push(healingFind.event)
+  }
+
+  if (rng.next() < LOOT_BONUS_SHIELD_RECHARGER_CHANCE) {
+    const rechargerFind = resolveShieldRechargerFind(nextState, rng, now)
+    nextState = rechargerFind.state
+    bonusEvents.push(rechargerFind.event)
+  }
+
+  return { state: nextState, events: bonusEvents }
 }
 
 function applyHiddenPocketFailureRecovery(
@@ -244,7 +278,15 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
     const template = allEvents.find(e => e.id === event.id)
     emitted.push(event)
     if (template) {
+      const backpackQuantityBeforeEffects = totalBackpackQuantity(currentState.raid.backpack)
       currentState = applyEffects(currentState, template, rng)
+
+      const backpackQuantityAfterEffects = totalBackpackQuantity(currentState.raid.backpack)
+      if (backpackQuantityAfterEffects > backpackQuantityBeforeEffects) {
+        const bonusLoot = maybeAwardLootBonusConsumables(currentState, rng, now)
+        currentState = bonusLoot.state
+        emitted.push(...bonusLoot.events)
+      }
 
       if (template.effects?.healingItem) {
         const healingFind = resolveHealingItemFind(currentState, rng, now)

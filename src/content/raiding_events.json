@@ -25,7 +25,7 @@
   },
   {
     "id": "loot_bandage",
-    "weight": 18,
+    "weight": 100,
     "text": "Spotted medical supplies in a pouch labeled PROBABLY CLEAN.",
     "requires": {
       "phase": "RAIDING"
@@ -37,7 +37,7 @@
   },
   {
     "id": "loot_shield_recharger",
-    "weight": 12,
+    "weight": 100,
     "text": "Found a shield recharger in a crate labeled ELECTRICAL MAYBE. That's either useful or a personality test.",
     "requires": {
       "phase": "RAIDING"

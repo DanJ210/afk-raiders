@@ -10,7 +10,7 @@
   },
   {
     "id": "duct_taped_capacitor",
-    "weight": 12,
+    "weight": 18,
     "rarity": 2,
     "name": "Duct-Taped Capacitor",
     "value": 28,
@@ -19,7 +19,7 @@
   },
   {
     "id": "panic_capacitor",
-    "weight": 5,
+    "weight": 8,
     "rarity": 4,
     "name": "Panic Capacitor",
     "value": 70,

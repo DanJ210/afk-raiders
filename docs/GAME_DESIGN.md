@@ -49,6 +49,13 @@ Shield rechargers are manual-use backpack loot found during RAIDING:
 - Rechargers restore shield charge only; they do not repair shield durability.
 - If unused, they extract into Home Stash like normal backpack loot.
 
+### Consumables on Loot
+When normal loot is received, the raid also rolls independent bonus chances for:
+- one healing item
+- one shield recharger
+
+Because the rolls are independent, the same loot event can award both bonus consumables in addition to normal loot.
+
 ## 3. The Handler (player) — Signal
 The only player resource. Regenerates ~1 per 10 minutes, capped at 5.
 - **Ready Up! (2 Signal):** HUB-only action that immediately starts DEPLOYING.
