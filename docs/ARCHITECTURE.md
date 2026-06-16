@@ -28,11 +28,12 @@ afk-raiders/
 │   │   ├── signal.ts            # Signal regen + spend rules
 │   │   ├── homeStash.ts         # Stash transfer and overflow auto-sell
 │   │   ├── stats.ts             # Lifetime stat aggregation helpers
+│   │   ├── log.ts               # Centralized log append/capping
 │   │   └── catchUp.ts           # Fast-forward elapsed ticks on app open
 │   ├── content/                 # The comedy lives here, as data
 │   │   ├── hub_events.json      # Desperanza rest & prep (≤5 min)
-│   │   ├── deployment_events.json # One-person tunnel pod ride (60 s)
-│   │   ├── raiding_events.json  # Looting, robots, greed (≤30 min)
+│   │   ├── deployment_events.json # One-person tunnel pod ride (2 min)
+│   │   ├── raiding_events.json  # Looting, robots, greed (≤30 min + nuke risk)
 │   │   ├── extraction_events.json # LZ drama: failed/early extractions, ambushes
 │   │   ├── downed_events.json   # Death quips
 │   │   ├── loot.json            # Many varieties of original comedy/parody loot items
@@ -83,18 +84,32 @@ Events may also gate themselves by `requires.timeOfDay` (`Day`, `Night`, or `Ste
 ### Home stash transfer
 On every EXTRACTING → HUB transition (natural or event-forced), `processTick` merges the backpack into `state.homeStash` before the backpack resets. Duplicate item IDs stack quantities.
 
+The stash has an enforced item cap (`HOME_STASH_ITEM_LIMIT`). Overflow items are auto-sold by lowest value first, and their value is converted to `state.coins` with a narrated `stash_overflow_sale` comms line. (Manual selling/trading is a future hub mechanic.)
+
+`RaidState` also includes an optional manual `hiddenPocket` selection (the parody safe pocket). The UI (`BackpackPanel.vue`) explicitly sets/changes/clears this slot from current backpack items. On backpack-loss failures (DOWNED → HUB), the engine transfers exactly one unit of the selected pocket item into home stash before normal reset bookkeeping.
+
 ### 3. Signal as the only real input
-Signal regenerates (~1 per 10 min, capped at 5). Ready Up (2 Signal) starts DEPLOYING from HUB, Encourage/Scold (1 each) nudge hidden behavior weights, and Scold also reduces current greed before the next greed check; CALL EXTRACT (3 Signal) forces an extraction attempt. During RAIDING only one action may be pending at a time.
+Signal regenerates (~1 per 10 min, capped at 5). Ready Up (2 Signal) starts DEPLOYING from HUB, Encourage/Scold (1 each) nudge hidden behavior weights, and Scold also reduces current greed before the next greed check; CALL EXTRACT (3 Signal) forces an extraction attempt. During RAIDING only one action may be queued at a time, so action buttons lock until the next tick applies the pending action.
 
 ### 4. Lifetime stat collection
 `GameState.stats` tracks long-lived outcomes: extraction/death totals and context (zone + zone/time), robot defeats, and healing item usage.
 
 Save migration in `gameStore.ts` backfills missing legacy stats from pre-existing `raider.extractCount` and `raider.deathCount` so historical totals remain consistent.
 
-### 5. State updates are immutable-style
+### 5. Phase timings and failure states
+- Tick cadence remains 30 seconds.
+- `HUB`: 20 ticks (10 minutes)
+- `DEPLOYING`: 4 ticks (2 minutes)
+- `RAIDING`: 60 ticks (30 minutes)
+- `EXTRACTING`: 4 ticks (~2 minutes)
+- `DOWNED`: 2 ticks
+
+When RAIDING time expires without extraction, the next natural transition is DOWNED (zone nuke failure), not EXTRACTING.
+
+### 6. State updates are immutable-style
 `processTick(state, rng)` returns `{ state: GameState, events: LogEvent[] }` without mutating its input. This keeps Pinia reactivity simple, enables snapshot tests, and makes catch-up a pure fold over ticks.
 
-### 6. Phase timings and timeout behavior
+### 7. Phase timings and timeout behavior
 - Tick cadence remains 30 seconds.
 - `HUB`: 20 ticks (10 minutes)
 - `DEPLOYING`: 4 ticks (2 minutes)

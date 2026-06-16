@@ -38,8 +38,15 @@ Key docs — read these before making changes:
 ### Home Stash
 Items successfully extracted are automatically transferred from the raider's backpack to a persistent `homeStash` array on the GameState. This survives raids, deaths, and sessions. When working with extraction logic or inventory systems, always ensure loot is transferred during the EXTRACTING → HUB phase transition (see `src/engine/tick.ts` for the implementation pattern). The stash holds at most 120 items (`HOME_STASH_ITEM_LIMIT` in `src/engine/homeStash.ts`; quantities count toward the cap). Overflow is never deleted: the lowest-value items are auto-sold and their value is credited to `GameState.coins` (the raider's coin stash), narrated by a `stash_overflow_sale` comms event. The Home Stash UI lists items highest-value first, and separates unsold `Stash Value` from sold `Coin Value`.
 
+### Secret Hidden Pocket
+AFK Raiders includes a parody safe pocket named **Secret Hidden Pocket**:
+- It is stored on `RaidState.hiddenPocket` and is **manual only** (never auto-assigned by engine logic).
+- The player can set, change, or clear the pocket selection from current raid backpack items in `BackpackPanel.vue`.
+- On failure outcomes that clear the backpack (notably DOWNED → HUB), exactly one unit of the selected pocket item is transferred to `homeStash` in `processTick` before raid reset bookkeeping finishes.
+- On successful extraction, do not duplicate this item; normal backpack extraction already transfers all loot.
+
 ### Raid Pacing
-Raid aggression is autonomous; there is no extraction preference slider. `runGreedCheck()` uses fixed seeded probabilities so the Raider generally spends more time raiding before choosing to extract. Low HP without any current-raid bandages increases extract probability so the raider tries to survive and cash out. If they do have bandages, this no-bandage extraction bonus is not applied. Scolding also reduces current greed before the next greed check, giving the Handler a direct way to cool risky behavior.
+Raid aggression is autonomous; there is no extraction preference slider. `runGreedCheck()` uses fixed seeded probabilities so the Raider generally spends more time raiding before choosing to extract. Low HP without any current-raid bandages increases extract probability so the raider tries to survive and cash out. If they do have bandages, this no-bandage extraction bonus is not applied. Scolding also reduces current greed before the next greed check, giving the Handler a direct way to cool risky behavior. Separately, the RAIDING phase has a hard timer cap; timing out in RAIDING transitions to DOWNED.
 
 During RAIDING, only one Handler action can be pending at a time (`pendingEncourage`, `pendingScold`, or `forceExtract`). When any pending action is set, raid action buttons should remain disabled until the next simulation tick consumes the pending action and logs feedback.
 

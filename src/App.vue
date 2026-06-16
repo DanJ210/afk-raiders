@@ -97,7 +97,7 @@ const showZoneStrip = computed(
 .app {
   display: flex;
   flex-direction: column;
-  height: 100dvh;
+  min-height: 100dvh;
   max-width: 900px;
   margin: 0 auto;
   padding: 12px;
@@ -155,7 +155,7 @@ const showZoneStrip = computed(
   display: flex;
   flex-direction: column;
   gap: 10px;
-  overflow-y: auto;
+  overflow: visible;
 }
 
 .app__log {
@@ -247,6 +247,8 @@ const showZoneStrip = computed(
 
 @media (max-width: 600px) {
   .app {
+    height: 100dvh;
+    min-height: 0;
     padding-bottom: 0;
   }
 

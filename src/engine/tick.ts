@@ -14,7 +14,7 @@
  *   6. Increment tick counter, append events to log.
  */
 
-import type { BackpackItem, GameState, LogEvent, TickResult } from './types.js'
+import type { BackpackItem, GameState, HiddenPocketItem, LogEvent, TickResult } from './types.js'
 import type { RNG } from './rng.js'
 import { tickPhase } from './raidStateMachine.js'
 import { runGreedCheck } from './greedCheck.js'
@@ -64,6 +64,48 @@ function stashSaleEvent(sold: number, coins: number, tick: number, now: number):
   }
 }
 
+function hiddenPocketSavedEvent(itemName: string, tick: number, now: number): LogEvent {
+  return {
+    id: 'hidden_pocket_saved',
+    tick,
+    timestamp: now,
+    text: `Secret Hidden Pocket check: 1x ${itemName} made it home. Very legal, totally declared.`,
+    phase: 'HUB',
+  }
+}
+
+function applyHiddenPocketFailureRecovery(
+  state: GameState,
+  hiddenPocket: HiddenPocketItem | null,
+): { state: GameState; saved: boolean; coinsGained: number; soldItemCount: number; savedItemName: string | null } {
+  if (!hiddenPocket) {
+    return { state, saved: false, coinsGained: 0, soldItemCount: 0, savedItemName: null }
+  }
+
+  const transfer = transferBackpackToHomeStash(state.homeStash, [
+    {
+      itemId: hiddenPocket.itemId,
+      name: hiddenPocket.name,
+      value: hiddenPocket.value,
+      rarity: hiddenPocket.rarity,
+      flavor: hiddenPocket.flavor,
+      quantity: 1,
+    },
+  ])
+
+  return {
+    state: {
+      ...state,
+      homeStash: transfer.homeStash,
+      coins: state.coins + transfer.coinsGained,
+    },
+    saved: true,
+    coinsGained: transfer.coinsGained,
+    soldItemCount: transfer.soldItemCount,
+    savedItemName: hiddenPocket.name,
+  }
+}
+
 export function processTick(state: GameState, rng: RNG, now: number = Date.now()): TickResult {
   const emitted: LogEvent[] = []
 
@@ -91,14 +133,21 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
     // pre-tick backpack from the input state.
     if (transition.to === 'HUB') {
       if (transition.from === 'DOWNED') {
+        const recovery = applyHiddenPocketFailureRecovery(currentState, state.raid.hiddenPocket)
         currentState = {
-          ...currentState,
+          ...recovery.state,
           raider: {
-            ...currentState.raider,
-            hp: currentState.raider.maxHp,
-            deathCount: currentState.raider.deathCount + 1,
+            ...recovery.state.raider,
+            hp: recovery.state.raider.maxHp,
+            deathCount: recovery.state.raider.deathCount + 1,
           },
           stats: recordOutcome(currentState.stats, 'deaths', state.raid.zone, state.raid.timeOfDay),
+        }
+        if (recovery.saved && recovery.savedItemName) {
+          emitted.push(hiddenPocketSavedEvent(recovery.savedItemName, state.tick, now))
+        }
+        if (recovery.soldItemCount > 0) {
+          emitted.push(stashSaleEvent(recovery.soldItemCount, recovery.coinsGained, state.tick, now))
         }
       } else if (transition.from === 'EXTRACTING') {
         const extraction = applySuccessfulExtraction(currentState, state.raid.backpack, {

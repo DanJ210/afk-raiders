@@ -15,9 +15,9 @@ You are **not** the raider. You are their Handler back in the underground hub, w
 ## 2. Core Loop
 1. **Prep phase (hub):** Raider sells loot, buys questionable gear, eats expired MREs, gossips with NPCs.
 2. **Deploy:** Raider autonomously picks a zone and a time-of-day profile (Day / Night / Stella Red).
-3. **Raid events:** Loot finds, robot encounters, weather, meeting other AI raiders (alliance → inevitable betrayal). Time-of-day influences risk and reward.
+3. **Raid events:** Loot finds, robot encounters, weather, meeting other AI raiders (alliance → inevitable betrayal). Time-of-day profile controls both upside (loot value/rarity) and risk (robot pressure/extraction danger).
 4. **The Greed Check™ (signature mechanic):** At intervals the Raider rolls to extract *or* push deeper for better loot. Backpack value rises → death risk rises. Pure dramatic tension, zero input required.
-5. **Extract or die:** Extraction takes ~90 seconds, then a final beat to hit the big RETURN HOME button. During that window **extraction events** can fire — the shuttle may arrive early (instant success), the beacon may get jammed (back into the zone, backpack kept), or the raider may go down at the LZ (lose the bag). If the raider stays in RAIDING until the timer expires, they go DOWNED (zone nuke failure). Death = lose the bag, respawn in hub with a sheepish log entry. Repeat forever.
+5. **Extract or die:** Extraction takes ~90 seconds, then a final beat to hit the big RETURN HOME button. During that window **extraction events** can fire — the shuttle may arrive early (instant success), the beacon may get jammed (back into the zone, backpack kept), or the raider may go down at the LZ (lose the bag). If the raider stays in RAIDING until the timer expires, they go DOWNED (zone nuke failure).  Death = lose the bag (keep the Emotional Support Pocket item), respawn in hub with a sheepish log entry. If the raid timer reaches zero while still in RAIDING, the zone nuke lands and the raider goes DOWNED.
 
 ### The Home Stash
 Loot that makes it home goes into the **Stash** — a persistent collection that survives raids, deaths, and sessions:
@@ -26,6 +26,13 @@ Loot that makes it home goes into the **Stash** — a persistent collection that
 - Overflow is auto-sold by lowest value first and credited as coins (value is never deleted).
 - Duplicate items stack with a ×N quantity multiplier, and their displayed value is multiplied accordingly.
 - The in-raid backpack resets if the raider dies or fails to extract — the stash is untouched.
+
+### Secret Hidden Pocket (parody safe pocket)
+The Raider has one manual **Secret Hidden Pocket** slot per raid:
+- The player must manually pick an item from the current raid backpack; it is never auto-assigned.
+- The slot can be changed or cleared at any time during the active raid.
+- On failures that clear the backpack (for example DOWNED outcomes), exactly one unit of the selected item is transferred safely to Home Stash.
+- On successful extraction, normal extraction transfer already keeps everything, so the pocket provides no extra duplicate item.
 
 ## 3. The Handler (player) — Signal
 The only player resource. Regenerates ~1 per 10 minutes, capped at 5.
@@ -74,8 +81,9 @@ Everything funny flows through an autoscrolling text feed:
 
 ## 7. Data Model (MVP)
 - **Raider** — stats, mood, Rat Rating, skills
-- **Raid** — zone, time-of-day, tick count, backpack contents/value, greed level, phase
-- **Home Stash** — persistent extracted loot; stacks duplicates (×N), capped at 120 items with overflow auto-selling into coins
+- **Raid** — zone, time-of-day, tick count, backpack contents/value, greed level, phase, optional manual Secret Hidden Pocket selection
+- **Home Stash** — persistent extracted loot; stacks duplicates (×N), capped at 120 items with overflow auto-sold into coins
+- **Coins** — accumulated value from stash overflow auto-sales
 - **Lifetime Stats** — extracts/deaths totals and context breakdowns, robot defeats, healing usage
 - **EventLog** — the comms feed entries
 - **Inventory / Gear** — hub stash, equipped items

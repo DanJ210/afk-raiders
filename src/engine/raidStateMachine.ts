@@ -60,7 +60,7 @@ export function tickPhase(
     }
     // Reset raid state when forced back to HUB (mirror of the natural-expiry path)
     if (forced === 'HUB') {
-      forcedRaid = { ...forcedRaid, backpack: [], healingItems: [], backpackValue: 0, greedLevel: 0, forceExtract: false, zone: null, timeOfDay: null }
+      forcedRaid = { ...forcedRaid, backpack: [], hiddenPocket: null, healingItems: [], backpackValue: 0, greedLevel: 0, forceExtract: false, zone: null, timeOfDay: null }
     }
     // Healing items are lost on death — clear immediately so they aren't visible during DOWNED phase
     if (forced === 'DOWNED') {
@@ -95,7 +95,7 @@ export function tickPhase(
 
   // Reset raid state when returning to HUB
   if (next === 'HUB') {
-    updatedRaid = { ...updatedRaid, backpack: [], healingItems: [], backpackValue: 0, greedLevel: 0, forceExtract: false, zone: null, timeOfDay: null }
+    updatedRaid = { ...updatedRaid, backpack: [], hiddenPocket: null, healingItems: [], backpackValue: 0, greedLevel: 0, forceExtract: false, zone: null, timeOfDay: null }
   }
 
   // Healing items are lost on death — clear on natural DOWNED transitions too.
