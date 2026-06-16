@@ -19,7 +19,7 @@ import type { RNG } from './rng.js'
 import { tickPhase } from './raidStateMachine.js'
 import { runGreedCheck } from './greedCheck.js'
 import { applyScoldGreedReduction } from './signal.js'
-import { resolveEvent, resolveFlavorKey, applyEffects, resolveHealingItemFind, resolveRobotEncounter, resolveShieldRechargerFind, events as allEvents } from './eventResolver.js'
+import { describeShieldDamage, resolveEvent, resolveFlavorKey, applyEffects, resolveHealingItemFind, resolveRobotEncounter, resolveShieldRechargerFind, events as allEvents } from './eventResolver.js'
 import { transferBackpackToHomeStash, HOME_STASH_ITEM_LIMIT } from './homeStash.js'
 import { appendLogEntries } from './log.js'
 import { recordOutcome, recordRobotDefeat } from './stats.js'
@@ -75,6 +75,22 @@ function hiddenPocketSavedEvent(itemName: string, tick: number, now: number): Lo
     timestamp: now,
     text: `Secret Hidden Pocket check: 1x ${itemName} made it home. Very legal, totally declared.`,
     phase: 'HUB',
+  }
+}
+
+function shieldDamageEvent(
+  text: string,
+  tick: number,
+  now: number,
+  phase: GameState['raid']['phase'],
+  sourceId: string,
+): LogEvent {
+  return {
+    id: `shield_damage_${sourceId}`,
+    tick,
+    timestamp: now,
+    text,
+    phase,
   }
 }
 
@@ -279,7 +295,20 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
     emitted.push(event)
     if (template) {
       const backpackQuantityBeforeEffects = totalBackpackQuantity(currentState.raid.backpack)
-      currentState = applyEffects(currentState, template, rng)
+      const effectResult = applyEffects(currentState, template, rng)
+      currentState = effectResult.state
+
+      if (effectResult.shieldDamage?.mitigated && effectResult.shieldDamage.shieldChargeLost > 0) {
+        emitted.push(
+          shieldDamageEvent(
+            describeShieldDamage(effectResult.shieldDamage),
+            state.tick,
+            now,
+            currentState.raid.phase,
+            template.id,
+          ),
+        )
+      }
 
       const backpackQuantityAfterEffects = totalBackpackQuantity(currentState.raid.backpack)
       if (backpackQuantityAfterEffects > backpackQuantityBeforeEffects) {
