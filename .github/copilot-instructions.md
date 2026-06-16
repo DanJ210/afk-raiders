@@ -83,6 +83,9 @@ Only `nasty` and `deadly` robots can kill the raider (lethal encounters trigger 
 ### Healing Items
 Bandages live in `src/content/healing_items.json` and are current-raid-only consumables, stored on `RaidState.healingItems`, not in the backpack or home stash. RAIDING events can use `effects.healingItem` to find one bandage. The engine automatically uses the smallest useful bandage when the raider is alive and HP is at or below 75%, capped at 50 HP per use: White +5, Green +10, Blue +25, Purple +50. Each bandage also has a `moodGain`, and higher-tier bandages grant more mood when consumed. The used bandage is removed from `RaidState.healingItems`. Healing items reset when the raid returns to HUB and are lost on death.
 
+### Shields
+Shields are implemented as a deterministic protection layer on `RaidState.shield`, not as bonus HP. All incoming engine damage that should respect shields must route through the shared helper in `src/engine/shields.ts`; do not subtract shielded HP ad hoc in unrelated files. Shield rechargers are backpack items found during RAIDING and are manual-use only from the current raid backpack. They restore shield charge, never durability, and if left unused they extract into the home stash like normal backpack loot.
+
 ## Future Development Notes
 - Home stash will eventually persist to IndexedDB when transitioning from localStorage
 - Consider adding sell/trade mechanics in the hub to let players convert stash items to currency

@@ -7,7 +7,7 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import { events, flavor, healingItems, loot, robots } from '../../src/engine/eventResolver'
+import { events, flavor, healingItems, loot, robots, shieldRechargers } from '../../src/engine/eventResolver'
 import baseLootData from '../../src/content/loot.json'
 import type { Phase, TimeOfDay } from '../../src/engine/types'
 
@@ -192,6 +192,14 @@ describe('content validation', () => {
       expect(healingEvents.length).toBeGreaterThan(0)
       for (const event of healingEvents) {
         expect(event.requires?.phase, `healing event "${event.id}" must require RAIDING`).toBe('RAIDING')
+      }
+    })
+
+    it('shield recharger find events only appear during RAIDING', () => {
+      const shieldEvents = events.filter(event => event.effects?.shieldRecharger)
+      expect(shieldEvents.length).toBeGreaterThan(0)
+      for (const event of shieldEvents) {
+        expect(event.requires?.phase, `shield event "${event.id}" must require RAIDING`).toBe('RAIDING')
       }
     })
   })
@@ -410,6 +418,35 @@ describe('content validation', () => {
     it('all healing item IDs are unique', () => {
       const ids = healingItems.map(item => item.id)
       expect(new Set(ids).size).toBe(ids.length)
+    })
+  })
+
+  describe('shield_rechargers.json', () => {
+    it('all shield recharger weights, rarities, and charge amounts are valid', () => {
+      for (const item of shieldRechargers) {
+        expect(item.weight, `shield recharger "${item.id}" has weight ${item.weight}`).toBeGreaterThan(0)
+        expect(item.chargeAmount, `shield recharger "${item.id}" must restore charge`).toBeGreaterThan(0)
+        expect(item.rarity, `shield recharger "${item.id}" rarity must be >= 1`).toBeGreaterThanOrEqual(1)
+        expect(item.rarity, `shield recharger "${item.id}" rarity must be <= 5`).toBeLessThanOrEqual(5)
+      }
+    })
+
+    it('all shield recharger IDs are unique', () => {
+      const ids = shieldRechargers.map(item => item.id)
+      expect(new Set(ids).size).toBe(ids.length)
+    })
+
+    it('higher-value shield rechargers are never more common than cheaper ones', () => {
+      for (const a of shieldRechargers) {
+        for (const b of shieldRechargers) {
+          if (a.value > b.value) {
+            expect(
+              a.weight,
+              `shield recharger "${a.id}" is more valuable than "${b.id}" but more common`,
+            ).toBeLessThanOrEqual(b.weight)
+          }
+        }
+      }
     })
   })
 })
