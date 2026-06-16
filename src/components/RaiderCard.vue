@@ -293,10 +293,14 @@ function parseZoneTimeKey(key: string): { zoneId: string; timeOfDay: string } {
 
 <style scoped>
 .raider-card {
+  display: flex;
+  flex-direction: column;
   background: var(--color-surface);
   border-radius: 8px;
   border: 1px solid var(--color-border);
   padding: 14px;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .raider-card__header {
@@ -366,12 +370,16 @@ function parseZoneTimeKey(key: string): { zoneId: string; timeOfDay: string } {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 2px;
 }
 
 .raider-card__stat {
   display: flex;
   align-items: center;
   gap: 8px;
+  min-width: 0;
 }
 
 .raider-card__stat--shield {
@@ -449,6 +457,8 @@ function parseZoneTimeKey(key: string): { zoneId: string; timeOfDay: string } {
   font-size: 0.85rem;
   color: var(--color-text);
   font-family: var(--font-mono);
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .raider-card__rat-rating {
@@ -462,6 +472,7 @@ function parseZoneTimeKey(key: string): { zoneId: string; timeOfDay: string } {
 
 .hp-bar {
   flex: 1;
+  min-width: 0;
   height: 8px;
   background: var(--color-surface-raised);
   border-radius: 4px;
@@ -491,6 +502,7 @@ function parseZoneTimeKey(key: string): { zoneId: string; timeOfDay: string } {
   margin-top: 8px;
   border-top: 1px solid var(--color-border);
   padding-top: 8px;
+  min-width: 0;
 }
 
 .raider-card__history summary {
@@ -519,6 +531,7 @@ function parseZoneTimeKey(key: string): { zoneId: string; timeOfDay: string } {
   font-family: var(--font-mono);
   font-size: 0.72rem;
   color: var(--color-muted);
+  overflow-wrap: anywhere;
 }
 
 .raider-card__history-section ul {
@@ -534,6 +547,49 @@ function parseZoneTimeKey(key: string): { zoneId: string; timeOfDay: string } {
   font-family: var(--font-mono);
   font-size: 0.72rem;
   color: var(--color-text);
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 600px) {
+  .raider-card {
+    padding: 10px;
+  }
+
+  .raider-card__header {
+    flex-wrap: wrap;
+    row-gap: 6px;
+  }
+
+  .raider-card__name {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .raider-card__phase-badge {
+    margin-left: auto;
+  }
+
+  .raider-card__stat {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .raider-card__stat-label {
+    min-width: 0;
+  }
+
+  .raider-card__counters {
+    flex-wrap: wrap;
+    gap: 8px 12px;
+  }
+
+  .raider-card__history {
+    margin-top: 10px;
+  }
+
+  .raider-card__history-grid {
+    gap: 10px;
+  }
 }
 
 @keyframes pulse {

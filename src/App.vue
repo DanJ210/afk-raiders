@@ -267,5 +267,12 @@ const showZoneStrip = computed(
     height: 100%;
     max-height: none;
   }
+
+  .app__mobile-panel--fill :deep(.raider-card),
+  .app__mobile-panel--fill :deep(.handler-actions) {
+    flex: none;
+    height: auto;
+    min-height: 0;
+  }
 }
 </style>
