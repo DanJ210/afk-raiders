@@ -24,7 +24,7 @@ Loot that makes it home goes into the **Stash** — a persistent collection that
 - On successful extraction the raider's backpack is transferred into the stash.
 - The stash has a hard cap of 120 total items (quantity counts).
 - Overflow is auto-sold by lowest value first and credited as coins (value is never deleted).
-- Duplicate items stack with a ×2 / ×3 quantity multiplier, and their displayed value is multiplied accordingly.
+- Duplicate items stack with a ×N quantity multiplier, and their displayed value is multiplied accordingly.
 - The in-raid backpack resets if the raider dies or fails to extract — the stash is untouched.
 
 ## 3. The Handler (player) — Signal
