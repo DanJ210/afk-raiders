@@ -9,10 +9,7 @@ const store = useGameStore()
 const logEl = ref<HTMLElement | null>(null)
 const userScrolledDown = ref(false)
 const entries = computed(() => [...store.log].reverse())
-const raidShield = computed(() => {
-  const raidRecord = store.raid as unknown as Record<string, unknown>
-  return raidRecord.shield
-})
+const raidShield = computed(() => store.raid.shield)
 
 function formatTime(ts: number): string {
   const d = new Date(ts)
