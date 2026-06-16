@@ -586,12 +586,36 @@ function applyShieldRecharger(itemId: string) {
 }
 
 @media (max-width: 600px) {
+  .backpack-panel {
+    max-height: none;
+    min-height: 0;
+  }
+
+  .backpack-panel__items {
+    flex: 1;
+    min-height: 0;
+    max-height: none;
+  }
+
   .stash-dialog__actions {
     flex-direction: column-reverse;
   }
 
   .stash-dialog__button {
     width: 100%;
+  }
+}
+
+@media (min-width: 601px) {
+  .backpack-panel {
+    min-height: 620px;
+    max-height: none;
+  }
+
+  .backpack-panel__items {
+    flex: none;
+    min-height: 320px;
+    max-height: 320px;
   }
 }
 </style>
