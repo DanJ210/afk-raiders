@@ -193,7 +193,7 @@ describe('applyEffects — backpack item behavior', () => {
 
     expect(result).not.toBeNull()
     expect(result!.event.id).toBe('robot_roomba_prime_escaped')
-    expect(result!.event.text).toContain('Shield absorbed 16 damage')
+    expect(result!.event.text).toContain('Shield lost 16 charge')
     expect(result!.event.text).toContain('10 HP damage landed')
     expect(result!.state.raider.hp).toBe(90)
     expect(result!.state.raid.shield?.charge).toBe(24)
@@ -228,7 +228,7 @@ describe('applyEffects — backpack item behavior', () => {
 
     expect(failed).not.toBeNull()
     expect(failed!.event.id).toBe('robot_tattletale_escaped')
-    expect(failed!.event.text).toContain('Shield absorbed 40 damage')
+    expect(failed!.event.text).toContain('Shield lost 40 charge')
     expect(failed!.event.text).toContain('26 HP damage landed')
     expect(failed!.state.raider.hp).toBe(74)
 
@@ -243,7 +243,7 @@ describe('applyEffects — backpack item behavior', () => {
 
     expect(result).not.toBeNull()
     expect(result!.event.id).toBe('robot_roomba_prime_escaped')
-    expect(result!.event.text).toContain('Shield absorbed 40 damage')
+    expect(result!.event.text).toContain('Shield lost 40 charge')
     expect(result!.event.text).toContain('29 HP damage landed')
     expect(result!.state.raider.hp).toBe(71)
   })
@@ -259,7 +259,7 @@ describe('applyEffects — backpack item behavior', () => {
 
     expect(deadly).not.toBeNull()
     expect(deadly!.event.id).toBe('robot_roomba_prime_escaped')
-    expect(deadly!.event.text).toContain('Shield absorbed 40 damage')
+    expect(deadly!.event.text).toContain('Shield lost 40 charge')
     expect(deadly!.state.raider.hp).toBe(11)
 
     expect(moderate).not.toBeNull()

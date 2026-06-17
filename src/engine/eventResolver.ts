@@ -86,10 +86,10 @@ export function describeShieldDamage(damage: ShieldDamageResult): string {
   }
 
   if (damage.hpDamage <= 0) {
-    return `Shield absorbed ${damage.shieldChargeLost} damage. No HP damage landed.`
+    return `Shield lost ${damage.shieldChargeLost} charge. No HP damage landed.`
   }
 
-  return `Shield absorbed ${damage.shieldChargeLost} damage; ${damage.hpDamage} HP damage landed.`
+  return `Shield lost ${damage.shieldChargeLost} charge; ${damage.hpDamage} HP damage landed.`
 }
 
 /** Filter events valid for the current game context */
