@@ -20,7 +20,7 @@ function createRaidStart(): GameState {
     raid: {
       ...state.raid,
       zone: 'damp_battlegrounds',
-      timeOfDay: 'Day',
+      dangerLevel: 'Low',
       phase: 'RAIDING',
       phaseTicksRemaining: PHASE_DURATIONS.RAIDING,
     },

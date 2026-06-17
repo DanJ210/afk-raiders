@@ -4,16 +4,16 @@ import { createInitialLifetimeStats, recordHealingItemUse, recordOutcome, record
 describe('lifetime stats helpers', () => {
   it('records extract/death totals and zone context', () => {
     const initial = createInitialLifetimeStats()
-    const afterExtract = recordOutcome(initial, 'extracts', 'damp_battlegrounds', 'Night')
-    const afterDeath = recordOutcome(afterExtract, 'deaths', 'damp_battlegrounds', 'Night')
+    const afterExtract = recordOutcome(initial, 'extracts', 'damp_battlegrounds', 'Medium')
+    const afterDeath = recordOutcome(afterExtract, 'deaths', 'damp_battlegrounds', 'Medium')
 
     expect(afterExtract.extracts.total).toBe(1)
     expect(afterExtract.extracts.byZone.damp_battlegrounds).toBe(1)
-    expect(afterExtract.extracts.byZoneAndTime['damp_battlegrounds__Night']).toBe(1)
+    expect(afterExtract.extracts.byZoneAndDanger['damp_battlegrounds__Medium']).toBe(1)
 
     expect(afterDeath.deaths.total).toBe(1)
     expect(afterDeath.deaths.byZone.damp_battlegrounds).toBe(1)
-    expect(afterDeath.deaths.byZoneAndTime['damp_battlegrounds__Night']).toBe(1)
+    expect(afterDeath.deaths.byZoneAndDanger['damp_battlegrounds__Medium']).toBe(1)
   })
 
   it('records robot defeats by id', () => {

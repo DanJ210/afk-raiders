@@ -24,7 +24,7 @@ afk-raiders/
 │   │   ├── raidStateMachine.ts  # HUB → DEPLOYING → RAIDING → EXTRACTING/DOWNED
 │   │   ├── greedCheck.ts        # The signature mechanic
 │   │   ├── eventResolver.ts     # Weighted event tables by context
-│   │   ├── timeProfiles.ts      # Day/Night/Stella Red risk/reward tuning
+│   │   ├── dangerLevelProfiles.ts # Low/Medium/High risk/reward tuning
 │   │   ├── signal.ts            # Signal regen + spend rules
 │   │   ├── shields.ts           # Shared shield damage + recharge rules
 │   │   ├── homeStash.ts         # Stash transfer and overflow auto-sell
@@ -81,7 +81,7 @@ Writing jokes never touches engine code — and this is the future community-con
 
 Events may also set `"effects": { "forcePhase": "..." }` to force a phase change. This powers `extraction_events.json`: during the EXTRACTING window (~90s extraction + a final tick to call the return shuttle, 4 ticks total) events can make extraction fail (`forcePhase: "RAIDING"` — backpack kept), succeed early (`forcePhase: "HUB"` — loot transferred to the home stash), or end in tragedy (`forcePhase: "DOWNED"` — bag lost).
 
-Events may also gate themselves by `requires.timeOfDay` (`Day`, `Night`, or `Stella Red`). The engine applies the matching time-of-day profile in `src/engine/timeProfiles.ts`: Day has lower loot value and rarity bias, Night raises loot upside and robot/extraction pressure, and Stella Red has the highest loot ceiling with the harshest robot and LZ risk. These profiles are the economy guardrail for risk/reward tuning.
+Events may also gate themselves by `requires.dangerLevel` (`Low`, `Medium`, or `High`). The danger level is determined by a seeded combination of zone selection and zone condition selection (from `src/content/zones/zone_conditions.json`). The engine applies the matching danger-level profile in `src/engine/dangerLevelProfiles.ts`: Low has lower loot value and rarity bias, Medium raises loot upside and robot/extraction pressure, and High has the highest loot ceiling with the harshest robot and LZ risk. These profiles are the economy guardrail for risk/reward tuning.
 
 When an event awards backpack loot (`effects.backpackValue` producing a positive loot add), `processTick()` performs two additional independent consumable bonus rolls: one for a healing item and one for a shield recharger. This allows a single loot event to grant normal loot plus either or both consumable types.
 

@@ -1,16 +1,16 @@
-import type { RaiderLifetimeStats, TimeOfDay } from './types.js'
+import type { RaiderLifetimeStats, DangerLevel } from './types.js'
 
 export function createInitialLifetimeStats(): RaiderLifetimeStats {
   return {
     extracts: {
       total: 0,
       byZone: {},
-      byZoneAndTime: {},
+      byZoneAndDanger: {},
     },
     deaths: {
       total: 0,
       byZone: {},
-      byZoneAndTime: {},
+      byZoneAndDanger: {},
     },
     robotDefeats: {},
     healingItemsUsed: {
@@ -27,15 +27,15 @@ function incrementCounter(counter: Record<string, number>, key: string): Record<
   }
 }
 
-function zoneTimeKey(zone: string, timeOfDay: TimeOfDay): string {
-  return `${zone}__${timeOfDay}`
+function zoneDangerKey(zone: string, dangerLevel: DangerLevel): string {
+  return `${zone}__${dangerLevel}`
 }
 
 export function recordOutcome(
   stats: RaiderLifetimeStats,
   outcome: 'extracts' | 'deaths',
   zone: string | null,
-  timeOfDay: TimeOfDay | null,
+  dangerLevel: DangerLevel | null,
 ): RaiderLifetimeStats {
   const current = stats[outcome]
   return {
@@ -43,9 +43,9 @@ export function recordOutcome(
     [outcome]: {
       total: current.total + 1,
       byZone: zone ? incrementCounter(current.byZone, zone) : current.byZone,
-      byZoneAndTime: zone && timeOfDay
-        ? incrementCounter(current.byZoneAndTime, zoneTimeKey(zone, timeOfDay))
-        : current.byZoneAndTime,
+      byZoneAndDanger: zone && dangerLevel
+        ? incrementCounter(current.byZoneAndDanger, zoneDangerKey(zone, dangerLevel))
+        : current.byZoneAndDanger,
     },
   }
 }

@@ -14,13 +14,13 @@ import { applyEffects, consumeHealingItem, consumeShieldRecharger, resolveHealin
 import { createInitialState } from '../../src/engine/initialState'
 import type { EventTemplate, HealingItemStack } from '../../src/engine/types'
 
-// backpackValue=500 maps exclusively to golden_water_bottle,
+// backpackValue=450 maps exclusively to Snack Mix (Chaos Blend),
 // so item selection is fully deterministic — no RNG variance.
 const LOOT_TEMPLATE: EventTemplate = {
   id: 'test_loot',
   weight: 1,
   text: 'You found something.',
-  effects: { backpackValue: 500 },
+  effects: { backpackValue: 450 },
 }
 
 const DAMAGE_TEMPLATE: EventTemplate = {
@@ -35,6 +35,20 @@ const FIXED_DAMAGE_TEMPLATE: EventTemplate = {
   weight: 1,
   text: 'You found something aggressively harmful.',
   effects: { hp: -20 },
+}
+
+const SHIELD_AWARE_DAMAGE_TEMPLATE: EventTemplate = {
+  id: 'test_shield_aware_damage',
+  weight: 1,
+  text: 'You found a truly unfair hazard.',
+  effects: { damage: 20 },
+}
+
+const NEGATIVE_DAMAGE_TEMPLATE: EventTemplate = {
+  id: 'test_negative_damage',
+  weight: 1,
+  text: 'You found a surprisingly gentle hazard.',
+  effects: { damage: -20 },
 }
 
 function makeBandage(overrides: Partial<HealingItemStack> = {}): HealingItemStack {
@@ -58,9 +72,9 @@ describe('applyEffects — backpack item behavior', () => {
 
     expect(result.state.raid.backpack).toHaveLength(1)
     const item = result.state.raid.backpack[0]
-    expect(item.itemId).toBe('golden_water_bottle')
-    expect(item.name).toBe('Golden Water Bottle')
-    expect(item.value).toBe(500)
+    expect(item.itemId).toBe('snack_mix_chaos')
+    expect(item.name).toBe('Snack Mix (Chaos Blend)')
+    expect(item.value).toBe(450)
     expect(item.rarity).toBe(5)
     expect(item.quantity).toBe(1)
   })
@@ -75,7 +89,7 @@ describe('applyEffects — backpack item behavior', () => {
 
     const afterSecond = applyEffects(afterFirst.state, LOOT_TEMPLATE, rng)
     expect(afterSecond.state.raid.backpack).toHaveLength(1)
-    expect(afterSecond.state.raid.backpack[0].itemId).toBe('golden_water_bottle')
+    expect(afterSecond.state.raid.backpack[0].itemId).toBe('snack_mix_chaos')
     expect(afterSecond.state.raid.backpack[0].quantity).toBe(2)
   })
 
@@ -84,10 +98,10 @@ describe('applyEffects — backpack item behavior', () => {
     const rng = createRNG(42)
 
     const afterFirst = applyEffects(state, LOOT_TEMPLATE, rng)
-    expect(afterFirst.state.raid.backpackValue).toBe(500)
+    expect(afterFirst.state.raid.backpackValue).toBe(450)
 
     const afterSecond = applyEffects(afterFirst.state, LOOT_TEMPLATE, rng)
-    expect(afterSecond.state.raid.backpackValue).toBe(1000)
+    expect(afterSecond.state.raid.backpackValue).toBe(900)
   })
 
   it('does not mutate the input state', () => {
@@ -120,17 +134,17 @@ describe('applyEffects — backpack item behavior', () => {
     }
 
     const day = applyEffects(
-      { ...initial, raid: { ...initial.raid, timeOfDay: 'Day' } },
+      { ...initial, raid: { ...initial.raid, dangerLevel: 'Low' } },
       template,
       createRNG(1),
     )
     const night = applyEffects(
-      { ...initial, raid: { ...initial.raid, timeOfDay: 'Night' } },
+      { ...initial, raid: { ...initial.raid, dangerLevel: 'Medium' } },
       template,
       createRNG(1),
     )
     const stellaRed = applyEffects(
-      { ...initial, raid: { ...initial.raid, timeOfDay: 'Stella Red' } },
+      { ...initial, raid: { ...initial.raid, dangerLevel: 'High' } },
       template,
       createRNG(1),
     )
@@ -152,6 +166,24 @@ describe('applyEffects — backpack item behavior', () => {
       shieldChargeLost: 20,
       mitigated: true,
     })
+  })
+
+  it('routes generic damage effects through shield mitigation', () => {
+    const initial = createInitialState(0)
+    const result = applyEffects(initial, SHIELD_AWARE_DAMAGE_TEMPLATE, createRNG(1))
+
+    expect(result.state.raider.hp).toBe(88)
+    expect(result.state.raid.shield?.charge).toBe(20)
+    expect(result.state.raid.shield?.durability).toBe(95)
+  })
+
+  it('treats negative generic damage as a no-op', () => {
+    const initial = createInitialState(0)
+    const result = applyEffects(initial, NEGATIVE_DAMAGE_TEMPLATE, createRNG(1))
+
+    expect(result.state.raider.hp).toBe(initial.raider.hp)
+    expect(result.state.raid.shield?.charge).toBe(initial.raid.shield?.charge)
+    expect(result.state.raid.shield?.durability).toBe(initial.raid.shield?.durability)
   })
 
   it('still mitigates a full hit when the shield only has 1 charge left', () => {
@@ -200,25 +232,25 @@ describe('applyEffects — backpack item behavior', () => {
     expect(result!.state.raid.backpack).toHaveLength(0)
   })
 
-  it('scales failed robot damage by time-of-day profile', () => {
+  it('scales failed robot damage by danger-level profile', () => {
     const initial = createInitialState(0)
-    const night = resolveRobotEncounter(
-      { ...initial, raid: { ...initial.raid, timeOfDay: 'Night' } },
+    const medium = resolveRobotEncounter(
+      { ...initial, raid: { ...initial.raid, dangerLevel: 'Medium' } },
       'roomba_prime',
       createRNG(1),
       0,
     )
-    const stellaRed = resolveRobotEncounter(
-      { ...initial, raid: { ...initial.raid, timeOfDay: 'Stella Red' } },
+    const high = resolveRobotEncounter(
+      { ...initial, raid: { ...initial.raid, dangerLevel: 'High' } },
       'roomba_prime',
       createRNG(1),
       0,
     )
 
-    expect(night).not.toBeNull()
-    expect(stellaRed).not.toBeNull()
-    expect(night!.state.raider.hp).toBe(85)
-    expect(stellaRed!.state.raider.hp).toBe(80)
+    expect(medium).not.toBeNull()
+    expect(high).not.toBeNull()
+    expect(medium!.state.raider.hp).toBe(85)
+    expect(high!.state.raider.hp).toBe(80)
   })
 
   it('applies encounter-specific damage multipliers only on failed robot encounters', () => {

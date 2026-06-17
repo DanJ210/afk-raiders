@@ -8,7 +8,7 @@ describe('raidStateMachine', () => {
     expect(PHASE_DURATIONS.RAIDING).toBe(60)
   })
 
-  it('assigns zone and time of day when HUB naturally expires into DEPLOYING', () => {
+  it('assigns zone and danger level when HUB naturally expires into DEPLOYING', () => {
     const initial = createInitialState(0)
     const result = tickPhase(
       { ...initial.raid, phaseTicksRemaining: 1 },
@@ -21,10 +21,10 @@ describe('raidStateMachine', () => {
     expect(result.raid.phase).toBe('DEPLOYING')
     expect(result.raid.phaseTicksRemaining).toBe(PHASE_DURATIONS.DEPLOYING)
     expect(result.raid.zone).not.toBeNull()
-    expect(result.raid.timeOfDay).not.toBeNull()
+    expect(result.raid.dangerLevel).not.toBeNull()
   })
 
-  it('assigns zone and time of day when Ready Up forces HUB into DEPLOYING', () => {
+  it('assigns zone and danger level when Ready Up forces HUB into DEPLOYING', () => {
     const initial = createInitialState(0)
     const result = tickPhase(initial.raid, 'DEPLOYING', createRNG(1))
 
@@ -33,7 +33,7 @@ describe('raidStateMachine', () => {
     expect(result.raid.phase).toBe('DEPLOYING')
     expect(result.raid.phaseTicksRemaining).toBe(PHASE_DURATIONS.DEPLOYING)
     expect(result.raid.zone).not.toBeNull()
-    expect(result.raid.timeOfDay).not.toBeNull()
+    expect(result.raid.dangerLevel).not.toBeNull()
   })
 
   it('clears healing items on natural RAIDING timeout into DOWNED', () => {

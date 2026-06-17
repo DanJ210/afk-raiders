@@ -7,23 +7,27 @@
  * when a transition occurs, or null if no transition happened this tick.
  */
 
-import type { DangerLevel, Phase, RaidState, TimeOfDay, ZoneEntry } from './types.js'
+import type { DangerLevel, Phase, RaidState, ZoneEntry } from './types.js'
 import type { RNG } from './rng.js'
-import zonesData from '../content/zones.json'
+import zonesData from '../content/zones/zones.json'
+import type { ContentEntry } from './types.js'
+import zoneConditionsData from '../content/zones/zone_conditions.json'
 import { restoreShieldAtHub } from './shields.js'
 
 const zones = zonesData as ZoneEntry[]
 
-const TIME_OF_DAY_TABLE: Array<{ id: TimeOfDay; weight: number; dangerLevel: DangerLevel }> = [
-  { id: 'Day',        weight: 80, dangerLevel: 'Low' },
-  { id: 'Night',      weight: 30, dangerLevel: 'Medium' },
-  { id: 'Stella Red', weight: 10, dangerLevel: 'High' },
-]
+// Flatten all conditions (minor + major) for random selection
+type Condition = ContentEntry & { dangerLevel: DangerLevel }
+const allConditions = [
+  ...zoneConditionsData.minor_conditions,
+  ...zoneConditionsData.major_conditions,
+] as Condition[]
 
 function enterDeploying(raid: RaidState, rng?: RNG): RaidState {
   const zone = rng ? rng.weightedPick(zones).id : zones[0].id
-  const timeOfDay = rng ? rng.weightedPick(TIME_OF_DAY_TABLE).id : 'Day'
-  return { ...raid, zone, timeOfDay }
+  const condition = rng ? rng.weightedPick(allConditions) : allConditions[0]
+  const dangerLevel = condition.dangerLevel
+  return { ...raid, zone, dangerLevel }
 }
 
 // Ticks each phase lasts before auto-transitioning (1 tick = 30s)
@@ -61,7 +65,7 @@ export function tickPhase(
     }
     // Reset raid state when forced back to HUB (mirror of the natural-expiry path)
     if (forced === 'HUB') {
-      forcedRaid = { ...forcedRaid, activeShieldRecharge: null, shield: restoreShieldAtHub(forcedRaid.shield), backpack: [], hiddenPocket: null, healingItems: [], backpackValue: 0, greedLevel: 0, forceExtract: false, zone: null, timeOfDay: null }
+      forcedRaid = { ...forcedRaid, activeShieldRecharge: null, shield: restoreShieldAtHub(forcedRaid.shield), backpack: [], hiddenPocket: null, healingItems: [], backpackValue: 0, greedLevel: 0, forceExtract: false, zone: null, dangerLevel: null }
     }
     // Healing items are lost on death — clear immediately so they aren't visible during DOWNED phase
     if (forced === 'DOWNED') {
@@ -99,7 +103,7 @@ export function tickPhase(
 
   // Reset raid state when returning to HUB
   if (next === 'HUB') {
-    updatedRaid = { ...updatedRaid, activeShieldRecharge: null, shield: restoreShieldAtHub(updatedRaid.shield), backpack: [], hiddenPocket: null, healingItems: [], backpackValue: 0, greedLevel: 0, forceExtract: false, zone: null, timeOfDay: null }
+    updatedRaid = { ...updatedRaid, activeShieldRecharge: null, shield: restoreShieldAtHub(updatedRaid.shield), backpack: [], hiddenPocket: null, healingItems: [], backpackValue: 0, greedLevel: 0, forceExtract: false, zone: null, dangerLevel: null }
   }
 
   // Healing items are lost on death — clear on natural DOWNED transitions too.
