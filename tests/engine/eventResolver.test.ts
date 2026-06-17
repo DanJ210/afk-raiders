@@ -44,6 +44,13 @@ const SHIELD_AWARE_DAMAGE_TEMPLATE: EventTemplate = {
   effects: { damage: 20 },
 }
 
+const NEGATIVE_DAMAGE_TEMPLATE: EventTemplate = {
+  id: 'test_negative_damage',
+  weight: 1,
+  text: 'You found a surprisingly gentle hazard.',
+  effects: { damage: -20 },
+}
+
 function makeBandage(overrides: Partial<HealingItemStack> = {}): HealingItemStack {
   return {
     itemId: 'bandage_white',
@@ -163,6 +170,15 @@ describe('applyEffects — backpack item behavior', () => {
     expect(result.raider.hp).toBe(88)
     expect(result.raid.shield?.charge).toBe(20)
     expect(result.raid.shield?.durability).toBe(95)
+  })
+
+  it('treats negative generic damage as a no-op', () => {
+    const initial = createInitialState(0)
+    const result = applyEffects(initial, NEGATIVE_DAMAGE_TEMPLATE, createRNG(1))
+
+    expect(result.raider.hp).toBe(initial.raider.hp)
+    expect(result.raid.shield?.charge).toBe(initial.raid.shield?.charge)
+    expect(result.raid.shield?.durability).toBe(initial.raid.shield?.durability)
   })
 
   it('still mitigates a full hit when the shield only has 1 charge left', () => {

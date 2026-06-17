@@ -127,10 +127,20 @@ function isNegativeHpEffect(hp: number | string | undefined): boolean {
   return hp.trim().startsWith('-')
 }
 
+// review and test in future 
 function isPositiveDamageEffect(damage: number | string | undefined): boolean {
   if (damage === undefined) return false
   if (typeof damage === 'number') return damage > 0
-  return !damage.trim().startsWith('-')
+  const trimmed = damage.trim()
+  const match = trimmed.match(/^([+-]?\d+)(?:d(\d+))?$/)
+  if (!match) return false
+
+  const base = parseInt(match[1], 10)
+  const die = match[2] ? parseInt(match[2], 10) : 0
+  if (die <= 0) return base > 0
+
+  // Dice expressions can still resolve to damage when non-negative base + die are used.
+  return base >= 0
 }
 
 function isRiskyExtractionEvent(template: EventTemplate): boolean {
@@ -643,9 +653,8 @@ export function applyEffects(
     const parsed = typeof effects.damage === 'string'
       ? parseDice(effects.damage, rng)
       : effects.damage
-    const amount = Math.max(0, Math.abs(parsed))
-    if (amount > 0) {
-      const shielded = applyShieldedDamage(raider, raid, amount)
+    if (parsed > 0) {
+      const shielded = applyShieldedDamage(raider, raid, parsed)
       raider = shielded.raider
       raid = shielded.raid
     }
