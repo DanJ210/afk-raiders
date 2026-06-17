@@ -280,6 +280,13 @@ function applyShieldRecharger(itemId: string) {
 
 <style scoped>
 .backpack-panel {
+  --backpack-visible-item-count: 5;
+  --backpack-item-row-height: 56px;
+  --backpack-item-row-gap: 8px;
+  --backpack-items-viewport-height: calc(
+    (var(--backpack-item-row-height) * var(--backpack-visible-item-count)) +
+    (var(--backpack-item-row-gap) * (var(--backpack-visible-item-count) - 1))
+  );
   background: var(--color-surface);
   border-radius: 8px;
   border: 1px solid var(--color-border);
@@ -438,6 +445,7 @@ function applyShieldRecharger(itemId: string) {
 }
 
 .backpack-panel__item {
+  min-height: var(--backpack-item-row-height);
   border: 1px solid var(--color-border-subtle);
   border-radius: 6px;
   background: var(--color-surface-raised);
@@ -608,6 +616,17 @@ function applyShieldRecharger(itemId: string) {
 
 @media (min-width: 601px) {
   .backpack-panel {
+    min-height: 0;
+    max-height: none;
+  }
+
+  .backpack-panel__items {
+    flex: 1;
+    min-height: 0;
+    max-height: none;
+  }
+
+  .backpack-panel {
     min-height: 620px;
     max-height: none;
   }
@@ -615,6 +634,19 @@ function applyShieldRecharger(itemId: string) {
   .backpack-panel__items {
     flex: none;
     min-height: 320px;
+
+@media (min-width: 601px) {
+  .backpack-panel {
+    min-height: 640px;
+    max-height: none;
+  }
+
+  .backpack-panel__items {
+    flex: none;
+    min-height: var(--backpack-items-viewport-height);
+    max-height: var(--backpack-items-viewport-height);
+  }
+}
     max-height: 320px;
   }
 }
