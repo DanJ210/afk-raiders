@@ -11,7 +11,7 @@ import { events, flavor, healingItems, loot, robots, shieldRechargers } from '..
 import type { Phase, DangerLevel } from '../../src/engine/types'
 import apparelAccessoriesData from '../../src/content/loot-tables/apparel_accessories.json'
 import arcTechData from '../../src/content/loot-tables/arc_tech.json'
-import consumeablesData from '../../src/content/loot-tables/consumeables.json'
+import consumablesData from '../../src/content/loot-tables/consumables.json'
 import cursedWeirdItemsData from '../../src/content/loot-tables/cursed_weird_items.json'
 import lootData from '../../src/content/loot-tables/loot.json'
 import personalJunkData from '../../src/content/loot-tables/personal_junk.json'
@@ -22,7 +22,7 @@ import weaponsPartsData from '../../src/content/loot-tables/weapons_parts.json'
 const rawLoot = [
   ...(apparelAccessoriesData as { items: typeof loot }).items,
   ...(arcTechData as { items: typeof loot }).items,
-  ...(consumeablesData as { items: typeof loot }).items,
+  ...(consumablesData as { items: typeof loot }).items,
   ...(cursedWeirdItemsData as { items: typeof loot }).items,
   ...(lootData as { items: typeof loot }).items,
   ...(personalJunkData as { items: typeof loot }).items,

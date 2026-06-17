@@ -24,7 +24,7 @@ import robotsData from '../content/robots.json'
 import flavorData from '../content/flavor.json'
 import apparelAccessoriesData from '../content/loot-tables/apparel_accessories.json'
 import arcTechData from '../content/loot-tables/arc_tech.json'
-import consumeablesData from '../content/loot-tables/consumeables.json'
+import consumablesData from '../content/loot-tables/consumables.json'
 import cursedWeirdItemsData from '../content/loot-tables/cursed_weird_items.json'
 import lootData from '../content/loot-tables/loot.json'
 import personalJunkData from '../content/loot-tables/personal_junk.json'
@@ -45,7 +45,7 @@ const events = [
 const baseLoot = [
   ...(apparelAccessoriesData as { items: LootItem[] }).items,
   ...(arcTechData as { items: LootItem[] }).items,
-  ...(consumeablesData as { items: LootItem[] }).items,
+  ...(consumablesData as { items: LootItem[] }).items,
   ...(cursedWeirdItemsData as { items: LootItem[] }).items,
   ...(lootData as { items: LootItem[] }).items,
   ...(personalJunkData as { items: LootItem[] }).items,
