@@ -37,8 +37,9 @@ interface SaveData {
   version: number
 }
 
-function clampMood(mood: number): number {
-  return Math.max(-5, Math.min(5, mood))
+function clampMood(mood: unknown): number {
+  const value = typeof mood === 'number' && Number.isFinite(mood) ? mood : 0
+  return Math.max(-5, Math.min(5, value))
 }
 
 function seedLegacyLifetimeStats(state: GameState): RaiderLifetimeStats {
