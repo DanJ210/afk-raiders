@@ -37,6 +37,10 @@ interface SaveData {
   version: number
 }
 
+function clampMood(mood: number): number {
+  return Math.max(-5, Math.min(5, mood))
+}
+
 function seedLegacyLifetimeStats(state: GameState): RaiderLifetimeStats {
   const seeded = createInitialLifetimeStats()
   return {
@@ -64,6 +68,10 @@ function loadSave(): SaveData | null {
     const sale = sellStashOverflow(loadedState.homeStash)
     data.state = {
       ...loadedState,
+      raider: {
+        ...loadedState.raider,
+        mood: clampMood(loadedState.raider.mood),
+      },
       homeStash: sale.homeStash,
       coins: (loadedState.coins ?? 0) + sale.coinsGained,
       stats: loadedState.stats ?? seedLegacyLifetimeStats(loadedState),

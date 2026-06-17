@@ -27,7 +27,7 @@ import { advanceShieldRecharge } from './shields.js'
 
 const LOOT_BONUS_HEALING_ITEM_CHANCE = 0.2 // 20% chance to find a healing item on any loot event, independent of normal loot rolls
 const LOOT_BONUS_SHIELD_RECHARGER_CHANCE = 0.15 // 15% chance to find a shield recharger on any loot event, independent of normal loot rolls
-
+const NEUTRAL_MOOD_THRESHOLD = 0 // Mood above this is positive, below is negative; separate from the "mood" number which can go up to +5 or down to -5
 /**
  * Apply successful-extraction bookkeeping: transfer loot home, heal up, count
  * the win. If the stash overflows the item limit, the lowest-value items are
@@ -46,6 +46,7 @@ function applySuccessfulExtraction(
       raider: {
         ...state.raider,
         hp: state.raider.maxHp,
+        mood: NEUTRAL_MOOD_THRESHOLD,
         extractCount: state.raider.extractCount + 1,
       },
       stats: recordOutcome(state.stats, 'extracts', context.zone, context.timeOfDay),
@@ -190,6 +191,7 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
           raider: {
             ...recovery.state.raider,
             hp: recovery.state.raider.maxHp,
+            mood: 0,
             deathCount: recovery.state.raider.deathCount + 1,
           },
           stats: recordOutcome(currentState.stats, 'deaths', state.raid.zone, state.raid.timeOfDay),
