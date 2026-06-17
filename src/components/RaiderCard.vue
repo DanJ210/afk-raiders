@@ -98,11 +98,11 @@ const deathZoneRows = computed(() =>
 )
 
 const extractZoneTimeRows = computed(() =>
-  Object.entries(lifetimeStats.value.extracts.byZoneAndTime).sort((a, b) => b[1] - a[1]),
+  Object.entries(lifetimeStats.value.extracts.byZoneAndDanger).sort((a, b) => b[1] - a[1]),
 )
 
 const deathZoneTimeRows = computed(() =>
-  Object.entries(lifetimeStats.value.deaths.byZoneAndTime).sort((a, b) => b[1] - a[1]),
+  Object.entries(lifetimeStats.value.deaths.byZoneAndDanger).sort((a, b) => b[1] - a[1]),
 )
 
 const robotRows = computed(() =>

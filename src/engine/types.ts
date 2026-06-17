@@ -189,7 +189,7 @@ export interface RaiderStats {
 export interface OutcomeContextStats {
   total: number
   byZone: Record<string, number>
-  byZoneAndTime: Record<string, number>
+  byZoneAndDanger: Record<string, number>
 }
 
 export interface RaiderLifetimeStats {

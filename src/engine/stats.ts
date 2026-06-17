@@ -5,12 +5,12 @@ export function createInitialLifetimeStats(): RaiderLifetimeStats {
     extracts: {
       total: 0,
       byZone: {},
-      byZoneAndTime: {},
+      byZoneAndDanger: {},
     },
     deaths: {
       total: 0,
       byZone: {},
-      byZoneAndTime: {},
+      byZoneAndDanger: {},
     },
     robotDefeats: {},
     healingItemsUsed: {
@@ -27,7 +27,7 @@ function incrementCounter(counter: Record<string, number>, key: string): Record<
   }
 }
 
-function zoneTimeKey(zone: string, dangerLevel: DangerLevel): string {
+function zoneDangerKey(zone: string, dangerLevel: DangerLevel): string {
   return `${zone}__${dangerLevel}`
 }
 
@@ -43,9 +43,9 @@ export function recordOutcome(
     [outcome]: {
       total: current.total + 1,
       byZone: zone ? incrementCounter(current.byZone, zone) : current.byZone,
-      byZoneAndTime: zone && dangerLevel
-        ? incrementCounter(current.byZoneAndTime, zoneTimeKey(zone, dangerLevel))
-        : current.byZoneAndTime,
+      byZoneAndDanger: zone && dangerLevel
+        ? incrementCounter(current.byZoneAndDanger, zoneDangerKey(zone, dangerLevel))
+        : current.byZoneAndDanger,
     },
   }
 }

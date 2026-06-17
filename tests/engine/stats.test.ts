@@ -9,11 +9,11 @@ describe('lifetime stats helpers', () => {
 
     expect(afterExtract.extracts.total).toBe(1)
     expect(afterExtract.extracts.byZone.damp_battlegrounds).toBe(1)
-    expect(afterExtract.extracts.byZoneAndTime['damp_battlegrounds__Medium']).toBe(1)
+    expect(afterExtract.extracts.byZoneAndDanger['damp_battlegrounds__Medium']).toBe(1)
 
     expect(afterDeath.deaths.total).toBe(1)
     expect(afterDeath.deaths.byZone.damp_battlegrounds).toBe(1)
-    expect(afterDeath.deaths.byZoneAndTime['damp_battlegrounds__Medium']).toBe(1)
+    expect(afterDeath.deaths.byZoneAndDanger['damp_battlegrounds__Medium']).toBe(1)
   })
 
   it('records robot defeats by id', () => {
