@@ -33,28 +33,28 @@
       "weight": 80,
       "name": "Mild Static Interference",
       "description": "Your comms crackle occasionally. Mostly with sarcasm.",
-      "dangerLevel": "Low"
+      "dangerLevel": "Medium"
     },
     {
       "id": "low_visibility_dust",
       "weight": 75,
       "name": "Dust Drift",
       "description": "A light dusting of airborne misery. Not enough to kill you, just enough to annoy you.",
-      "dangerLevel": "Low"
+      "dangerLevel": "Medium"
     },
     {
-      "id": "robot_activity_low",
+      "id": "robot_activity_medium",
       "weight": 100,
-      "name": "Low Robot Activity",
+      "name": "Medium Robot Activity",
       "description": "Only a few robots wandering around. They still want you dead, just less enthusiastically.",
-      "dangerLevel": "Low"
+      "dangerLevel": "Medium"
     },
     {
       "id": "mild_heat",
       "weight": 85,
       "name": "Mild Heat",
       "description": "Warm enough to sweat, not warm enough to complain about. You complain anyway.",
-      "dangerLevel": "Low"
+      "dangerLevel": "Medium"
     },
     {
       "id": "cool_breeze",
@@ -96,7 +96,7 @@
       "weight": 80,
       "name": "Ambient Hum",
       "description": "A low-frequency hum fills the air. No one knows why. No one wants to.",
-      "dangerLevel": "Low"
+      "dangerLevel": "Medium"
     }
   ],
   "major_conditions": [
@@ -126,14 +126,14 @@
       "weight": 30,
       "name": "Robot Surge",
       "description": "Robot activity spikes dramatically. They are everywhere. And they are loud.",
-      "dangerLevel": "Medium"
+      "dangerLevel": "High "
     },
     {
       "id": "blackout",
       "weight": 35,
       "name": "Total Blackout",
       "description": "All lights fail. Night vision recommended. Screaming optional.",
-      "dangerLevel": "Medium"
+      "dangerLevel": "High"
     },
     {
       "id": "sandstorm",

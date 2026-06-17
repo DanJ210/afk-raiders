@@ -186,37 +186,39 @@ function applyShieldRecharger(itemId: string) {
       </div>
     </div>
 
-    <p v-if="raid.backpack.length === 0 && raid.phase === 'HUB'" class="backpack-panel__empty">
-      Backpack empty. Ready for terrible decisions.
-    </p>
-    <p v-else-if="raid.backpack.length === 0" class="backpack-panel__empty">
-      Nothing yet. The zone is full of possibilities and also robots.
-    </p>
+    <div class="backpack-panel__items-container">
+      <p v-if="raid.backpack.length === 0 && raid.phase === 'HUB'" class="backpack-panel__empty">
+        Backpack empty. Ready for terrible decisions.
+      </p>
+      <p v-else-if="raid.backpack.length === 0" class="backpack-panel__empty">
+        Nothing yet. The zone is full of possibilities and also robots.
+      </p>
 
-    <ul v-else class="backpack-panel__items">
-      <li
-        v-for="item in backpackItems"
-        :key="item.itemId"
-        class="backpack-panel__item backpack-panel__item--clickable"
-        role="button"
-        tabindex="0"
-        @click="openBackpackItemDetails(item.itemId)"
-        @keydown.enter.prevent="openBackpackItemDetails(item.itemId)"
-        @keydown.space.prevent="openBackpackItemDetails(item.itemId)"
-      >
-        <div class="backpack-panel__item-main">
-          <span :class="rarityBarClass(item.rarity)" :title="rarityLabel(item.rarity)" aria-hidden="true" />
-          <span class="backpack-panel__item-name">{{ item.name }}</span>
-          <span class="backpack-panel__item-meta">{{ rarityLabel(item.rarity) }}</span>
-        </div>
-        <div class="backpack-panel__item-sub">
-          <span>Value {{ item.value }}</span>
-          <span v-if="item.kind === 'shield_recharger'">+{{ item.shieldChargeAmount }} Shield</span>
-          <span v-if="item.quantity > 1">x{{ item.quantity }}</span>
-        </div>
-        <p v-if="item.flavor" class="backpack-panel__item-flavor">{{ item.flavor }}</p>
-      </li>
-    </ul>
+      <ul v-else class="backpack-panel__items">
+        <li
+          v-for="item in backpackItems"
+          :key="item.itemId"
+          class="backpack-panel__item backpack-panel__item--clickable"
+          role="button"
+          tabindex="0"
+          @click="openBackpackItemDetails(item.itemId)"
+          @keydown.enter.prevent="openBackpackItemDetails(item.itemId)"
+          @keydown.space.prevent="openBackpackItemDetails(item.itemId)"
+        >
+          <div class="backpack-panel__item-main">
+            <span :class="rarityBarClass(item.rarity)" :title="rarityLabel(item.rarity)" aria-hidden="true" />
+            <span class="backpack-panel__item-name">{{ item.name }}</span>
+            <span class="backpack-panel__item-meta">{{ rarityLabel(item.rarity) }}</span>
+          </div>
+          <div class="backpack-panel__item-sub">
+            <span>Value {{ item.value }}</span>
+            <span v-if="item.kind === 'shield_recharger'">+{{ item.shieldChargeAmount }} Shield</span>
+            <span v-if="item.quantity > 1">x{{ item.quantity }}</span>
+          </div>
+          <p v-if="item.flavor" class="backpack-panel__item-flavor">{{ item.flavor }}</p>
+        </li>
+      </ul>
+    </div>
 
     <div
       v-if="selectedBackpackItem"
@@ -281,7 +283,7 @@ function applyShieldRecharger(itemId: string) {
 <style scoped>
 .backpack-panel {
   --backpack-visible-item-count: 5;
-  --backpack-item-row-height: 56px;
+  --backpack-item-row-height: 84px;
   --backpack-item-row-gap: 8px;
   --backpack-items-viewport-height: calc(
     (var(--backpack-item-row-height) * var(--backpack-visible-item-count)) +
@@ -293,7 +295,7 @@ function applyShieldRecharger(itemId: string) {
   padding: 14px;
   display: flex;
   flex-direction: column;
-  max-height: 400px;
+  max-height: none;
   min-height: 0;
 }
 
@@ -424,6 +426,14 @@ function applyShieldRecharger(itemId: string) {
   text-align: right;
 }
 
+.backpack-panel__items-container {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
 .backpack-panel__empty {
   font-size: 0.8rem;
   color: var(--color-muted);
@@ -434,8 +444,9 @@ function applyShieldRecharger(itemId: string) {
 .backpack-panel__items {
   list-style: none;
   padding: 0;
-  margin: 12px 0 0;
+  margin: 0;
   display: grid;
+  grid-auto-rows: max-content;
   gap: 8px;
   align-content: start;
   overflow-y: auto;
@@ -445,11 +456,15 @@ function applyShieldRecharger(itemId: string) {
 }
 
 .backpack-panel__item {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
   min-height: var(--backpack-item-row-height);
   border: 1px solid var(--color-border-subtle);
   border-radius: 6px;
   background: var(--color-surface-raised);
   padding: 8px 10px;
+  overflow: visible;
 }
 
 .backpack-panel__item--clickable {
@@ -467,10 +482,12 @@ function applyShieldRecharger(itemId: string) {
   display: flex;
   justify-content: space-between;
   gap: 10px;
+  min-width: 0;
 }
 
 .backpack-panel__item-name {
   flex: 1;
+  min-width: 0;
   font-size: 0.86rem;
   color: var(--color-text);
 }
@@ -495,6 +512,13 @@ function applyShieldRecharger(itemId: string) {
   margin: 6px 0 0;
   font-style: italic;
   line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 600px) {
+  .backpack-panel {
+    --backpack-item-row-height: 92px;
+  }
 }
 
 .stash-dialog {
@@ -506,15 +530,18 @@ function applyShieldRecharger(itemId: string) {
   justify-content: center;
   padding: 16px;
   z-index: 50;
+  overflow-y: auto;
 }
 
 .stash-dialog__card {
   width: min(100%, 420px);
+  max-height: calc(100dvh - 32px);
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: 10px;
   padding: 16px;
   box-shadow: 0 16px 40px rgb(0 0 0 / 35%);
+  overflow-y: auto;
 }
 
 .stash-dialog__header {
@@ -595,8 +622,14 @@ function applyShieldRecharger(itemId: string) {
 
 @media (max-width: 600px) {
   .backpack-panel {
-    max-height: none;
     min-height: 0;
+    max-height: none;
+  }
+
+  .backpack-panel__items-container {
+    flex: 1;
+    min-height: 0;
+    max-height: none;
   }
 
   .backpack-panel__items {
@@ -616,38 +649,14 @@ function applyShieldRecharger(itemId: string) {
 
 @media (min-width: 601px) {
   .backpack-panel {
-    min-height: 0;
-    max-height: none;
-  }
-
-  .backpack-panel__items {
-    flex: 1;
-    min-height: 0;
-    max-height: none;
-  }
-
-  .backpack-panel {
-    min-height: 620px;
-    max-height: none;
-  }
-
-  .backpack-panel__items {
-    flex: none;
-    min-height: 320px;
-
-@media (min-width: 601px) {
-  .backpack-panel {
     min-height: 640px;
     max-height: none;
   }
 
-  .backpack-panel__items {
+  .backpack-panel__items-container {
     flex: none;
     min-height: var(--backpack-items-viewport-height);
     max-height: var(--backpack-items-viewport-height);
-  }
-}
-    max-height: 320px;
   }
 }
 </style>
