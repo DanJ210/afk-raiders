@@ -249,7 +249,7 @@ describe('deterministic snapshot', () => {
     expect(downedState.raider.deathCount).toBe(deathsBefore + 1)
     expect(downedState.stats.deaths.total).toBe(1)
     expect(downedState.stats.deaths.byZone.damp_battlegrounds).toBe(1)
-    expect(downedState.stats.deaths.byZoneAndTime['damp_battlegrounds__Night']).toBe(1)
+    expect(downedState.stats.deaths.byZoneAndTime['damp_battlegrounds__Medium']).toBe(1)
   })
 
   it('saves exactly one hidden-pocket item when a failed raid clears the backpack', () => {
