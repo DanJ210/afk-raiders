@@ -22,6 +22,7 @@ import healingItemsData from '../content/healing_items.json'
 import shieldRechargersData from '../content/shield_rechargers.json'
 import robotsData from '../content/robots.json'
 import flavorData from '../content/flavor.json'
+<<<<<<< HEAD
 import apparelAccessoriesData from '../content/loot-tables/apparel_accessories.json'
 import arcTechData from '../content/loot-tables/arc_tech.json'
 import consumablesData from '../content/loot-tables/consumables.json'
@@ -33,6 +34,10 @@ import valuablesData from '../content/loot-tables/valuables.json'
 import weaponsPartsData from '../content/loot-tables/weapons_parts.json'
 import { getDangerLevelProfile, rarityWeight, type DangerLevelProfile } from './dangerLevelProfiles.js'
 import { applyShieldedDamage, startShieldRecharge } from './shields.js'
+=======
+import { getTimeOfDayProfile, rarityWeight, type TimeOfDayProfile } from './timeProfiles.js'
+import { applyShieldedDamage, startShieldRecharge, type ShieldDamageResult } from './shields.js'
+>>>>>>> origin/main
 
 // One events file per phase: HUB, DEPLOYING, RAIDING, EXTRACTING, DOWNED
 const events = [
@@ -96,6 +101,18 @@ function clampMood(mood: number): number {
 
 function healingMoodGain(item: HealingItemStack): number {
   return item.moodGain ?? Math.max(1, Math.min(4, item.rarity))
+}
+
+export function describeShieldDamage(damage: ShieldDamageResult): string {
+  if (!damage.mitigated || damage.shieldChargeLost <= 0) {
+    return `Took ${damage.hpDamage} damage.`
+  }
+
+  if (damage.hpDamage <= 0) {
+    return `Shield lost ${damage.shieldChargeLost} charge. No HP damage landed.`
+  }
+
+  return `Shield lost ${damage.shieldChargeLost} charge; ${damage.hpDamage} HP damage landed.`
 }
 
 /** Filter events valid for the current game context */
@@ -491,9 +508,21 @@ function applyRobotDamage(
   state: GameState,
   robot: RobotEntry,
   rawDamage: number,
-): { raider: GameState['raider']; raid: GameState['raid']; damage: number } {
+): { raider: GameState['raider']; raid: GameState['raid']; damage: number; shieldDamage: ShieldDamageResult } {
   if (state.raider.hp <= 0) {
-    return { raider: state.raider, raid: state.raid, damage: 0 }
+    return {
+      raider: state.raider,
+      raid: state.raid,
+      damage: 0,
+      shieldDamage: {
+        raider: state.raider,
+        raid: state.raid,
+        hpDamage: 0,
+        shieldChargeLost: 0,
+        shieldDurabilityLost: 0,
+        mitigated: false,
+      },
+    }
   }
 
   const shielded = applyShieldedDamage(state.raider, state.raid, rawDamage)
@@ -502,6 +531,7 @@ function applyRobotDamage(
       raider: shielded.raider,
       raid: shielded.raid,
       damage: state.raider.hp - shielded.raider.hp,
+      shieldDamage: shielded,
     }
   }
 
@@ -517,6 +547,11 @@ function applyRobotDamage(
     raider: { ...shielded.raider, hp },
     raid: shielded.raid,
     damage: state.raider.hp - hp,
+    shieldDamage: {
+      ...shielded,
+      raider: { ...shielded.raider, hp },
+      hpDamage: state.raider.hp - hp,
+    },
   }
 }
 
@@ -570,7 +605,7 @@ export function resolveRobotEncounter(
       id: `robot_${robot.id}_escaped`,
       tick: state.tick,
       timestamp: now,
-      text: `${robot.name} won that exchange. Took ${damageResult.damage} damage and ran away with the tactical urgency of someone who just learned a lesson.`,
+      text: `${robot.name} won that exchange. ${describeShieldDamage(damageResult.shieldDamage)} Ran away with the tactical urgency of someone who just learned a lesson.`,
       phase: state.raid.phase,
     },
   }
@@ -606,11 +641,12 @@ export function applyEffects(
   state: GameState,
   template: EventTemplate,
   rng: RNG,
-): GameState {
+): { state: GameState; shieldDamage?: ShieldDamageResult } {
   const effects = template.effects
-  if (!effects) return state
+  if (!effects) return { state }
 
   let { raider, raid } = state
+  let shieldDamage: ShieldDamageResult | undefined
 
   if (effects.backpackValue !== undefined) {
     const delta = typeof effects.backpackValue === 'string'
@@ -644,6 +680,7 @@ export function applyEffects(
       const shielded = applyShieldedDamage(raider, raid, Math.abs(delta))
       raider = shielded.raider
       raid = shielded.raid
+      shieldDamage = shielded
     } else {
       raider = { ...raider, hp: Math.max(0, Math.min(raider.maxHp, raider.hp + delta)) }
     }
@@ -668,7 +705,7 @@ export function applyEffects(
     raider = { ...raider, ratRating: Math.max(0, raider.ratRating + effects.ratRating) }
   }
 
-  return { ...state, raider, raid }
+  return { state: { ...state, raider, raid }, shieldDamage }
 }
 
 /** Simple dice parser using seeded RNG: "+2", "-5", "+1d6" → integer value. */

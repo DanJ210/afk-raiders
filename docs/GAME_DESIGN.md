@@ -39,6 +39,7 @@ The Raider now starts each raid with a basic **Makeshift Confidence Shield** lay
 - Shields mitigate incoming damage while they still have both charge and durability.
 - Shields are not extra HP; they reduce the HP damage taken from a hit while spending shield charge.
 - Shield durability wears down as shield charge is spent.
+- When a shield soaks part of a hit, the comms feed shows both the shield loss and the remaining HP damage so the mitigation is visible.
 - For the MVP, returning to the HUB restores the starter shield to full charge and durability.
 - In future phases, a loadout and store loop can decide which shield is equipped and how it persists.
 

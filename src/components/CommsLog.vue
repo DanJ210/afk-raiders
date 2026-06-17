@@ -10,6 +10,7 @@ const logEl = ref<HTMLElement | null>(null)
 const userScrolledDown = ref(false)
 const entries = computed(() => [...store.log].reverse())
 const raidShield = computed(() => store.raid.shield)
+const raidShieldRecharge = computed(() => store.raid.activeShieldRecharge)
 
 function formatTime(ts: number): string {
   const d = new Date(ts)
@@ -57,7 +58,7 @@ onMounted(scrollToTop)
       <span class="comms-log__title">COMMS FEED</span>
     </header>
     <div class="comms-log__mobile-health">
-      <ShieldBar :shield="raidShield" label="SHIELD" compact />
+      <ShieldBar :shield="raidShield" :recharge="raidShieldRecharge" label="SHIELD" compact />
       <HealthBar :current="store.raider.hp" :max="store.raider.maxHp" label="RAIDER HP" />
     </div>
     <div class="comms-log__tick-track" aria-hidden="true">
