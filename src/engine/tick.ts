@@ -19,7 +19,7 @@ import type { RNG } from './rng.js'
 import { tickPhase } from './raidStateMachine.js'
 import { runGreedCheck } from './greedCheck.js'
 import { applyScoldGreedReduction } from './signal.js'
-import { resolveEvent, resolveFlavorKey, applyEffects, resolveHealingItemFind, resolveRobotEncounter, resolveShieldRechargerFind, events as allEvents } from './eventResolver.js'
+import { describeShieldDamage, resolveEvent, resolveFlavorKey, applyEffects, resolveHealingItemFind, resolveRobotEncounter, resolveShieldRechargerFind, events as allEvents } from './eventResolver.js'
 import { transferBackpackToHomeStash, HOME_STASH_ITEM_LIMIT } from './homeStash.js'
 import { appendLogEntries } from './log.js'
 import { recordOutcome, recordRobotDefeat } from './stats.js'
@@ -27,7 +27,7 @@ import { advanceShieldRecharge } from './shields.js'
 
 const LOOT_BONUS_HEALING_ITEM_CHANCE = 0.2 // 20% chance to find a healing item on any loot event, independent of normal loot rolls
 const LOOT_BONUS_SHIELD_RECHARGER_CHANCE = 0.15 // 15% chance to find a shield recharger on any loot event, independent of normal loot rolls
-
+const NEUTRAL_MOOD_THRESHOLD = 0 // Mood above this is positive, below is negative; separate from the "mood" number which can go up to +5 or down to -5
 /**
  * Apply successful-extraction bookkeeping: transfer loot home, heal up, count
  * the win. If the stash overflows the item limit, the lowest-value items are
@@ -46,6 +46,7 @@ function applySuccessfulExtraction(
       raider: {
         ...state.raider,
         hp: state.raider.maxHp,
+        mood: NEUTRAL_MOOD_THRESHOLD,
         extractCount: state.raider.extractCount + 1,
       },
       stats: recordOutcome(state.stats, 'extracts', context.zone, context.timeOfDay),
@@ -75,6 +76,22 @@ function hiddenPocketSavedEvent(itemName: string, tick: number, now: number): Lo
     timestamp: now,
     text: `Secret Hidden Pocket check: 1x ${itemName} made it home. Very legal, totally declared.`,
     phase: 'HUB',
+  }
+}
+
+function shieldDamageEvent(
+  text: string,
+  tick: number,
+  now: number,
+  phase: GameState['raid']['phase'],
+  sourceId: string,
+): LogEvent {
+  return {
+    id: `shield_damage_${sourceId}`,
+    tick,
+    timestamp: now,
+    text,
+    phase,
   }
 }
 
@@ -174,6 +191,7 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
           raider: {
             ...recovery.state.raider,
             hp: recovery.state.raider.maxHp,
+            mood: 0,
             deathCount: recovery.state.raider.deathCount + 1,
           },
           stats: recordOutcome(currentState.stats, 'deaths', state.raid.zone, state.raid.timeOfDay),
@@ -279,7 +297,20 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
     emitted.push(event)
     if (template) {
       const backpackQuantityBeforeEffects = totalBackpackQuantity(currentState.raid.backpack)
-      currentState = applyEffects(currentState, template, rng)
+      const effectResult = applyEffects(currentState, template, rng)
+      currentState = effectResult.state
+
+      if (effectResult.shieldDamage?.mitigated && effectResult.shieldDamage.shieldChargeLost > 0) {
+        emitted.push(
+          shieldDamageEvent(
+            describeShieldDamage(effectResult.shieldDamage),
+            state.tick,
+            now,
+            currentState.raid.phase,
+            template.id,
+          ),
+        )
+      }
 
       const backpackQuantityAfterEffects = totalBackpackQuantity(currentState.raid.backpack)
       if (backpackQuantityAfterEffects > backpackQuantityBeforeEffects) {

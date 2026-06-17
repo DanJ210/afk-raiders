@@ -158,6 +158,10 @@ describe('deterministic snapshot', () => {
     const rng = createRNG(FIXED_SEED)
     const state = {
       ...createInitialState(0),
+      raider: {
+        ...createInitialState(0).raider,
+        mood: -4,
+      },
       raid: {
         ...createInitialState(0).raid,
         zone: 'damp_battlegrounds',
@@ -190,6 +194,7 @@ describe('deterministic snapshot', () => {
       },
     ])
     expect(result.state.raider.extractCount).toBe(1)
+    expect(result.state.raider.mood).toBeGreaterThan(-4)
     expect(result.state.stats.extracts.total).toBe(1)
     expect(result.state.stats.extracts.byZone.damp_battlegrounds).toBe(1)
     expect(result.state.stats.extracts.byZoneAndTime['damp_battlegrounds__Night']).toBe(1)
@@ -199,7 +204,7 @@ describe('deterministic snapshot', () => {
     const initial = createInitialState(0)
     const state = {
       ...initial,
-      raider: { ...initial.raider, hp: 0 },
+      raider: { ...initial.raider, hp: 0, mood: -5 },
       homeStash: [
         {
           itemId: 'scrap',
@@ -246,6 +251,7 @@ describe('deterministic snapshot', () => {
     expect(downedState.raid.backpack).toEqual([])
     expect(downedState.homeStash).toEqual(stashBefore)
     expect(downedState.raider.hp).toBe(downedState.raider.maxHp)
+    expect(downedState.raider.mood).toBeGreaterThan(-5)
     expect(downedState.raider.deathCount).toBe(deathsBefore + 1)
     expect(downedState.stats.deaths.total).toBe(1)
     expect(downedState.stats.deaths.byZone.damp_battlegrounds).toBe(1)

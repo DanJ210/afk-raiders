@@ -56,8 +56,8 @@ describe('applyEffects — backpack item behavior', () => {
 
     const result = applyEffects(state, LOOT_TEMPLATE, rng)
 
-    expect(result.raid.backpack).toHaveLength(1)
-    const item = result.raid.backpack[0]
+    expect(result.state.raid.backpack).toHaveLength(1)
+    const item = result.state.raid.backpack[0]
     expect(item.itemId).toBe('golden_water_bottle')
     expect(item.name).toBe('Golden Water Bottle')
     expect(item.value).toBe(500)
@@ -70,13 +70,13 @@ describe('applyEffects — backpack item behavior', () => {
     const rng = createRNG(42)
 
     const afterFirst = applyEffects(state, LOOT_TEMPLATE, rng)
-    expect(afterFirst.raid.backpack).toHaveLength(1)
-    expect(afterFirst.raid.backpack[0].quantity).toBe(1)
+    expect(afterFirst.state.raid.backpack).toHaveLength(1)
+    expect(afterFirst.state.raid.backpack[0].quantity).toBe(1)
 
-    const afterSecond = applyEffects(afterFirst, LOOT_TEMPLATE, rng)
-    expect(afterSecond.raid.backpack).toHaveLength(1)
-    expect(afterSecond.raid.backpack[0].itemId).toBe('golden_water_bottle')
-    expect(afterSecond.raid.backpack[0].quantity).toBe(2)
+    const afterSecond = applyEffects(afterFirst.state, LOOT_TEMPLATE, rng)
+    expect(afterSecond.state.raid.backpack).toHaveLength(1)
+    expect(afterSecond.state.raid.backpack[0].itemId).toBe('golden_water_bottle')
+    expect(afterSecond.state.raid.backpack[0].quantity).toBe(2)
   })
 
   it('keeps backpackValue equal to the cumulative sum of applied deltas', () => {
@@ -84,10 +84,10 @@ describe('applyEffects — backpack item behavior', () => {
     const rng = createRNG(42)
 
     const afterFirst = applyEffects(state, LOOT_TEMPLATE, rng)
-    expect(afterFirst.raid.backpackValue).toBe(500)
+    expect(afterFirst.state.raid.backpackValue).toBe(500)
 
-    const afterSecond = applyEffects(afterFirst, LOOT_TEMPLATE, rng)
-    expect(afterSecond.raid.backpackValue).toBe(1000)
+    const afterSecond = applyEffects(afterFirst.state, LOOT_TEMPLATE, rng)
+    expect(afterSecond.state.raid.backpackValue).toBe(1000)
   })
 
   it('does not mutate the input state', () => {
@@ -105,9 +105,9 @@ describe('applyEffects — backpack item behavior', () => {
     const result1 = applyEffects(state, DAMAGE_TEMPLATE, createRNG(42))
     const result2 = applyEffects(state, DAMAGE_TEMPLATE, createRNG(42))
 
-    expect(result1.raider.hp).toBe(result2.raider.hp)
-    expect(result1.raider.hp).toBeLessThanOrEqual(95)
-    expect(result1.raider.hp).toBeGreaterThanOrEqual(86)
+    expect(result1.state.raider.hp).toBe(result2.state.raider.hp)
+    expect(result1.state.raider.hp).toBeLessThanOrEqual(95)
+    expect(result1.state.raider.hp).toBeGreaterThanOrEqual(86)
   })
 
   it('scales loot value by time-of-day profile', () => {
@@ -135,18 +135,23 @@ describe('applyEffects — backpack item behavior', () => {
       createRNG(1),
     )
 
-    expect(day.raid.backpackValue).toBe(85)
-    expect(night.raid.backpackValue).toBe(120)
-    expect(stellaRed.raid.backpackValue).toBe(155)
+    expect(day.state.raid.backpackValue).toBe(85)
+    expect(night.state.raid.backpackValue).toBe(120)
+    expect(stellaRed.state.raid.backpackValue).toBe(155)
   })
 
   it('routes negative HP effects through shield mitigation', () => {
     const initial = createInitialState(0)
     const result = applyEffects(initial, FIXED_DAMAGE_TEMPLATE, createRNG(1))
 
-    expect(result.raider.hp).toBe(88)
-    expect(result.raid.shield?.charge).toBe(20)
-    expect(result.raid.shield?.durability).toBe(95)
+    expect(result.state.raider.hp).toBe(88)
+    expect(result.state.raid.shield?.charge).toBe(20)
+    expect(result.state.raid.shield?.durability).toBe(95)
+    expect(result.shieldDamage).toMatchObject({
+      hpDamage: 12,
+      shieldChargeLost: 20,
+      mitigated: true,
+    })
   })
 
   it('still mitigates a full hit when the shield only has 1 charge left', () => {
@@ -165,9 +170,9 @@ describe('applyEffects — backpack item behavior', () => {
 
     const result = applyEffects(state, { ...FIXED_DAMAGE_TEMPLATE, effects: { hp: -35 } }, createRNG(1))
 
-    expect(result.raider.hp).toBe(79)
-    expect(result.raid.shield?.charge).toBe(0)
-    expect(result.raid.shield?.durability).toBe(82.25)
+    expect(result.state.raider.hp).toBe(79)
+    expect(result.state.raid.shield?.charge).toBe(0)
+    expect(result.state.raid.shield?.durability).toBe(82.25)
   })
 
   it('defeats a robot when the combat roll beats menace and awards robot loot', () => {
@@ -188,7 +193,8 @@ describe('applyEffects — backpack item behavior', () => {
 
     expect(result).not.toBeNull()
     expect(result!.event.id).toBe('robot_roomba_prime_escaped')
-    expect(result!.event.text).toContain('Took 10 damage')
+    expect(result!.event.text).toContain('Shield lost 16 charge')
+    expect(result!.event.text).toContain('10 HP damage landed')
     expect(result!.state.raider.hp).toBe(90)
     expect(result!.state.raid.shield?.charge).toBe(24)
     expect(result!.state.raid.backpack).toHaveLength(0)
@@ -222,7 +228,8 @@ describe('applyEffects — backpack item behavior', () => {
 
     expect(failed).not.toBeNull()
     expect(failed!.event.id).toBe('robot_tattletale_escaped')
-    expect(failed!.event.text).toContain('Took 26 damage')
+    expect(failed!.event.text).toContain('Shield lost 40 charge')
+    expect(failed!.event.text).toContain('26 HP damage landed')
     expect(failed!.state.raider.hp).toBe(74)
 
     expect(defeated).not.toBeNull()
@@ -236,7 +243,8 @@ describe('applyEffects — backpack item behavior', () => {
 
     expect(result).not.toBeNull()
     expect(result!.event.id).toBe('robot_roomba_prime_escaped')
-    expect(result!.event.text).toContain('Took 29 damage')
+    expect(result!.event.text).toContain('Shield lost 40 charge')
+    expect(result!.event.text).toContain('29 HP damage landed')
     expect(result!.state.raider.hp).toBe(71)
   })
 
@@ -251,6 +259,7 @@ describe('applyEffects — backpack item behavior', () => {
 
     expect(deadly).not.toBeNull()
     expect(deadly!.event.id).toBe('robot_roomba_prime_escaped')
+    expect(deadly!.event.text).toContain('Shield lost 40 charge')
     expect(deadly!.state.raider.hp).toBe(11)
 
     expect(moderate).not.toBeNull()
