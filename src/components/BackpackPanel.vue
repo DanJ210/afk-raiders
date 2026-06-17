@@ -151,16 +151,16 @@ function applyShieldRecharger(itemId: string) {
       </span>
     </div>
 
-    <FieldMedsPanel
-      :items="healingItems"
-      :can-apply="canApplyHealing"
-      @apply="store.applyHealingItem"
-    />
-
     <ShieldRechargersPanel
       :items="shieldRechargerItems"
       :can-apply="canApplyAnyShieldRecharger"
       @apply="applyShieldRecharger"
+    />
+
+    <FieldMedsPanel
+      :items="healingItems"
+      :can-apply="canApplyHealing"
+      @apply="store.applyHealingItem"
     />
 
     <div class="backpack-panel__hidden-pocket">
