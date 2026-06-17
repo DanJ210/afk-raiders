@@ -70,19 +70,11 @@ describe('applyEffects — backpack item behavior', () => {
 
     const result = applyEffects(state, LOOT_TEMPLATE, rng)
 
-<<<<<<< HEAD
-    expect(result.raid.backpack).toHaveLength(1)
-    const item = result.raid.backpack[0]
+    expect(result.state.raid.backpack).toHaveLength(1)
+    const item = result.state.raid.backpack[0]
     expect(item.itemId).toBe('snack_mix_chaos')
     expect(item.name).toBe('Snack Mix (Chaos Blend)')
     expect(item.value).toBe(450)
-=======
-    expect(result.state.raid.backpack).toHaveLength(1)
-    const item = result.state.raid.backpack[0]
-    expect(item.itemId).toBe('golden_water_bottle')
-    expect(item.name).toBe('Golden Water Bottle')
-    expect(item.value).toBe(500)
->>>>>>> origin/main
     expect(item.rarity).toBe(5)
     expect(item.quantity).toBe(1)
   })
@@ -95,17 +87,10 @@ describe('applyEffects — backpack item behavior', () => {
     expect(afterFirst.state.raid.backpack).toHaveLength(1)
     expect(afterFirst.state.raid.backpack[0].quantity).toBe(1)
 
-<<<<<<< HEAD
-    const afterSecond = applyEffects(afterFirst, LOOT_TEMPLATE, rng)
-    expect(afterSecond.raid.backpack).toHaveLength(1)
-    expect(afterSecond.raid.backpack[0].itemId).toBe('snack_mix_chaos')
-    expect(afterSecond.raid.backpack[0].quantity).toBe(2)
-=======
     const afterSecond = applyEffects(afterFirst.state, LOOT_TEMPLATE, rng)
     expect(afterSecond.state.raid.backpack).toHaveLength(1)
-    expect(afterSecond.state.raid.backpack[0].itemId).toBe('golden_water_bottle')
+    expect(afterSecond.state.raid.backpack[0].itemId).toBe('snack_mix_chaos')
     expect(afterSecond.state.raid.backpack[0].quantity).toBe(2)
->>>>>>> origin/main
   })
 
   it('keeps backpackValue equal to the cumulative sum of applied deltas', () => {
@@ -113,17 +98,10 @@ describe('applyEffects — backpack item behavior', () => {
     const rng = createRNG(42)
 
     const afterFirst = applyEffects(state, LOOT_TEMPLATE, rng)
-<<<<<<< HEAD
-    expect(afterFirst.raid.backpackValue).toBe(450)
-
-    const afterSecond = applyEffects(afterFirst, LOOT_TEMPLATE, rng)
-    expect(afterSecond.raid.backpackValue).toBe(900)
-=======
-    expect(afterFirst.state.raid.backpackValue).toBe(500)
+    expect(afterFirst.state.raid.backpackValue).toBe(450)
 
     const afterSecond = applyEffects(afterFirst.state, LOOT_TEMPLATE, rng)
-    expect(afterSecond.state.raid.backpackValue).toBe(1000)
->>>>>>> origin/main
+    expect(afterSecond.state.raid.backpackValue).toBe(900)
   })
 
   it('does not mutate the input state', () => {
@@ -194,18 +172,18 @@ describe('applyEffects — backpack item behavior', () => {
     const initial = createInitialState(0)
     const result = applyEffects(initial, SHIELD_AWARE_DAMAGE_TEMPLATE, createRNG(1))
 
-    expect(result.raider.hp).toBe(88)
-    expect(result.raid.shield?.charge).toBe(20)
-    expect(result.raid.shield?.durability).toBe(95)
+    expect(result.state.raider.hp).toBe(88)
+    expect(result.state.raid.shield?.charge).toBe(20)
+    expect(result.state.raid.shield?.durability).toBe(95)
   })
 
   it('treats negative generic damage as a no-op', () => {
     const initial = createInitialState(0)
     const result = applyEffects(initial, NEGATIVE_DAMAGE_TEMPLATE, createRNG(1))
 
-    expect(result.raider.hp).toBe(initial.raider.hp)
-    expect(result.raid.shield?.charge).toBe(initial.raid.shield?.charge)
-    expect(result.raid.shield?.durability).toBe(initial.raid.shield?.durability)
+    expect(result.state.raider.hp).toBe(initial.raider.hp)
+    expect(result.state.raid.shield?.charge).toBe(initial.raid.shield?.charge)
+    expect(result.state.raid.shield?.durability).toBe(initial.raid.shield?.durability)
   })
 
   it('still mitigates a full hit when the shield only has 1 charge left', () => {

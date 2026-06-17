@@ -22,7 +22,6 @@ import healingItemsData from '../content/healing_items.json'
 import shieldRechargersData from '../content/shield_rechargers.json'
 import robotsData from '../content/robots.json'
 import flavorData from '../content/flavor.json'
-<<<<<<< HEAD
 import apparelAccessoriesData from '../content/loot-tables/apparel_accessories.json'
 import arcTechData from '../content/loot-tables/arc_tech.json'
 import consumablesData from '../content/loot-tables/consumables.json'
@@ -33,11 +32,7 @@ import scrapComponentsData from '../content/loot-tables/scrap_components.json'
 import valuablesData from '../content/loot-tables/valuables.json'
 import weaponsPartsData from '../content/loot-tables/weapons_parts.json'
 import { getDangerLevelProfile, rarityWeight, type DangerLevelProfile } from './dangerLevelProfiles.js'
-import { applyShieldedDamage, startShieldRecharge } from './shields.js'
-=======
-import { getTimeOfDayProfile, rarityWeight, type TimeOfDayProfile } from './timeProfiles.js'
 import { applyShieldedDamage, startShieldRecharge, type ShieldDamageResult } from './shields.js'
->>>>>>> origin/main
 
 // One events file per phase: HUB, DEPLOYING, RAIDING, EXTRACTING, DOWNED
 const events = [
