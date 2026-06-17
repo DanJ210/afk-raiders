@@ -113,9 +113,9 @@ const healingRows = computed(() =>
   Object.entries(lifetimeStats.value.healingItemsUsed.byItem).sort((a, b) => b[1] - a[1]),
 )
 
-function parseZoneTimeKey(key: string): { zoneId: string; timeOfDay: string } {
-  const [zoneId, timeOfDay] = key.split('__')
-  return { zoneId, timeOfDay }
+function parseZoneDangerLevelKey(key: string): { zoneId: string; dangerLevel: string } {
+  const [zoneId, dangerLevel] = key.split('__')
+  return { zoneId, dangerLevel }
 }
 </script>
 
@@ -206,13 +206,13 @@ function parseZoneTimeKey(key: string): { zoneId: string; timeOfDay: string } {
           </div>
 
           <div class="raider-card__history-section" v-if="extractZoneTimeRows.length > 0 || deathZoneTimeRows.length > 0">
-            <h4>By Zone + Time</h4>
+            <h4>By Zone + Danger Level</h4>
             <ul>
               <li v-for="[key, count] in extractZoneTimeRows" :key="`extract-zone-time-${key}`">
-                ✅ {{ zoneName(parseZoneTimeKey(key).zoneId) ?? prettyId(parseZoneTimeKey(key).zoneId) }} ({{ parseZoneTimeKey(key).timeOfDay }}): {{ count }}
+                ✅ {{ zoneName(parseZoneDangerLevelKey(key).zoneId) ?? prettyId(parseZoneDangerLevelKey(key).zoneId) }} ({{ parseZoneDangerLevelKey(key).dangerLevel }}): {{ count }}
               </li>
               <li v-for="[key, count] in deathZoneTimeRows" :key="`death-zone-time-${key}`">
-                💀 {{ zoneName(parseZoneTimeKey(key).zoneId) ?? prettyId(parseZoneTimeKey(key).zoneId) }} ({{ parseZoneTimeKey(key).timeOfDay }}): {{ count }}
+                💀 {{ zoneName(parseZoneDangerLevelKey(key).zoneId) ?? prettyId(parseZoneDangerLevelKey(key).zoneId) }} ({{ parseZoneDangerLevelKey(key).dangerLevel }}): {{ count }}
               </li>
             </ul>
           </div>

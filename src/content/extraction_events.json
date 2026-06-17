@@ -11,7 +11,7 @@
     "weight": 25,
     "text": "Running to extract. The backpack jingles like a vending machine falling down stairs. Every robot heard it.",
     "requires": { "phase": "EXTRACTING" },
-    "effects": { "hp": -3 }
+    "effects": { "damage": 3 }
   },
   {
     "id": "extract_one_more_crate",
@@ -32,7 +32,7 @@
     "weight": 20,
     "text": "Three Anxieticks in pursuit. They're nervous, we're nervous, the shuttle is nervous. Took shrapnel.",
     "requires": { "phase": "EXTRACTING" },
-    "effects": { "hp": -8, "mood": -2 }
+    "effects": { "damage": 8, "mood": -2 }
   },
   {
     "id": "extract_early_dustoff",
@@ -53,14 +53,14 @@
     "weight": 6,
     "text": "Another raider was camping the LZ. We emoted. They did not emote back.",
     "requires": { "phase": "EXTRACTING" },
-    "effects": { "hp": -15, "mood": -2, "ratRating": 1 }
+    "effects": { "damage": 15, "mood": -2, "ratRating": 1 }
   },
   {
     "id": "extract_downed_at_lz",
     "weight": 4,
     "text": "Roomba Prime rolled onto the LZ at the worst possible moment. The floor is clean. The raider is not okay.",
     "requires": { "phase": "EXTRACTING", "maxHp": 50 },
-    "effects": { "hp": -50, "mood": -3, "forcePhase": "DOWNED" }
+    "effects": { "damage": 50, "mood": -3, "forcePhase": "DOWNED" }
   },
   {
     "id": "extract_return_button",
@@ -81,7 +81,7 @@
     "weight": 40,
     "text": "Extraction beacon active. Counting down. Three robots in pursuit. This is fine.",
     "requires": { "phase": "EXTRACTING" },
-    "effects": { "hp": -5, "mood": -1 }
+    "effects": { "damage": 5, "mood": -1 }
   },
   {
     "id": "extract_signal_flare",
@@ -572,21 +572,21 @@
     "id": "extract_day_clean_window",
     "weight": 12,
     "text": "Daylight gave the LZ a clean lane. Extremely suspicious. Boarded anyway.",
-    "requires": { "phase": "EXTRACTING", "timeOfDay": "Day" },
+    "requires": { "phase": "EXTRACTING", "dangerLevel": "Low" },
     "effects": { "mood": 2 }
   },
   {
     "id": "extract_night_beacon_echo",
     "weight": 10,
     "text": "Night air bounced the extract beacon off every surface. The robots got a helpful audio tour.",
-    "requires": { "phase": "EXTRACTING", "timeOfDay": "Night" },
-    "effects": { "hp": -8, "mood": -2, "robotEncounter": "tattletale" }
+    "requires": { "phase": "EXTRACTING", "dangerLevel": "Medium" },
+    "effects": { "damage": 8, "mood": -2, "robotEncounter": "tattletale" }
   },
   {
     "id": "extract_stella_red_lz_overrun",
     "weight": 8,
     "text": "Stella Red turned the LZ into a robot meet-and-greet. Attendance was mandatory and poorly catered.",
-    "requires": { "phase": "EXTRACTING", "timeOfDay": "Stella Red", "minGreed": 20 },
-    "effects": { "hp": -15, "mood": -4, "robotEncounter": "roomba_prime", "robotDamageMultiplier": 1.5 }
+    "requires": { "phase": "EXTRACTING", "dangerLevel": "High", "minGreed": 20 },
+    "effects": { "damage": 15, "mood": -4, "robotEncounter": "roomba_prime", "robotDamageMultiplier": 1.5 }
   }
 ]

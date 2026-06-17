@@ -31,7 +31,7 @@ import personalJunkData from '../content/loot-tables/personal_junk.json'
 import scrapComponentsData from '../content/loot-tables/scrap_components.json'
 import valuablesData from '../content/loot-tables/valuables.json'
 import weaponsPartsData from '../content/loot-tables/weapons_parts.json'
-import { getTimeOfDayProfile, rarityWeight, type TimeOfDayProfile } from './timeProfiles.js'
+import { getDangerLevelProfile, rarityWeight, type DangerLevelProfile } from './dangerLevelProfiles.js'
 import { applyShieldedDamage, startShieldRecharge } from './shields.js'
 
 // One events file per phase: HUB, DEPLOYING, RAIDING, EXTRACTING, DOWNED
@@ -108,10 +108,10 @@ function eligibleEvents(state: GameState): EventTemplate[] {
       const phases: Phase[] = Array.isArray(r.phase) ? r.phase : [r.phase]
       if (!phases.includes(raid.phase)) return false
     }
-    if (r.timeOfDay) {
-      if (!raid.timeOfDay) return false
-      const times = Array.isArray(r.timeOfDay) ? r.timeOfDay : [r.timeOfDay]
-      if (!times.includes(raid.timeOfDay)) return false
+    if (r.dangerLevel) {
+      if (!raid.dangerLevel) return false
+      const levels = Array.isArray(r.dangerLevel) ? r.dangerLevel : [r.dangerLevel]
+      if (!levels.includes(raid.dangerLevel)) return false
     }
     if (r.minGreed !== undefined && raid.greedLevel < r.minGreed) return false
     if (r.maxGreed !== undefined && raid.greedLevel > r.maxGreed) return false
@@ -127,12 +127,19 @@ function isNegativeHpEffect(hp: number | string | undefined): boolean {
   return hp.trim().startsWith('-')
 }
 
+function isPositiveDamageEffect(damage: number | string | undefined): boolean {
+  if (damage === undefined) return false
+  if (typeof damage === 'number') return damage > 0
+  return !damage.trim().startsWith('-')
+}
+
 function isRiskyExtractionEvent(template: EventTemplate): boolean {
   const effects = template.effects
   if (!effects) return false
   return effects.forcePhase === 'RAIDING' ||
     effects.forcePhase === 'DOWNED' ||
     effects.robotEncounter !== undefined ||
+    isPositiveDamageEffect(effects.damage) ||
     isNegativeHpEffect(effects.hp)
 }
 
@@ -143,7 +150,7 @@ function isSafeExtractionEvent(template: EventTemplate): boolean {
 }
 
 function adjustedEventWeight(template: EventTemplate, state: GameState): number {
-  const profile = getTimeOfDayProfile(state.raid.timeOfDay)
+  const profile = getDangerLevelProfile(state.raid.dangerLevel)
   let weight = template.weight
 
   if (template.effects?.robotEncounter) {
@@ -210,14 +217,14 @@ function fillSlots(text: string, rng: RNG): string {
   })
 }
 
-function weightedLootPick(items: LootItem[], rng: RNG, profile: TimeOfDayProfile): LootItem {
+function weightedLootPick(items: LootItem[], rng: RNG, profile: DangerLevelProfile): LootItem {
   return rng.weightedPick(items.map(item => ({
     ...item,
     weight: item.weight * rarityWeight(profile, item.rarity),
   })))
 }
 
-function pickLootItemForValue(targetValue: number, rng: RNG, profile: TimeOfDayProfile): LootItem {
+function pickLootItemForValue(targetValue: number, rng: RNG, profile: DangerLevelProfile): LootItem {
   const exactMatches = loot.filter(item => item.value === targetValue)
   if (exactMatches.length > 0) {
     return weightedLootPick(exactMatches, rng, profile)
@@ -539,7 +546,7 @@ export function resolveRobotEncounter(
     }
   }
 
-  const profile = getTimeOfDayProfile(state.raid.timeOfDay)
+  const profile = getDangerLevelProfile(state.raid.dangerLevel)
   const damageMultiplier = Math.max(0, (opts.damageMultiplier ?? 1) * profile.robotFailureDamageMultiplier)
   const rawDamage = Math.ceil(robot.menace * ROBOT_DAMAGE_PER_MENACE * damageMultiplier)
   const damageResult = applyRobotDamage(state, robot, rawDamage)
@@ -600,7 +607,7 @@ export function applyEffects(
       ? parseDice(effects.backpackValue, rng)
       : effects.backpackValue
     if (delta > 0) {
-      const profile = getTimeOfDayProfile(raid.timeOfDay)
+      const profile = getDangerLevelProfile(raid.dangerLevel)
       const profiledDelta = Math.max(1, Math.round(delta * profile.lootValueMultiplier))
       const item = pickLootItemForValue(profiledDelta, rng, profile)
       raid = addBackpackItem(raid, item)
@@ -617,6 +624,8 @@ export function applyEffects(
     raider = { ...raider, mood: clampMood(raider.mood + effects.mood) }
   }
 
+  // Compatibility: Keep `effects.hp` support for direct HP adjustments (for example, HUB healing)
+  // and for optional content that should continue using explicit HP semantics.
   if (effects.hp !== undefined) {
     const delta = typeof effects.hp === 'string'
       ? parseDice(effects.hp, rng)
@@ -627,6 +636,18 @@ export function applyEffects(
       raid = shielded.raid
     } else {
       raider = { ...raider, hp: Math.max(0, Math.min(raider.maxHp, raider.hp + delta)) }
+    }
+  }
+
+  if (effects.damage !== undefined) {
+    const parsed = typeof effects.damage === 'string'
+      ? parseDice(effects.damage, rng)
+      : effects.damage
+    const amount = Math.max(0, Math.abs(parsed))
+    if (amount > 0) {
+      const shielded = applyShieldedDamage(raider, raid, amount)
+      raider = shielded.raider
+      raid = shielded.raid
     }
   }
 

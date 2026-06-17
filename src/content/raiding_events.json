@@ -808,35 +808,35 @@
       "id": "day_clear_sightline_loot",
       "weight": 12,
       "text": "Daylight revealed a safe-looking supply nook. Suspiciously normal. Looted it with one eye on the exit.",
-      "requires": { "phase": "RAIDING", "timeOfDay": "Day" },
+      "requires": { "phase": "RAIDING", "dangerLevel": "Low" },
       "effects": { "backpackValue": 2, "mood": 1 }
     },
     {
       "id": "night_alerted_patrol",
       "weight": 10,
       "text": "Night patrol lights swept the street. Every robot suddenly looked like it had coffee and a promotion to chase.",
-      "requires": { "phase": "RAIDING", "timeOfDay": "Night", "minGreed": 10 },
+      "requires": { "phase": "RAIDING", "dangerLevel": "Medium", "minGreed": 10 },
       "effects": { "mood": -2, "ratRating": 1, "robotEncounter": "tattletale" }
     },
     {
       "id": "night_black_box_cache",
       "weight": 8,
       "text": "Found a black-box cache humming in the dark. It was valuable in the way warning labels are valuable.",
-      "requires": { "phase": "RAIDING", "timeOfDay": "Night", "minGreed": 15 },
+      "requires": { "phase": "RAIDING", "dangerLevel": "Medium", "minGreed": 15 },
       "effects": { "backpackValue": 8, "greedLevel": 4, "mood": 1 }
     },
     {
       "id": "stella_red_redline_cache",
       "weight": 8,
       "text": "Stella Red painted the loot crate like a prize on a dare show. Opened it. Heard distant machinery applaud.",
-      "requires": { "phase": "RAIDING", "timeOfDay": "Stella Red", "minGreed": 15 },
+      "requires": { "phase": "RAIDING", "dangerLevel": "High", "minGreed": 15 },
       "effects": { "backpackValue": 14, "greedLevel": 6, "mood": 2 }
     },
     {
       "id": "stella_red_hunter_ping",
       "weight": 7,
       "text": "The sky went Stella Red and something pinged my position like I was a limited-time objective.",
-      "requires": { "phase": "RAIDING", "timeOfDay": "Stella Red", "minGreed": 20 },
+      "requires": { "phase": "RAIDING", "dangerLevel": "High", "minGreed": 20 },
       "effects": { "mood": -4, "ratRating": 2, "robotEncounter": "sniper_poor_decisions", "robotDamageMultiplier": 1.5 }
     }
 ]

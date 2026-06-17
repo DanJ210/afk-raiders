@@ -37,7 +37,7 @@ const LOOT_BONUS_SHIELD_RECHARGER_CHANCE = 0.15 // 15% chance to find a shield r
 function applySuccessfulExtraction(
   state: GameState,
   extractedBackpack: BackpackItem[],
-  context: { zone: string | null; timeOfDay: GameState['raid']['timeOfDay'] },
+  context: { zone: string | null; dangerLevel: GameState['raid']['dangerLevel'] },
 ): { state: GameState; coinsGained: number; soldItemCount: number } {
   const transfer = transferBackpackToHomeStash(state.homeStash, extractedBackpack)
   return {
@@ -48,7 +48,7 @@ function applySuccessfulExtraction(
         hp: state.raider.maxHp,
         extractCount: state.raider.extractCount + 1,
       },
-      stats: recordOutcome(state.stats, 'extracts', context.zone, context.timeOfDay),
+      stats: recordOutcome(state.stats, 'extracts', context.zone, context.dangerLevel),
       homeStash: transfer.homeStash,
       coins: state.coins + transfer.coinsGained,
     },
@@ -176,7 +176,7 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
             hp: recovery.state.raider.maxHp,
             deathCount: recovery.state.raider.deathCount + 1,
           },
-          stats: recordOutcome(currentState.stats, 'deaths', state.raid.zone, state.raid.timeOfDay),
+          stats: recordOutcome(currentState.stats, 'deaths', state.raid.zone, state.raid.dangerLevel),
         }
         if (recovery.saved && recovery.savedItemName) {
           emitted.push(hiddenPocketSavedEvent(recovery.savedItemName, state.tick, now))
@@ -187,7 +187,7 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
       } else if (transition.from === 'EXTRACTING') {
         const extraction = applySuccessfulExtraction(currentState, state.raid.backpack, {
           zone: state.raid.zone,
-          timeOfDay: state.raid.timeOfDay,
+          dangerLevel: state.raid.dangerLevel,
         })
         currentState = extraction.state
         if (extraction.soldItemCount > 0) {
@@ -326,7 +326,7 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
         const fromPhase = currentState.raid.phase
         const backpackBeforeForce = currentState.raid.backpack
         const zoneBeforeForce = currentState.raid.zone
-        const timeOfDayBeforeForce = currentState.raid.timeOfDay
+        const dangerLevelBeforeForce = currentState.raid.dangerLevel
         const { raid: forcedRaid, transition: forcedTransition } = tickPhase(
           currentState.raid,
           forcedPhase,
@@ -344,7 +344,7 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
         if (fromPhase === 'EXTRACTING' && forcedPhase === 'HUB') {
           const extraction = applySuccessfulExtraction(currentState, backpackBeforeForce, {
             zone: zoneBeforeForce,
-            timeOfDay: timeOfDayBeforeForce,
+            dangerLevel: dangerLevelBeforeForce,
           })
           currentState = extraction.state
           if (extraction.soldItemCount > 0) {

@@ -8,7 +8,7 @@
 
 import { describe, it, expect } from 'vitest'
 import { events, flavor, healingItems, loot, robots, shieldRechargers } from '../../src/engine/eventResolver'
-import type { Phase, TimeOfDay } from '../../src/engine/types'
+import type { Phase, DangerLevel } from '../../src/engine/types'
 import apparelAccessoriesData from '../../src/content/loot-tables/apparel_accessories.json'
 import arcTechData from '../../src/content/loot-tables/arc_tech.json'
 import consumeablesData from '../../src/content/loot-tables/consumeables.json'
@@ -57,7 +57,7 @@ const DEADLINESS_RANK = {
 // Known non-table slot names handled directly in fillSlots()
 const BUILT_IN_SLOTS = new Set(['mundane_item', 'water_item', 'healing_item', 'count'])
 const VALID_PHASES = new Set<Phase>(['HUB', 'DEPLOYING', 'RAIDING', 'EXTRACTING', 'DOWNED'])
-const VALID_TIMES_OF_DAY = new Set<TimeOfDay>(['Day', 'Night', 'Stella Red'])
+const VALID_DANGER_LEVELS = new Set<DangerLevel>(['Low', 'Medium', 'High'])
 
 // Robot flavor slots: {robot_flavor_<robotId>}
 function isRobotFlavorSlot(slot: string): boolean {
@@ -104,20 +104,20 @@ describe('content validation', () => {
       expect(unique.size).toBe(ids.length)
     })
 
-    it('all phase and time-of-day requirements are valid', () => {
+    it('all phase and danger-level requirements are valid', () => {
       for (const event of events) {
         const phases = event.requires?.phase === undefined
           ? []
           : Array.isArray(event.requires.phase) ? event.requires.phase : [event.requires.phase]
-        const timesOfDay = event.requires?.timeOfDay === undefined
+        const dangerLevels = event.requires?.dangerLevel === undefined
           ? []
-          : Array.isArray(event.requires.timeOfDay) ? event.requires.timeOfDay : [event.requires.timeOfDay]
+          : Array.isArray(event.requires.dangerLevel) ? event.requires.dangerLevel : [event.requires.dangerLevel]
 
         for (const phase of phases) {
           expect(VALID_PHASES.has(phase), `event "${event.id}" has invalid phase "${phase}"`).toBe(true)
         }
-        for (const timeOfDay of timesOfDay) {
-          expect(VALID_TIMES_OF_DAY.has(timeOfDay), `event "${event.id}" has invalid timeOfDay "${timeOfDay}"`).toBe(true)
+        for (const dangerLevel of dangerLevels) {
+          expect(VALID_DANGER_LEVELS.has(dangerLevel), `event "${event.id}" has invalid dangerLevel "${dangerLevel}"`).toBe(true)
         }
       }
     })

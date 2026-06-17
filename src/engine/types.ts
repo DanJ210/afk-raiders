@@ -13,7 +13,7 @@ export interface EventTemplate extends ContentEntry {
   text: string
   requires?: {
     phase?: Phase | Phase[]
-    timeOfDay?: TimeOfDay | TimeOfDay[]
+    dangerLevel?: DangerLevel | DangerLevel[]
     minGreed?: number
     maxGreed?: number
     minHp?: number
@@ -23,6 +23,8 @@ export interface EventTemplate extends ContentEntry {
     backpackValue?: number | string // number or dice string like "+1d6"
     mood?: number
     hp?: number | string // number or dice string like "-15d21"
+    /** General incoming damage that always routes through shield mitigation. */
+    damage?: number | string // number or dice string like "15d6"
     greedLevel?: number
     ratRating?: number
     forcePhase?: Phase
@@ -157,7 +159,7 @@ export interface ActiveShieldRecharge {
 
 export interface RaidState {
   zone: string | null
-  timeOfDay: TimeOfDay | null
+  dangerLevel: DangerLevel | null
   shield: ShieldState | null
   activeShieldRecharge: ActiveShieldRecharge | null
   backpack: BackpackItem[]

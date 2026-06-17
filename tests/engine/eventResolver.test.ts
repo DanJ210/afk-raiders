@@ -37,6 +37,13 @@ const FIXED_DAMAGE_TEMPLATE: EventTemplate = {
   effects: { hp: -20 },
 }
 
+const SHIELD_AWARE_DAMAGE_TEMPLATE: EventTemplate = {
+  id: 'test_shield_aware_damage',
+  weight: 1,
+  text: 'You found a truly unfair hazard.',
+  effects: { damage: 20 },
+}
+
 function makeBandage(overrides: Partial<HealingItemStack> = {}): HealingItemStack {
   return {
     itemId: 'bandage_white',
@@ -120,17 +127,17 @@ describe('applyEffects — backpack item behavior', () => {
     }
 
     const day = applyEffects(
-      { ...initial, raid: { ...initial.raid, timeOfDay: 'Day' } },
+      { ...initial, raid: { ...initial.raid, dangerLevel: 'Low' } },
       template,
       createRNG(1),
     )
     const night = applyEffects(
-      { ...initial, raid: { ...initial.raid, timeOfDay: 'Night' } },
+      { ...initial, raid: { ...initial.raid, dangerLevel: 'Medium' } },
       template,
       createRNG(1),
     )
     const stellaRed = applyEffects(
-      { ...initial, raid: { ...initial.raid, timeOfDay: 'Stella Red' } },
+      { ...initial, raid: { ...initial.raid, dangerLevel: 'High' } },
       template,
       createRNG(1),
     )
@@ -143,6 +150,15 @@ describe('applyEffects — backpack item behavior', () => {
   it('routes negative HP effects through shield mitigation', () => {
     const initial = createInitialState(0)
     const result = applyEffects(initial, FIXED_DAMAGE_TEMPLATE, createRNG(1))
+
+    expect(result.raider.hp).toBe(88)
+    expect(result.raid.shield?.charge).toBe(20)
+    expect(result.raid.shield?.durability).toBe(95)
+  })
+
+  it('routes generic damage effects through shield mitigation', () => {
+    const initial = createInitialState(0)
+    const result = applyEffects(initial, SHIELD_AWARE_DAMAGE_TEMPLATE, createRNG(1))
 
     expect(result.raider.hp).toBe(88)
     expect(result.raid.shield?.charge).toBe(20)
@@ -194,25 +210,25 @@ describe('applyEffects — backpack item behavior', () => {
     expect(result!.state.raid.backpack).toHaveLength(0)
   })
 
-  it('scales failed robot damage by time-of-day profile', () => {
+  it('scales failed robot damage by danger-level profile', () => {
     const initial = createInitialState(0)
-    const night = resolveRobotEncounter(
-      { ...initial, raid: { ...initial.raid, timeOfDay: 'Night' } },
+    const medium = resolveRobotEncounter(
+      { ...initial, raid: { ...initial.raid, dangerLevel: 'Medium' } },
       'roomba_prime',
       createRNG(1),
       0,
     )
-    const stellaRed = resolveRobotEncounter(
-      { ...initial, raid: { ...initial.raid, timeOfDay: 'Stella Red' } },
+    const high = resolveRobotEncounter(
+      { ...initial, raid: { ...initial.raid, dangerLevel: 'High' } },
       'roomba_prime',
       createRNG(1),
       0,
     )
 
-    expect(night).not.toBeNull()
-    expect(stellaRed).not.toBeNull()
-    expect(night!.state.raider.hp).toBe(85)
-    expect(stellaRed!.state.raider.hp).toBe(80)
+    expect(medium).not.toBeNull()
+    expect(high).not.toBeNull()
+    expect(medium!.state.raider.hp).toBe(85)
+    expect(high!.state.raider.hp).toBe(80)
   })
 
   it('applies encounter-specific damage multipliers only on failed robot encounters', () => {

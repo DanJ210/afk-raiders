@@ -73,7 +73,7 @@ function loadSave(): SaveData | null {
         activeShieldRecharge: loadedState.raid.activeShieldRecharge ?? null,
         hiddenPocket: loadedState.raid.hiddenPocket ?? null,
         healingItems: loadedState.raid.healingItems ?? [],
-        timeOfDay: loadedState.raid.timeOfDay ?? null,
+        dangerLevel: loadedState.raid.dangerLevel ?? null,
       },
     }
     return data

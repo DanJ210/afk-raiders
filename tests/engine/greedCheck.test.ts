@@ -14,7 +14,7 @@ import type { RaidState } from '../../src/engine/types'
 function makeRaid(overrides: Partial<RaidState> = {}): RaidState {
   return {
     zone: 'damp_battlegrounds',
-    timeOfDay: 'Day',
+    dangerLevel: 'Low',
     backpack: [],
     healingItems: [],
     backpackValue: 0,

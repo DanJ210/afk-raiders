@@ -1,0 +1,162 @@
+{
+  "minor_conditions": [
+    {
+      "id": "light_fog",
+      "weight": 100,
+      "name": "Light Fog",
+      "description": "A gentle haze that makes everything look slightly spooky and significantly harder to shoot."
+    },
+    {
+      "id": "drizzle",
+      "weight": 90,
+      "name": "Drizzle",
+      "description": "Barely rain, but just enough to ruin your visibility and your mood."
+    },
+    {
+      "id": "gusty_winds",
+      "weight": 85,
+      "name": "Gusty Winds",
+      "description": "Your bullets curve slightly. Your hair, dramatically."
+    },
+    {
+      "id": "overcast_skies",
+      "weight": 95,
+      "name": "Overcast Skies",
+      "description": "Grey clouds loom overhead, matching your emotional state."
+    },
+    {
+      "id": "mild_static_interference",
+      "weight": 80,
+      "name": "Mild Static Interference",
+      "description": "Your comms crackle occasionally. Mostly with sarcasm."
+    },
+    {
+      "id": "low_visibility_dust",
+      "weight": 75,
+      "name": "Dust Drift",
+      "description": "A light dusting of airborne misery. Not enough to kill you, just enough to annoy you."
+    },
+    {
+      "id": "robot_activity_low",
+      "weight": 100,
+      "name": "Low Robot Activity",
+      "description": "Only a few robots wandering around. They still want you dead, just less enthusiastically."
+    },
+    {
+      "id": "mild_heat",
+      "weight": 85,
+      "name": "Mild Heat",
+      "description": "Warm enough to sweat, not warm enough to complain about. You complain anyway."
+    },
+    {
+      "id": "cool_breeze",
+      "weight": 90,
+      "name": "Cool Breeze",
+      "description": "Pleasant weather. Something is definitely about to go wrong."
+    },
+    {
+      "id": "patchy_fog",
+      "weight": 70,
+      "name": "Patchy Fog",
+      "description": "Visibility varies wildly. So does your confidence."
+    },
+    {
+      "id": "light_smoke",
+      "weight": 65,
+      "name": "Light Smoke",
+      "description": "Something is burning nearby. Hopefully not your extraction point."
+    },
+    {
+      "id": "minor_quakes",
+      "weight": 60,
+      "name": "Minor Ground Tremors",
+      "description": "The ground shakes occasionally. Probably unrelated to your presence. Probably."
+    },
+    {
+      "id": "weak_signal",
+      "weight": 75,
+      "name": "Weak Signal",
+      "description": "Your comms cut out at the worst possible times. Standard ARC experience."
+    },
+    {
+      "id": "ambient_hum",
+      "weight": 80,
+      "name": "Ambient Hum",
+      "description": "A low-frequency hum fills the air. No one knows why. No one wants to."
+    }
+  ],
+  "major_conditions": [
+    {
+      "id": "heavy_fog",
+      "weight": 40,
+      "name": "Heavy Fog",
+      "description": "Visibility reduced to 'guess and pray.' Perfect for ambushes and terrible decisions."
+    },
+    {
+      "id": "acid_rain",
+      "weight": 25,
+      "name": "Acid Rain",
+      "description": "Burns slightly. Smells worse. ARC claims it's 'within acceptable limits.'"
+    },
+    {
+      "id": "electrical_storm",
+      "weight": 20,
+      "name": "Electrical Storm",
+      "description": "Lightning arcs across the sky. Electronics malfunction. Hair stands up. Morale goes down."
+    },
+    {
+      "id": "robot_surge",
+      "weight": 30,
+      "name": "Robot Surge",
+      "description": "Robot activity spikes dramatically. They are everywhere. And they are loud."
+    },
+    {
+      "id": "blackout",
+      "weight": 35,
+      "name": "Total Blackout",
+      "description": "All lights fail. Night vision recommended. Screaming optional."
+    },
+    {
+      "id": "sandstorm",
+      "weight": 25,
+      "name": "Sandstorm",
+      "description": "Sand in your eyes. Sand in your gear. Sand in your soul."
+    },
+    {
+      "id": "toxic_fog",
+      "weight": 20,
+      "name": "Toxic Fog",
+      "description": "Thick, green, and definitely not safe to breathe. ARC calls it 'atmospheric seasoning.'"
+    },
+    {
+      "id": "meteor_shower",
+      "weight": 15,
+      "name": "Meteor Shower",
+      "description": "Small meteors rain from the sky. Great for spectacle, terrible for survival."
+    },
+    {
+      "id": "unstable_gravity",
+      "weight": 10,
+      "name": "Unstable Gravity",
+      "description": "Gravity fluctuates wildly. Sometimes you float. Sometimes you crater."
+    },
+    {
+      "id": "arc_signal_overload",
+      "weight": 20,
+      "name": "ARC Signal Overload",
+      "description": "Comms explode with static, warnings, and corporate disclaimers."
+    },
+    {
+      "id": "superheated_air",
+      "weight": 15,
+      "name": "Superheated Air",
+      "description": "The air itself burns. Hydration recommended. Survival optional."
+    },
+    {
+      "id": "dimensional_rift",
+      "weight": 5,
+      "name": "Dimensional Rift",
+      "description": "Reality flickers. You see things that shouldn't exist. They see you too."
+    }
+  ]
+}
