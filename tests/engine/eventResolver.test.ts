@@ -14,13 +14,13 @@ import { applyEffects, consumeHealingItem, consumeShieldRecharger, resolveHealin
 import { createInitialState } from '../../src/engine/initialState'
 import type { EventTemplate, HealingItemStack } from '../../src/engine/types'
 
-// backpackValue=500 maps exclusively to golden_water_bottle,
+// backpackValue=450 maps exclusively to Snack Mix (Chaos Blend),
 // so item selection is fully deterministic — no RNG variance.
 const LOOT_TEMPLATE: EventTemplate = {
   id: 'test_loot',
   weight: 1,
   text: 'You found something.',
-  effects: { backpackValue: 500 },
+  effects: { backpackValue: 450 },
 }
 
 const DAMAGE_TEMPLATE: EventTemplate = {
@@ -58,9 +58,9 @@ describe('applyEffects — backpack item behavior', () => {
 
     expect(result.raid.backpack).toHaveLength(1)
     const item = result.raid.backpack[0]
-    expect(item.itemId).toBe('golden_water_bottle')
-    expect(item.name).toBe('Golden Water Bottle')
-    expect(item.value).toBe(500)
+    expect(item.itemId).toBe('snack_mix_chaos')
+    expect(item.name).toBe('Snack Mix (Chaos Blend)')
+    expect(item.value).toBe(450)
     expect(item.rarity).toBe(5)
     expect(item.quantity).toBe(1)
   })
@@ -75,7 +75,7 @@ describe('applyEffects — backpack item behavior', () => {
 
     const afterSecond = applyEffects(afterFirst, LOOT_TEMPLATE, rng)
     expect(afterSecond.raid.backpack).toHaveLength(1)
-    expect(afterSecond.raid.backpack[0].itemId).toBe('golden_water_bottle')
+    expect(afterSecond.raid.backpack[0].itemId).toBe('snack_mix_chaos')
     expect(afterSecond.raid.backpack[0].quantity).toBe(2)
   })
 
@@ -84,10 +84,10 @@ describe('applyEffects — backpack item behavior', () => {
     const rng = createRNG(42)
 
     const afterFirst = applyEffects(state, LOOT_TEMPLATE, rng)
-    expect(afterFirst.raid.backpackValue).toBe(500)
+    expect(afterFirst.raid.backpackValue).toBe(450)
 
     const afterSecond = applyEffects(afterFirst, LOOT_TEMPLATE, rng)
-    expect(afterSecond.raid.backpackValue).toBe(1000)
+    expect(afterSecond.raid.backpackValue).toBe(900)
   })
 
   it('does not mutate the input state', () => {

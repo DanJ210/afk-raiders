@@ -1,0 +1,356 @@
+{
+    "category": "valuables",
+    "items": [
+        {
+            "id": "arc_commemorative_coin",
+            "weight": 20,
+            "rarity": 2,
+            "name": "ARC Commemorative Coin",
+            "value": 25,
+            "stackSize": 20,
+            "flavor": "Celebrates an event that absolutely did not go well."
+        },
+        {
+            "id": "arc_commemorative_coin_gold",
+            "weight": 8,
+            "rarity": 4,
+            "name": "ARC Gold Commemorative Coin",
+            "value": 120,
+            "stackSize": 10,
+            "flavor": "Shiny, heavy, and historically inaccurate."
+        },
+        {
+            "id": "arc_commemorative_coin_platinum",
+            "weight": 3,
+            "rarity": 5,
+            "name": "ARC Platinum Coin",
+            "value": 900,
+            "stackSize": 5,
+            "flavor": "Worth more than your entire loadout."
+        },
+        {
+            "id": "golden_spork",
+            "weight": 3,
+            "rarity": 5,
+            "name": "Golden Spork",
+            "value": 700,
+            "stackSize": 1,
+            "flavor": "The ultimate hybrid utensil. Revered by collectors."
+        },
+        {
+            "id": "silver_spork",
+            "weight": 10,
+            "rarity": 3,
+            "name": "Silver Spork",
+            "value": 45,
+            "stackSize": 3,
+            "flavor": "Elegant. Confused. Functional."
+        },
+        {
+            "id": "rusted_spork",
+            "weight": 20,
+            "rarity": 1,
+            "name": "Rusted Spork",
+            "value": 10,
+            "stackSize": 5,
+            "flavor": "A relic of simpler, tetanus-filled times."
+        },
+        {
+            "id": "vintage_comic_book",
+            "weight": 15,
+            "rarity": 2,
+            "name": "Vintage Comic Book",
+            "value": 20,
+            "stackSize": 1,
+            "flavor": "Features a hero who fights robots. The cover is torn but the nostalgia is intact."
+        },
+        {
+            "id": "vintage_comic_book_rare",
+            "weight": 8,
+            "rarity": 4,
+            "name": "Vintage Comic Book (First Edition)",
+            "value": 150,
+            "stackSize": 1,
+            "flavor": "The hero dies on page 3. Bold storytelling."
+        },
+        {
+            "id": "vintage_comic_book_mythic",
+            "weight": 3,
+            "rarity": 5,
+            "name": "Vintage Comic Book (Banned Issue)",
+            "value": 900,
+            "stackSize": 1,
+            "flavor": "This issue was recalled for 'emotional damage.'"
+        },
+        {
+            "id": "collector_plate_arc",
+            "weight": 12,
+            "rarity": 3,
+            "name": "Collector Plate (ARC Memorial Edition)",
+            "value": 60,
+            "stackSize": 1,
+            "flavor": "Commemorates an event that is definitely also abandoned now."
+        },
+        {
+            "id": "collector_plate_shattered",
+            "weight": 20,
+            "rarity": 1,
+            "name": "Shattered Collector Plate",
+            "value": 8,
+            "stackSize": 5,
+            "flavor": "Still collectible. Technically."
+        },
+        {
+            "id": "collector_plate_gold_trim",
+            "weight": 8,
+            "rarity": 4,
+            "name": "Collector Plate (Gold Trim)",
+            "value": 140,
+            "stackSize": 1,
+            "flavor": "The gold is real. The craftsmanship is not."
+        },
+        {
+            "id": "arc_vintage_coin",
+            "weight": 10,
+            "rarity": 3,
+            "name": "ARC Vintage Coin",
+            "value": 80,
+            "stackSize": 20,
+            "flavor": "Worth a lot to collectors. Worth nothing to everyone else."
+        },
+        {
+            "id": "arc_vintage_coin_fake",
+            "weight": 18,
+            "rarity": 2,
+            "name": "Fake ARC Vintage Coin",
+            "value": 15,
+            "stackSize": 20,
+            "flavor": "Looks real from a distance. A great distance."
+        },
+        {
+            "id": "arc_vintage_coin_platinum",
+            "weight": 3,
+            "rarity": 5,
+            "name": "ARC Platinum Collector Coin",
+            "value": 1200,
+            "stackSize": 10,
+            "flavor": "Stamped with a misprint that makes it priceless."
+        },
+        {
+            "id": "jewelry_tarnished_ring",
+            "weight": 20,
+            "rarity": 2,
+            "name": "Tarnished Ring",
+            "value": 18,
+            "stackSize": 1,
+            "flavor": "Engraving reads: 'We tried.'"
+        },
+        {
+            "id": "jewelry_silver_ring",
+            "weight": 12,
+            "rarity": 3,
+            "name": "Silver Ring",
+            "value": 60,
+            "stackSize": 1,
+            "flavor": "Fits perfectly. Uncomfortably perfectly."
+        },
+        {
+            "id": "jewelry_diamond_ring",
+            "weight": 3,
+            "rarity": 5,
+            "name": "Diamond Ring (Real)",
+            "value": 1500,
+            "stackSize": 1,
+            "flavor": "You feel richer just holding it."
+        },
+        {
+            "id": "jewelry_fake_diamond",
+            "weight": 18,
+            "rarity": 2,
+            "name": "Fake Diamond Shard",
+            "value": 15,
+            "stackSize": 6,
+            "flavor": "Shiny. Useless. Still shiny."
+        },
+        {
+            "id": "jewelry_ruby_fragment",
+            "weight": 10,
+            "rarity": 3,
+            "name": "Ruby Fragment",
+            "value": 70,
+            "stackSize": 3,
+            "flavor": "Probably real. Probably."
+        },
+        {
+            "id": "jewelry_emerald_core",
+            "weight": 3,
+            "rarity": 5,
+            "name": "Emerald Core Gem",
+            "value": 900,
+            "stackSize": 1,
+            "flavor": "Glows faintly. You pretend not to notice."
+        },
+        {
+            "id": "rare_statue_small",
+            "weight": 12,
+            "rarity": 3,
+            "name": "Small Rare Statue",
+            "value": 50,
+            "stackSize": 1,
+            "flavor": "Looks expensive. Feels heavy. Probably cursed."
+        },
+        {
+            "id": "rare_statue_medium",
+            "weight": 8,
+            "rarity": 4,
+            "name": "Medium Rare Statue",
+            "value": 120,
+            "stackSize": 1,
+            "flavor": "Depicts a hero you've never heard of."
+        },
+        {
+            "id": "rare_statue_large",
+            "weight": 3,
+            "rarity": 5,
+            "name": "Large Rare Statue",
+            "value": 800,
+            "stackSize": 1,
+            "flavor": "Too heavy to carry. You carry it anyway."
+        },
+        {
+            "id": "ancient_coin_rusted",
+            "weight": 20,
+            "rarity": 2,
+            "name": "Rusted Ancient Coin",
+            "value": 18,
+            "stackSize": 20,
+            "flavor": "Older than ARC. Barely."
+        },
+        {
+            "id": "ancient_coin_clean",
+            "weight": 12,
+            "rarity": 3,
+            "name": "Clean Ancient Coin",
+            "value": 60,
+            "stackSize": 20,
+            "flavor": "Mint condition. Literally."
+        },
+        {
+            "id": "ancient_coin_legendary",
+            "weight": 3,
+            "rarity": 5,
+            "name": "Ancient Coin (Royal Mint)",
+            "value": 1500,
+            "stackSize": 10,
+            "flavor": "Worth more than your entire squad combined."
+        },
+        {
+            "id": "luxury_watch_broken",
+            "weight": 18,
+            "rarity": 2,
+            "name": "Broken Luxury Watch",
+            "value": 20,
+            "stackSize": 1,
+            "flavor": "Stopped at 3:17. A dramatic time."
+        },
+        {
+            "id": "luxury_watch_working",
+            "weight": 10,
+            "rarity": 3,
+            "name": "Luxury Watch (Working)",
+            "value": 80,
+            "stackSize": 1,
+            "flavor": "Keeps perfect time. Unlike you."
+        },
+        {
+            "id": "luxury_watch_legendary",
+            "weight": 3,
+            "rarity": 5,
+            "name": "Luxury Watch (Diamond-Encrusted)",
+            "value": 2000,
+            "stackSize": 1,
+            "flavor": "You can hear it ticking. You can feel it judging."
+        },
+        {
+            "id": "gold_bar_small",
+            "weight": 10,
+            "rarity": 3,
+            "name": "Small Gold Bar",
+            "value": 90,
+            "stackSize": 3,
+            "flavor": "Heavy for its size. Valuable for its weight."
+        },
+        {
+            "id": "gold_bar_medium",
+            "weight": 6,
+            "rarity": 4,
+            "name": "Medium Gold Bar",
+            "value": 200,
+            "stackSize": 2,
+            "flavor": "Feels like wealth. Smells like fingerprints."
+        },
+        {
+            "id": "gold_bar_large",
+            "weight": 3,
+            "rarity": 5,
+            "name": "Large Gold Bar",
+            "value": 1500,
+            "stackSize": 1,
+            "flavor": "You consider retiring. Briefly."
+        },
+        {
+            "id": "precious_artifact_unknown",
+            "weight": 12,
+            "rarity": 3,
+            "name": "Unknown Precious Artifact",
+            "value": 70,
+            "stackSize": 1,
+            "flavor": "You have no idea what it is. Valuable though."
+        },
+        {
+            "id": "precious_artifact_arc",
+            "weight": 8,
+            "rarity": 4,
+            "name": "ARC Artifact (Recovered)",
+            "value": 150,
+            "stackSize": 1,
+            "flavor": "Stamped with a serial number and a warning."
+        },
+        {
+            "id": "precious_artifact_legendary",
+            "weight": 3,
+            "rarity": 5,
+            "name": "Legendary ARC Artifact",
+            "value": 1800,
+            "stackSize": 1,
+            "flavor": "You feel a strange warmth. Probably fine."
+        },
+        {
+            "id": "rare_painting_small",
+            "weight": 10,
+            "rarity": 3,
+            "name": "Small Rare Painting",
+            "value": 60,
+            "stackSize": 1,
+            "flavor": "The subject stares at you. You stare back."
+        },
+        {
+            "id": "rare_painting_medium",
+            "weight": 6,
+            "rarity": 4,
+            "name": "Medium Rare Painting",
+            "value": 150,
+            "stackSize": 1,
+            "flavor": "Signed by someone with a very dramatic signature."
+        },
+        {
+            "id": "rare_painting_large",
+            "weight": 3,
+            "rarity": 5,
+            "name": "Large Rare Painting",
+            "value": 1200,
+            "stackSize": 1,
+            "flavor": "Too big to carry. You carry it anyway."
+        }
+    ]
+}

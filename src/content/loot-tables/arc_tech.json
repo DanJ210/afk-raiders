@@ -1,0 +1,338 @@
+{
+    "category": "arc_tech",
+    "items": [
+        {
+            "id": "arc_data_shard",
+            "weight": 15,
+            "rarity": 3,
+            "name": "ARC Data Shard",
+            "value": 60,
+            "stackSize": 5,
+            "flavor": "Encrypted. Probably important. Definitely unreadable."
+        },
+        {
+            "id": "arc_data_shard_corrupted",
+            "weight": 20,
+            "rarity": 2,
+            "name": "ARC Data Shard (Corrupted)",
+            "value": 25,
+            "stackSize": 5,
+            "flavor": "Contains 98% static and 2% screaming."
+        },
+        {
+            "id": "arc_data_shard_legendary",
+            "weight": 3,
+            "rarity": 5,
+            "name": "ARC Data Shard (Prime Archive)",
+            "value": 900,
+            "stackSize": 1,
+            "flavor": "You feel smarter just holding it. Briefly."
+        },
+        {
+            "id": "unstable_energy_core",
+            "weight": 10,
+            "rarity": 3,
+            "name": "Unstable Energy Core",
+            "value": 120,
+            "stackSize": 2,
+            "flavor": "Vibrates ominously. You vibrate back."
+        },
+        {
+            "id": "energy_core_spent",
+            "weight": 25,
+            "rarity": 1,
+            "name": "Spent Energy Core",
+            "value": 10,
+            "stackSize": 6,
+            "flavor": "Completely drained. Same."
+        },
+        {
+            "id": "energy_core_overcharged",
+            "weight": 5,
+            "rarity": 4,
+            "name": "Overcharged Energy Core",
+            "value": 150,
+            "stackSize": 1,
+            "flavor": "Hums loudly. Too loudly."
+        },
+        {
+            "id": "energy_core_singularity",
+            "weight": 3,
+            "rarity": 5,
+            "name": "Singularity Core",
+            "value": 1500,
+            "stackSize": 1,
+            "flavor": "Feels heavier than it should. Concerningly so."
+        },
+        {
+            "id": "prototype_chip_unknown",
+            "weight": 5,
+            "rarity": 4,
+            "name": "Prototype Chip (Unknown)",
+            "value": 200,
+            "stackSize": 1,
+            "flavor": "ARC engineers labeled it 'Do Not Touch.' You touched it."
+        },
+        {
+            "id": "prototype_chip_faulty",
+            "weight": 20,
+            "rarity": 2,
+            "name": "Prototype Chip (Faulty)",
+            "value": 20,
+            "stackSize": 3,
+            "flavor": "It sparks occasionally. You pretend not to notice."
+        },
+        {
+            "id": "prototype_chip_legendary",
+            "weight": 3,
+            "rarity": 5,
+            "name": "Prototype Chip (Forbidden)",
+            "value": 1200,
+            "stackSize": 1,
+            "flavor": "You hear faint whispers when you hold it."
+        },
+        {
+            "id": "arc_encrypted_drive",
+            "weight": 12,
+            "rarity": 3,
+            "name": "ARC Encrypted Drive",
+            "value": 70,
+            "stackSize": 3,
+            "flavor": "Requires a password. The password field is 64 characters long."
+        },
+        {
+            "id": "arc_encrypted_drive_broken",
+            "weight": 20,
+            "rarity": 2,
+            "name": "ARC Encrypted Drive (Broken)",
+            "value": 18,
+            "stackSize": 4,
+            "flavor": "Contains exactly one intact file: 'notes.txt'. It's empty."
+        },
+        {
+            "id": "arc_encrypted_drive_master",
+            "weight": 3,
+            "rarity": 5,
+            "name": "ARC Master Encryption Drive",
+            "value": 1500,
+            "stackSize": 1,
+            "flavor": "You shouldn't have this. ARC would like it back."
+        },
+        {
+            "id": "nanite_canister_low",
+            "weight": 18,
+            "rarity": 2,
+            "name": "Nanite Canister (Low Density)",
+            "value": 25,
+            "stackSize": 3,
+            "flavor": "The nanites inside seem bored."
+        },
+        {
+            "id": "nanite_canister_standard",
+            "weight": 10,
+            "rarity": 3,
+            "name": "Nanite Canister (Standard)",
+            "value": 80,
+            "stackSize": 2,
+            "flavor": "They swirl aggressively when shaken."
+        },
+        {
+            "id": "nanite_canister_legendary",
+            "weight": 3,
+            "rarity": 5,
+            "name": "Nanite Canister (Swarm Intelligence)",
+            "value": 1800,
+            "stackSize": 1,
+            "flavor": "They tap on the glass. You tap back."
+        },
+        {
+            "id": "arc_relay_node",
+            "weight": 15,
+            "rarity": 3,
+            "name": "ARC Relay Node",
+            "value": 60,
+            "stackSize": 3,
+            "flavor": "Boosts signal strength and paranoia."
+        },
+        {
+            "id": "arc_relay_node_broken",
+            "weight": 20,
+            "rarity": 2,
+            "name": "ARC Relay Node (Broken)",
+            "value": 15,
+            "stackSize": 4,
+            "flavor": "Still tries to connect to something. Anything."
+        },
+        {
+            "id": "arc_relay_node_prime",
+            "weight": 3,
+            "rarity": 5,
+            "name": "ARC Relay Node (Prime)",
+            "value": 900,
+            "stackSize": 1,
+            "flavor": "Connects to networks that shouldn't exist."
+        },
+        {
+            "id": "quantum_stabilizer",
+            "weight": 10,
+            "rarity": 3,
+            "name": "Quantum Stabilizer",
+            "value": 90,
+            "stackSize": 2,
+            "flavor": "Keeps reality from wobbling. Mostly."
+        },
+        {
+            "id": "quantum_stabilizer_faulty",
+            "weight": 18,
+            "rarity": 2,
+            "name": "Quantum Stabilizer (Faulty)",
+            "value": 20,
+            "stackSize": 3,
+            "flavor": "Reality wobbles slightly when you hold it."
+        },
+        {
+            "id": "quantum_stabilizer_legendary",
+            "weight": 3,
+            "rarity": 5,
+            "name": "Quantum Stabilizer (Perfect)",
+            "value": 2000,
+            "stackSize": 1,
+            "flavor": "Reality feels smoother around you."
+        },
+        {
+            "id": "arc_power_cell",
+            "weight": 15,
+            "rarity": 3,
+            "name": "ARC Power Cell",
+            "value": 70,
+            "stackSize": 4,
+            "flavor": "Holds enough power to run a small outpost. Or explode."
+        },
+        {
+            "id": "arc_power_cell_spent",
+            "weight": 25,
+            "rarity": 1,
+            "name": "ARC Power Cell (Spent)",
+            "value": 10,
+            "stackSize": 6,
+            "flavor": "Completely drained. Same."
+        },
+        {
+            "id": "arc_power_cell_prime",
+            "weight": 3,
+            "rarity": 5,
+            "name": "ARC Power Cell (Prime)",
+            "value": 1500,
+            "stackSize": 1,
+            "flavor": "You feel a faint heartbeat. Probably fine."
+        },
+        {
+            "id": "experimental_fuse",
+            "weight": 18,
+            "rarity": 2,
+            "name": "Experimental Fuse",
+            "value": 20,
+            "stackSize": 5,
+            "flavor": "Designed to fail in interesting ways."
+        },
+        {
+            "id": "experimental_fuse_arc",
+            "weight": 10,
+            "rarity": 3,
+            "name": "ARC Experimental Fuse",
+            "value": 60,
+            "stackSize": 3,
+            "flavor": "The label reads: 'Not for field use.'"
+        },
+        {
+            "id": "experimental_fuse_legendary",
+            "weight": 3,
+            "rarity": 5,
+            "name": "Experimental Fuse (Catastrophic)",
+            "value": 900,
+            "stackSize": 1,
+            "flavor": "You feel like you're holding a mistake."
+        },
+        {
+            "id": "arc_memory_core",
+            "weight": 12,
+            "rarity": 3,
+            "name": "ARC Memory Core",
+            "value": 80,
+            "stackSize": 2,
+            "flavor": "Contains memories. Not yours."
+        },
+        {
+            "id": "arc_memory_core_fragmented",
+            "weight": 20,
+            "rarity": 2,
+            "name": "ARC Memory Core (Fragmented)",
+            "value": 20,
+            "stackSize": 4,
+            "flavor": "Shows random images when shaken."
+        },
+        {
+            "id": "arc_memory_core_legendary",
+            "weight": 3,
+            "rarity": 5,
+            "name": "Memory Core (Eternal)",
+            "value": 2000,
+            "stackSize": 1,
+            "flavor": "You see flashes of a life you never lived."
+        },
+        {
+            "id": "arc_logic_module",
+            "weight": 15,
+            "rarity": 3,
+            "name": "ARC Logic Module",
+            "value": 70,
+            "stackSize": 3,
+            "flavor": "Processes logic faster than you process emotions."
+        },
+        {
+            "id": "arc_logic_module_faulty",
+            "weight": 20,
+            "rarity": 2,
+            "name": "ARC Logic Module (Faulty)",
+            "value": 18,
+            "stackSize": 4,
+            "flavor": "Makes decisions at random. Bold."
+        },
+        {
+            "id": "arc_logic_module_prime",
+            "weight": 3,
+            "rarity": 5,
+            "name": "ARC Logic Module (Prime)",
+            "value": 1500,
+            "stackSize": 1,
+            "flavor": "Thinks faster than you can blink."
+        },
+        {
+            "id": "arc_flux_regulator",
+            "weight": 12,
+            "rarity": 3,
+            "name": "ARC Flux Regulator",
+            "value": 80,
+            "stackSize": 2,
+            "flavor": "Regulates flux. Whatever that means."
+        },
+        {
+            "id": "arc_flux_regulator_broken",
+            "weight": 20,
+            "rarity": 2,
+            "name": "ARC Flux Regulator (Broken)",
+            "value": 20,
+            "stackSize": 4,
+            "flavor": "Regulates nothing. Looks cool."
+        },
+        {
+            "id": "arc_flux_regulator_legendary",
+            "weight": 3,
+            "rarity": 5,
+            "name": "Flux Regulator (Perfect)",
+            "value": 1800,
+            "stackSize": 1,
+            "flavor": "You feel the universe settle slightly."
+        }
+    ]
+}

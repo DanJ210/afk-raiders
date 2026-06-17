@@ -18,11 +18,19 @@ import deploymentEventsData from '../content/deployment_events.json'
 import raidingEventsData from '../content/raiding_events.json'
 import extractionEventsData from '../content/extraction_events.json'
 import downedEventsData from '../content/downed_events.json'
-import lootData from '../content/loot.json'
 import healingItemsData from '../content/healing_items.json'
 import shieldRechargersData from '../content/shield_rechargers.json'
 import robotsData from '../content/robots.json'
 import flavorData from '../content/flavor.json'
+import apparelAccessoriesData from '../content/loot-tables/apparel_accessories.json'
+import arcTechData from '../content/loot-tables/arc_tech.json'
+import consumeablesData from '../content/loot-tables/consumeables.json'
+import cursedWeirdItemsData from '../content/loot-tables/cursed_weird_items.json'
+import lootData from '../content/loot-tables/loot.json'
+import personalJunkData from '../content/loot-tables/personal_junk.json'
+import scrapComponentsData from '../content/loot-tables/scrap_components.json'
+import valuablesData from '../content/loot-tables/valuables.json'
+import weaponsPartsData from '../content/loot-tables/weapons_parts.json'
 import { getTimeOfDayProfile, rarityWeight, type TimeOfDayProfile } from './timeProfiles.js'
 import { applyShieldedDamage, startShieldRecharge } from './shields.js'
 
@@ -34,7 +42,17 @@ const events = [
   ...extractionEventsData,
   ...downedEventsData,
 ] as EventTemplate[]
-const baseLoot = lootData as LootItem[]
+const baseLoot = [
+  ...(apparelAccessoriesData as { items: LootItem[] }).items,
+  ...(arcTechData as { items: LootItem[] }).items,
+  ...(consumeablesData as { items: LootItem[] }).items,
+  ...(cursedWeirdItemsData as { items: LootItem[] }).items,
+  ...(lootData as { items: LootItem[] }).items,
+  ...(personalJunkData as { items: LootItem[] }).items,
+  ...(scrapComponentsData as { items: LootItem[] }).items,
+  ...(valuablesData as { items: LootItem[] }).items,
+  ...(weaponsPartsData as { items: LootItem[] }).items,
+]
 const healingItems = healingItemsData as HealingItem[]
 const shieldRechargers = shieldRechargersData as ShieldRechargerItem[]
 const robots = robotsData as RobotEntry[]
