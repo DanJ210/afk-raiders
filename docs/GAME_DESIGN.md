@@ -114,7 +114,7 @@ Everything funny flows through an autoscrolling text feed:
 
 ## 7. Data Model (MVP)
 - **Raider** — stats, mood, Rat Rating, skills
-- **Raid** — zone, time-of-day, tick count, backpack contents/value, greed level, phase, optional manual Secret Hidden Pocket selection
+- **Raid** — zone, condition, tick count, backpack contents/value, greed level, phase, optional manual Secret Hidden Pocket selection
 - **Home Stash** — persistent extracted loot; stacks duplicates (×N), capped at 120 items with overflow auto-sold into coins
 - **Coins** — accumulated value from stash overflow auto-sales
 - **Lifetime Stats** — extracts/deaths totals and context breakdowns, robot defeats, healing usage

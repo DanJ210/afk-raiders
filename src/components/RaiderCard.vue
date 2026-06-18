@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue'
 import { useNow } from '@vueuse/core'
 import { useGameStore } from '../stores/gameStore'
-import { zoneName } from '../utils/zones'
+import { zoneConditionByDangerLevel, zoneDescription, zoneName } from '../utils/zones'
 import { TICK_INTERVAL_MS } from '../engine/catchUp'
 import ShieldBar from './ShieldBar.vue'
 import MoodResilienceBadge from './MoodResilienceBadge.vue'
@@ -13,7 +13,12 @@ const raider = computed(() => store.raider)
 const lifetimeStats = computed(() => store.state.stats)
 const activeShieldRecharge = computed(() => store.raid.activeShieldRecharge)
 const currentZoneName = computed(() => zoneName(store.raid.zone))
+const currentZoneDescription = computed(() => zoneDescription(store.raid.zone))
 const showCurrentZone = computed(() => store.phase === 'RAIDING' && currentZoneName.value !== null)
+const currentCondition = computed(() =>
+  store.raid.zoneCondition ?? zoneConditionByDangerLevel(store.raid.dangerLevel),
+)
+const showCurrentCondition = computed(() => store.phase === 'RAIDING' && currentCondition.value !== null)
 const showRaidTimer = computed(() => store.phase === 'RAIDING')
 const now = useNow({ interval: 1000 })
 const phaseTimerMs = computed(() => {
@@ -136,7 +141,40 @@ const hpClass = computed(() => {
 
       <div v-if="showCurrentZone" class="raider-card__stat">
         <span class="raider-card__stat-label">Zone</span>
-        <span class="raider-card__stat-value">{{ currentZoneName }}</span>
+        <button
+          v-if="currentZoneName"
+          type="button"
+          class="raider-card__stat-value raider-card__zone-value"
+          :aria-label="currentZoneDescription ? `Zone ${currentZoneName}. ${currentZoneDescription}` : `Zone ${currentZoneName}`"
+        >
+          {{ currentZoneName }}
+          <span
+            v-if="currentZoneDescription"
+            class="raider-card__zone-tooltip"
+            role="tooltip"
+          >
+            {{ currentZoneDescription }}
+          </span>
+        </button>
+      </div>
+
+      <div v-if="showCurrentCondition" class="raider-card__stat">
+        <span class="raider-card__stat-label">Condition</span>
+        <button
+          v-if="currentCondition"
+          type="button"
+          class="raider-card__stat-value raider-card__condition-value"
+          :aria-label="currentCondition.description ? `Condition ${currentCondition.name}. ${currentCondition.description}` : `Condition ${currentCondition.name}`"
+        >
+          {{ currentCondition.name }}
+          <span
+            v-if="currentCondition.description"
+            class="raider-card__condition-tooltip"
+            role="tooltip"
+          >
+            {{ currentCondition.description }}
+          </span>
+        </button>
       </div>
 
       <div v-if="showRaidTimer" class="raider-card__stat">
@@ -276,6 +314,76 @@ const hpClass = computed(() => {
 
 .raider-card__rat-rating {
   color: var(--color-accent-secondary);
+}
+
+.raider-card__condition-value {
+  position: relative;
+  border: none;
+  background: transparent;
+  padding: 0;
+  text-decoration: underline dotted;
+  text-underline-offset: 2px;
+  cursor: help;
+  text-align: left;
+}
+
+.raider-card__zone-value {
+  position: relative;
+  border: none;
+  background: transparent;
+  padding: 0;
+  text-decoration: underline dotted;
+  text-underline-offset: 2px;
+  cursor: help;
+  text-align: left;
+}
+
+.raider-card__condition-tooltip {
+  position: absolute;
+  left: 0;
+  top: calc(100% + 6px);
+  z-index: 2;
+  display: none;
+  width: min(42ch, 70vw);
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-raised);
+  color: var(--color-text);
+  font-size: 0.75rem;
+  line-height: 1.35;
+  text-decoration: none;
+  letter-spacing: normal;
+  box-shadow: 0 6px 14px color-mix(in srgb, var(--color-bg) 70%, transparent);
+}
+
+
+.raider-card__zone-tooltip {
+  position: absolute;
+  left: 0;
+  top: calc(100% + 6px);
+  z-index: 2;
+  display: none;
+  width: min(42ch, 70vw);
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-raised);
+  color: var(--color-text);
+  font-size: 0.75rem;
+  line-height: 1.35;
+  text-decoration: none;
+  letter-spacing: normal;
+  box-shadow: 0 6px 14px color-mix(in srgb, var(--color-bg) 70%, transparent);
+}
+
+.raider-card__zone-value:hover .raider-card__zone-tooltip,
+.raider-card__zone-value:focus-visible .raider-card__zone-tooltip,
+.raider-card__zone-value:active .raider-card__zone-tooltip,
+.raider-card__condition-value:hover .raider-card__condition-tooltip,
+.raider-card__condition-value:focus-visible .raider-card__condition-tooltip,
+.raider-card__condition-value:active .raider-card__condition-tooltip {
+  display: block;
 }
 
 .raider-card__timer {

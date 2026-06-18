@@ -2,7 +2,7 @@
 import { computed, ref, watch } from 'vue'
 import { useMediaQuery, useNow } from '@vueuse/core'
 import { useGameStore } from './stores/gameStore'
-import { zoneName } from './utils/zones'
+import { zoneConditionByDangerLevel, zoneName } from './utils/zones'
 import { TICK_INTERVAL_MS } from './engine/catchUp'
 import CommsLog from './components/CommsLog.vue'
 import RaiderCard from './components/RaiderCard.vue'
@@ -38,6 +38,9 @@ watch(activeMobileTab, (tab) => {
 
 const currentZoneName = computed(() => zoneName(store.raid.zone))
 const currentDangerLevel = computed(() => store.raid.dangerLevel)
+const fallbackCondition = computed(() => zoneConditionByDangerLevel(store.raid.dangerLevel))
+const currentConditionName = computed(() => store.raid.zoneCondition?.name ?? fallbackCondition.value?.name ?? null)
+const currentConditionDescription = computed(() => store.raid.zoneCondition?.description ?? fallbackCondition.value?.description ?? null)
 
 const phaseTimerMs = computed(() => {
   if (store.raid.phaseTicksRemaining <= 0) return 0
@@ -77,7 +80,14 @@ const phaseTimeText = computed(() => {
     </main>
 
     <main v-else class="app__main-mobile">
-      <PhaseStatusStrip :phase="store.phase" :zone-name="currentZoneName" :danger-level="currentDangerLevel" :phase-time-text="phaseTimeText" />
+      <PhaseStatusStrip
+        :phase="store.phase"
+        :zone-name="currentZoneName"
+        :danger-level="currentDangerLevel"
+        :phase-time-text="phaseTimeText"
+        :condition-name="currentConditionName"
+        :condition-description="currentConditionDescription"
+      />
 
       <section v-if="activeMobileTab === 'comms'" class="app__mobile-panel app__mobile-panel--fill">
         <CommsLog />

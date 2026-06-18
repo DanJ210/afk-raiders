@@ -80,6 +80,7 @@ export function useGamePersistence(): GamePersistenceReturn {
           hiddenPocket: loadedState.raid.hiddenPocket ?? null,
           healingItems: loadedState.raid.healingItems ?? [],
           dangerLevel: loadedState.raid.dangerLevel ?? null,
+          zoneCondition: loadedState.raid.zoneCondition ?? null,
         },
       }
       return data
