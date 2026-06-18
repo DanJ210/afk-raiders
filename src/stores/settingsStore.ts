@@ -23,21 +23,25 @@ export const useSettingsStore = defineStore('settings', () => {
 
   // Listen for beforeinstallprompt event (web)
   if (typeof window !== 'undefined') {
-    window.addEventListener('beforeinstallprompt', (e: Event) => {
-      e.preventDefault()
-      deferredPrompt.value = e as BeforeInstallPromptEvent
-      showInstallPrompt.value = true
-    })
-
-    // Detect if app is already installed
-    window.addEventListener('appinstalled', () => {
-      isAppInstalled.value = true
-      showInstallPrompt.value = false
-    })
-
     // Check if running as installed PWA
     if (window.matchMedia('(display-mode: standalone)').matches) {
       isAppInstalled.value = true
+    }
+
+    // Guard against duplicate listener registration (e.g. HMR)
+    if (!(window as any).__afkPwaListenersRegistered) {
+      ;(window as any).__afkPwaListenersRegistered = true
+
+      window.addEventListener('beforeinstallprompt', (e: Event) => {
+        e.preventDefault()
+        deferredPrompt.value = e as BeforeInstallPromptEvent
+        showInstallPrompt.value = true
+      })
+
+      window.addEventListener('appinstalled', () => {
+        isAppInstalled.value = true
+        showInstallPrompt.value = false
+      })
     }
   }
 
