@@ -5,6 +5,7 @@ import { useGameStore } from '../stores/gameStore'
 import { zoneName } from '../utils/zones'
 import { TICK_INTERVAL_MS } from '../engine/catchUp'
 import ShieldBar from './ShieldBar.vue'
+import MoodResilienceBadge from './MoodResilienceBadge.vue'
 import RaiderLifetimeStats from './RaiderLifetimeStats.vue'
 
 const store = useGameStore()
@@ -124,7 +125,10 @@ const hpClass = computed(() => {
 
       <div class="raider-card__stat">
         <span class="raider-card__stat-label">Mood</span>
-        <span class="raider-card__stat-value">{{ moodLabel(raider.mood) }}</span>
+        <span class="raider-card__stat-value raider-card__mood-value">
+          {{ moodLabel(raider.mood) }}
+          <MoodResilienceBadge :mood="raider.mood" />
+        </span>
       </div>
 
       <div v-if="showCurrentZone" class="raider-card__stat">
@@ -258,6 +262,13 @@ const hpClass = computed(() => {
   font-family: var(--font-mono);
   min-width: 0;
   overflow-wrap: anywhere;
+}
+
+.raider-card__mood-value {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0;
 }
 
 .raider-card__rat-rating {

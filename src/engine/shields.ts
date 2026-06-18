@@ -39,6 +39,7 @@ export interface ShieldDamageResult {
   shieldChargeLost: number
   shieldDurabilityLost: number
   mitigated: boolean
+  moodResilienceHpSaved?: number
 }
 
 export interface ShieldRechargeStartResult {

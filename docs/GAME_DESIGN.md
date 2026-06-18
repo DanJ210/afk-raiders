@@ -16,6 +16,7 @@ You are **not** the raider. You are their Handler back in the underground hub, w
 1. **Prep phase (hub):** Raider sells loot, buys questionable gear, eats expired MREs, gossips with NPCs.
 2. **Deploy:** Raider autonomously picks a zone and a time-of-day profile (Day / Night / Stella Red).
 3. **Raid events:** Loot finds, robot encounters, weather, meeting other AI raiders (alliance → inevitable betrayal). Time-of-day profile controls both upside (loot value/rarity) and risk (robot pressure/extraction danger).
+   - Raider **mood** now provides a tiny secondary bias to loot quality: positive mood slightly improves higher-rarity odds, while negative mood slightly favors lower-rarity outcomes.
 4. **The Greed Check™ (signature mechanic):** At intervals the Raider rolls to extract *or* push deeper for better loot. Backpack value rises → death risk rises. Pure dramatic tension, zero input required.
 5. **Extract or die:** Extraction takes ~90 seconds, then a final beat to hit the big RETURN HOME button. During that window **extraction events** can fire — the shuttle may arrive early (instant success), the beacon may get jammed (back into the zone, backpack kept), or the raider may go down at the LZ (lose the bag). If the raider stays in RAIDING until the timer expires, they go DOWNED (zone nuke failure).  Death = lose the bag (keep the Emotional Support Pocket item), respawn in hub with a sheepish log entry. If the raid timer reaches zero while still in RAIDING, the zone nuke lands and the raider goes DOWNED.
 
@@ -43,6 +44,13 @@ The Raider now starts each raid with a basic **Makeshift Confidence Shield** lay
 - For the MVP, returning to the HUB restores the starter shield to full charge and durability.
 - In future phases, a loadout and store loop can decide which shield is equipped and how it persists.
 
+### Resilience
+Mood also feeds a small hidden **resilience** bonus against robot damage:
+- Positive mood slightly reduces the HP damage that remains after shield mitigation.
+- Mood at or below zero gives no resilience bonus.
+- Robots still roll and hit for the same raw damage; resilience only trims the final HP loss.
+- The comms feed calls out the bonus when it happens so the player can see the mood effect.
+
 ### Shield Rechargers
 Shield rechargers are manual-use backpack loot found during RAIDING:
 - They drop into the normal current-raid backpack, not the separate field-meds pocket.
@@ -67,6 +75,8 @@ The only player resource. Regenerates ~1 per 10 minutes, capped at 5.
 - Possible later: ping a loot stash, bless a piece of gear.
 
 Keeping input this thin is the point — it must remain firmly zero-player.
+
+Mood therefore matters beyond flavor text: keeping the raider in a better mood gives a subtle long-run boost to item quality without overriding danger-level risk/reward tuning.
 
 ## 4. The Comms Log — the content engine
 Everything funny flows through an autoscrolling text feed:

@@ -32,6 +32,7 @@ import scrapComponentsData from '../content/loot-tables/scrap_components.json'
 import valuablesData from '../content/loot-tables/valuables.json'
 import weaponsPartsData from '../content/loot-tables/weapons_parts.json'
 import { getDangerLevelProfile, rarityWeight, type DangerLevelProfile } from './dangerLevelProfiles.js'
+import { clampMood, getMoodRarityWeightMultiplier, getMoodResilienceMultiplier } from './mood.js'
 import { applyShieldedDamage, startShieldRecharge, type ShieldDamageResult } from './shields.js'
 
 // One events file per phase: HUB, DEPLOYING, RAIDING, EXTRACTING, DOWNED
@@ -89,25 +90,24 @@ const ROBOT_LETHAL_HP_RATIO = 0.5
 const ROBOT_NONLETHAL_MIN_HP_RATIO = 0.25
 const ROBOT_DAMAGE_PER_MENACE = 2
 const LETHAL_ROBOT_DEADLINESS: ReadonlySet<RobotEntry['deadliness']> = new Set(['nasty', 'deadly'])
-
-function clampMood(mood: number): number {
-  return Math.max(-5, Math.min(5, mood))
-}
-
 function healingMoodGain(item: HealingItemStack): number {
   return item.moodGain ?? Math.max(1, Math.min(4, item.rarity))
 }
 
 export function describeShieldDamage(damage: ShieldDamageResult): string {
+  const resilienceText = damage.moodResilienceHpSaved && damage.moodResilienceHpSaved > 0
+    ? ` Mood held together the raider and shaved off ${damage.moodResilienceHpSaved} HP.`
+    : ''
+
   if (!damage.mitigated || damage.shieldChargeLost <= 0) {
-    return `Took ${damage.hpDamage} damage.`
+    return `Took ${damage.hpDamage} damage.${resilienceText}`
   }
 
   if (damage.hpDamage <= 0) {
     return `Shield lost ${damage.shieldChargeLost} charge. No HP damage landed.`
   }
 
-  return `Shield lost ${damage.shieldChargeLost} charge; ${damage.hpDamage} HP damage landed.`
+  return `Shield lost ${damage.shieldChargeLost} charge; ${damage.hpDamage} HP damage landed.${resilienceText}`
 }
 
 /** Filter events valid for the current game context */
@@ -239,27 +239,27 @@ function fillSlots(text: string, rng: RNG): string {
   })
 }
 
-function weightedLootPick(items: LootItem[], rng: RNG, profile: DangerLevelProfile): LootItem {
+function weightedLootPick(items: LootItem[], rng: RNG, profile: DangerLevelProfile, mood: number): LootItem {
   return rng.weightedPick(items.map(item => ({
     ...item,
-    weight: item.weight * rarityWeight(profile, item.rarity),
+    weight: item.weight * rarityWeight(profile, item.rarity) * getMoodRarityWeightMultiplier(item.rarity, mood),
   })))
 }
 
-function pickLootItemForValue(targetValue: number, rng: RNG, profile: DangerLevelProfile): LootItem {
+function pickLootItemForValue(targetValue: number, rng: RNG, profile: DangerLevelProfile, mood: number): LootItem {
   const exactMatches = loot.filter(item => item.value === targetValue)
   if (exactMatches.length > 0) {
-    return weightedLootPick(exactMatches, rng, profile)
+    return weightedLootPick(exactMatches, rng, profile, mood)
   }
 
   const lowerMatches = loot.filter(item => item.value <= targetValue)
   if (lowerMatches.length > 0) {
     const highestValue = Math.max(...lowerMatches.map(item => item.value))
     const bestMatches = lowerMatches.filter(item => item.value === highestValue)
-    return weightedLootPick(bestMatches, rng, profile)
+    return weightedLootPick(bestMatches, rng, profile, mood)
   }
 
-  return weightedLootPick(loot, rng, profile)
+  return weightedLootPick(loot, rng, profile, mood)
 }
 
 function addBackpackItem(
@@ -530,12 +530,22 @@ function applyRobotDamage(
     }
   }
 
-  let hp = shielded.raider.hp
+  const hpAfterShield = shielded.raider.hp
+  let hp = hpAfterShield
+  let moodResilienceHpSaved = 0
   if (!canRobotEncounterBeLethal(state, robot)) {
     const nonlethalFloor = state.raider.hp / state.raider.maxHp > ROBOT_LETHAL_HP_RATIO
       ? Math.ceil(state.raider.maxHp * ROBOT_NONLETHAL_MIN_HP_RATIO)
       : 1
     hp = Math.max(nonlethalFloor, hp)
+  }
+
+  const resilienceMultiplier = getMoodResilienceMultiplier(state.raider.mood)
+  if (resilienceMultiplier < 1 && hp < state.raider.hp) {
+    const mitigatedDamage = Math.max(1, Math.floor((state.raider.hp - hp) * resilienceMultiplier))
+    const nextHp = Math.max(state.raider.hp - mitigatedDamage, hp)
+    moodResilienceHpSaved = Math.max(0, nextHp - hp)
+    hp = nextHp
   }
 
   return {
@@ -546,6 +556,7 @@ function applyRobotDamage(
       ...shielded,
       raider: { ...shielded.raider, hp },
       hpDamage: state.raider.hp - hp,
+      moodResilienceHpSaved: moodResilienceHpSaved > 0 ? moodResilienceHpSaved : undefined,
     },
   }
 }
@@ -650,7 +661,7 @@ export function applyEffects(
     if (delta > 0) {
       const profile = getDangerLevelProfile(raid.dangerLevel)
       const profiledDelta = Math.max(1, Math.round(delta * profile.lootValueMultiplier))
-      const item = pickLootItemForValue(profiledDelta, rng, profile)
+      const item = pickLootItemForValue(profiledDelta, rng, profile, raider.mood)
       raid = addBackpackItem(raid, item)
       raid = {
         ...raid,

@@ -44,6 +44,8 @@ function toHiddenPocketItem(item: BackpackItem) {
     value: item.value,
     rarity: item.rarity,
     flavor: item.flavor,
+    quantity: item.quantity,
+    kind: item.kind
   }
 }
 
