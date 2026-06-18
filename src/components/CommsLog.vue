@@ -18,6 +18,8 @@ const raidShieldRecharge = computed(() => store.raid.activeShieldRecharge)
 const visibility = useDocumentVisibility()
 const tickBarKey = computed(() => `${store.lastTickAt}-${visibility.value}`)
 const tickAnimationDelay = computed(() => {
+  // Include visibility as a dependency so delay recomputes when the tab becomes visible.
+  void visibility.value
   const elapsed = Math.min(TICK_INTERVAL_MS, Math.max(0, Date.now() - store.lastTickAt))
   return `-${elapsed}ms`
 })
