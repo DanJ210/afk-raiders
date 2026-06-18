@@ -60,12 +60,13 @@ export default defineConfig({
             short_name: 'Deploy',
             description: 'Open AFK Raiders',
             url: '/',
-            icons: [{
-              src: '/icon-192.png',
-              sizes: '192x192',
-              type: 'image/png',
-            }],
-          }
+            icons: [
+              {
+                src: '/icon-192.png',
+                sizes: '192x192',
+                type: 'image/png',
+              },
+            ],
           },
         ],
       },
