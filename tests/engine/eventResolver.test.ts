@@ -290,6 +290,21 @@ describe('applyEffects — backpack item behavior', () => {
     expect(upbeatResult!.state.raid.shield?.durability).toBe(neutralResult!.state.raid.shield?.durability)
   })
 
+  it('shows the mood resilience callout even when no shield is active', () => {
+    const state = {
+      ...createInitialState(0),
+      raider: { ...createInitialState(0).raider, mood: 5 },
+      raid: { ...createInitialState(0).raid, shield: null },
+    }
+
+    const result = resolveRobotEncounter(state, 'roomba_prime', createRNG(1), 0)
+
+    expect(result).not.toBeNull()
+    expect(result!.event.text).toContain('Took 14 damage')
+    expect(result!.event.text).toContain('Mood held together the raider')
+    expect(result!.state.raider.hp).toBe(86)
+  })
+
   it('scales failed robot damage by danger-level profile', () => {
     const initial = createInitialState(0)
     const medium = resolveRobotEncounter(

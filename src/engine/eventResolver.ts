@@ -95,17 +95,17 @@ function healingMoodGain(item: HealingItemStack): number {
 }
 
 export function describeShieldDamage(damage: ShieldDamageResult): string {
+  const resilienceText = damage.moodResilienceHpSaved && damage.moodResilienceHpSaved > 0
+    ? ` Mood held together the raider and shaved off ${damage.moodResilienceHpSaved} HP.`
+    : ''
+
   if (!damage.mitigated || damage.shieldChargeLost <= 0) {
-    return `Took ${damage.hpDamage} damage.`
+    return `Took ${damage.hpDamage} damage.${resilienceText}`
   }
 
   if (damage.hpDamage <= 0) {
     return `Shield lost ${damage.shieldChargeLost} charge. No HP damage landed.`
   }
-
-  const resilienceText = damage.moodResilienceHpSaved && damage.moodResilienceHpSaved > 0
-    ? ` Mood held together the raider and shaved off ${damage.moodResilienceHpSaved} HP.`
-    : ''
 
   return `Shield lost ${damage.shieldChargeLost} charge; ${damage.hpDamage} HP damage landed.${resilienceText}`
 }
