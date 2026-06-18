@@ -1,0 +1,374 @@
+{
+    "category": "weapons_parts",
+    "items": [
+        {
+            "id": "broken_pistol",
+            "weight": 25,
+            "rarity": 1,
+            "name": "Broken Pistol",
+            "value": 10,
+            "stackSize": 1,
+            "flavor": "Doesn't fire. Makes a great paperweight."
+        },
+        {
+            "id": "broken_rifle",
+            "weight": 20,
+            "rarity": 1,
+            "name": "Broken Rifle",
+            "value": 12,
+            "stackSize": 1,
+            "flavor": "Missing several parts. And dignity."
+        },
+        {
+            "id": "broken_shotgun",
+            "weight": 18,
+            "rarity": 1,
+            "name": "Broken Shotgun",
+            "value": 15,
+            "stackSize": 1,
+            "flavor": "Still intimidating. Barely functional."
+        },
+        {
+            "id": "rusted_barrel",
+            "weight": 20,
+            "rarity": 2,
+            "name": "Rusted Barrel",
+            "value": 20,
+            "stackSize": 2,
+            "flavor": "Adds +10% chance of tetanus."
+        },
+        {
+            "id": "rifle_barrel_standard",
+            "weight": 15,
+            "rarity": 2,
+            "name": "Standard Rifle Barrel",
+            "value": 25,
+            "stackSize": 2,
+            "flavor": "Straight enough. Probably."
+        },
+        {
+            "id": "rifle_barrel_precision",
+            "weight": 10,
+            "rarity": 3,
+            "name": "Precision Rifle Barrel",
+            "value": 70,
+            "stackSize": 1,
+            "flavor": "Improves accuracy. Not your aim."
+        },
+        {
+            "id": "rifle_barrel_legendary",
+            "weight": 3,
+            "rarity": 5,
+            "name": "Barrel of Perfect Trajectory",
+            "value": 1500,
+            "stackSize": 1,
+            "flavor": "Bullets whisper 'we got you' as they fly."
+        },
+        {
+            "id": "duct_tape_grip",
+            "weight": 20,
+            "rarity": 2,
+            "name": "Duct Tape Grip",
+            "value": 20,
+            "stackSize": 4,
+            "flavor": "Improves handling. Probably."
+        },
+        {
+            "id": "rubberized_grip",
+            "weight": 12,
+            "rarity": 3,
+            "name": "Rubberized Grip",
+            "value": 50,
+            "stackSize": 2,
+            "flavor": "Feels nice. Smells weird."
+        },
+        {
+            "id": "grip_legendary",
+            "weight": 3,
+            "rarity": 5,
+            "name": "Grip of Unshakable Resolve",
+            "value": 900,
+            "stackSize": 1,
+            "flavor": "Your hands feel steady. Your life does not."
+        },
+        {
+            "id": "scope_basic",
+            "weight": 20,
+            "rarity": 2,
+            "name": "Basic Scope",
+            "value": 25,
+            "stackSize": 1,
+            "flavor": "Zooms in slightly. Very slightly."
+        },
+        {
+            "id": "scope_midrange",
+            "weight": 12,
+            "rarity": 3,
+            "name": "Midrange Scope",
+            "value": 70,
+            "stackSize": 1,
+            "flavor": "Lets you see your mistakes from farther away."
+        },
+        {
+            "id": "scope_longrange",
+            "weight": 8,
+            "rarity": 4,
+            "name": "Long-Range Scope",
+            "value": 120,
+            "stackSize": 1,
+            "flavor": "You can see the future. It's not great."
+        },
+        {
+            "id": "scope_legendary",
+            "weight": 3,
+            "rarity": 5,
+            "name": "Scope of Absolute Clarity",
+            "value": 1800,
+            "stackSize": 1,
+            "flavor": "You see everything. Even what you wish you didn’t."
+        },
+        {
+            "id": "magazine_small",
+            "weight": 20,
+            "rarity": 1,
+            "name": "Small Magazine",
+            "value": 10,
+            "stackSize": 3,
+            "flavor": "Holds a few bullets. Not enough."
+        },
+        {
+            "id": "magazine_standard",
+            "weight": 15,
+            "rarity": 2,
+            "name": "Standard Magazine",
+            "value": 20,
+            "stackSize": 3,
+            "flavor": "Reliable. Boring."
+        },
+        {
+            "id": "magazine_extended",
+            "weight": 10,
+            "rarity": 3,
+            "name": "Extended Magazine",
+            "value": 60,
+            "stackSize": 2,
+            "flavor": "More bullets. More problems."
+        },
+        {
+            "id": "magazine_drum",
+            "weight": 5,
+            "rarity": 4,
+            "name": "Drum Magazine",
+            "value": 120,
+            "stackSize": 1,
+            "flavor": "For when subtlety is not an option."
+        },
+        {
+            "id": "magazine_legendary",
+            "weight": 3,
+            "rarity": 5,
+            "name": "Magazine of Endless Ammo (Not Really)",
+            "value": 900,
+            "stackSize": 1,
+            "flavor": "Feels bottomless. Isn't."
+        },
+        {
+            "id": "trigger_group_basic",
+            "weight": 20,
+            "rarity": 2,
+            "name": "Basic Trigger Group",
+            "value": 20,
+            "stackSize": 2,
+            "flavor": "Clicky. Functional. Boring."
+        },
+        {
+            "id": "trigger_group_hair",
+            "weight": 12,
+            "rarity": 3,
+            "name": "Hair Trigger Group",
+            "value": 70,
+            "stackSize": 1,
+            "flavor": "Goes off if you think about firing."
+        },
+        {
+            "id": "trigger_group_legendary",
+            "weight": 3,
+            "rarity": 5,
+            "name": "Trigger of Destiny",
+            "value": 1500,
+            "stackSize": 1,
+            "flavor": "You feel fate guiding your finger."
+        },
+        {
+            "id": "stock_wooden",
+            "weight": 20,
+            "rarity": 2,
+            "name": "Wooden Stock",
+            "value": 20,
+            "stackSize": 1,
+            "flavor": "Classic. Splintery."
+        },
+        {
+            "id": "stock_polymer",
+            "weight": 12,
+            "rarity": 3,
+            "name": "Polymer Stock",
+            "value": 60,
+            "stackSize": 1,
+            "flavor": "Lightweight and durable. Unlike you."
+        },
+        {
+            "id": "stock_tactical",
+            "weight": 8,
+            "rarity": 4,
+            "name": "Tactical Stock",
+            "value": 120,
+            "stackSize": 1,
+            "flavor": "Adjustable for comfort. Not for accuracy."
+        },
+        {
+            "id": "stock_legendary",
+            "weight": 3,
+            "rarity": 5,
+            "name": "Stock of Unbreakable Resolve",
+            "value": 1500,
+            "stackSize": 1,
+            "flavor": "Feels like it could survive a tank. You couldn't."
+        },
+        {
+            "id": "barrel_attachment_suppressor",
+            "weight": 15,
+            "rarity": 3,
+            "name": "Suppressor",
+            "value": 70,
+            "stackSize": 1,
+            "flavor": "Quiets your shots. Not your thoughts."
+        },
+        {
+            "id": "barrel_attachment_flash_hider",
+            "weight": 20,
+            "rarity": 2,
+            "name": "Flash Hider",
+            "value": 20,
+            "stackSize": 1,
+            "flavor": "Reduces muzzle flash. Does nothing for stealth."
+        },
+        {
+            "id": "barrel_attachment_muzzle_brake",
+            "weight": 12,
+            "rarity": 3,
+            "name": "Muzzle Brake",
+            "value": 60,
+            "stackSize": 1,
+            "flavor": "Reduces recoil. Increases confidence."
+        },
+        {
+            "id": "barrel_attachment_legendary",
+            "weight": 3,
+            "rarity": 5,
+            "name": "Muzzle of Perfect Control",
+            "value": 1800,
+            "stackSize": 1,
+            "flavor": "Your recoil disappears. Your fear does not."
+        },
+        {
+            "id": "weapon_frame_light",
+            "weight": 20,
+            "rarity": 2,
+            "name": "Light Weapon Frame",
+            "value": 25,
+            "stackSize": 1,
+            "flavor": "Feels flimsy. Is flimsy."
+        },
+        {
+            "id": "weapon_frame_standard",
+            "weight": 15,
+            "rarity": 3,
+            "name": "Standard Weapon Frame",
+            "value": 70,
+            "stackSize": 1,
+            "flavor": "Reliable. Predictable. Boring."
+        },
+        {
+            "id": "weapon_frame_heavy",
+            "weight": 8,
+            "rarity": 4,
+            "name": "Heavy Weapon Frame",
+            "value": 150,
+            "stackSize": 1,
+            "flavor": "Built like a tank. Weighs like one too."
+        },
+        {
+            "id": "weapon_frame_legendary",
+            "weight": 3,
+            "rarity": 5,
+            "name": "Frame of the Eternal Raider",
+            "value": 2000,
+            "stackSize": 1,
+            "flavor": "You feel unstoppable. Incorrectly."
+        },
+        {
+            "id": "improvised_weapon_pipe",
+            "weight": 20,
+            "rarity": 1,
+            "name": "Improvised Pipe Weapon",
+            "value": 10,
+            "stackSize": 1,
+            "flavor": "A pipe. A dream. A bad idea."
+        },
+        {
+            "id": "improvised_weapon_board",
+            "weight": 18,
+            "rarity": 1,
+            "name": "Board with a Nail",
+            "value": 12,
+            "stackSize": 1,
+            "flavor": "Classic apocalypse chic."
+        },
+        {
+            "id": "improvised_weapon_sawblade",
+            "weight": 12,
+            "rarity": 3,
+            "name": "Sawblade Launcher (Improvised)",
+            "value": 80,
+            "stackSize": 1,
+            "flavor": "Fires sawblades. Usually forward."
+        },
+        {
+            "id": "improvised_weapon_legendary",
+            "weight": 3,
+            "rarity": 5,
+            "name": "Legendary Frying Pan",
+            "value": 1500,
+            "stackSize": 1,
+            "flavor": "The clang it makes is unforgettable."
+        },
+        {
+            "id": "weapon_core_basic",
+            "weight": 15,
+            "rarity": 2,
+            "name": "Basic Weapon Core",
+            "value": 25,
+            "stackSize": 2,
+            "flavor": "Powers weapons. Barely."
+        },
+        {
+            "id": "weapon_core_arc",
+            "weight": 10,
+            "rarity": 3,
+            "name": "ARC Weapon Core",
+            "value": 90,
+            "stackSize": 1,
+            "flavor": "Glows ominously. You glow back."
+        },
+        {
+            "id": "weapon_core_legendary",
+            "weight": 3,
+            "rarity": 5,
+            "name": "Prime Weapon Core",
+            "value": 2000,
+            "stackSize": 1,
+            "flavor": "You feel unstoppable. Incorrectly."
+        }
+    ]
+}

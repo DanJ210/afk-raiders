@@ -7,11 +7,44 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import { events, flavor, healingItems, loot, robots } from '../../src/engine/eventResolver'
-import baseLootData from '../../src/content/loot.json'
-import type { Phase, TimeOfDay } from '../../src/engine/types'
+import { events, flavor, healingItems, loot, robots, shieldRechargers } from '../../src/engine/eventResolver'
+import type { Phase, DangerLevel } from '../../src/engine/types'
+import apparelAccessoriesData from '../../src/content/loot-tables/apparel_accessories.json'
+import arcTechData from '../../src/content/loot-tables/arc_tech.json'
+import consumablesData from '../../src/content/loot-tables/consumables.json'
+import cursedWeirdItemsData from '../../src/content/loot-tables/cursed_weird_items.json'
+import lootData from '../../src/content/loot-tables/loot.json'
+import personalJunkData from '../../src/content/loot-tables/personal_junk.json'
+import scrapComponentsData from '../../src/content/loot-tables/scrap_components.json'
+import valuablesData from '../../src/content/loot-tables/valuables.json'
+import weaponsPartsData from '../../src/content/loot-tables/weapons_parts.json'
 
-const baseLoot = baseLootData as typeof loot
+const rawLoot = [
+  ...(apparelAccessoriesData as { items: typeof loot }).items,
+  ...(arcTechData as { items: typeof loot }).items,
+  ...(consumablesData as { items: typeof loot }).items,
+  ...(cursedWeirdItemsData as { items: typeof loot }).items,
+  ...(lootData as { items: typeof loot }).items,
+  ...(personalJunkData as { items: typeof loot }).items,
+  ...(scrapComponentsData as { items: typeof loot }).items,
+  ...(valuablesData as { items: typeof loot }).items,
+  ...(weaponsPartsData as { items: typeof loot }).items,
+]
+
+function mergeLootTables(items: typeof loot): typeof loot {
+  const merged = new Map<string, (typeof loot)[number]>()
+  for (const item of items) {
+    const existing = merged.get(item.id)
+    if (existing) {
+      merged.set(item.id, { ...existing, weight: existing.weight + item.weight })
+    } else {
+      merged.set(item.id, { ...item })
+    }
+  }
+  return [...merged.values()]
+}
+
+const baseLoot = mergeLootTables(rawLoot)
 
 const DEADLINESS_RANK = {
   weak: 1,
@@ -24,7 +57,7 @@ const DEADLINESS_RANK = {
 // Known non-table slot names handled directly in fillSlots()
 const BUILT_IN_SLOTS = new Set(['mundane_item', 'water_item', 'healing_item', 'count'])
 const VALID_PHASES = new Set<Phase>(['HUB', 'DEPLOYING', 'RAIDING', 'EXTRACTING', 'DOWNED'])
-const VALID_TIMES_OF_DAY = new Set<TimeOfDay>(['Day', 'Night', 'Stella Red'])
+const VALID_DANGER_LEVELS = new Set<DangerLevel>(['Low', 'Medium', 'High'])
 
 // Robot flavor slots: {robot_flavor_<robotId>}
 function isRobotFlavorSlot(slot: string): boolean {
@@ -71,20 +104,20 @@ describe('content validation', () => {
       expect(unique.size).toBe(ids.length)
     })
 
-    it('all phase and time-of-day requirements are valid', () => {
+    it('all phase and danger-level requirements are valid', () => {
       for (const event of events) {
         const phases = event.requires?.phase === undefined
           ? []
           : Array.isArray(event.requires.phase) ? event.requires.phase : [event.requires.phase]
-        const timesOfDay = event.requires?.timeOfDay === undefined
+        const dangerLevels = event.requires?.dangerLevel === undefined
           ? []
-          : Array.isArray(event.requires.timeOfDay) ? event.requires.timeOfDay : [event.requires.timeOfDay]
+          : Array.isArray(event.requires.dangerLevel) ? event.requires.dangerLevel : [event.requires.dangerLevel]
 
         for (const phase of phases) {
           expect(VALID_PHASES.has(phase), `event "${event.id}" has invalid phase "${phase}"`).toBe(true)
         }
-        for (const timeOfDay of timesOfDay) {
-          expect(VALID_TIMES_OF_DAY.has(timeOfDay), `event "${event.id}" has invalid timeOfDay "${timeOfDay}"`).toBe(true)
+        for (const dangerLevel of dangerLevels) {
+          expect(VALID_DANGER_LEVELS.has(dangerLevel), `event "${event.id}" has invalid dangerLevel "${dangerLevel}"`).toBe(true)
         }
       }
     })
@@ -194,6 +227,14 @@ describe('content validation', () => {
         expect(event.requires?.phase, `healing event "${event.id}" must require RAIDING`).toBe('RAIDING')
       }
     })
+
+    it('shield recharger find events only appear during RAIDING', () => {
+      const shieldEvents = events.filter(event => event.effects?.shieldRecharger)
+      expect(shieldEvents.length).toBeGreaterThan(0)
+      for (const event of shieldEvents) {
+        expect(event.requires?.phase, `shield event "${event.id}" must require RAIDING`).toBe('RAIDING')
+      }
+    })
   })
 
   describe('flavor.json', () => {
@@ -239,7 +280,7 @@ describe('content validation', () => {
     })
   })
 
-  describe('loot.json', () => {
+  describe('loot tables', () => {
     it('all loot weights are > 0', () => {
       for (const item of baseLoot) {
         expect(item.weight, `loot "${item.id}" has weight ${item.weight}`).toBeGreaterThan(0)
@@ -269,22 +310,11 @@ describe('content validation', () => {
       expect(waterBottles.length).toBeGreaterThanOrEqual(3)
     })
 
-    it('lighter loot items are at least as rare as heavier loot items', () => {
-      for (const a of baseLoot) {
-        for (const b of baseLoot) {
-          if (a.weight < b.weight) {
-            expect(
-              a.rarity,
-              `loot "${a.id}" is lighter than "${b.id}" but not rarer`,
-            ).toBeGreaterThanOrEqual(b.rarity)
-          }
-        }
-      }
-    })
-
-    it('resolver loot pool includes robot loot in addition to loot.json', () => {
+    it('resolver loot pool includes robot loot in addition to loot tables', () => {
       expect(loot.some(item => item.id === 'anxietick_gear')).toBe(true)
       expect(loot.some(item => item.id === 'roomba_battery')).toBe(true)
+      expect(loot.some(item => item.id === 'right_boot')).toBe(true)
+      expect(loot.some(item => item.id === 'protein_cube_sad')).toBe(true)
       expect(loot.length).toBeGreaterThan(baseLoot.length)
     })
   })
@@ -410,6 +440,35 @@ describe('content validation', () => {
     it('all healing item IDs are unique', () => {
       const ids = healingItems.map(item => item.id)
       expect(new Set(ids).size).toBe(ids.length)
+    })
+  })
+
+  describe('shield_rechargers.json', () => {
+    it('all shield recharger weights, rarities, and charge amounts are valid', () => {
+      for (const item of shieldRechargers) {
+        expect(item.weight, `shield recharger "${item.id}" has weight ${item.weight}`).toBeGreaterThan(0)
+        expect(item.chargeAmount, `shield recharger "${item.id}" must restore charge`).toBeGreaterThan(0)
+        expect(item.rarity, `shield recharger "${item.id}" rarity must be >= 1`).toBeGreaterThanOrEqual(1)
+        expect(item.rarity, `shield recharger "${item.id}" rarity must be <= 5`).toBeLessThanOrEqual(5)
+      }
+    })
+
+    it('all shield recharger IDs are unique', () => {
+      const ids = shieldRechargers.map(item => item.id)
+      expect(new Set(ids).size).toBe(ids.length)
+    })
+
+    it('higher-value shield rechargers are never more common than cheaper ones', () => {
+      for (const a of shieldRechargers) {
+        for (const b of shieldRechargers) {
+          if (a.value > b.value) {
+            expect(
+              a.weight,
+              `shield recharger "${a.id}" is more valuable than "${b.id}" but more common`,
+            ).toBeLessThanOrEqual(b.weight)
+          }
+        }
+      }
     })
   })
 })

@@ -3,8 +3,10 @@
 import type { GameState } from './types.js'
 import { initialSignalState } from './signal.js'
 import { PHASE_DURATIONS } from './raidStateMachine.js'
+import { createInitialLifetimeStats } from './stats.js'
+import { createStarterShieldState } from './shields.js'
 
-export const SAVE_VERSION = 1
+export const SAVE_VERSION = 3
 
 export function createInitialState(now: number = Date.now()): GameState {
   return {
@@ -22,8 +24,12 @@ export function createInitialState(now: number = Date.now()): GameState {
     },
     raid: {
       zone: null,
-      timeOfDay: null,
+      dangerLevel: null,
+      zoneCondition: null,
+      shield: createStarterShieldState(),
+      activeShieldRecharge: null,
       backpack: [],
+      hiddenPocket: null,
       healingItems: [],
       backpackValue: 0,
       greedLevel: 0,
@@ -35,6 +41,7 @@ export function createInitialState(now: number = Date.now()): GameState {
     log: [],
     homeStash: [],
     coins: 0,
+    stats: createInitialLifetimeStats(),
     pendingEncourage: false,
     pendingScold: false,
   }

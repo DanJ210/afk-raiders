@@ -1,0 +1,329 @@
+{
+    "category": "cursed_weird_items",
+    "items": [
+        {
+            "id": "haunted_toaster",
+            "weight": 15,
+            "rarity": 3,
+            "name": "Haunted Toaster",
+            "value": 40,
+            "stackSize": 1,
+            "flavor": "Burns bread and whispers your name."
+        },
+        {
+            "id": "haunted_toaster_angry",
+            "weight": 10,
+            "rarity": 4,
+            "name": "Haunted Toaster (Angry)",
+            "value": 120,
+            "stackSize": 1,
+            "flavor": "Launches toast at high velocity."
+        },
+        {
+            "id": "haunted_toaster_legendary",
+            "weight": 3,
+            "rarity": 5,
+            "name": "Toaster of Eternal Breakfast",
+            "value": 900,
+            "stackSize": 1,
+            "flavor": "Produces toast endlessly. You cannot stop it."
+        },
+        {
+            "id": "sentient_dust_bunny",
+            "weight": 10,
+            "rarity": 4,
+            "name": "Sentient Dust Bunny",
+            "value": 80,
+            "stackSize": 1,
+            "flavor": "It follows you. You wish it wouldn't."
+        },
+        {
+            "id": "dust_bunny_gigantic",
+            "weight": 5,
+            "rarity": 4,
+            "name": "Gigantic Dust Bunny",
+            "value": 150,
+            "stackSize": 1,
+            "flavor": "It has mass. And opinions."
+        },
+        {
+            "id": "dust_bunny_legendary",
+            "weight": 2,
+            "rarity": 5,
+            "name": "Dust Bunny (Eldritch)",
+            "value": 1200,
+            "stackSize": 1,
+            "flavor": "You stare into the fluff. The fluff stares back."
+        },
+        {
+            "id": "cursed_slinky",
+            "weight": 10,
+            "rarity": 3,
+            "name": "Cursed Slinky",
+            "value": 50,
+            "stackSize": 1,
+            "flavor": "Goes down stairs. And back up. On its own."
+        },
+        {
+            "id": "cursed_slinky_tangled",
+            "weight": 15,
+            "rarity": 2,
+            "name": "Cursed Slinky (Tangled)",
+            "value": 15,
+            "stackSize": 1,
+            "flavor": "It untangles itself when you're not looking."
+        },
+        {
+            "id": "cursed_slinky_legendary",
+            "weight": 3,
+            "rarity": 5,
+            "name": "Slinky of Infinite Motion",
+            "value": 1000,
+            "stackSize": 1,
+            "flavor": "It never stops. Never."
+        },
+        {
+            "id": "ominous_music_box",
+            "weight": 20,
+            "rarity": 2,
+            "name": "Ominous Music Box",
+            "value": 20,
+            "stackSize": 1,
+            "flavor": "Plays a tune you almost remember."
+        },
+        {
+            "id": "ominous_music_box_broken",
+            "weight": 15,
+            "rarity": 2,
+            "name": "Broken Ominous Music Box",
+            "value": 12,
+            "stackSize": 1,
+            "flavor": "Plays two notes. Badly."
+        },
+        {
+            "id": "ominous_music_box_legendary",
+            "weight": 3,
+            "rarity": 5,
+            "name": "Music Box of Lost Memories",
+            "value": 1500,
+            "stackSize": 1,
+            "flavor": "You hear a lullaby from your childhood. You never heard lullabies."
+        },
+        {
+            "id": "possessed_rubber_duck",
+            "weight": 15,
+            "rarity": 3,
+            "name": "Possessed Rubber Duck",
+            "value": 45,
+            "stackSize": 1,
+            "flavor": "Squeaks without being touched."
+        },
+        {
+            "id": "rubber_duck_screaming",
+            "weight": 10,
+            "rarity": 4,
+            "name": "Screaming Rubber Duck",
+            "value": 120,
+            "stackSize": 1,
+            "flavor": "You squeeze it once. It screams twice."
+        },
+        {
+            "id": "rubber_duck_legendary",
+            "weight": 3,
+            "rarity": 5,
+            "name": "Duck of Eternal Echoes",
+            "value": 900,
+            "stackSize": 1,
+            "flavor": "You hear quacking in the distance. There are no ducks."
+        },
+        {
+            "id": "forbidden_sandwich",
+            "weight": 20,
+            "rarity": 2,
+            "name": "Forbidden Sandwich",
+            "value": 18,
+            "stackSize": 1,
+            "flavor": "You don't know what's in it. You don't want to."
+        },
+        {
+            "id": "forbidden_sandwich_glowing",
+            "weight": 10,
+            "rarity": 4,
+            "name": "Glowing Forbidden Sandwich",
+            "value": 150,
+            "stackSize": 1,
+            "flavor": "It hums softly. You feel uneasy."
+        },
+        {
+            "id": "forbidden_sandwich_legendary",
+            "weight": 3,
+            "rarity": 5,
+            "name": "Sandwich of the Ancients",
+            "value": 1200,
+            "stackSize": 1,
+            "flavor": "It is older than civilization. Still fresh."
+        },
+        {
+            "id": "mysterious_egg",
+            "weight": 15,
+            "rarity": 3,
+            "name": "Mysterious Egg",
+            "value": 60,
+            "stackSize": 1,
+            "flavor": "Warm. Occasionally shakes."
+        },
+        {
+            "id": "mysterious_egg_cracked",
+            "weight": 12,
+            "rarity": 3,
+            "name": "Cracked Mysterious Egg",
+            "value": 40,
+            "stackSize": 1,
+            "flavor": "Something inside is moving. Slowly."
+        },
+        {
+            "id": "mysterious_egg_legendary",
+            "weight": 3,
+            "rarity": 5,
+            "name": "Egg of Impossible Origin",
+            "value": 1800,
+            "stackSize": 1,
+            "flavor": "You hear faint breathing. It's not yours."
+        },
+        {
+            "id": "cursed_mirror",
+            "weight": 20,
+            "rarity": 2,
+            "name": "Cursed Mirror",
+            "value": 20,
+            "stackSize": 1,
+            "flavor": "Your reflection waves at you."
+        },
+        {
+            "id": "cursed_mirror_smiling",
+            "weight": 10,
+            "rarity": 4,
+            "name": "Smiling Cursed Mirror",
+            "value": 150,
+            "stackSize": 1,
+            "flavor": "Your reflection smiles. You don't."
+        },
+        {
+            "id": "cursed_mirror_legendary",
+            "weight": 3,
+            "rarity": 5,
+            "name": "Mirror of the Other You",
+            "value": 2000,
+            "stackSize": 1,
+            "flavor": "Your reflection whispers: 'Soon.'"
+        },
+        {
+            "id": "ominous_jar",
+            "weight": 20,
+            "rarity": 2,
+            "name": "Ominous Jar",
+            "value": 15,
+            "stackSize": 1,
+            "flavor": "Something inside moves when you shake it."
+        },
+        {
+            "id": "ominous_jar_glowing",
+            "weight": 10,
+            "rarity": 4,
+            "name": "Glowing Ominous Jar",
+            "value": 120,
+            "stackSize": 1,
+            "flavor": "The glow pulses like a heartbeat."
+        },
+        {
+            "id": "ominous_jar_legendary",
+            "weight": 3,
+            "rarity": 5,
+            "name": "Jar of Infinite Mystery",
+            "value": 1500,
+            "stackSize": 1,
+            "flavor": "You open it. You regret it."
+        },
+        {
+            "id": "possessed_teddy_bear",
+            "weight": 15,
+            "rarity": 3,
+            "name": "Possessed Teddy Bear",
+            "value": 60,
+            "stackSize": 1,
+            "flavor": "Its eyes follow you."
+        },
+        {
+            "id": "teddy_bear_singing",
+            "weight": 10,
+            "rarity": 4,
+            "name": "Singing Teddy Bear",
+            "value": 150,
+            "stackSize": 1,
+            "flavor": "Sings lullabies in a language you don't know."
+        },
+        {
+            "id": "teddy_bear_legendary",
+            "weight": 3,
+            "rarity": 5,
+            "name": "Teddy Bear of Eternal Comfort",
+            "value": 1800,
+            "stackSize": 1,
+            "flavor": "You feel safe. You shouldn't."
+        },
+        {
+            "id": "forbidden_remote",
+            "weight": 20,
+            "rarity": 2,
+            "name": "Forbidden Remote",
+            "value": 20,
+            "stackSize": 1,
+            "flavor": "You press a button. Something somewhere turns off."
+        },
+        {
+            "id": "forbidden_remote_glowing",
+            "weight": 10,
+            "rarity": 4,
+            "name": "Glowing Forbidden Remote",
+            "value": 150,
+            "stackSize": 1,
+            "flavor": "You press a button. Something somewhere screams."
+        },
+        {
+            "id": "forbidden_remote_legendary",
+            "weight": 3,
+            "rarity": 5,
+            "name": "Remote of Absolute Control",
+            "value": 2000,
+            "stackSize": 1,
+            "flavor": "You press a button. Reality flickers."
+        },
+        {
+            "id": "eldritch_coin",
+            "weight": 15,
+            "rarity": 3,
+            "name": "Eldritch Coin",
+            "value": 70,
+            "stackSize": 10,
+            "flavor": "The symbols shift when you blink."
+        },
+        {
+            "id": "eldritch_coin_whispering",
+            "weight": 10,
+            "rarity": 4,
+            "name": "Whispering Eldritch Coin",
+            "value": 150,
+            "stackSize": 5,
+            "flavor": "You hear faint chanting."
+        },
+        {
+            "id": "eldritch_coin_legendary",
+            "weight": 3,
+            "rarity": 5,
+            "name": "Coin of the Outer Realms",
+            "value": 1800,
+            "stackSize": 3,
+            "flavor": "You feel watched by something ancient."
+        }
+    ]
+}

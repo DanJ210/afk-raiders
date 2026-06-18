@@ -1,0 +1,329 @@
+{
+    "category": "apparel_accessories",
+    "items": [
+        {
+            "id": "left_boot",
+            "weight": 20,
+            "rarity": 2,
+            "name": "Left Boot",
+            "value": 15,
+            "stackSize": 1,
+            "flavor": "Someone out there has the right one. The pair would be worth something."
+        },
+        {
+            "id": "right_boot",
+            "weight": 20,
+            "rarity": 2,
+            "name": "Right Boot",
+            "value": 15,
+            "stackSize": 1,
+            "flavor": "Finally. The prophecy is fulfilled."
+        },
+        {
+            "id": "boot_pair_mismatched",
+            "weight": 12,
+            "rarity": 3,
+            "name": "Mismatched Boot Pair",
+            "value": 40,
+            "stackSize": 1,
+            "flavor": "Left is size 9. Right is size 12. Fashion is pain."
+        },
+        {
+            "id": "boot_pair_legendary",
+            "weight": 3,
+            "rarity": 5,
+            "name": "Boots of Perfect Fit",
+            "value": 900,
+            "stackSize": 1,
+            "flavor": "They fit you perfectly. Too perfectly."
+        },
+        {
+            "id": "tactical_gloves",
+            "weight": 15,
+            "rarity": 3,
+            "name": "Tactical Gloves",
+            "value": 60,
+            "stackSize": 1,
+            "flavor": "Adds +2 confidence. No actual stats."
+        },
+        {
+            "id": "fingerless_gloves",
+            "weight": 20,
+            "rarity": 2,
+            "name": "Fingerless Gloves",
+            "value": 20,
+            "stackSize": 1,
+            "flavor": "For when you want to be edgy AND cold."
+        },
+        {
+            "id": "gloves_legendary",
+            "weight": 3,
+            "rarity": 5,
+            "name": "Gloves of Infinite Grip",
+            "value": 1200,
+            "stackSize": 1,
+            "flavor": "You could climb a wall. Or a robot."
+        },
+        {
+            "id": "tactical_bandana",
+            "weight": 12,
+            "rarity": 3,
+            "name": "Tactical Bandana",
+            "value": 35,
+            "stackSize": 1,
+            "flavor": "Adds +2 confidence. No actual stats."
+        },
+        {
+            "id": "bandana_sweaty",
+            "weight": 20,
+            "rarity": 1,
+            "name": "Sweaty Bandana",
+            "value": 5,
+            "stackSize": 1,
+            "flavor": "Smells like effort and regret."
+        },
+        {
+            "id": "bandana_legendary",
+            "weight": 3,
+            "rarity": 5,
+            "name": "Bandana of the Lone Raider",
+            "value": 800,
+            "stackSize": 1,
+            "flavor": "Flutters dramatically even without wind."
+        },
+        {
+            "id": "broken_helmet",
+            "weight": 20,
+            "rarity": 2,
+            "name": "Broken Helmet",
+            "value": 18,
+            "stackSize": 1,
+            "flavor": "Provides emotional protection only."
+        },
+        {
+            "id": "helmet_scratched",
+            "weight": 15,
+            "rarity": 2,
+            "name": "Scratched Helmet",
+            "value": 25,
+            "stackSize": 1,
+            "flavor": "The scratches tell a story. A bad one."
+        },
+        {
+            "id": "helmet_of_bad_choices",
+            "weight": 5,
+            "rarity": 4,
+            "name": "Helmet of Bad Choices",
+            "value": 150,
+            "stackSize": 1,
+            "flavor": "You feel braver. Not smarter."
+        },
+        {
+            "id": "helmet_legendary",
+            "weight": 3,
+            "rarity": 5,
+            "name": "Helmet of Eternal Vigilance",
+            "value": 1500,
+            "stackSize": 1,
+            "flavor": "You can see everything. Even what you don't want to."
+        },
+        {
+            "id": "scarf_generic",
+            "weight": 20,
+            "rarity": 1,
+            "name": "Generic Scarf",
+            "value": 10,
+            "stackSize": 1,
+            "flavor": "Warm. Itchy. Fashionable?"
+        },
+        {
+            "id": "scarf_fancy",
+            "weight": 12,
+            "rarity": 3,
+            "name": "Fancy Scarf",
+            "value": 45,
+            "stackSize": 1,
+            "flavor": "Smells faintly of perfume and danger."
+        },
+        {
+            "id": "scarf_legendary",
+            "weight": 3,
+            "rarity": 5,
+            "name": "Scarf of Infinite Warmth",
+            "value": 900,
+            "stackSize": 1,
+            "flavor": "You feel cozy. Too cozy."
+        },
+        {
+            "id": "sunglasses_cracked",
+            "weight": 20,
+            "rarity": 2,
+            "name": "Cracked Sunglasses",
+            "value": 15,
+            "stackSize": 1,
+            "flavor": "Still blocks the sun. Mostly."
+        },
+        {
+            "id": "sunglasses_mirrored",
+            "weight": 12,
+            "rarity": 3,
+            "name": "Mirrored Sunglasses",
+            "value": 60,
+            "stackSize": 1,
+            "flavor": "You look cooler instantly. Not by much."
+        },
+        {
+            "id": "sunglasses_legendary",
+            "weight": 3,
+            "rarity": 5,
+            "name": "Sunglasses of Maximum Cool",
+            "value": 1500,
+            "stackSize": 1,
+            "flavor": "You feel like a protagonist."
+        },
+        {
+            "id": "mask_cloth",
+            "weight": 20,
+            "rarity": 1,
+            "name": "Cloth Mask",
+            "value": 10,
+            "stackSize": 1,
+            "flavor": "Smells like detergent and fear."
+        },
+        {
+            "id": "mask_tactical",
+            "weight": 12,
+            "rarity": 3,
+            "name": "Tactical Mask",
+            "value": 70,
+            "stackSize": 1,
+            "flavor": "Filters dust, smoke, and bad vibes."
+        },
+        {
+            "id": "mask_legendary",
+            "weight": 3,
+            "rarity": 5,
+            "name": "Mask of the Forgotten Raider",
+            "value": 1800,
+            "stackSize": 1,
+            "flavor": "You feel anonymous. And powerful."
+        },
+        {
+            "id": "jacket_worn",
+            "weight": 20,
+            "rarity": 2,
+            "name": "Worn Jacket",
+            "value": 20,
+            "stackSize": 1,
+            "flavor": "Smells like campfire and disappointment."
+        },
+        {
+            "id": "jacket_leather",
+            "weight": 12,
+            "rarity": 3,
+            "name": "Leather Jacket",
+            "value": 80,
+            "stackSize": 1,
+            "flavor": "Adds +5 coolness. Still no actual stats."
+        },
+        {
+            "id": "jacket_legendary",
+            "weight": 3,
+            "rarity": 5,
+            "name": "Jacket of the Last Outrider",
+            "value": 2000,
+            "stackSize": 1,
+            "flavor": "You feel like you should be in a cutscene."
+        },
+        {
+            "id": "belt_generic",
+            "weight": 20,
+            "rarity": 1,
+            "name": "Generic Belt",
+            "value": 10,
+            "stackSize": 1,
+            "flavor": "Holds up pants. And morale."
+        },
+        {
+            "id": "belt_tactical",
+            "weight": 12,
+            "rarity": 3,
+            "name": "Tactical Belt",
+            "value": 60,
+            "stackSize": 1,
+            "flavor": "Has more pouches than purpose."
+        },
+        {
+            "id": "belt_legendary",
+            "weight": 3,
+            "rarity": 5,
+            "name": "Belt of Infinite Storage",
+            "value": 1500,
+            "stackSize": 1,
+            "flavor": "You could fit a whole robot in here. Probably."
+        },
+        {
+            "id": "glasses_reading",
+            "weight": 20,
+            "rarity": 2,
+            "name": "Reading Glasses",
+            "value": 15,
+            "stackSize": 1,
+            "flavor": "Makes everything look smarter."
+        },
+        {
+            "id": "glasses_arc",
+            "weight": 12,
+            "rarity": 3,
+            "name": "ARC Smart Glasses",
+            "value": 90,
+            "stackSize": 1,
+            "flavor": "Displays helpful data. And ads."
+        },
+        {
+            "id": "glasses_legendary",
+            "weight": 3,
+            "rarity": 5,
+            "name": "Glasses of Perfect Insight",
+            "value": 2000,
+            "stackSize": 1,
+            "flavor": "You suddenly understand everything. It’s overwhelming."
+        },
+        {
+            "id": "hat_baseball",
+            "weight": 20,
+            "rarity": 1,
+            "name": "Baseball Cap",
+            "value": 10,
+            "stackSize": 1,
+            "flavor": "Sweat-stained. Sun-faded. Iconic."
+        },
+        {
+            "id": "hat_beanie",
+            "weight": 15,
+            "rarity": 2,
+            "name": "Beanie",
+            "value": 20,
+            "stackSize": 1,
+            "flavor": "Warm and slightly itchy."
+        },
+        {
+            "id": "hat_cowboy",
+            "weight": 10,
+            "rarity": 3,
+            "name": "Cowboy Hat",
+            "value": 60,
+            "stackSize": 1,
+            "flavor": "Yeehaw energy detected."
+        },
+        {
+            "id": "hat_legendary",
+            "weight": 3,
+            "rarity": 5,
+            "name": "Hat of the Lone Wanderer",
+            "value": 1500,
+            "stackSize": 1,
+            "flavor": "You hear a faint guitar riff when you put it on."
+        }
+    ]
+}

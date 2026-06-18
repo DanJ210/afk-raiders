@@ -3,9 +3,10 @@
  * Fixed seed + fresh state → run N ticks → assert the event id sequence is stable.
  */
 
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { createRNG } from '../../src/engine/rng'
-import { processTick } from '../../src/engine/tick'
+import type { RNG } from '../../src/engine/rng'
+import { maybeAwardLootBonusConsumables, processTick } from '../../src/engine/tick'
 import { createInitialState } from '../../src/engine/initialState'
 
 const FIXED_SEED = 42
@@ -25,6 +26,68 @@ function runTicks(n: number, seed = FIXED_SEED) {
 }
 
 describe('deterministic snapshot', () => {
+  it('can award both a healing item and shield recharger as independent loot bonuses', () => {
+    const initial = createInitialState(0)
+    const state = {
+      ...initial,
+      raid: {
+        ...initial.raid,
+        phase: 'RAIDING' as const,
+      },
+    }
+
+    const fakeRng = {
+      next: vi
+        .fn<() => number>()
+        .mockReturnValueOnce(0.01)
+        .mockReturnValueOnce(0.01),
+      weightedPick: <T,>(items: readonly T[]) => items[0],
+      pick: <T,>(items: readonly T[]) => items[0],
+      int: () => 1,
+      clone: () => { throw new Error('unused in test') },
+      getSeed: () => 0,
+    } as unknown as RNG
+
+    const result = maybeAwardLootBonusConsumables(state, fakeRng, 0)
+
+    expect(result.state.raid.healingItems).toHaveLength(1)
+    expect(result.state.raid.backpack).toHaveLength(1)
+    expect(result.state.raid.backpack[0].kind).toBe('shield_recharger')
+    expect(result.events).toHaveLength(2)
+    expect(result.events[0].id).toMatch(/^healing_.*_found$/)
+    expect(result.events[1].id).toMatch(/^shield_recharger_.*_found$/)
+  })
+
+  it('rolls healing and shield recharger loot bonuses independently', () => {
+    const initial = createInitialState(0)
+    const state = {
+      ...initial,
+      raid: {
+        ...initial.raid,
+        phase: 'RAIDING' as const,
+      },
+    }
+
+    const fakeRng = {
+      next: vi
+        .fn<() => number>()
+        .mockReturnValueOnce(0.99)
+        .mockReturnValueOnce(0.01),
+      weightedPick: <T,>(items: readonly T[]) => items[0],
+      pick: <T,>(items: readonly T[]) => items[0],
+      int: () => 1,
+      clone: () => { throw new Error('unused in test') },
+      getSeed: () => 0,
+    } as unknown as RNG
+
+    const result = maybeAwardLootBonusConsumables(state, fakeRng, 0)
+
+    expect(result.state.raid.healingItems).toHaveLength(0)
+    expect(result.state.raid.backpack).toHaveLength(1)
+    expect(result.events).toHaveLength(1)
+    expect(result.events[0].id).toMatch(/^shield_recharger_.*_found$/)
+  })
+
   it('produces the same event sequence for the same seed', () => {
     const { allEvents: run1 } = runTicks(20)
     const { allEvents: run2 } = runTicks(20)
@@ -95,8 +158,14 @@ describe('deterministic snapshot', () => {
     const rng = createRNG(FIXED_SEED)
     const state = {
       ...createInitialState(0),
+      raider: {
+        ...createInitialState(0).raider,
+        mood: -4,
+      },
       raid: {
         ...createInitialState(0).raid,
+        zone: 'damp_battlegrounds',
+        dangerLevel: 'Medium' as const,
         phase: 'EXTRACTING' as const,
         phaseTicksRemaining: 1,
         backpack: [
@@ -125,13 +194,17 @@ describe('deterministic snapshot', () => {
       },
     ])
     expect(result.state.raider.extractCount).toBe(1)
+    expect(result.state.raider.mood).toBeGreaterThan(-4)
+    expect(result.state.stats.extracts.total).toBe(1)
+    expect(result.state.stats.extracts.byZone.damp_battlegrounds).toBe(1)
+    expect(result.state.stats.extracts.byZoneAndDanger['damp_battlegrounds__Medium']).toBe(1)
   })
 
   it('downs the raider when HP reaches 0, losing the backpack', () => {
     const initial = createInitialState(0)
     const state = {
       ...initial,
-      raider: { ...initial.raider, hp: 0 },
+      raider: { ...initial.raider, hp: 0, mood: -5 },
       homeStash: [
         {
           itemId: 'scrap',
@@ -143,6 +216,8 @@ describe('deterministic snapshot', () => {
       ],
       raid: {
         ...initial.raid,
+        zone: 'damp_battlegrounds',
+        dangerLevel: 'Medium' as const,
         phase: 'DEPLOYING' as const,
         phaseTicksRemaining: 2,
         greedLevel: 0,
@@ -176,10 +251,65 @@ describe('deterministic snapshot', () => {
     expect(downedState.raid.backpack).toEqual([])
     expect(downedState.homeStash).toEqual(stashBefore)
     expect(downedState.raider.hp).toBe(downedState.raider.maxHp)
+    expect(downedState.raider.mood).toBeGreaterThan(-5)
     expect(downedState.raider.deathCount).toBe(deathsBefore + 1)
+    expect(downedState.stats.deaths.total).toBe(1)
+    expect(downedState.stats.deaths.byZone.damp_battlegrounds).toBe(1)
+    expect(downedState.stats.deaths.byZoneAndDanger['damp_battlegrounds__Medium']).toBe(1)
   })
 
-  it('forces extraction when the raid timer expires', () => {
+  it('saves exactly one hidden-pocket item when a failed raid clears the backpack', () => {
+    const initial = createInitialState(0)
+    const state = {
+      ...initial,
+      raider: { ...initial.raider, hp: 0 },
+      raid: {
+        ...initial.raid,
+        phase: 'RAIDING' as const,
+        phaseTicksRemaining: 2,
+        backpack: [
+          {
+            itemId: 'water_bottle',
+            name: 'Water Bottle',
+            value: 5,
+            rarity: 1,
+            quantity: 4,
+          },
+        ],
+        hiddenPocket: {
+          itemId: 'water_bottle',
+          name: 'Water Bottle',
+          value: 5,
+          rarity: 1,
+        },
+        backpackValue: 20,
+      },
+    }
+
+    const rng = createRNG(FIXED_SEED)
+    const firstTick = processTick(state, rng, 0)
+    expect(firstTick.state.raid.phase).toBe('DOWNED')
+
+    let downedState = firstTick.state
+    for (let i = 0; i < 5 && downedState.raid.phase !== 'HUB'; i++) {
+      downedState = processTick(downedState, rng, i * 5000 + 1000).state
+    }
+
+    expect(downedState.raid.phase).toBe('HUB')
+    expect(downedState.raid.backpack).toEqual([])
+    expect(downedState.raid.hiddenPocket).toBeNull()
+    expect(downedState.homeStash).toEqual([
+      {
+        itemId: 'water_bottle',
+        name: 'Water Bottle',
+        value: 5,
+        rarity: 1,
+        quantity: 1,
+      },
+    ])
+  })
+
+  it('downs the raider when the raid timer expires before extraction', () => {
     const rng = createRNG(FIXED_SEED)
     const initial = createInitialState(0)
     const state = {
@@ -193,8 +323,8 @@ describe('deterministic snapshot', () => {
     }
 
     const result = processTick(state, rng, 0)
-    // The expiring raid timer must push the raider into EXTRACTING (never straight home)
-    expect(result.events.some(e => e.id === 'phase_RAIDING_to_EXTRACTING')).toBe(true)
+    expect(result.state.raid.phase).toBe('DOWNED')
+    expect(result.events.some(e => e.id === 'phase_RAIDING_to_DOWNED')).toBe(true)
   })
 
   it('stacks extracted quantities into existing stash entries', () => {
@@ -275,5 +405,45 @@ describe('deterministic snapshot', () => {
     expect(result.state.raider.hp).toBeLessThanOrEqual(50)
     expect(result.state.raid.healingItems).toHaveLength(1)
     expect(result.events.some(e => e.id === 'healing_bandage_purple_used')).toBe(false)
+  })
+
+  it('extracts unused shield rechargers into the home stash like other backpack loot', () => {
+    const rng = createRNG(FIXED_SEED)
+    const initial = createInitialState(0)
+    const state = {
+      ...initial,
+      raid: {
+        ...initial.raid,
+        phase: 'EXTRACTING' as const,
+        phaseTicksRemaining: 1,
+        backpack: [
+          {
+            itemId: 'fizz_cell',
+            name: 'Fizz Cell',
+            value: 12,
+            rarity: 1,
+            quantity: 2,
+            kind: 'shield_recharger' as const,
+            shieldChargeAmount: 20,
+          },
+        ],
+        backpackValue: 24,
+      },
+    }
+
+    const result = processTick(state, rng, 0)
+
+    expect(result.state.raid.phase).toBe('HUB')
+    expect(result.state.homeStash).toEqual([
+      {
+        itemId: 'fizz_cell',
+        name: 'Fizz Cell',
+        value: 12,
+        rarity: 1,
+        quantity: 2,
+        kind: 'shield_recharger',
+        shieldChargeAmount: 20,
+      },
+    ])
   })
 })
