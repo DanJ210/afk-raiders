@@ -32,9 +32,13 @@ const seenLogCount = ref(store.log.length)
 const unseenCommsCount = computed(() =>
   activeMobileTab.value === 'comms' ? 0 : Math.max(0, store.log.length - seenLogCount.value)
 )
-watch(activeMobileTab, (tab) => {
-  if (tab === 'comms') seenLogCount.value = store.log.length
-})
+watch(
+  [activeMobileTab, () => store.log.length],
+  ([tab, logLen]) => {
+    if (tab === 'comms') seenLogCount.value = logLen
+  },
+  { immediate: true },
+)
 
 const currentZoneName = computed(() => zoneName(store.raid.zone))
 const currentDangerLevel = computed(() => store.raid.dangerLevel)
