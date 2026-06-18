@@ -27,12 +27,13 @@ defineEmits<{
       </button>
     </div>
     <p v-if="!hiddenPocket" class="hidden-pocket-empty">
-      Empty. Pick 1 backpack item to save if the raid fails.
+      The dark safe spot that no one wants to check 😬
     </p>
     <div v-else class="hidden-pocket-item">
       <span :class="rarityBarClass(hiddenPocket.rarity)" :title="rarityLabel(hiddenPocket.rarity)" aria-hidden="true" />
       <span class="hidden-pocket-name">{{ hiddenPocket.name }}</span>
       <span class="hidden-pocket-meta">Value {{ hiddenPocket.value }}</span>
+      <span v-if="hiddenPocket.quantity > 1" class="hidden-pocket-quantity">×{{ hiddenPocket.quantity }}</span>
     </div>
   </div>
 </template>

@@ -154,6 +154,41 @@ describe('applyEffects — backpack item behavior', () => {
     expect(stellaRed.state.raid.backpackValue).toBe(155)
   })
 
+  it('slightly biases loot rarity quality by mood', () => {
+    const template: EventTemplate = {
+      id: 'test_mood_rarity_bias',
+      weight: 1,
+      text: 'Mood-adjusted loot roll.',
+      effects: { backpackValue: 90 },
+    }
+
+    const averageRarityForMood = (mood: number): number => {
+      let totalRarity = 0
+      const sampleSize = 600
+
+      for (let seed = 1; seed <= sampleSize; seed += 1) {
+        const initial = createInitialState(0)
+        const state = {
+          ...initial,
+          raider: { ...initial.raider, mood },
+          raid: { ...initial.raid, dangerLevel: null },
+        }
+        const result = applyEffects(state, template, createRNG(seed))
+        totalRarity += result.state.raid.backpack[0].rarity
+      }
+
+      return totalRarity / sampleSize
+    }
+
+    const lowMoodAverage = averageRarityForMood(-5)
+    const neutralMoodAverage = averageRarityForMood(0)
+    const highMoodAverage = averageRarityForMood(5)
+
+    expect(highMoodAverage).toBeGreaterThan(neutralMoodAverage)
+    expect(neutralMoodAverage).toBeGreaterThan(lowMoodAverage)
+    expect(highMoodAverage - lowMoodAverage).toBeGreaterThan(0.05)
+  })
+
   it('routes negative HP effects through shield mitigation', () => {
     const initial = createInitialState(0)
     const result = applyEffects(initial, FIXED_DAMAGE_TEMPLATE, createRNG(1))
@@ -230,6 +265,29 @@ describe('applyEffects — backpack item behavior', () => {
     expect(result!.state.raider.hp).toBe(90)
     expect(result!.state.raid.shield?.charge).toBe(24)
     expect(result!.state.raid.backpack).toHaveLength(0)
+  })
+
+  it('reduces robot damage when mood is positive but leaves raw robot damage unchanged', () => {
+    const neutral = {
+      ...createInitialState(0),
+      raider: { ...createInitialState(0).raider, mood: 0 },
+    }
+    const upbeat = {
+      ...createInitialState(0),
+      raider: { ...createInitialState(0).raider, mood: 5 },
+    }
+
+    const neutralResult = resolveRobotEncounter(neutral, 'roomba_prime', createRNG(1), 0)
+    const upbeatResult = resolveRobotEncounter(upbeat, 'roomba_prime', createRNG(1), 0)
+
+    expect(neutralResult).not.toBeNull()
+    expect(upbeatResult).not.toBeNull()
+    expect(neutralResult!.event.text).toContain('Shield lost 16 charge')
+    expect(upbeatResult!.event.text).toContain('Shield lost 16 charge')
+    expect(upbeatResult!.event.text).toContain('Mood held together the raider')
+    expect(upbeatResult!.state.raider.hp).toBeGreaterThan(neutralResult!.state.raider.hp)
+    expect(upbeatResult!.state.raid.shield?.charge).toBe(neutralResult!.state.raid.shield?.charge)
+    expect(upbeatResult!.state.raid.shield?.durability).toBe(neutralResult!.state.raid.shield?.durability)
   })
 
   it('scales failed robot damage by danger-level profile', () => {

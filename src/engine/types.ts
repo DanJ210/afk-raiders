@@ -146,6 +146,8 @@ export interface HiddenPocketItem {
   value: number
   rarity: number
   flavor?: string
+  kind?: BackpackItemKind
+  quantity: number
 }
 
 export interface ActiveShieldRecharge {

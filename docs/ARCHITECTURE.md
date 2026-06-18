@@ -83,6 +83,8 @@ Events may also set `"effects": { "forcePhase": "..." }` to force a phase change
 
 Events may also gate themselves by `requires.dangerLevel` (`Low`, `Medium`, or `High`). The danger level is determined by a seeded combination of zone selection and zone condition selection (from `src/content/zones/zone_conditions.json`). The engine applies the matching danger-level profile in `src/engine/dangerLevelProfiles.ts`: Low has lower loot value and rarity bias, Medium raises loot upside and robot/extraction pressure, and High has the highest loot ceiling with the harshest robot and LZ risk. These profiles are the economy guardrail for risk/reward tuning.
 
+Loot rarity selection also applies a small raider-mood bias in `eventResolver.ts`: positive mood nudges weights toward higher rarity and negative mood nudges toward lower rarity. The effect is intentionally mild and always secondary to danger-level profile tuning.
+
 When an event awards backpack loot (`effects.backpackValue` producing a positive loot add), `processTick()` performs two additional independent consumable bonus rolls: one for a healing item and one for a shield recharger. This allows a single loot event to grant normal loot plus either or both consumable types.
 
 When a shield mitigates damage, the comms feed should include a follow-up line that shows the split between shield charge lost and HP damage landed. That keeps the log readable while still reflecting the shield math.
@@ -96,6 +98,9 @@ The stash has an enforced item cap (`HOME_STASH_ITEM_LIMIT`). Overflow items are
 
 ### Shield layer
 `RaidState.shield` stores the current shield snapshot for the active raid. Shield damage rules live in `src/engine/shields.ts` so all incoming damage uses one deterministic calculation path. Negative HP event effects and failed robot encounters both route through the same helper.
+
+Positive raider mood adds a small derived resilience bonus in `eventResolver.ts` for failed robot encounters only. It does not change robot raw damage; it slightly reduces the final HP loss after shield mitigation when mood is above zero.
+The resulting shield-damage log line includes a short note when that bonus applies so the effect stays visible in the comms UI.
 
 Shield rechargers are intentionally different from bandages:
 - Bandages live in `RaidState.healingItems` and never extract.
