@@ -52,7 +52,7 @@ function phaseBadge(phase: string): string {
       ></div>
     </div>
     <div
-      ref="pinnedTopLog.logEl"
+      :ref="pinnedTopLog.logEl"
       class="comms-log__feed"
       role="log"
       aria-live="polite"
