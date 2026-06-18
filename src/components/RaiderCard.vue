@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { useNow } from '@vueuse/core'
 import { useGameStore } from '../stores/gameStore'
 import { zoneName } from '../utils/zones'
-import { TICK_INTERVAL_MS } from '../engine/catchUp'
 import ShieldBar from './ShieldBar.vue'
+import RaidTimer from './RaidTimer.vue'
+import { useRaidTimer } from '../composables/useRaidTimer'
 
 const store = useGameStore()
 const raider = computed(() => store.raider)
@@ -12,16 +12,12 @@ const lifetimeStats = computed(() => store.state.stats)
 const activeShieldRecharge = computed(() => store.raid.activeShieldRecharge)
 const currentZoneName = computed(() => zoneName(store.raid.zone))
 const showCurrentZone = computed(() => store.phase === 'RAIDING' && currentZoneName.value !== null)
-const showRaidTimer = computed(() => store.phase === 'RAIDING')
-const now = useNow({ interval: 1000 })
-const raidTimerMs = computed(() => {
-  if (store.phase !== 'RAIDING') return 0
-  const phaseRemainingMs = store.raid.phaseTicksRemaining * TICK_INTERVAL_MS
-  const elapsedSinceLastTick = Math.max(0, now.value.getTime() - store.lastTickAt)
-  return Math.max(0, phaseRemainingMs - elapsedSinceLastTick)
-})
-const raidTimerText = computed(() => formatDuration(raidTimerMs.value))
 const raidShield = computed(() => store.raid.shield)
+const { showRaidTimer, raidTimerText } = useRaidTimer({
+  phase: computed(() => store.phase),
+  phaseTicksRemaining: computed(() => store.raid.phaseTicksRemaining),
+  lastTickAt: computed(() => store.lastTickAt),
+})
 
 const editingName = ref(false)
 const nameInput = ref('')
@@ -63,13 +59,6 @@ function moodLabel(mood: number): string {
   if (mood === 0) return '😐 Neutral'
   if (mood >= -2) return '😒 Grumpy'
   return '😩 Demoralized'
-}
-
-function formatDuration(ms: number): string {
-  const totalSeconds = Math.max(0, Math.floor(ms / 1000))
-  const minutes = Math.floor(totalSeconds / 60)
-  const seconds = totalSeconds % 60
-  return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
 }
 
 const hpPercent = computed(() =>
@@ -167,10 +156,7 @@ function parseZoneDangerLevelKey(key: string): { zoneId: string; dangerLevel: st
         <span class="raider-card__stat-value">{{ currentZoneName }}</span>
       </div>
 
-      <div v-if="showRaidTimer" class="raider-card__stat">
-        <span class="raider-card__stat-label">Zone Nuke In</span>
-        <span class="raider-card__stat-value raider-card__timer">{{ raidTimerText }}</span>
-      </div>
+      <RaidTimer v-if="showRaidTimer" :timer-text="raidTimerText" />
 
       <div class="raider-card__stat">
         <span class="raider-card__stat-label">Rat Rating</span>
@@ -349,11 +335,6 @@ function parseZoneDangerLevelKey(key: string): { zoneId: string; dangerLevel: st
 
 .raider-card__rat-rating {
   color: var(--color-accent-secondary);
-}
-
-.raider-card__timer {
-  color: var(--color-danger);
-  font-weight: 700;
 }
 
 .hp-bar {
