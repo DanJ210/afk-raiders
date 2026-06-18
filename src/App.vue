@@ -70,13 +70,16 @@ const phaseTimeText = computed(() => {
       <aside class="app__sidebar">
         <HandlerActions />
         <RaiderCard />
-        <BackpackPanel />
         <HomeStash />
       </aside>
 
       <div class="app__log">
         <CommsLog />
       </div>
+
+      <aside class="app__raid">
+        <BackpackPanel />
+      </aside>
     </main>
 
     <main v-else class="app__main-mobile">
@@ -183,7 +186,7 @@ const phaseTimeText = computed(() => {
 .app__main {
   flex: 1;
   display: grid;
-  grid-template-columns: 260px 1fr;
+  grid-template-columns: minmax(240px, 260px) minmax(0, 1fr) minmax(240px, 260px);
   gap: 12px;
   min-height: 0;
 }
@@ -197,6 +200,17 @@ const phaseTimeText = computed(() => {
 
 .app__log {
   min-height: 0;
+}
+
+.app__raid {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.app__raid :deep(.backpack-panel) {
+  height: 100%;
+  max-height: none;
 }
 
 .app__main-mobile {
