@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-import { useMediaQuery } from '@vueuse/core'
+import { computed, ref, watch } from 'vue'
+import { useMediaQuery, useNow } from '@vueuse/core'
 import { useGameStore } from './stores/gameStore'
 import { zoneName } from './utils/zones'
+import { TICK_INTERVAL_MS } from './engine/catchUp'
 import CommsLog from './components/CommsLog.vue'
 import RaiderCard from './components/RaiderCard.vue'
 import BackpackPanel from './components/BackpackPanel.vue'
@@ -24,9 +25,34 @@ const mobileTabs: Array<{ id: MobileTabId; label: string; icon: string }> = [
 ]
 
 const activeMobileTab = ref<MobileTabId>('comms')
+const now = useNow({ interval: 1000 })
+
+// Badge: track how many log entries the user has seen while on the comms tab.
+const seenLogCount = ref(store.log.length)
+const unseenCommsCount = computed(() =>
+  activeMobileTab.value === 'comms' ? 0 : Math.max(0, store.log.length - seenLogCount.value)
+)
+watch(activeMobileTab, (tab) => {
+  if (tab === 'comms') seenLogCount.value = store.log.length
+})
 
 const currentZoneName = computed(() => zoneName(store.raid.zone))
 const currentDangerLevel = computed(() => store.raid.dangerLevel)
+
+const phaseTimerMs = computed(() => {
+  if (store.raid.phaseTicksRemaining <= 0) return 0
+  const phaseRemainingMs = store.raid.phaseTicksRemaining * TICK_INTERVAL_MS
+  const elapsedSinceLastTick = Math.max(0, now.value.getTime() - store.lastTickAt)
+  return Math.max(0, phaseRemainingMs - elapsedSinceLastTick)
+})
+
+const phaseTimeText = computed(() => {
+  if (phaseTimerMs.value <= 0) return null
+  const totalSeconds = Math.floor(phaseTimerMs.value / 1000)
+  const minutes = Math.floor(totalSeconds / 60)
+  const seconds = totalSeconds % 60
+  return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
+})
 </script>
 
 <template>
@@ -51,7 +77,7 @@ const currentDangerLevel = computed(() => store.raid.dangerLevel)
     </main>
 
     <main v-else class="app__main-mobile">
-      <PhaseStatusStrip :phase="store.phase" :zone-name="currentZoneName" :danger-level="currentDangerLevel" />
+      <PhaseStatusStrip :phase="store.phase" :zone-name="currentZoneName" :danger-level="currentDangerLevel" :phase-time-text="phaseTimeText" />
 
       <section v-if="activeMobileTab === 'comms'" class="app__mobile-panel app__mobile-panel--fill">
         <CommsLog />
@@ -80,7 +106,12 @@ const currentDangerLevel = computed(() => store.raid.dangerLevel)
         :class="{ 'app__mobile-nav-btn--active': activeMobileTab === tab.id }"
         :aria-current="activeMobileTab === tab.id ? 'page' : undefined"
         @click="activeMobileTab = tab.id">
-        <span class="app__mobile-nav-icon" aria-hidden="true">{{ tab.icon }}</span>
+        <span class="app__mobile-nav-icon-wrap">
+          <span class="app__mobile-nav-icon" aria-hidden="true">{{ tab.icon }}</span>
+          <span v-if="tab.id === 'comms' && unseenCommsCount > 0" class="app__mobile-nav-badge" :aria-label="`${unseenCommsCount} unread messages`">
+            {{ unseenCommsCount > 99 ? '99+' : unseenCommsCount }}
+          </span>
+        </span>
         <span class="app__mobile-nav-label">{{ tab.label }}</span>
       </button>
     </nav>
@@ -212,8 +243,33 @@ const currentDangerLevel = computed(() => store.raid.dangerLevel)
   border-color: var(--color-border);
 }
 
+.app__mobile-nav-icon-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .app__mobile-nav-icon {
   font-size: 1rem;
+}
+
+.app__mobile-nav-badge {
+  position: absolute;
+  top: -5px;
+  right: -8px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--color-danger);
+  color: var(--color-bg);
+  font-size: 0.58rem;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  line-height: 16px;
+  text-align: center;
+  pointer-events: none;
 }
 
 .app__mobile-nav-label {

@@ -16,13 +16,16 @@ const currentZoneName = computed(() => zoneName(store.raid.zone))
 const showCurrentZone = computed(() => store.phase === 'RAIDING' && currentZoneName.value !== null)
 const showRaidTimer = computed(() => store.phase === 'RAIDING')
 const now = useNow({ interval: 1000 })
-const raidTimerMs = computed(() => {
-  if (store.phase !== 'RAIDING') return 0
+const phaseTimerMs = computed(() => {
+  if (store.raid.phaseTicksRemaining <= 0) return 0
   const phaseRemainingMs = store.raid.phaseTicksRemaining * TICK_INTERVAL_MS
   const elapsedSinceLastTick = Math.max(0, now.value.getTime() - store.lastTickAt)
   return Math.max(0, phaseRemainingMs - elapsedSinceLastTick)
 })
+const raidTimerMs = computed(() => (store.phase === 'RAIDING' ? phaseTimerMs.value : 0))
+const phaseTimerText = computed(() => formatDuration(phaseTimerMs.value))
 const raidTimerText = computed(() => formatDuration(raidTimerMs.value))
+const showPhaseTimer = computed(() => phaseTimerMs.value > 0)
 const raidShield = computed(() => store.raid.shield)
 
 const editingName = ref(false)
@@ -103,7 +106,7 @@ const hpClass = computed(() => {
         />
       </span>
       <span class="raider-card__phase-badge" :data-phase="store.phase">
-        {{ phaseLabel(store.phase) }}
+        {{ phaseLabel(store.phase) }}<span v-if="showPhaseTimer"> · {{ phaseTimerText }}</span>
       </span>
     </div>
 

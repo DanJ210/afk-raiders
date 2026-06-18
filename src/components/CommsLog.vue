@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useDocumentVisibility } from '@vueuse/core'
 import { useGameStore } from '../stores/gameStore'
 import { TICK_INTERVAL_MS } from '../engine/catchUp'
 import { usePinnedTopLog } from '../composables/usePinnedTopLog'
@@ -11,6 +12,15 @@ const entries = computed(() => [...store.log].reverse())
 const logEntryCount = computed(() => store.log.length)
 const raidShield = computed(() => store.raid.shield)
 const raidShieldRecharge = computed(() => store.raid.activeShieldRecharge)
+
+// Re-key the tick bar on every new tick AND whenever the tab becomes visible,
+// so the animation restarts from the correct elapsed offset instead of 0.
+const visibility = useDocumentVisibility()
+const tickBarKey = computed(() => `${store.lastTickAt}-${visibility.value}`)
+const tickAnimationDelay = computed(() => {
+  const elapsed = Math.min(TICK_INTERVAL_MS, Math.max(0, Date.now() - store.lastTickAt))
+  return `-${elapsed}ms`
+})
 
 const pinnedTopLog = usePinnedTopLog(logEntryCount)
 
@@ -46,9 +56,9 @@ function phaseBadge(phase: string): string {
     </div>
     <div class="comms-log__tick-track" aria-hidden="true">
       <div
-        :key="store.lastTickAt"
+        :key="tickBarKey"
         class="comms-log__tick-bar"
-        :style="{ animationDuration: `${TICK_INTERVAL_MS}ms` }"
+        :style="{ animationDuration: `${TICK_INTERVAL_MS}ms`, animationDelay: tickAnimationDelay }"
       ></div>
     </div>
     <div

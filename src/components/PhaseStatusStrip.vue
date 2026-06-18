@@ -6,6 +6,7 @@ const props = defineProps<{
   phase: Phase
   zoneName: string | null
   dangerLevel: string | null
+  phaseTimeText?: string | null
 }>()
 
 const showZoneStrip = computed(() => props.phase === 'RAIDING' && props.zoneName !== null)
@@ -13,28 +14,32 @@ const showZoneStrip = computed(() => props.phase === 'RAIDING' && props.zoneName
 
 <template>
   <div v-if="showZoneStrip" class="phase-status-strip">
-    📍 Zone: <strong>{{ zoneName }}</strong><span v-if="dangerLevel"> · <span class="phase-status-strip__danger">{{ dangerLevel }}</span></span>
+    📍 Zone: <strong>{{ zoneName }}</strong><span v-if="dangerLevel"> · <span class="phase-status-strip__danger">{{ dangerLevel }}</span></span><span v-if="phaseTimeText"> · <span class="phase-status-strip__time">{{ phaseTimeText }}</span></span>
   </div>
 </template>
 
 <style scoped>
 .phase-status-strip {
-  flex: none;
+  font-size: 0.7rem;
   font-family: var(--font-mono);
-  font-size: 0.72rem;
-  color: var(--color-muted);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 6px;
-  padding: 5px 10px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  letter-spacing: 0.05em;
+  background: var(--color-surface-raised);
+  color: var(--color-accent);
+  border: 1px solid var(--color-accent);
 }
 
 .phase-status-strip strong {
-  color: var(--color-accent);
   font-weight: 700;
 }
 
 .phase-status-strip__danger {
   color: var(--color-muted);
+}
+
+.phase-status-strip__time {
+  color: var(--color-accent);
+  font-weight: 700;
 }
 </style>
