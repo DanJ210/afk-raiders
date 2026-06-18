@@ -11,23 +11,44 @@ import { createRNG } from '../../src/engine/rng'
 import { runGreedCheck } from '../../src/engine/greedCheck'
 import type { RaidState } from '../../src/engine/types'
 
+interface GreedCheckOpts {
+  encouraged: boolean
+  scolded: boolean
+  currentHp?: number
+  maxHp?: number
+  hasHealingItems?: boolean
+}
+
 function makeRaid(overrides: Partial<RaidState> = {}): RaidState {
-  return {
+  const baseRaid: RaidState = {
     zone: 'damp_battlegrounds',
     dangerLevel: 'Low',
+    shield: null,
+    activeShieldRecharge: null,
     backpack: [],
+    hiddenPocket: null,
     healingItems: [],
     backpackValue: 0,
     greedLevel: 0,
     phase: 'RAIDING',
     phaseTicksRemaining: 999,
     forceExtract: false,
+  }
+
+  return {
+    ...baseRaid,
     ...overrides,
+    // Preserve explicit null overrides while still filling omitted properties.
+    zone: Object.prototype.hasOwnProperty.call(overrides, 'zone') ? overrides.zone! : baseRaid.zone,
+    dangerLevel: Object.prototype.hasOwnProperty.call(overrides, 'dangerLevel') ? overrides.dangerLevel! : baseRaid.dangerLevel,
+    shield: Object.prototype.hasOwnProperty.call(overrides, 'shield') ? overrides.shield! : baseRaid.shield,
+    activeShieldRecharge: Object.prototype.hasOwnProperty.call(overrides, 'activeShieldRecharge') ? overrides.activeShieldRecharge! : baseRaid.activeShieldRecharge,
+    hiddenPocket: Object.prototype.hasOwnProperty.call(overrides, 'hiddenPocket') ? overrides.hiddenPocket! : baseRaid.hiddenPocket,
   }
 }
 
 /** Run N greed checks with fixed seed, count outcomes */
-function countOutcomes(raid: RaidState, n = 500, opts = { encouraged: false, scolded: false }) {
+function countOutcomes(raid: RaidState, n = 500, opts: GreedCheckOpts = { encouraged: false, scolded: false }) {
   const rng = createRNG(12345)
   let pushDeeper = 0, extract = 0, downed = 0
   for (let i = 0; i < n; i++) {
@@ -40,6 +61,22 @@ function countOutcomes(raid: RaidState, n = 500, opts = { encouraged: false, sco
 }
 
 describe('greedCheck', () => {
+  it('allows explicit null overrides in makeRaid', () => {
+    const raid = makeRaid({
+      zone: null,
+      dangerLevel: null,
+      shield: null,
+      activeShieldRecharge: null,
+      hiddenPocket: null,
+    })
+
+    expect(raid.zone).toBeNull()
+    expect(raid.dangerLevel).toBeNull()
+    expect(raid.shield).toBeNull()
+    expect(raid.activeShieldRecharge).toBeNull()
+    expect(raid.hiddenPocket).toBeNull()
+  })
+
   it('forceExtract always returns EXTRACT', () => {
     const rng = createRNG(1)
     const raid = makeRaid({ forceExtract: true, greedLevel: 90 })

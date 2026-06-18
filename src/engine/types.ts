@@ -89,7 +89,6 @@ export interface ZoneEntry extends ContentEntry {
   description: string
 }
 
-export type TimeOfDay = 'Day' | 'Night' | 'Stella Red'
 export type DangerLevel = 'Low' | 'Medium' | 'High'
 
 export interface FlavorTable {
@@ -159,9 +158,16 @@ export interface ActiveShieldRecharge {
   ticksRemaining: number
 }
 
+export interface ZoneCondition {
+  id: string
+  name: string
+  description: string
+}
+
 export interface RaidState {
   zone: string | null
   dangerLevel: DangerLevel | null
+  zoneCondition?: ZoneCondition | null
   shield: ShieldState | null
   activeShieldRecharge: ActiveShieldRecharge | null
   backpack: BackpackItem[]

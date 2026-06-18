@@ -14,8 +14,8 @@ You are **not** the raider. You are their Handler back in the underground hub, w
 
 ## 2. Core Loop
 1. **Prep phase (hub):** Raider sells loot, buys questionable gear, eats expired MREs, gossips with NPCs.
-2. **Deploy:** Raider autonomously picks a zone and a time-of-day profile (Day / Night / Stella Red).
-3. **Raid events:** Loot finds, robot encounters, weather, meeting other AI raiders (alliance → inevitable betrayal). Time-of-day profile controls both upside (loot value/rarity) and risk (robot pressure/extraction danger).
+2. **Deploy:** Raider autonomously picks a zone and a seeded **zone condition** (for example Light Fog, Acid Rain, Robot Surge).
+3. **Raid events:** Loot finds, robot encounters, weather, meeting other AI raiders (alliance → inevitable betrayal). The selected condition sets a `dangerLevel` (Low/Medium/High), which then drives the danger-level profile for both upside (loot value/rarity) and risk (robot pressure/extraction danger).
    - Raider **mood** now provides a tiny secondary bias to loot quality: positive mood slightly improves higher-rarity odds, while negative mood slightly favors lower-rarity outcomes.
 4. **The Greed Check™ (signature mechanic):** At intervals the Raider rolls to extract *or* push deeper for better loot. Backpack value rises → death risk rises. Pure dramatic tension, zero input required.
 5. **Extract or die:** Extraction takes ~90 seconds, then a final beat to hit the big RETURN HOME button. During that window **extraction events** can fire — the shuttle may arrive early (instant success), the beacon may get jammed (back into the zone, backpack kept), or the raider may go down at the LZ (lose the bag). If the raider stays in RAIDING until the timer expires, they go DOWNED (zone nuke failure).  Death = lose the bag (keep the Emotional Support Pocket item), respawn in hub with a sheepish log entry. If the raid timer reaches zero while still in RAIDING, the zone nuke lands and the raider goes DOWNED.
@@ -114,7 +114,7 @@ Everything funny flows through an autoscrolling text feed:
 
 ## 7. Data Model (MVP)
 - **Raider** — stats, mood, Rat Rating, skills
-- **Raid** — zone, time-of-day, tick count, backpack contents/value, greed level, phase, optional manual Secret Hidden Pocket selection
+- **Raid** — zone, condition, tick count, backpack contents/value, greed level, phase, optional manual Secret Hidden Pocket selection
 - **Home Stash** — persistent extracted loot; stacks duplicates (×N), capped at 120 items with overflow auto-sold into coins
 - **Coins** — accumulated value from stash overflow auto-sales
 - **Lifetime Stats** — extracts/deaths totals and context breakdowns, robot defeats, healing usage

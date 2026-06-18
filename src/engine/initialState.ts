@@ -25,6 +25,7 @@ export function createInitialState(now: number = Date.now()): GameState {
     raid: {
       zone: null,
       dangerLevel: null,
+      zoneCondition: null,
       shield: createStarterShieldState(),
       activeShieldRecharge: null,
       backpack: [],

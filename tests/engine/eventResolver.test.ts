@@ -13,6 +13,7 @@ import { createRNG } from '../../src/engine/rng'
 import { applyEffects, consumeHealingItem, consumeShieldRecharger, resolveEvent, resolveHealingItemFind, resolveRobotEncounter, resolveShieldRechargerFind } from '../../src/engine/eventResolver'
 import { createInitialState } from '../../src/engine/initialState'
 import type { EventTemplate, HealingItemStack } from '../../src/engine/types'
+import zoneConditionsData from '../../src/content/zones/zone_conditions.json'
 
 // backpackValue=450 maps exclusively to Snack Mix (Chaos Blend),
 // so item selection is fully deterministic — no RNG variance.
@@ -124,34 +125,80 @@ describe('applyEffects — backpack item behavior', () => {
     expect(result1.state.raider.hp).toBeGreaterThanOrEqual(86)
   })
 
-  it('scales loot value by time-of-day profile', () => {
+  it('scales loot value by danger-level profile derived from zone conditions', () => {
     const initial = createInitialState(0)
     const template: EventTemplate = {
-      id: 'test_time_loot',
+      id: 'test_zone_condition_loot',
       weight: 1,
       text: 'You found something timely.',
       effects: { backpackValue: 100 },
     }
 
-    const day = applyEffects(
-      { ...initial, raid: { ...initial.raid, dangerLevel: 'Low' } },
+    const allConditions = [
+      ...zoneConditionsData.minor_conditions,
+      ...zoneConditionsData.major_conditions,
+    ]
+
+    const lowCondition = allConditions.find(c => c.dangerLevel.trim() === 'Low')
+    const mediumCondition = allConditions.find(c => c.dangerLevel.trim() === 'Medium')
+    const highCondition = allConditions.find(c => c.dangerLevel.trim() === 'High')
+
+    expect(lowCondition).toBeDefined()
+    expect(mediumCondition).toBeDefined()
+    expect(highCondition).toBeDefined()
+
+    const lowDanger = applyEffects(
+      {
+        ...initial,
+        raid: {
+          ...initial.raid,
+          dangerLevel: lowCondition!.dangerLevel.trim() as 'Low',
+          zoneCondition: {
+            id: lowCondition!.id,
+            name: lowCondition!.name,
+            description: lowCondition!.description,
+          },
+        },
+      },
       template,
       createRNG(1),
     )
-    const night = applyEffects(
-      { ...initial, raid: { ...initial.raid, dangerLevel: 'Medium' } },
+    const mediumDanger = applyEffects(
+      {
+        ...initial,
+        raid: {
+          ...initial.raid,
+          dangerLevel: mediumCondition!.dangerLevel.trim() as 'Medium',
+          zoneCondition: {
+            id: mediumCondition!.id,
+            name: mediumCondition!.name,
+            description: mediumCondition!.description,
+          },
+        },
+      },
       template,
       createRNG(1),
     )
-    const stellaRed = applyEffects(
-      { ...initial, raid: { ...initial.raid, dangerLevel: 'High' } },
+    const highDanger = applyEffects(
+      {
+        ...initial,
+        raid: {
+          ...initial.raid,
+          dangerLevel: highCondition!.dangerLevel.trim() as 'High',
+          zoneCondition: {
+            id: highCondition!.id,
+            name: highCondition!.name,
+            description: highCondition!.description,
+          },
+        },
+      },
       template,
       createRNG(1),
     )
 
-    expect(day.state.raid.backpackValue).toBe(85)
-    expect(night.state.raid.backpackValue).toBe(120)
-    expect(stellaRed.state.raid.backpackValue).toBe(155)
+    expect(lowDanger.state.raid.backpackValue).toBe(85)
+    expect(mediumDanger.state.raid.backpackValue).toBe(120)
+    expect(highDanger.state.raid.backpackValue).toBe(155)
   })
 
   it('slightly biases loot rarity quality by mood', () => {
