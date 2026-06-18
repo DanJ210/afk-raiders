@@ -38,11 +38,12 @@ function makeRaid(overrides: Partial<RaidState> = {}): RaidState {
   return {
     ...baseRaid,
     ...overrides,
-    zone: overrides.zone ?? baseRaid.zone,
-    dangerLevel: overrides.dangerLevel ?? baseRaid.dangerLevel,
-    shield: overrides.shield ?? baseRaid.shield,
-    activeShieldRecharge: overrides.activeShieldRecharge ?? baseRaid.activeShieldRecharge,
-    hiddenPocket: overrides.hiddenPocket ?? baseRaid.hiddenPocket,
+    // Preserve explicit null overrides while still filling omitted properties.
+    zone: Object.prototype.hasOwnProperty.call(overrides, 'zone') ? overrides.zone! : baseRaid.zone,
+    dangerLevel: Object.prototype.hasOwnProperty.call(overrides, 'dangerLevel') ? overrides.dangerLevel! : baseRaid.dangerLevel,
+    shield: Object.prototype.hasOwnProperty.call(overrides, 'shield') ? overrides.shield! : baseRaid.shield,
+    activeShieldRecharge: Object.prototype.hasOwnProperty.call(overrides, 'activeShieldRecharge') ? overrides.activeShieldRecharge! : baseRaid.activeShieldRecharge,
+    hiddenPocket: Object.prototype.hasOwnProperty.call(overrides, 'hiddenPocket') ? overrides.hiddenPocket! : baseRaid.hiddenPocket,
   }
 }
 
@@ -60,6 +61,22 @@ function countOutcomes(raid: RaidState, n = 500, opts: GreedCheckOpts = { encour
 }
 
 describe('greedCheck', () => {
+  it('allows explicit null overrides in makeRaid', () => {
+    const raid = makeRaid({
+      zone: null,
+      dangerLevel: null,
+      shield: null,
+      activeShieldRecharge: null,
+      hiddenPocket: null,
+    })
+
+    expect(raid.zone).toBeNull()
+    expect(raid.dangerLevel).toBeNull()
+    expect(raid.shield).toBeNull()
+    expect(raid.activeShieldRecharge).toBeNull()
+    expect(raid.hiddenPocket).toBeNull()
+  })
+
   it('forceExtract always returns EXTRACT', () => {
     const rng = createRNG(1)
     const raid = makeRaid({ forceExtract: true, greedLevel: 90 })
