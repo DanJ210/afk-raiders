@@ -10,9 +10,10 @@ import BackpackItemDialog from './BackpackItemDialog.vue'
 
 const store = useGameStore()
 const raid = computed(() => store.raid)
+const raider = computed(() => store.raider)
 
 // Use the composable for all view-model logic
-const viewModel = useBackpackViewModel(raid)
+const viewModel = useBackpackViewModel(raid, raider)
 
 // Handlers for component events
 function handleItemClick(itemId: string) {

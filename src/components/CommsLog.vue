@@ -52,7 +52,7 @@ function phaseBadge(phase: string): string {
       ></div>
     </div>
     <div
-      ref="pinnedTopLog.logEl"
+      :ref="pinnedTopLog.logEl"
       class="comms-log__feed"
       role="log"
       aria-live="polite"
@@ -73,7 +73,7 @@ function phaseBadge(phase: string): string {
         <span class="comms-log__text">{{ entry.text }}</span>
       </div>
     </div>
-    <div v-if="pinnedTopLog.userScrolledDown" class="comms-log__scroll-hint" @click="pinnedTopLog.jumpToTop()">
+    <div v-if="pinnedTopLog.userScrolledDown.value" class="comms-log__scroll-hint" @click="pinnedTopLog.jumpToTop()">
       ▲ New messages at top
     </div>
   </section>

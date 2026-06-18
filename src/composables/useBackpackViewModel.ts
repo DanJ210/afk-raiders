@@ -12,7 +12,10 @@ import { computed, ref } from 'vue'
 import type { BackpackItem } from '../engine/types.js'
 import type { GameState } from '../engine/types.js'
 
-export function useBackpackViewModel(raidRef: { value: GameState['raid'] }) {
+export function useBackpackViewModel(
+  raidRef: { value: GameState['raid'] },
+  raiderRef: { value: GameState['raider'] },
+) {
   const selectedBackpackItemId = ref<string | null>(null)
 
   const hiddenPocket = computed(() => raidRef.value.hiddenPocket)
@@ -56,8 +59,8 @@ export function useBackpackViewModel(raidRef: { value: GameState['raid'] }) {
     () =>
       raidRef.value.phase !== 'HUB' &&
       raidRef.value.phase !== 'DOWNED' &&
-      // Note: raider ref will come from store; we check hp here via raid context
-      raidRef.value.backpack.length > 0, // Simplified check; full version checks raider.hp
+      raiderRef.value.hp > 0 &&
+      raiderRef.value.hp < raiderRef.value.maxHp,
   )
 
   // Can manage pocket (set/clear) when raid is active

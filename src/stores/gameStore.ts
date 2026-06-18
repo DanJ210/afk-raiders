@@ -17,7 +17,9 @@ import { ref, computed } from 'vue'
 import { createRNG } from '../engine/rng.js'
 import { createInitialState } from '../engine/initialState.js'
 import { computeSignal } from '../engine/signal.js'
+import { catchUp } from '../engine/catchUp.js'
 import type { GameState, LogEvent } from '../engine/types.js'
+import type { AwaySummary } from '../engine/catchUp.js'
 import { useGamePersistence } from '../composables/useGamePersistence.js'
 import { useGameTicker } from '../composables/useGameTicker.js'
 import { useHandlerActions } from '../composables/useHandlerActions.js'
@@ -34,12 +36,20 @@ export const useGameStore = defineStore('game', () => {
 
   // If we have a save, restore; otherwise start fresh
   let initialState = createInitialState(now)
+  let initialLastTickAt = saved?.lastTickAt ?? now
+  let initialAwaySummary: AwaySummary | null = null
   if (saved) {
-    initialState = saved.state
+    const startupCatchUp = catchUp(saved.state, rngRef.current, saved.lastTickAt, now)
+    initialState = startupCatchUp.state
+    initialLastTickAt = now
+    if (startupCatchUp.summary.ticksReplayed > 0) {
+      initialAwaySummary = startupCatchUp.summary
+      persistence.persistSave(initialState, seedValue.value, initialLastTickAt)
+    }
   }
 
   const state = ref<GameState>(initialState)
-  const lastTickAt = ref<number>(saved?.lastTickAt ?? now)
+  const lastTickAt = ref<number>(initialLastTickAt)
   const newEvents = ref<LogEvent[]>([])
 
   // Derived values for the UI
@@ -86,6 +96,10 @@ export const useGameStore = defineStore('game', () => {
       ticker.awaySummary.value = null
     },
   )
+
+  if (initialAwaySummary) {
+    ticker.awaySummary.value = initialAwaySummary
+  }
 
   return {
     state,

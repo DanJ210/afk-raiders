@@ -34,6 +34,16 @@ export function useGameTicker(
 ): GameTickerReturn {
   const awaySummary = ref<AwaySummary | null>(null)
 
+  function runCatchUp(fromTickAt: number, toNow: number) {
+    const result = catchUp(stateRef.value as GameState, rngRef.current, fromTickAt, toNow)
+    stateRef.value = result.state
+    if (result.summary.ticksReplayed > 0) {
+      awaySummary.value = result.summary
+      lastTickAtRef.value = toNow
+      persistCallback(stateRef.value, rngRef.current.getSeed(), toNow)
+    }
+  }
+
   function tick() {
     const tickNow = Date.now()
     const result = processTick(stateRef.value as GameState, rngRef.current, tickNow)
@@ -54,13 +64,7 @@ export function useGameTicker(
       hiddenAt = Date.now()
     } else {
       if (hiddenAt !== null) {
-        const result = catchUp(stateRef.value as GameState, rngRef.current, hiddenAt, Date.now())
-        stateRef.value = result.state
-        if (result.summary.ticksReplayed > 0) {
-          awaySummary.value = result.summary
-        }
-        lastTickAtRef.value = Date.now()
-        persistCallback(stateRef.value, rngRef.current.getSeed(), lastTickAtRef.value)
+        runCatchUp(hiddenAt, Date.now())
         hiddenAt = null
       }
       resume()

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import type { RaiderLifetimeStats } from '../engine/types'
 import { useLifetimeStatsRows } from '../composables/useLifetimeStatsRows'
 
@@ -6,7 +7,7 @@ const props = defineProps<{
   stats: RaiderLifetimeStats
 }>()
 
-const viewModel = useLifetimeStatsRows({ value: props.stats })
+const viewModel = useLifetimeStatsRows(computed(() => props.stats))
 </script>
 
 <template>
