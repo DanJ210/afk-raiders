@@ -9,6 +9,7 @@ import BackpackPanel from './components/BackpackPanel.vue'
 import HomeStash from './components/HomeStash.vue'
 import HandlerActions from './components/HandlerActions.vue'
 import AwaySummary from './components/AwaySummary.vue'
+import PhaseStatusStrip from './components/PhaseStatusStrip.vue'
 
 const store = useGameStore()
 const isMobile = useMediaQuery('(max-width: 600px)')
@@ -26,9 +27,6 @@ const activeMobileTab = ref<MobileTabId>('comms')
 
 const currentZoneName = computed(() => zoneName(store.raid.zone))
 const currentDangerLevel = computed(() => store.raid.dangerLevel)
-const showZoneStrip = computed(
-  () => store.phase === 'RAIDING' && currentZoneName.value !== null,
-)
 </script>
 
 <template>
@@ -53,9 +51,7 @@ const showZoneStrip = computed(
     </main>
 
     <main v-else class="app__main-mobile">
-      <div v-if="showZoneStrip" class="app__zone-strip">
-        📍 Zone: <strong>{{ currentZoneName }}</strong><span v-if="currentDangerLevel"> · <span class="app__zone-tod">{{ currentDangerLevel }}</span></span>
-      </div>
+      <PhaseStatusStrip :phase="store.phase" :zone-name="currentZoneName" :danger-level="currentDangerLevel" />
 
       <section v-if="activeMobileTab === 'comms'" class="app__mobile-panel app__mobile-panel--fill">
         <CommsLog />
@@ -170,25 +166,6 @@ const showZoneStrip = computed(
   gap: 8px;
 }
 
-.app__zone-strip {
-  flex: none;
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  color: var(--color-muted);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 6px;
-  padding: 5px 10px;
-}
-
-.app__zone-strip strong {
-  color: var(--color-accent);
-  font-weight: 700;
-}
-
-.app__zone-tod {
-  color: var(--color-muted);
-}
 
 .app__mobile-panel {
   min-height: 0;

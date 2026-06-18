@@ -1,16 +1,18 @@
 <script setup lang="ts">
-import { computed, ref, watch, nextTick, onMounted } from 'vue'
+import { computed } from 'vue'
 import { useGameStore } from '../stores/gameStore'
 import { TICK_INTERVAL_MS } from '../engine/catchUp'
+import { usePinnedTopLog } from '../composables/usePinnedTopLog'
 import ShieldBar from './ShieldBar.vue'
 import HealthBar from './HealthBar.vue'
 
 const store = useGameStore()
-const logEl = ref<HTMLElement | null>(null)
-const userScrolledDown = ref(false)
 const entries = computed(() => [...store.log].reverse())
+const logEntryCount = computed(() => store.log.length)
 const raidShield = computed(() => store.raid.shield)
 const raidShieldRecharge = computed(() => store.raid.activeShieldRecharge)
+
+const pinnedTopLog = usePinnedTopLog(logEntryCount)
 
 function formatTime(ts: number): string {
   const d = new Date(ts)
@@ -30,25 +32,6 @@ function phaseBadge(phase: string): string {
   return badges[phase] ?? '📡'
 }
 
-function onScroll() {
-  if (!logEl.value) return
-  const { scrollTop } = logEl.value
-  // Consider "scrolled away" if more than 60px from the top
-  userScrolledDown.value = scrollTop > 60
-}
-
-async function scrollToTop() {
-  if (userScrolledDown.value) return
-  await nextTick()
-  if (logEl.value) {
-    logEl.value.scrollTop = 0
-  }
-}
-
-// Auto-scroll when new events arrive
-watch(() => store.log.length, scrollToTop)
-
-onMounted(scrollToTop)
 </script>
 
 <template>
@@ -69,12 +52,12 @@ onMounted(scrollToTop)
       ></div>
     </div>
     <div
-      ref="logEl"
+      ref="pinnedTopLog.logEl"
       class="comms-log__feed"
       role="log"
       aria-live="polite"
       aria-relevant="additions"
-      @scroll="onScroll"
+      @scroll="pinnedTopLog.onScroll"
     >
       <p v-if="store.log.length === 0" class="comms-log__empty">
         Waiting for transmission…
@@ -90,7 +73,7 @@ onMounted(scrollToTop)
         <span class="comms-log__text">{{ entry.text }}</span>
       </div>
     </div>
-    <div v-if="userScrolledDown" class="comms-log__scroll-hint" @click="userScrolledDown = false; scrollToTop()">
+    <div v-if="pinnedTopLog.userScrolledDown" class="comms-log__scroll-hint" @click="pinnedTopLog.jumpToTop()">
       ▲ New messages at top
     </div>
   </section>
