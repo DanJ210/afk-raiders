@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import type { RaiderLifetimeStats } from '../engine/types'
 import { useLifetimeStatsRows } from '../composables/useLifetimeStatsRows'
 
