@@ -89,7 +89,6 @@ export interface ZoneEntry extends ContentEntry {
   description: string
 }
 
-export type TimeOfDay = 'Day' | 'Night' | 'Stella Red'
 export type DangerLevel = 'Low' | 'Medium' | 'High'
 
 export interface FlavorTable {

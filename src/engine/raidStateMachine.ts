@@ -130,7 +130,7 @@ export function tickPhase(
     updatedRaid = { ...updatedRaid, activeShieldRecharge: null }
   }
 
-  // Pick a zone and time of day when deploying
+  // Pick a zone and condition when deploying
   if (next === 'DEPLOYING') {
     updatedRaid = enterDeploying(updatedRaid, rng)
   }
