@@ -9,8 +9,7 @@
  */
 
 import { computed, ref } from 'vue'
-import type { BackpackItem } from '../engine/types.js'
-import type { GameState } from '../engine/types.js'
+import type { BackpackItem, HiddenPocketItem, GameState } from '../engine/types.js'
 
 export function useBackpackViewModel(
   raidRef: { value: GameState['raid'] },
@@ -18,7 +17,16 @@ export function useBackpackViewModel(
 ) {
   const selectedBackpackItemId = ref<string | null>(null)
 
-  const hiddenPocket = computed(() => raidRef.value.hiddenPocket)
+  const hiddenPocket = computed<HiddenPocketItem | null>(() => {
+    const pocket = raidRef.value.hiddenPocket
+    if (!pocket) return null
+
+    const liveStack = raidRef.value.backpack.find(item => item.itemId === pocket.itemId)
+    return {
+      ...pocket,
+      quantity: liveStack?.quantity ?? 0,
+    }
+  })
   const shield = computed(() => raidRef.value.shield)
 
   // Filters & sorts backpack items (excluding pocket items and shield rechargers)
