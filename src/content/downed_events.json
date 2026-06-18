@@ -5,5 +5,26 @@
     "text": "{death_quip}",
     "requires": { "phase": "DOWNED" },
     "effects": { "ratRating": 3 }
+  },
+  {
+    "id": "downed_shield_broke",
+    "weight": 40,
+    "text": "Shield at 0. HP at 0. Raider is DOWNED and not taking further questions.",
+    "requires": { "phase": "DOWNED" },
+    "effects": { "mood": -1 }
+  },
+  {
+    "id": "downed_blast_zone",
+    "weight": 35,
+    "text": "The blast zone won. The raider lost. Someone in Desperanza is already prepping the respawn paperwork.",
+    "requires": { "phase": "DOWNED" },
+    "effects": { "ratRating": 1 }
+  },
+  {
+    "id": "downed_respawn_ticket",
+    "weight": 25,
+    "text": "Emergency status: DOWNED. Shield collapsed, inventory dumped, ego damaged.",
+    "requires": { "phase": "DOWNED" },
+    "effects": { "mood": -2 }
   }
 ]
