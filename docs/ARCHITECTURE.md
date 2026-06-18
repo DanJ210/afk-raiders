@@ -15,16 +15,16 @@
 
 The app is configured as a fully installable Progressive Web App targeting web, iOS, and Android:
 
-- **Web installation:** Modern browsers (Chrome, Edge, Brave) show a native install prompt after brief use. The [PWAInstallPrompt.vue](src/components/PWAInstallPrompt.vue) component surfaces the `beforeinstallprompt` event as a dismissible banner in the UI.
+- **Web installation:** Modern browsers (Chrome, Edge, Brave) show a native install prompt after brief use. The [PWAInstallPrompt.vue](../src/components/PWAInstallPrompt.vue) component surfaces the `beforeinstallprompt` event as a dismissible banner in the UI.
 - **iOS installation:** Users install via "Share → Add to Home Screen" on Safari. Requires `apple-touch-icon` meta tag, `apple-mobile-web-app-capable`, and `apple-mobile-web-app-status-bar-style` for status bar theming.
 - **Android installation:** Native install prompt appears automatically after short engagement. Falls back to "Add to Home Screen" from the browser menu.
 
-Configuration in [vite.config.ts](vite.config.ts):
+Configuration in [vite.config.ts](../vite.config.ts):
 - Manifest is auto-generated with app name, theme colors, icons (192×192 and 512×512 px in `any` and `maskable` variants), app shortcuts (e.g., "Ready Up" to deploy), and screenshot support for installation UI.
 - Service worker auto-registers with `registerType: 'autoUpdate'` for transparent cache-first + network fallback (no user prompt).
 - Scope and start_url ensure the app launches to `/` in standalone mode.
 
-Meta tags in [index.html](index.html) enable iOS and desktop browser detection. Installation state is tracked in [useSettingsStore](src/stores/settingsStore.ts) via `beforeinstallprompt` and `appinstalled` events, plus `window.matchMedia('(display-mode: standalone)')` for PWA mode detection.
+Meta tags in [index.html](../index.html) enable iOS and desktop browser detection. Installation state is tracked in [useSettingsStore](../src/stores/settingsStore.ts) via `beforeinstallprompt` and `appinstalled` events, plus `window.matchMedia('(display-mode: standalone)')` for PWA mode detection.
 
 ## Golden rule: Engine ≠ UI
 The simulation engine is **pure TypeScript with zero framework imports**. Vue renders state and dispatches the rare Handler action. The engine must run identically in Node (tests) and the browser.

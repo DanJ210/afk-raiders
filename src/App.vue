@@ -135,7 +135,7 @@ const phaseTimeText = computed(() => {
     </nav>
 
     <AwaySummary />
-      <PWAInstallPrompt />
+    <PWAInstallPrompt />
   </div>
 </template>
 
