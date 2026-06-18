@@ -12,7 +12,7 @@ const store = useGameStore()
 const homeStash = computed(() => store.state.homeStash)
 const coins = computed(() => store.state.coins)
 
-const viewModel = useStashViewModel({ value: homeStash.value }, { value: coins.value })
+const viewModel = useStashViewModel(homeStash, coins)
 
 function handleItemClick(itemId: string) {
   viewModel.openItemDetails(itemId)
