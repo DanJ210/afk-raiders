@@ -238,6 +238,9 @@ describe('deterministic snapshot', () => {
     const result = processTick(state, rng, 0)
     expect(result.state.raid.phase).toBe('DOWNED')
     expect(result.events.some(e => e.id === 'phase_DEPLOYING_to_DOWNED')).toBe(true)
+  expect(result.state.raider.hp).toBe(0)
+  expect(result.state.raid.shield?.charge).toBe(0)
+  expect(result.state.raid.shield?.durability).toBe(0)
 
     // Ride out DOWNED → HUB: loot must be lost, HP restored, death counted
     let downedState = result.state

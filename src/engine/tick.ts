@@ -79,6 +79,37 @@ function hiddenPocketSavedEvent(itemName: string, tick: number, now: number): Lo
   }
 }
 
+function applyDownedCombatReset(state: GameState): GameState {
+  return {
+    ...state,
+    raider: {
+      ...state.raider,
+      hp: 0,
+    },
+    raid: {
+      ...state.raid,
+      shield: state.raid.shield
+        ? {
+            ...state.raid.shield,
+            charge: 0,
+            durability: 0,
+          }
+        : state.raid.shield,
+      activeShieldRecharge: null,
+    },
+  }
+}
+
+function downedTransitionText(source: 'timer' | 'greed' | 'damage'): string {
+  if (source === 'timer') {
+    return 'Raid timer hit zero. Zone nuke confirmed. Raider was still in the blast radius.'
+  }
+  if (source === 'greed') {
+    return 'Greed check failed. Raider pushed too deep and got caught in the blast radius.'
+  }
+  return 'Shield collapsed, HP hit zero, and the raider was marked DOWNED.'
+}
+
 function shieldDamageEvent(
   text: string,
   tick: number,
@@ -170,8 +201,11 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
   if (transition) {
     const transitionText =
       transition.from === 'RAIDING' && transition.to === 'DOWNED'
-        ? 'Raid timer hit zero. Zone nuke confirmed. Raider was still in the blast radius.'
+        ? downedTransitionText('timer')
         : transition.eventText
+    if (transition.to === 'DOWNED') {
+      currentState = applyDownedCombatReset(currentState)
+    }
     emitted.push({
       id: `phase_${transition.from}_to_${transition.to}`,
       tick: state.tick,
@@ -192,7 +226,7 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
             ...recovery.state.raider,
             hp: recovery.state.raider.maxHp,
             mood: 0,
-            deathCount: recovery.state.raider.deathCount + 1,
+            deathCount: recovery.state.raider.deathCount + 1
           },
           stats: recordOutcome(currentState.stats, 'deaths', state.raid.zone, state.raid.dangerLevel),
         }
@@ -276,11 +310,12 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
       const { raid: r2, transition: t2 } = tickPhase(currentState.raid, 'DOWNED')
       currentState = { ...currentState, raid: r2 }
       if (t2) {
+        currentState = applyDownedCombatReset(currentState)
         emitted.push({
           id: 'phase_RAIDING_to_DOWNED',
           tick: state.tick,
           timestamp: now,
-          text: t2.eventText,
+          text: downedTransitionText('greed'),
           phase: 'DOWNED',
         })
       }
@@ -364,6 +399,9 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
         )
         currentState = { ...currentState, raid: forcedRaid }
         if (forcedTransition) {
+          if (forcedTransition.to === 'DOWNED') {
+            currentState = applyDownedCombatReset(currentState)
+          }
           emitted.push({
             id: `phase_${forcedTransition.from}_to_${forcedTransition.to}`,
             tick: state.tick,
@@ -403,11 +441,12 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
     )
     currentState = { ...currentState, raid: downedRaid }
     if (downedTransition) {
+      currentState = applyDownedCombatReset(currentState)
       emitted.push({
         id: `phase_${fromPhase}_to_DOWNED`,
         tick: state.tick,
         timestamp: now,
-        text: downedTransition.eventText,
+        text: downedTransitionText('damage'),
         phase: 'DOWNED',
       })
     }

@@ -3,12 +3,14 @@ import { computed, ref } from 'vue'
 import { useMediaQuery } from '@vueuse/core'
 import { useGameStore } from './stores/gameStore'
 import { zoneName } from './utils/zones'
+import RaidTimer from './components/RaidTimer.vue'
 import CommsLog from './components/CommsLog.vue'
 import RaiderCard from './components/RaiderCard.vue'
 import BackpackPanel from './components/BackpackPanel.vue'
 import HomeStash from './components/HomeStash.vue'
 import HandlerActions from './components/HandlerActions.vue'
 import AwaySummary from './components/AwaySummary.vue'
+import { useRaidTimer } from './composables/useRaidTimer'
 
 const store = useGameStore()
 const isMobile = useMediaQuery('(max-width: 600px)')
@@ -26,9 +28,40 @@ const activeMobileTab = ref<MobileTabId>('comms')
 
 const currentZoneName = computed(() => zoneName(store.raid.zone))
 const currentDangerLevel = computed(() => store.raid.dangerLevel)
-const showZoneStrip = computed(
-  () => store.phase === 'RAIDING' && currentZoneName.value !== null,
-)
+const currentPhaseLabel = computed(() => {
+  switch (store.phase) {
+    case 'HUB':
+      return 'In Hub'
+    case 'DEPLOYING':
+      return 'Deploying'
+    case 'RAIDING':
+      return 'Raiding'
+    case 'EXTRACTING':
+      return 'Extracting'
+    case 'DOWNED':
+      return 'Downed'
+  }
+})
+const phaseTimerLabel = computed(() => {
+  switch (store.phase) {
+    case 'HUB':
+      return 'Next Deploy In'
+    case 'DEPLOYING':
+      return 'Drop In'
+    case 'RAIDING':
+      return 'Zone Nuke In'
+    case 'EXTRACTING':
+      return 'Touchdown In'
+    case 'DOWNED':
+      return 'Respawn In'
+  }
+})
+const { raidTimerText } = useRaidTimer({
+  phase: computed(() => store.phase),
+  phaseTicksRemaining: computed(() => store.raid.phaseTicksRemaining),
+  lastTickAt: computed(() => store.lastTickAt),
+  visiblePhases: ['HUB', 'DEPLOYING', 'RAIDING', 'EXTRACTING', 'DOWNED'],
+})
 </script>
 
 <template>
@@ -38,6 +71,16 @@ const showZoneStrip = computed(
       <span class="app__subtitle">Handler Console — Desperanza Underground</span>
       <button class="app__reset" title="Reset save data" @click="store.resetSave()">↺ Reset</button>
     </header>
+
+    <section class="app__phase-strip" aria-label="Current phase status">
+      <div class="app__phase-summary">
+        <span class="app__phase-name">{{ currentPhaseLabel }}</span>
+        <span v-if="currentZoneName" class="app__phase-meta">
+          {{ currentZoneName }}<span v-if="currentDangerLevel"> · {{ currentDangerLevel }}</span>
+        </span>
+      </div>
+      <RaidTimer :label="phaseTimerLabel" :timer-text="raidTimerText" />
+    </section>
 
     <main v-if="!isMobile" class="app__main">
       <aside class="app__sidebar">
@@ -53,10 +96,6 @@ const showZoneStrip = computed(
     </main>
 
     <main v-else class="app__main-mobile">
-      <div v-if="showZoneStrip" class="app__zone-strip">
-        📍 Zone: <strong>{{ currentZoneName }}</strong><span v-if="currentDangerLevel"> · <span class="app__zone-tod">{{ currentDangerLevel }}</span></span>
-      </div>
-
       <section v-if="activeMobileTab === 'comms'" class="app__mobile-panel app__mobile-panel--fill">
         <CommsLog />
       </section>
@@ -170,24 +209,40 @@ const showZoneStrip = computed(
   gap: 8px;
 }
 
-.app__zone-strip {
+.app__phase-strip {
+  position: sticky;
+  top: 0;
+  z-index: 5;
   flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   font-family: var(--font-mono);
-  font-size: 0.72rem;
-  color: var(--color-muted);
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: 6px;
-  padding: 5px 10px;
+  padding: 8px 10px;
 }
 
-.app__zone-strip strong {
+.app__phase-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.app__phase-name {
+  font-size: 0.78rem;
   color: var(--color-accent);
   font-weight: 700;
 }
 
-.app__zone-tod {
+.app__phase-meta {
+  min-width: 0;
+  font-size: 0.72rem;
   color: var(--color-muted);
+  overflow-wrap: anywhere;
 }
 
 .app__mobile-panel {
@@ -259,6 +314,15 @@ const showZoneStrip = computed(
   .app__subtitle {
     width: 100%;
     flex: none;
+  }
+
+  .app__phase-strip {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .app__phase-strip :deep(.raid-timer) {
+    width: 100%;
   }
 
   .app__mobile-panel--fill :deep(.comms-log),
