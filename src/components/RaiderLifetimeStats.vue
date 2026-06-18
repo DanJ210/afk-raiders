@@ -7,8 +7,7 @@ const props = defineProps<{
   stats: RaiderLifetimeStats
 }>()
 
-const statsRef = computed(() => props.stats)
-const viewModel = useLifetimeStatsRows(statsRef)
+const viewModel = useLifetimeStatsRows(computed(() => props.stats))
 </script>
 
 <template>
