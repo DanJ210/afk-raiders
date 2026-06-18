@@ -11,23 +11,43 @@ import { createRNG } from '../../src/engine/rng'
 import { runGreedCheck } from '../../src/engine/greedCheck'
 import type { RaidState } from '../../src/engine/types'
 
+interface GreedCheckOpts {
+  encouraged: boolean
+  scolded: boolean
+  currentHp?: number
+  maxHp?: number
+  hasHealingItems?: boolean
+}
+
 function makeRaid(overrides: Partial<RaidState> = {}): RaidState {
-  return {
+  const baseRaid: RaidState = {
     zone: 'damp_battlegrounds',
     dangerLevel: 'Low',
+    shield: null,
+    activeShieldRecharge: null,
     backpack: [],
+    hiddenPocket: null,
     healingItems: [],
     backpackValue: 0,
     greedLevel: 0,
     phase: 'RAIDING',
     phaseTicksRemaining: 999,
     forceExtract: false,
+  }
+
+  return {
+    ...baseRaid,
     ...overrides,
+    zone: overrides.zone ?? baseRaid.zone,
+    dangerLevel: overrides.dangerLevel ?? baseRaid.dangerLevel,
+    shield: overrides.shield ?? baseRaid.shield,
+    activeShieldRecharge: overrides.activeShieldRecharge ?? baseRaid.activeShieldRecharge,
+    hiddenPocket: overrides.hiddenPocket ?? baseRaid.hiddenPocket,
   }
 }
 
 /** Run N greed checks with fixed seed, count outcomes */
-function countOutcomes(raid: RaidState, n = 500, opts = { encouraged: false, scolded: false }) {
+function countOutcomes(raid: RaidState, n = 500, opts: GreedCheckOpts = { encouraged: false, scolded: false }) {
   const rng = createRNG(12345)
   let pushDeeper = 0, extract = 0, downed = 0
   for (let i = 0; i < n; i++) {
