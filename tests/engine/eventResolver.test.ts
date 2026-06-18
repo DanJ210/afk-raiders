@@ -10,7 +10,7 @@
 
 import { describe, it, expect } from 'vitest'
 import { createRNG } from '../../src/engine/rng'
-import { applyEffects, consumeHealingItem, consumeShieldRecharger, resolveHealingItemFind, resolveRobotEncounter, resolveShieldRechargerFind } from '../../src/engine/eventResolver'
+import { applyEffects, consumeHealingItem, consumeShieldRecharger, resolveEvent, resolveHealingItemFind, resolveRobotEncounter, resolveShieldRechargerFind } from '../../src/engine/eventResolver'
 import { createInitialState } from '../../src/engine/initialState'
 import type { EventTemplate, HealingItemStack } from '../../src/engine/types'
 
@@ -324,6 +324,18 @@ describe('applyEffects — backpack item behavior', () => {
     expect(high).not.toBeNull()
     expect(medium!.state.raider.hp).toBe(85)
     expect(high!.state.raider.hp).toBe(80)
+  })
+
+  it('falls back to the baseline profile when danger level data is invalid', () => {
+    const state = {
+      ...createInitialState(0),
+      raid: { ...createInitialState(0).raid, dangerLevel: 'Broken' as any },
+    }
+
+    const result = resolveEvent(state, createRNG(1), 0)
+
+    expect(result).not.toBeNull()
+    expect(result!.phase).toBe('HUB')
   })
 
   it('applies encounter-specific damage multipliers only on failed robot encounters', () => {

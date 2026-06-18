@@ -53,7 +53,8 @@ const BASELINE_PROFILE: DangerLevelProfile = {
 }
 
 export function getDangerLevelProfile(dangerLevel: DangerLevel | null | undefined): DangerLevelProfile {
-  return dangerLevel ? DANGER_LEVEL_PROFILES[dangerLevel] : BASELINE_PROFILE
+  if (!dangerLevel) return BASELINE_PROFILE
+  return DANGER_LEVEL_PROFILES[dangerLevel] ?? BASELINE_PROFILE
 }
 
 export function rarityWeight(profile: DangerLevelProfile, rarity: number): number {
