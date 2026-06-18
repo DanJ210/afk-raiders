@@ -42,13 +42,22 @@ export const useSettingsStore = defineStore('settings', () => {
   }
 
   async function installApp() {
-    if (!deferredPrompt.value) return
-    deferredPrompt.value.prompt()
-    const { outcome } = await deferredPrompt.value.userChoice
-    if (outcome === 'accepted') {
-      isAppInstalled.value = true
+    const promptEvent = deferredPrompt.value
+    if (!promptEvent) return
+
+    // Hide the banner while the native prompt is being handled
+    showInstallPrompt.value = false
+
+    try {
+      await promptEvent.prompt()
+      const { outcome } = await promptEvent.userChoice
+      if (outcome === 'accepted') {
+        isAppInstalled.value = true
+      }
+    } finally {
+      // The event can only be used once.
+      deferredPrompt.value = null
     }
-    deferredPrompt.value = null
   }
 
   function dismissInstallPrompt() {

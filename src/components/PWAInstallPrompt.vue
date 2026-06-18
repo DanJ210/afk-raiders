@@ -33,7 +33,7 @@ const shouldShow = computed(() => settings.showInstallPrompt && !settings.isAppI
 <style scoped>
 .pwa-install-prompt {
   position: fixed;
-  bottom: 0;
+  bottom: env(safe-area-inset-bottom);
   left: 0;
   right: 0;
   background: linear-gradient(135deg, #16213e 0%, #0f3460 100%);
@@ -116,11 +116,14 @@ const shouldShow = computed(() => settings.showInstallPrompt && !settings.isAppI
 }
 
 @media (max-width: 600px) {
+  .pwa-install-prompt {
+    bottom: calc(env(safe-area-inset-bottom) + 64px);
+  }
+
   .pwa-install-content {
     flex-direction: column;
     align-items: flex-start;
   }
-
   .pwa-install-actions {
     width: 100%;
   }

@@ -58,13 +58,14 @@ export default defineConfig({
           {
             name: 'Ready Up',
             short_name: 'Deploy',
-            description: 'Start a new raid',
-            url: '/?action=ready-up',
+            description: 'Open AFK Raiders',
+            url: '/',
             icons: [{
               src: '/icon-192.png',
               sizes: '192x192',
               type: 'image/png',
             }],
+          }
           },
         ],
       },
