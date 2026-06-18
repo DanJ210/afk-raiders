@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed, ref, watch, nextTick, onMounted } from 'vue'
 import { useGameStore } from '../stores/gameStore'
-import { TICK_INTERVAL_MS } from '../engine/catchUp'
 import ShieldBar from './ShieldBar.vue'
 import HealthBar from './HealthBar.vue'
+import TickTrack from './TickTrack.vue'
 
 const store = useGameStore()
 const logEl = ref<HTMLElement | null>(null)
@@ -61,13 +61,7 @@ onMounted(scrollToTop)
       <ShieldBar :shield="raidShield" :recharge="raidShieldRecharge" label="SHIELD" compact />
       <HealthBar :current="store.raider.hp" :max="store.raider.maxHp" label="RAIDER HP" />
     </div>
-    <div class="comms-log__tick-track" aria-hidden="true">
-      <div
-        :key="store.lastTickAt"
-        class="comms-log__tick-bar"
-        :style="{ animationDuration: `${TICK_INTERVAL_MS}ms` }"
-      ></div>
-    </div>
+    <TickTrack :last-tick-at="store.lastTickAt" />
     <div
       ref="logEl"
       class="comms-log__feed"
@@ -129,37 +123,6 @@ onMounted(scrollToTop)
   background: var(--color-surface-raised);
   border-bottom: 1px solid var(--color-border);
   font-family: var(--font-mono);
-}
-
-.comms-log__tick-track {
-  height: 3px;
-  background: var(--color-surface-raised);
-  border-bottom: 1px solid var(--color-border);
-  overflow: hidden;
-}
-
-.comms-log__tick-bar {
-  height: 100%;
-  width: 0%;
-  background: var(--color-accent);
-  opacity: 0.7;
-  animation: tick-fill linear forwards;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .comms-log__tick-bar {
-    animation: none;
-    width: 100%;
-  }
-}
-
-@keyframes tick-fill {
-  from {
-    width: 0%;
-  }
-  to {
-    width: 100%;
-  }
 }
 
 .comms-log__feed {
