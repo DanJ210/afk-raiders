@@ -1,6 +1,6 @@
 /**
  * Greed Check unit tests.
- * - Higher backpack value increases push-deeper probability
+ * - Higher greed reduces extraction probability
  * - Pressure reduces push-deeper probability
  * - CALL_EXTRACT forces extraction attempt
  * - forceExtract in raid state forces EXTRACT outcome
@@ -106,7 +106,7 @@ describe('greedCheck', () => {
   })
 
   it('very high greed produces some deaths', () => {
-    const { downed } = countOutcomes(makeRaid({ greedLevel: 100 }), 500)
+    const { downed } = countOutcomes(makeRaid({ greedLevel: 100 }), 3000)
     expect(downed).toBeGreaterThan(0)
   })
 
@@ -115,19 +115,29 @@ describe('greedCheck', () => {
     expect(downed).toBe(0)
   })
 
-  it('push-deeper increments greed level', () => {
+  it('push-deeper keeps greed unchanged (event-driven greed)', () => {
     const rng = createRNG(999)
     const raid = makeRaid({ greedLevel: 0 })
     // Find a push-deeper outcome
     for (let i = 0; i < 100; i++) {
       const result = runGreedCheck(raid, rng, { calmed: false, pressured: false })
       if (result.outcome === 'PUSH_DEEPER') {
-        expect(result.newGreedLevel).toBeGreaterThan(raid.greedLevel)
+        expect(result.newGreedLevel).toBe(raid.greedLevel)
         return
       }
     }
     // If no push-deeper found in 100 rolls, fail
     throw new Error('No PUSH_DEEPER outcome found in 100 rolls')
+  })
+
+  it('keeps extract and downed rates relatively small even at max greed', () => {
+    const n = 5000
+    const outcomes = countOutcomes(makeRaid({ greedLevel: 100 }), n, { calmed: false, pressured: false })
+    const extractRate = outcomes.extract / n
+    const downedRate = outcomes.downed / n
+
+    expect(extractRate).toBeLessThan(0.02)
+    expect(downedRate).toBeLessThan(0.01)
   })
 
   it('low HP without bandages increases extraction rate', () => {
