@@ -26,16 +26,28 @@ const mobileTabs: Array<{ id: MobileTabId; label: string; icon: string }> = [
 
 const activeMobileTab = ref<MobileTabId>('comms')
 const now = useNow({ interval: 1000 })
+const logCount = computed(() => store.log.length)
+const latestLogKey = computed(() => {
+  const latest = store.log.at(-1)
+  if (!latest) return ''
+  return `${latest.tick}-${latest.id}-${latest.timestamp}`
+})
 
 // Badge: track how many log entries the user has seen while on the comms tab.
-const seenLogCount = ref(store.log.length)
-const unseenCommsCount = computed(() =>
-  activeMobileTab.value === 'comms' ? 0 : Math.max(0, store.log.length - seenLogCount.value)
-)
+const unseenCommsCount = ref(0)
 watch(
-  [activeMobileTab, () => store.log.length],
-  ([tab, logLen]) => {
-    if (tab === 'comms') seenLogCount.value = logLen
+  [activeMobileTab, logCount, latestLogKey],
+  ([tab, count, key], [, previousCount, previousKey]) => {
+    if (tab === 'comms') {
+      unseenCommsCount.value = 0
+      return
+    }
+
+    if (!key || key === previousKey) return
+
+    // Log is capped, so once full the length can stay flat while new entries arrive.
+    const delta = Math.max(0, count - (previousCount ?? count))
+    unseenCommsCount.value += delta > 0 ? delta : 1
   },
   { immediate: true },
 )

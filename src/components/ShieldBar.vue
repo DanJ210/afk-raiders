@@ -282,9 +282,5 @@ const shieldRechargeProgress = computed(() => {
   .shield-bar__status {
     display: none;
   }
-
-  .shield-bar__durability {
-    display: none;
-  }
 }
 </style>

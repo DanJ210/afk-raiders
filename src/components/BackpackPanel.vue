@@ -46,62 +46,80 @@ function handleApplyShieldRecharger(itemId: string) {
 </script>
 
 <template>
-  <section class="backpack-panel" aria-label="Backpack">
-    <header class="backpack-panel__header">🎒 BACKPACK</header>
+  <div class="backpack-container">
+    <div class="consumables-container">
+      <ShieldRechargersPanel
+        :items="viewModel.shieldRechargerItems.value"
+        :can-apply="viewModel.canApplyAnyShieldRecharger.value"
+        @apply="handleApplyShieldRecharger"
+      />
 
-    <div class="backpack-panel__value">
-      <span class="backpack-panel__label">Total Value</span>
-      <span class="backpack-panel__amount">{{ raid.backpackValue }}</span>
+      <FieldMedsPanel
+        :items="viewModel.healingItems.value"
+        :can-apply="viewModel.canApplyHealing.value"
+        @apply="store.applyHealingItem"
+      />
     </div>
 
-    <div class="backpack-panel__greed">
-      <span class="backpack-panel__label">Greed Level</span>
-      <div class="greed-bar" :title="`Greed: ${raid.greedLevel}/100`">
-        <div class="greed-bar__fill" :class="viewModel.greedClass.value" :style="{ width: raid.greedLevel + '%' }" />
+    <section class="backpack-panel" aria-label="Backpack">
+      <header class="backpack-panel__header">🎒 BACKPACK</header>
+
+      <div class="backpack-panel__value">
+        <span class="backpack-panel__label">Total Value</span>
+        <span class="backpack-panel__amount">{{ raid.backpackValue }}</span>
       </div>
-      <span class="backpack-panel__greed-label" :class="viewModel.greedClass.value">
-        {{ viewModel.greedLabel(raid.greedLevel) }}
-      </span>
-    </div>
 
-    <ShieldRechargersPanel
-      :items="viewModel.shieldRechargerItems.value"
-      :can-apply="viewModel.canApplyAnyShieldRecharger.value"
-      @apply="handleApplyShieldRecharger"
-    />
+      <div class="backpack-panel__greed">
+        <span class="backpack-panel__label">Greed Level</span>
+        <div class="greed-bar" :title="`Greed: ${raid.greedLevel}/100`">
+          <div class="greed-bar__fill" :class="viewModel.greedClass.value" :style="{ width: raid.greedLevel + '%' }" />
+        </div>
+        <span class="backpack-panel__greed-label" :class="viewModel.greedClass.value">
+          {{ viewModel.greedLabel(raid.greedLevel) }}
+        </span>
+      </div>
 
-    <FieldMedsPanel
-      :items="viewModel.healingItems.value"
-      :can-apply="viewModel.canApplyHealing.value"
-      @apply="store.applyHealingItem"
-    />
+      <HiddenPocketPanel
+        :hidden-pocket="viewModel.hiddenPocket.value"
+        :can-manage="viewModel.canManageHiddenPocket.value"
+        @clear="handleHiddenPocketClear"
+      />
 
-    <HiddenPocketPanel
-      :hidden-pocket="viewModel.hiddenPocket.value"
-      :can-manage="viewModel.canManageHiddenPocket.value"
-      @clear="handleHiddenPocketClear"
-    />
+      <BackpackItemsList
+        :items="viewModel.backpackItems.value"
+        :phase="raid.phase"
+        @item-click="handleItemClick"
+      />
 
-    <BackpackItemsList
-      :items="viewModel.backpackItems.value"
-      :phase="raid.phase"
-      @item-click="handleItemClick"
-    />
-
-    <BackpackItemDialog
-      :item="viewModel.selectedBackpackItem.value"
-      :hidden-pocket="viewModel.hiddenPocket.value"
-      :total-value="viewModel.selectedBackpackItemTotalValue.value"
-      :can-save="viewModel.canSaveToPocket.value"
-      :can-remove="viewModel.canManageHiddenPocket.value"
-      @close="handleDialogClose"
-      @save="handleDialogSave"
-      @remove="handleDialogRemove"
-    />
-  </section>
+      <BackpackItemDialog
+        :item="viewModel.selectedBackpackItem.value"
+        :hidden-pocket="viewModel.hiddenPocket.value"
+        :total-value="viewModel.selectedBackpackItemTotalValue.value"
+        :can-save="viewModel.canSaveToPocket.value"
+        :can-remove="viewModel.canManageHiddenPocket.value"
+        @close="handleDialogClose"
+        @save="handleDialogSave"
+        @remove="handleDialogRemove"
+      />
+    </section>
+  </div>
 </template>
 
 <style scoped>
+.backpack-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.consumables-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
 .backpack-panel {
   background: var(--color-surface);
   border-radius: 8px;
