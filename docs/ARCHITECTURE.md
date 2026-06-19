@@ -93,3 +93,8 @@ Signal regenerates (~1 per 10 min, capped 3–5). Encourage/Scold nudge hidden b
 - Fully client-side; no network calls, no accounts, no telemetry.
 - One raider, one zone, Encourage/Scold/CALL EXTRACT, offline catch-up, PWA installability.
 - localStorage persistence with a schema `version` field for future migrations.
+
+## Planned account-backed save phase
+- Future server-side account/save work is documented in [`docs/SERVER_STORAGE_AND_ACCOUNTS.md`](./SERVER_STORAGE_AND_ACCOUNTS.md).
+- Scope for that phase remains offline-first: local simulation stays authoritative while offline, with remote sync when signed in and online.
+- Backend target for that phase is .NET 8+ with PostgreSQL and revision-based conflict handling.
