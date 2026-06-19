@@ -8,16 +8,18 @@
  *
  * Formula explanation:
  *
- *   baseExtractChance = 2%  (Raider's survival instinct, barely)
- *   greedPenalty      = greedLevel * 0.02%  (each greed point reduces extraction chance by 0.02 percentage points)
- *   extractChance     = clamp(baseExtractChance - greedPenalty, 1%, 80%)
+ *   baseExtractChance = 1.5%  (Raider's survival instinct, barely)
+ *   greedPenalty      = greedLevel * 0.01%  (each greed point reduces extraction chance by 0.01 percentage points)
+ *   extractChance     = clamp(baseExtractChance - greedPenalty, 0.5%, 8%)
  *
  *   deathChance starts at 0, grows with greedLevel:
- *   deathChance = max(0, (greedLevel - 95) * 0.1)%  (deadly near max greed)
+ *   deathChance = max(0, (greedLevel - 90) * 0.03)%  (still relatively small even at max greed)
  *
  *   Calm     decreases extract chance (raider is calm, resilient, pushes longer)
  *   Pressure increases extract chance (raider gets nervous, wants out sooner)
  *   CALL_EXTRACT forces the extraction branch regardless of RNG
+ *
+ * Greed is event-driven: this function never increases greed by itself.
  *
  * Roll order: death check first, then extract check, else push deeper.
  */
@@ -32,23 +34,22 @@ export interface GreedCheckResult {
   newGreedLevel: number
 }
 
-const BASE_EXTRACT_CHANCE = 0.02
-const MIN_EXTRACT_CHANCE = 0.01
-const MAX_EXTRACT_CHANCE = 0.80
-const GREED_EXTRACT_PENALTY = 0.0002    // per greed point (0–100 scale)
-const GREED_DEATH_THRESHOLD = 95
-const GREED_DEATH_RATE = 0.001          // per greed point above threshold
-const CALM_EXTRACT_PENALTY = 0.10  // calm raider stays in longer — extraction less likely
-const PRESSURE_EXTRACT_BONUS = 0.15        // nervous raider wants out sooner — extraction more likely
-const GREED_INCREMENT = 8               // how much greed rises each push-deeper
+const BASE_EXTRACT_CHANCE = 0.015
+const MIN_EXTRACT_CHANCE = 0.005
+const MAX_EXTRACT_CHANCE = 0.08
+const GREED_EXTRACT_PENALTY = 0.0001    // per greed point (0–100 scale)
+const GREED_DEATH_THRESHOLD = 90
+const GREED_DEATH_RATE = 0.0003         // per greed point above threshold
+const CALM_EXTRACT_PENALTY = 0.01  // calm raider stays in longer — extraction less likely
+const PRESSURE_EXTRACT_BONUS = 0.015      // nervous raider wants out sooner — extraction more likely
 
 function lowHpExtractionBonus(currentHp: number | undefined, maxHp: number | undefined, hasHealingItems: boolean): number {
   if (currentHp === undefined || maxHp === undefined || maxHp <= 0 || hasHealingItems) return 0
 
   const hpRatio = currentHp / maxHp
-  if (hpRatio <= 0.25) return 0.20
-  if (hpRatio <= 0.50) return 0.12
-  if (hpRatio <= 0.75) return 0.06
+  if (hpRatio <= 0.25) return 0.08
+  if (hpRatio <= 0.50) return 0.05
+  if (hpRatio <= 0.75) return 0.025
   return 0
 }
 
@@ -95,6 +96,5 @@ export function runGreedCheck(
     return { outcome: 'EXTRACT', newGreedLevel: greedLevel }
   }
 
-  const newGreedLevel = Math.min(100, greedLevel + GREED_INCREMENT)
-  return { outcome: 'PUSH_DEEPER', newGreedLevel }
+  return { outcome: 'PUSH_DEEPER', newGreedLevel: greedLevel }
 }

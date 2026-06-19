@@ -52,6 +52,13 @@ const NEGATIVE_DAMAGE_TEMPLATE: EventTemplate = {
   effects: { damage: -20 },
 }
 
+const GREED_EFFECT_TEMPLATE: EventTemplate = {
+  id: 'test_greed_effect',
+  weight: 1,
+  text: 'You saw loot bait and made a bad choice.',
+  effects: { greedLevel: 5 },
+}
+
 function makeBandage(overrides: Partial<HealingItemStack> = {}): HealingItemStack {
   return {
     itemId: 'bandage_white',
@@ -290,6 +297,26 @@ describe('applyEffects — backpack item behavior', () => {
     expect(result.state.raider.hp).toBe(initial.raider.hp)
     expect(result.state.raid.shield?.charge).toBe(initial.raid.shield?.charge)
     expect(result.state.raid.shield?.durability).toBe(initial.raid.shield?.durability)
+  })
+
+  it('applies effects.greedLevel and clamps to 0-100', () => {
+    const initial = createInitialState(0)
+    const raised = applyEffects(initial, GREED_EFFECT_TEMPLATE, createRNG(1))
+    expect(raised.state.raid.greedLevel).toBe(initial.raid.greedLevel + 5)
+
+    const cappedHigh = applyEffects(
+      { ...initial, raid: { ...initial.raid, greedLevel: 99 } },
+      GREED_EFFECT_TEMPLATE,
+      createRNG(1),
+    )
+    expect(cappedHigh.state.raid.greedLevel).toBe(100)
+
+    const dropped = applyEffects(
+      { ...initial, raid: { ...initial.raid, greedLevel: 1 } },
+      { ...GREED_EFFECT_TEMPLATE, effects: { greedLevel: -10 } },
+      createRNG(1),
+    )
+    expect(dropped.state.raid.greedLevel).toBe(0)
   })
 
   it('still mitigates a full hit when the shield only has 1 charge left', () => {
