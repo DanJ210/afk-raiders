@@ -54,7 +54,7 @@
   "pressure_responses": [
     { "id": "pr_01", "weight": 25, "text": "Handler revokes snack privileges. Raider sulks but considers the exits." },
     { "id": "pr_02", "weight": 25, "text": "Handler: 'GET OUT NOW.' Raider re-evaluates the risk-reward math." },
-    { "id": "pr_03", "weight": 25, "text": "Scolding received. Raider's survival instincts briefly override greed instincts." },
+    { "id": "pr_03", "weight": 25, "text": "Pressure received. Raider's survival instincts briefly override greed instincts." },
     { "id": "pr_04", "weight": 25, "text": "Handler says they're disappointed. Raider begins passive extraction process." }
   ]
 }
