@@ -58,9 +58,17 @@ create table save_snapshot (
   created_at timestamptz not null default now(),
   unique (user_id, revision)
 );
+
+create index idx_raider_save_save_version on raider_save (save_version);
+create index idx_raider_save_last_tick_at on raider_save (last_tick_at);
+create index idx_raider_save_seed on raider_save (seed);
+
+create index idx_save_snapshot_save_version on save_snapshot (save_version);
+create index idx_save_snapshot_last_tick_at on save_snapshot (last_tick_at);
+create index idx_save_snapshot_seed on save_snapshot (seed);
 ```
 
-`raider_save.state` should store current `GameState` shape from `src/engine/types.ts`. Keep `seed`, `lastTickAt`, and `save_version` indexed outside payload for migration/catch-up checks.
+`raider_save.state` should store current `GameState` shape from `src/engine/types.ts`. Keep `seed`, `lastTickAt`, and `save_version` as top-level columns and index them outside payload for migration/catch-up checks.
 
 `save_snapshot` is optional in first cut; if used, cap retention to avoid unbounded growth.
 
@@ -74,6 +82,16 @@ interface RemoteSaveEnvelope {
   seed: number
   lastTickAt: string
   updatedAt: string
+  state: GameState
+  checksum: string
+}
+
+interface SaveUploadRequest {
+  // Server derives userId from auth context, not request body.
+  saveVersion: number
+  revision: number
+  seed: number
+  lastTickAt: string
   state: GameState
   checksum: string
 }
@@ -100,7 +118,7 @@ interface LocalSaveData {
 
 - `GET /api/me` -> authenticated account profile
 - `GET /api/save` -> latest `RemoteSaveEnvelope` (or `404`)
-- `PUT /api/save` -> upload save with expected `revision`
+- `PUT /api/save` -> upload `SaveUploadRequest` with expected `revision` (server derives `userId` and `updatedAt`)
 - `POST /api/save/reset` -> create fresh save for signed-in user
 - `POST /api/auth/logout` (or provider equivalent) -> clear auth session
 
