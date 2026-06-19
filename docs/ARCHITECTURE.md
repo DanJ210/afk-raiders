@@ -21,7 +21,7 @@ The app is configured as a fully installable Progressive Web App targeting web, 
 
 Configuration in [vite.config.ts](../vite.config.ts):
 - Manifest is auto-generated with app name, theme colors, icons (192×192 and 512×512 px in `any` and `maskable` variants), app shortcuts (e.g., "Ready Up" to deploy), and screenshot support for installation UI.
-- Service worker auto-registers with `registerType: 'autoUpdate'` for transparent cache-first + network fallback (no user prompt).
+- Service worker uses `registerType: 'autoUpdate'` with Workbox `generateSW`. All built assets (`**/*.{js,css,html,ico,png,svg,woff2}`) are fully precached (cache-first). SPA navigation requests are served from the cached `index.html` via `navigateFallback`, so the app works entirely offline. No network fallback is needed because AFK Raiders has no backend calls.
 - Scope and start_url ensure the app launches to `/` in standalone mode.
 
 Meta tags in [index.html](../index.html) enable iOS and desktop browser detection. Installation state is tracked in [useSettingsStore](../src/stores/settingsStore.ts) via `beforeinstallprompt` and `appinstalled` events, plus `window.matchMedia('(display-mode: standalone)')` for PWA mode detection.

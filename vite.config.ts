@@ -9,6 +9,12 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'icon-192.png', 'icon-512.png'],
+      workbox: {
+        // Precache all built assets — the full app shell works offline
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        // SPA: serve cached index.html for any navigation request while offline
+        navigateFallback: 'index.html',
+      },
       manifest: {
         name: 'AFK Raiders',
         short_name: 'AFK Raiders',
