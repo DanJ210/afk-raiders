@@ -6,6 +6,7 @@ AFK Raiders is a "zero-player" idle comedy game (inspired by Godville) that paro
 Key docs — read these before making changes:
 - `docs/GAME_DESIGN.md` — game concept, mechanics, comedy content, roadmap
 - `docs/ARCHITECTURE.md` — folder structure, engine design, persistence, testing
+- `docs/SERVER_STORAGE_AND_ACCOUNTS.md` — planned account-backed save sync architecture and backend boundaries
 
 ## Tech stack
 - Vue 3 + TypeScript + Vite, Composition API with `<script setup>`
