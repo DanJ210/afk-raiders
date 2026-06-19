@@ -15,8 +15,8 @@
  *   deathChance starts at 0, grows with greedLevel:
  *   deathChance = max(0, (greedLevel - 95) * 0.1)%  (deadly near max greed)
  *
- *   Encourage nudges +10% toward push-deeper (more bold/greedy)
- *   Scold    nudges +15% toward extraction  (more cautious)
+ *   Calm     decreases extract chance (raider is calm, resilient, pushes longer)
+ *   Pressure increases extract chance (raider gets nervous, wants out sooner)
  *   CALL_EXTRACT forces the extraction branch regardless of RNG
  *
  * Roll order: death check first, then extract check, else push deeper.
@@ -38,8 +38,8 @@ const MAX_EXTRACT_CHANCE = 0.80
 const GREED_EXTRACT_PENALTY = 0.0002    // per greed point (0–100 scale)
 const GREED_DEATH_THRESHOLD = 95
 const GREED_DEATH_RATE = 0.001          // per greed point above threshold
-const ENCOURAGE_EXTRACT_PENALTY = 0.10  // courage boost makes extraction less likely
-const SCOLD_EXTRACT_BONUS = 0.15        // scolding makes caution more likely
+const CALM_EXTRACT_PENALTY = 0.10  // calm raider stays in longer — extraction less likely
+const PRESSURE_EXTRACT_BONUS = 0.15        // nervous raider wants out sooner — extraction more likely
 const GREED_INCREMENT = 8               // how much greed rises each push-deeper
 
 function lowHpExtractionBonus(currentHp: number | undefined, maxHp: number | undefined, hasHealingItems: boolean): number {
@@ -57,8 +57,8 @@ export function runGreedCheck(
   raid: RaidState,
   rng: RNG,
   opts: {
-    encouraged: boolean
-    scolded: boolean
+    calmed: boolean
+    pressured: boolean
     currentHp?: number
     maxHp?: number
     hasHealingItems?: boolean
@@ -72,8 +72,8 @@ export function runGreedCheck(
   }
 
   let extractChance = BASE_EXTRACT_CHANCE - greedLevel * GREED_EXTRACT_PENALTY
-  if (opts.encouraged) extractChance -= ENCOURAGE_EXTRACT_PENALTY
-  if (opts.scolded) extractChance += SCOLD_EXTRACT_BONUS
+  if (opts.calmed) extractChance -= CALM_EXTRACT_PENALTY
+  if (opts.pressured) extractChance += PRESSURE_EXTRACT_BONUS
   extractChance += lowHpExtractionBonus(opts.currentHp, opts.maxHp, opts.hasHealingItems ?? false)
   extractChance = Math.min(MAX_EXTRACT_CHANCE, Math.max(MIN_EXTRACT_CHANCE, extractChance))
 

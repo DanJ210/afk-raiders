@@ -1,10 +1,10 @@
 /**
  * Signal meter — the only player resource in AFK Raiders.
  *
- * Signal regenerates over real time (~1 per 10 minutes), capped at 5.
+ * Signal regenerates over real time (~1 per 10 minutes); the meter cycles 1→5 and overflow banks Signal Amplifiers.
  * Actions and their costs:
- *   ENCOURAGE    → 1 Signal
- *   SCOLD        → 1 Signal
+ *   CALM         → 1 Signal
+ *   PRESSURE     → 1 Signal
  *   READY_UP     → 2 Signal
  *   CALL_EXTRACT → 3 Signal
  */
@@ -15,39 +15,56 @@ export const SIGNAL_CAP = 5
 export const SIGNAL_REGEN_MS = 10 * 60 * 1000  // 10 minutes in ms
 
 export const SIGNAL_COSTS = {
-  ENCOURAGE: 1,
-  SCOLD: 1,
+  CALM: 1,
+  PRESSURE: 1,
   READY_UP: 2,
   CALL_EXTRACT: 3,
 } as const
 
-/** How much greed a scold removes when consumed on the next raid tick. */
-export const SCOLD_GREED_REDUCTION = 12
-export const ENCOURAGE_GREED_INCREASE = 8
+export interface SignalAdvanceResult {
+  signal: SignalState
+  amplifiersGained: number
+}
+
+/** How much greed calm removes when consumed on the next raid tick. */
+export const CALM_GREED_REDUCTION = 12
+export const PRESSURE_GREED_INCREASE = 8
 
 export type SignalAction = keyof typeof SIGNAL_COSTS
 
-/** Compute the current signal level based on elapsed time since last regen tick */
-export function computeSignal(signal: SignalState, now: number): SignalState {
-  // While full, don't bank regen time; keep baseline at "now".
-  if (signal.current >= SIGNAL_CAP) {
-    const normalizedCurrent = Math.min(signal.current, SIGNAL_CAP)
-    if (normalizedCurrent === signal.current && signal.lastRegenAt === now) return signal
-    return { ...signal, current: normalizedCurrent, lastRegenAt: now }
-  }
-
+/** Advance signal regen using the 1-through-5 loop. Overflow banks Signal Amplifiers. */
+export function advanceSignal(signal: SignalState, now: number): SignalAdvanceResult {
   const elapsed = now - signal.lastRegenAt
   const regenTicks = Math.floor(elapsed / SIGNAL_REGEN_MS)
 
-  if (regenTicks <= 0) return signal
+  if (regenTicks <= 0) {
+    return { signal, amplifiersGained: 0 }
+  }
 
-  const newCurrent = Math.min(SIGNAL_CAP, signal.current + regenTicks)
-  // If we reached cap, reset the baseline to now so full-time cannot be banked.
-  const newLastRegenAt = newCurrent >= SIGNAL_CAP
-    ? now
-    : signal.lastRegenAt + regenTicks * SIGNAL_REGEN_MS
+  let current = signal.current
+  let amplifiersGained = 0
 
-  return { ...signal, current: newCurrent, lastRegenAt: newLastRegenAt }
+  for (let i = 0; i < regenTicks; i++) {
+    current += 1
+    if (current > SIGNAL_CAP) {
+      current -= SIGNAL_CAP
+      amplifiersGained += 1
+    }
+  }
+
+  return {
+    signal: {
+      ...signal,
+      current,
+      lastRegenAt: signal.lastRegenAt + regenTicks * SIGNAL_REGEN_MS,
+    },
+    amplifiersGained,
+  }
+}
+
+/** Compute the current signal level based on elapsed time since last regen tick */
+export function computeSignal(signal: SignalState, now: number): SignalState {
+  return advanceSignal(signal, now).signal
 }
 
 /** Attempt to spend signal for an action. Returns updated state, or null if insufficient. */
@@ -57,13 +74,23 @@ export function spendSignal(signal: SignalState, action: SignalAction): SignalSt
   return { ...signal, current: signal.current - cost }
 }
 
-/** Apply the scold action's greed reduction with floor at 0. */
-export function applyScoldGreedReduction(greedLevel: number): number {
-  return Math.max(0, greedLevel - SCOLD_GREED_REDUCTION)
+/** Apply the calm action's greed reduction with floor at 0. */
+export function applyCalmGreedReduction(greedLevel: number): number {
+  return Math.max(0, greedLevel - CALM_GREED_REDUCTION)
 }
 
-export function applyEncourageGreedIncrease(greedLevel: number): number {
-  return Math.min(100, greedLevel + ENCOURAGE_GREED_INCREASE)
+export function applyPressureGreedIncrease(greedLevel: number): number {
+  return Math.min(100, greedLevel + PRESSURE_GREED_INCREASE)
+}
+
+/** Refill signal back to cap after spending a Signal Amplifier. */
+export function refillSignalWithAmplifier(signal: SignalState, now: number): SignalState | null {
+  if (signal.current >= SIGNAL_CAP) return null
+  return {
+    ...signal,
+    current: SIGNAL_CAP,
+    lastRegenAt: now,
+  }
 }
 
 /** Create the initial signal state */

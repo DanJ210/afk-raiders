@@ -63,7 +63,7 @@ export const useGameStore = defineStore('game', () => {
   const raid = computed(() => state.value.raid)
   const signal = computed(() => computeSignal(state.value.signal, Date.now()))
   const hasPendingHandlerAction = computed(
-    () => state.value.pendingEncourage || state.value.pendingScold || state.value.raid.forceExtract,
+    () => state.value.pendingCalm || state.value.pendingPressure || state.value.raid.forceExtract,
   )
   const log = computed(() => state.value.log)
 
@@ -117,8 +117,9 @@ export const useGameStore = defineStore('game', () => {
     newEvents,
     lastTickAt,
     awaySummary: ticker.awaySummary,
-    encourage: actions.encourage,
-    scold: actions.scold,
+    calm: actions.calm,
+    pressure: actions.pressure,
+    applySignalAmplifier: actions.applySignalAmplifier,
     readyUp: actions.readyUp,
     callExtract: actions.callExtract,
     applyHealingItem: actions.applyHealingItem,

@@ -71,7 +71,7 @@ function moodLabel(mood: number): string {
   if (mood >= 3) return '😤 Fired up'
   if (mood >= 1) return '🙂 OK'
   if (mood === 0) return '😐 Neutral'
-  if (mood >= -2) return '😒 Grumpy'
+  if (mood >= -2) return '😒 Crank Face'
   return '😩 Demoralized'
 }
 

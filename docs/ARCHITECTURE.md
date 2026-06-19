@@ -56,7 +56,7 @@ afk-raiders/
 │   │   ├── RaiderCard.vue       # Stats, mood, Rat Rating
 │   │   ├── BackpackPanel.vue
 │   │   ├── HomeStash.vue        # Persistent stash — extracted loot, ×N stacking
-│   │   ├── HandlerActions.vue   # Ready Up / Encourage / Scold / CALL EXTRACT
+│   │   ├── HandlerActions.vue   # Ready Up / Calm / Pressure / CALL EXTRACT
 │   │   └── AwaySummary.vue
 │   └── App.vue
 └── tests/engine/                # Snapshot sims: seed X → identical story
@@ -116,7 +116,7 @@ Shield rechargers are intentionally different from bandages:
 - This is a contract, not a style preference: every processed damage instance must produce a comms damage line, even if the same tick later transitions the raider to DOWNED.
 
 ### 3. Signal as the only real input
-Signal regenerates (~1 per 10 min, capped at 5). Ready Up (2 Signal) starts DEPLOYING from HUB, Encourage/Scold (1 each) nudge hidden behavior weights, and Scold also reduces current greed before the next greed check; CALL EXTRACT (3 Signal) forces an extraction attempt. During RAIDING only one action may be queued at a time, so action buttons lock until the next tick applies the pending action.
+Signal regenerates (~1 per 10 min, capped at 5). Ready Up (2 Signal) starts DEPLOYING from HUB. Calm (1 Signal, internal action ID `CALM`) reduces current greed before the next greed check and lowers extraction chance (calm raider stays in longer). Pressure (1 Signal, internal action ID `PRESSURE`) increases current greed before the next greed check and raises extraction chance (rattled raider wants out sooner). CALL EXTRACT (3 Signal) forces an extraction attempt. During RAIDING only one action may be queued at a time, so action buttons lock until the next tick applies and clears the pending action. On every HUB return, raid pressure state resets (greed 0, force-extract cleared).
 
 ### 4. Lifetime stat collection
 `GameState.stats` tracks long-lived outcomes: extraction/death totals and context (zone + zone/time), robot defeats, and healing item usage.
@@ -153,7 +153,7 @@ If RAIDING time expires without extracting, natural transition goes to DOWNED (z
 
 ## MVP boundaries (phase 1)
 - Fully client-side; no network calls, no accounts, no telemetry.
-- One raider, one zone pool, Ready Up/Encourage/Scold/CALL EXTRACT, offline catch-up, PWA installability.
+- One raider, one zone pool, Ready Up/Calm/Pressure/CALL EXTRACT, offline catch-up, PWA installability.
 - localStorage persistence with a schema `version` field for future migrations.
 
 ## Planned account-backed save phase

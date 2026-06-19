@@ -202,7 +202,7 @@ function handleApplyShieldRecharger(itemId: string) {
 
 @media (max-width: 600px) {
   .backpack-panel {
-    min-height: 0;
+    min-height: 560px;
     max-height: none;
   }
 }

@@ -10,7 +10,7 @@
  *   3. Resolve a flavor event for the current phase.
  *   4. Apply event effects. If HP hits 0, the raider goes DOWNED and returns
  *      home with nothing.
- *   5. Consume pending Handler actions (encourage / scold).
+ *   5. Consume pending Handler actions (calm / pressure).
  *   6. Increment tick counter, append events to log.
  */
 
@@ -18,7 +18,7 @@ import type { BackpackItem, GameState, HiddenPocketItem, LogEvent, TickResult } 
 import type { RNG } from './rng.js'
 import { tickPhase } from './raidStateMachine.js'
 import { runGreedCheck } from './greedCheck.js'
-import { applyScoldGreedReduction } from './signal.js'
+import { advanceSignal, applyCalmGreedReduction, applyPressureGreedIncrease } from './signal.js'
 import { describeShieldDamage, resolveEvent, resolveFlavorKey, applyEffects, resolveHealingItemFind, resolveRobotEncounter, resolveShieldRechargerFind, events as allEvents } from './eventResolver.js'
 import { transferBackpackToHomeStash, HOME_STASH_ITEM_LIMIT } from './homeStash.js'
 import { appendLogEntries } from './log.js'
@@ -144,12 +144,18 @@ function applyHiddenPocketFailureRecovery(
 
 export function processTick(state: GameState, rng: RNG, now: number = Date.now()): TickResult {
   const emitted: LogEvent[] = []
+  const signalAdvance = advanceSignal(state.signal, now)
 
   // ------------------------------------------------------------------
   // 1. Run phase state machine
   // ------------------------------------------------------------------
   const { raid: nextRaid, transition } = tickPhase(state.raid, undefined, rng)
-  let currentState: GameState = { ...state, raid: nextRaid }
+  let currentState: GameState = {
+    ...state,
+    raid: nextRaid,
+    signal: signalAdvance.signal,
+    signalAmplifiers: state.signalAmplifiers + signalAdvance.amplifiersGained,
+  }
 
   if (transition) {
     const transitionText =
@@ -216,19 +222,24 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
       })
     }
 
-    const raidForGreedCheck = currentState.pendingScold
+    const raidForGreedCheck = currentState.pendingCalm
       ? {
           ...currentState.raid,
-          greedLevel: applyScoldGreedReduction(currentState.raid.greedLevel),
+          greedLevel: applyCalmGreedReduction(currentState.raid.greedLevel),
         }
-      : currentState.raid
+      : currentState.pendingPressure
+        ? {
+            ...currentState.raid,
+            greedLevel: applyPressureGreedIncrease(currentState.raid.greedLevel),
+          }
+        : currentState.raid
 
     const greedResult = runGreedCheck(
       raidForGreedCheck,
       rng,
       {
-        encouraged: currentState.pendingEncourage,
-        scolded: currentState.pendingScold,
+        calmed: currentState.pendingCalm,
+        pressured: currentState.pendingPressure,
         currentHp: currentState.raider.hp,
         maxHp: currentState.raider.maxHp,
         hasHealingItems: currentState.raid.healingItems.length > 0,
@@ -404,29 +415,29 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
   // ------------------------------------------------------------------
   // 4. Consume pending Handler actions (emit a feedback line)
   // ------------------------------------------------------------------
-  if (currentState.pendingEncourage) {
+  if (currentState.pendingCalm) {
     emitted.push({
-      id: 'handler_encourage',
+      id: 'handler_calm',
       tick: state.tick,
       timestamp: now,
-      text: resolveFlavorKey('encourage_responses', rng),
+      text: resolveFlavorKey('calm_responses', rng),
       phase: currentState.raid.phase,
     })
   }
-  if (currentState.pendingScold) {
+  if (currentState.pendingPressure) {
     emitted.push({
-      id: 'handler_scold',
+      id: 'handler_pressure',
       tick: state.tick,
       timestamp: now,
-      text: resolveFlavorKey('scold_responses', rng),
+      text: resolveFlavorKey('pressure_responses', rng),
       phase: currentState.raid.phase,
     })
   }
 
   currentState = {
     ...currentState,
-    pendingEncourage: false,
-    pendingScold: false,
+    pendingCalm: false,
+    pendingPressure: false,
     raid: { ...currentState.raid, forceExtract: false },
   }
 
