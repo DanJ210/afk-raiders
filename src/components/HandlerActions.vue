@@ -11,8 +11,7 @@ let timerInterval: ReturnType<typeof setInterval> | null = null
 onMounted(() => {
   timerInterval = setInterval(() => {
     nowMs.value = Date.now()
-  }, 100) // Update 10 times per second for smooth display
-})
+  }, 1000) // Update once per second (timer display is second-granularity)
 onUnmounted(() => {
   if (timerInterval) clearInterval(timerInterval)
 })
