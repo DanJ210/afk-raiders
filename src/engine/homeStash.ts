@@ -48,6 +48,38 @@ export function sellStashOverflow(items: BackpackItem[]): StashSellResult {
   return { homeStash: stash, coinsGained, soldItemCount }
 }
 
+export function sellItemFromHomeStash(
+  items: BackpackItem[],
+  itemId: string,
+  quantity?: number,
+): StashSellResult {
+  const stash = items.map(item => ({ ...item }))
+  const entryIndex = stash.findIndex(item => item.itemId === itemId)
+
+  if (entryIndex < 0) {
+    return { homeStash: stash, coinsGained: 0, soldItemCount: 0 }
+  }
+
+  const entry = stash[entryIndex]
+  const requested = quantity === undefined
+    ? entry.quantity
+    : (Number.isFinite(quantity) ? Math.floor(quantity) : 0)
+  const unitsToSell = Math.max(0, Math.min(requested, entry.quantity))
+  if (unitsToSell === 0) {
+    return { homeStash: stash, coinsGained: 0, soldItemCount: 0 }
+  }
+
+  const coinsGained = unitsToSell * entry.value
+
+  if (unitsToSell === entry.quantity) {
+    stash.splice(entryIndex, 1)
+  } else {
+    stash[entryIndex] = { ...entry, quantity: entry.quantity - unitsToSell }
+  }
+
+  return { homeStash: stash, coinsGained, soldItemCount: unitsToSell }
+}
+
 export interface HomeStashTransferResult {
   homeStash: BackpackItem[]
   transferredItemCount: number

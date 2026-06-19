@@ -1,0 +1,29 @@
+[
+  {
+    "id": "fizz_cell",
+    "weight": 24,
+    "rarity": 1,
+    "name": "Fizz Cell",
+    "value": 12,
+    "chargeAmount": 20,
+    "flavor": "A pocket battery making brave little snapping noises."
+  },
+  {
+    "id": "duct_taped_capacitor",
+    "weight": 18,
+    "rarity": 2,
+    "name": "Duct-Taped Capacitor",
+    "value": 28,
+    "chargeAmount": 35,
+    "flavor": "Technically a repair kit. Spiritually a cry for help."
+  },
+  {
+    "id": "panic_capacitor",
+    "weight": 8,
+    "rarity": 4,
+    "name": "Panic Capacitor",
+    "value": 70,
+    "chargeAmount": 50,
+    "flavor": "Emergency confidence in a handheld brick."
+  }
+]

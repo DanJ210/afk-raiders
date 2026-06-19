@@ -1,14 +1,16 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-import { useMediaQuery } from '@vueuse/core'
+import { computed, ref, watch } from 'vue'
+import { useMediaQuery, useNow } from '@vueuse/core'
 import { useGameStore } from './stores/gameStore'
-import { zoneName } from './utils/zones'
+import { zoneConditionByDangerLevel, zoneName } from './utils/zones'
+import { TICK_INTERVAL_MS } from './engine/catchUp'
 import CommsLog from './components/CommsLog.vue'
 import RaiderCard from './components/RaiderCard.vue'
 import BackpackPanel from './components/BackpackPanel.vue'
 import HomeStash from './components/HomeStash.vue'
 import HandlerActions from './components/HandlerActions.vue'
 import AwaySummary from './components/AwaySummary.vue'
+import PhaseStatusStrip from './components/PhaseStatusStrip.vue'
 
 const store = useGameStore()
 const isMobile = useMediaQuery('(max-width: 600px)')
@@ -17,18 +19,47 @@ type MobileTabId = 'comms' | 'stash' | 'raider' | 'raid'
 
 const mobileTabs: Array<{ id: MobileTabId; label: string; icon: string }> = [
   { id: 'comms', label: 'Comms Feed', icon: '📻' },
-  { id: 'stash', label: 'Home Stash', icon: '🏠' },
-  { id: 'raider', label: 'Raider', icon: '🧍' },
   { id: 'raid', label: 'Current Raid', icon: '🎒' },
+  { id: 'raider', label: 'Raider', icon: '🧍' },
+  { id: 'stash', label: 'Home Stash', icon: '🏠' },
 ]
 
 const activeMobileTab = ref<MobileTabId>('comms')
+const now = useNow({ interval: 1000 })
+
+// Badge: track how many log entries the user has seen while on the comms tab.
+const seenLogCount = ref(store.log.length)
+const unseenCommsCount = computed(() =>
+  activeMobileTab.value === 'comms' ? 0 : Math.max(0, store.log.length - seenLogCount.value)
+)
+watch(
+  [activeMobileTab, () => store.log.length],
+  ([tab, logLen]) => {
+    if (tab === 'comms') seenLogCount.value = logLen
+  },
+  { immediate: true },
+)
 
 const currentZoneName = computed(() => zoneName(store.raid.zone))
-const currentTimeOfDay = computed(() => store.raid.timeOfDay)
-const showZoneStrip = computed(
-  () => store.phase === 'RAIDING' && currentZoneName.value !== null,
-)
+const currentDangerLevel = computed(() => store.raid.dangerLevel)
+const fallbackCondition = computed(() => zoneConditionByDangerLevel(store.raid.dangerLevel))
+const currentConditionName = computed(() => store.raid.zoneCondition?.name ?? fallbackCondition.value?.name ?? null)
+const currentConditionDescription = computed(() => store.raid.zoneCondition?.description ?? fallbackCondition.value?.description ?? null)
+
+const phaseTimerMs = computed(() => {
+  if (store.raid.phaseTicksRemaining <= 0) return 0
+  const phaseRemainingMs = store.raid.phaseTicksRemaining * TICK_INTERVAL_MS
+  const elapsedSinceLastTick = Math.max(0, now.value.getTime() - store.lastTickAt)
+  return Math.max(0, phaseRemainingMs - elapsedSinceLastTick)
+})
+
+const phaseTimeText = computed(() => {
+  if (phaseTimerMs.value <= 0) return null
+  const totalSeconds = Math.floor(phaseTimerMs.value / 1000)
+  const minutes = Math.floor(totalSeconds / 60)
+  const seconds = totalSeconds % 60
+  return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
+})
 </script>
 
 <template>
@@ -41,37 +72,45 @@ const showZoneStrip = computed(
 
     <main v-if="!isMobile" class="app__main">
       <aside class="app__sidebar">
-        <RaiderCard />
-        <BackpackPanel />
-        <HomeStash />
         <HandlerActions />
+        <RaiderCard />
+        <HomeStash />
       </aside>
 
       <div class="app__log">
         <CommsLog />
       </div>
+
+      <aside class="app__raid">
+        <BackpackPanel />
+      </aside>
     </main>
 
     <main v-else class="app__main-mobile">
-      <div v-if="showZoneStrip" class="app__zone-strip">
-        📍 Zone: <strong>{{ currentZoneName }}</strong><span v-if="currentTimeOfDay"> · <span class="app__zone-tod">{{ currentTimeOfDay }}</span></span>
-      </div>
+      <PhaseStatusStrip
+        :phase="store.phase"
+        :zone-name="currentZoneName"
+        :danger-level="currentDangerLevel"
+        :phase-time-text="phaseTimeText"
+        :condition-name="currentConditionName"
+        :condition-description="currentConditionDescription"
+      />
 
       <section v-if="activeMobileTab === 'comms'" class="app__mobile-panel app__mobile-panel--fill">
         <CommsLog />
       </section>
 
-      <section v-if="activeMobileTab === 'stash'" class="app__mobile-panel app__mobile-panel--fill">
-        <HomeStash />
-      </section>
-
-      <section v-if="activeMobileTab === 'raider'" class="app__mobile-panel">
-        <RaiderCard />
-        <HandlerActions />
-      </section>
-
       <section v-if="activeMobileTab === 'raid'" class="app__mobile-panel app__mobile-panel--fill">
         <BackpackPanel />
+      </section>
+
+      <section v-if="activeMobileTab === 'raider'" class="app__mobile-panel app__mobile-panel--fill">
+        <HandlerActions />
+        <RaiderCard />
+      </section>
+
+      <section v-if="activeMobileTab === 'stash'" class="app__mobile-panel app__mobile-panel--fill">
+        <HomeStash />
       </section>
     </main>
 
@@ -84,7 +123,12 @@ const showZoneStrip = computed(
         :class="{ 'app__mobile-nav-btn--active': activeMobileTab === tab.id }"
         :aria-current="activeMobileTab === tab.id ? 'page' : undefined"
         @click="activeMobileTab = tab.id">
-        <span class="app__mobile-nav-icon" aria-hidden="true">{{ tab.icon }}</span>
+        <span class="app__mobile-nav-icon-wrap">
+          <span class="app__mobile-nav-icon" aria-hidden="true">{{ tab.icon }}</span>
+          <span v-if="tab.id === 'comms' && unseenCommsCount > 0" class="app__mobile-nav-badge" :aria-label="`${unseenCommsCount} unread messages`">
+            {{ unseenCommsCount > 99 ? '99+' : unseenCommsCount }}
+          </span>
+        </span>
         <span class="app__mobile-nav-label">{{ tab.label }}</span>
       </button>
     </nav>
@@ -97,7 +141,7 @@ const showZoneStrip = computed(
 .app {
   display: flex;
   flex-direction: column;
-  height: 100dvh;
+  min-height: 100dvh;
   max-width: 900px;
   margin: 0 auto;
   padding: 12px;
@@ -146,7 +190,7 @@ const showZoneStrip = computed(
 .app__main {
   flex: 1;
   display: grid;
-  grid-template-columns: 260px 1fr;
+  grid-template-columns: minmax(240px, 260px) minmax(0, 1fr) minmax(240px, 260px);
   gap: 12px;
   min-height: 0;
 }
@@ -155,11 +199,22 @@ const showZoneStrip = computed(
   display: flex;
   flex-direction: column;
   gap: 10px;
-  overflow-y: auto;
+  overflow: visible;
 }
 
 .app__log {
   min-height: 0;
+}
+
+.app__raid {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.app__raid :deep(.backpack-panel) {
+  height: 100%;
+  max-height: none;
 }
 
 .app__main-mobile {
@@ -170,25 +225,6 @@ const showZoneStrip = computed(
   gap: 8px;
 }
 
-.app__zone-strip {
-  flex: none;
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  color: var(--color-muted);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 6px;
-  padding: 5px 10px;
-}
-
-.app__zone-strip strong {
-  color: var(--color-accent);
-  font-weight: 700;
-}
-
-.app__zone-tod {
-  color: var(--color-muted);
-}
 
 .app__mobile-panel {
   min-height: 0;
@@ -235,8 +271,33 @@ const showZoneStrip = computed(
   border-color: var(--color-border);
 }
 
+.app__mobile-nav-icon-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .app__mobile-nav-icon {
   font-size: 1rem;
+}
+
+.app__mobile-nav-badge {
+  position: absolute;
+  top: -5px;
+  right: -8px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--color-danger);
+  color: var(--color-bg);
+  font-size: 0.58rem;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  line-height: 16px;
+  text-align: center;
+  pointer-events: none;
 }
 
 .app__mobile-nav-label {
@@ -247,6 +308,8 @@ const showZoneStrip = computed(
 
 @media (max-width: 600px) {
   .app {
+    height: 100dvh;
+    min-height: 0;
     padding-bottom: 0;
   }
 
@@ -264,6 +327,13 @@ const showZoneStrip = computed(
   .app__mobile-panel--fill :deep(.backpack-panel) {
     height: 100%;
     max-height: none;
+  }
+
+  .app__mobile-panel--fill :deep(.raider-card),
+  .app__mobile-panel--fill :deep(.handler-actions) {
+    flex: none;
+    height: auto;
+    min-height: 0;
   }
 }
 </style>

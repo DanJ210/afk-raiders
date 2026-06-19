@@ -1,0 +1,392 @@
+{
+    "category": "scrap_components",
+    "items": [
+        {
+            "id": "scrap_metal_basic",
+            "weight": 35,
+            "rarity": 1,
+            "name": "Basic Scrap Metal",
+            "value": 8,
+            "stackSize": 20,
+            "flavor": "Sharp, rusty, and eager to give you tetanus."
+        },
+        {
+            "id": "scrap_metal_bent",
+            "weight": 30,
+            "rarity": 1,
+            "name": "Bent Scrap Metal",
+            "value": 10,
+            "stackSize": 20,
+            "flavor": "Bent at a perfect 37° angle. Useless but stylish."
+        },
+        {
+            "id": "scrap_metal_twisted",
+            "weight": 25,
+            "rarity": 1,
+            "name": "Twisted Scrap Metal",
+            "value": 12,
+            "stackSize": 20,
+            "flavor": "Looks like modern art. Feels like regret."
+        },
+        {
+            "id": "robot_toe",
+            "weight": 20,
+            "rarity": 2,
+            "name": "Robot Toe",
+            "value": 15,
+            "stackSize": 10,
+            "flavor": "You don't want to know how you got this."
+        },
+        {
+            "id": "robot_finger",
+            "weight": 18,
+            "rarity": 2,
+            "name": "Robot Finger",
+            "value": 18,
+            "stackSize": 10,
+            "flavor": "Points accusingly no matter how you hold it."
+        },
+        {
+            "id": "robot_knuckle_joint",
+            "weight": 15,
+            "rarity": 2,
+            "name": "Robot Knuckle Joint",
+            "value": 20,
+            "stackSize": 8,
+            "flavor": "Clicks ominously when shaken."
+        },
+        {
+            "id": "circuit_bundle_messy",
+            "weight": 22,
+            "rarity": 3,
+            "name": "Messy Circuit Bundle",
+            "value": 35,
+            "stackSize": 5,
+            "flavor": "A tangled knot of wires. Might work. Might explode."
+        },
+        {
+            "id": "circuit_board_cracked",
+            "weight": 18,
+            "rarity": 2,
+            "name": "Cracked Circuit Board",
+            "value": 18,
+            "stackSize": 6,
+            "flavor": "Still lights up. Shouldn't."
+        },
+        {
+            "id": "circuit_board_arc",
+            "weight": 12,
+            "rarity": 3,
+            "name": "ARC Circuit Board",
+            "value": 45,
+            "stackSize": 4,
+            "flavor": "Stamped with a warning label: 'Do Not Think About It.'"
+        },
+        {
+            "id": "wiring_bundle_frayed",
+            "weight": 20,
+            "rarity": 2,
+            "name": "Frayed Wiring Bundle",
+            "value": 15,
+            "stackSize": 10,
+            "flavor": "Sparks occasionally. You pretend not to notice."
+        },
+        {
+            "id": "wiring_bundle_clean",
+            "weight": 15,
+            "rarity": 3,
+            "name": "Clean Wiring Bundle",
+            "value": 40,
+            "stackSize": 8,
+            "flavor": "Surprisingly intact. Suspiciously intact."
+        },
+        {
+            "id": "wiring_bundle_legendary",
+            "weight": 3,
+            "rarity": 5,
+            "name": "Wiring Bundle (Golden Weave)",
+            "value": 600,
+            "stackSize": 1,
+            "flavor": "Shimmers with forbidden electricity."
+        },
+        {
+            "id": "broken_servo",
+            "weight": 25,
+            "rarity": 2,
+            "name": "Broken Servo",
+            "value": 20,
+            "stackSize": 6,
+            "flavor": "It tries to move. It fails."
+        },
+        {
+            "id": "servo_high_torque",
+            "weight": 12,
+            "rarity": 3,
+            "name": "High-Torque Servo",
+            "value": 55,
+            "stackSize": 4,
+            "flavor": "Overpowered for its size. Like a chihuahua."
+        },
+        {
+            "id": "servo_ultra_precision",
+            "weight": 4,
+            "rarity": 5,
+            "name": "Ultra-Precision Servo",
+            "value": 900,
+            "stackSize": 1,
+            "flavor": "Moves smoother than your life ever has."
+        },
+        {
+            "id": "gear_small",
+            "weight": 30,
+            "rarity": 1,
+            "name": "Small Gear",
+            "value": 10,
+            "stackSize": 15,
+            "flavor": "Perfectly round. Unlike your luck."
+        },
+        {
+            "id": "gear_medium",
+            "weight": 20,
+            "rarity": 2,
+            "name": "Medium Gear",
+            "value": 18,
+            "stackSize": 10,
+            "flavor": "Feels important. Probably isn't."
+        },
+        {
+            "id": "gear_large",
+            "weight": 12,
+            "rarity": 3,
+            "name": "Large Gear",
+            "value": 40,
+            "stackSize": 6,
+            "flavor": "Heavy enough to be a weapon. Tempting."
+        },
+        {
+            "id": "gear_legendary",
+            "weight": 3,
+            "rarity": 5,
+            "name": "Gear of Eternal Rotation",
+            "value": 700,
+            "stackSize": 1,
+            "flavor": "Spins forever. You stopped questioning it."
+        },
+        {
+            "id": "robot_eye_basic",
+            "weight": 18,
+            "rarity": 2,
+            "name": "Basic Robot Eye",
+            "value": 20,
+            "stackSize": 6,
+            "flavor": "Stares blankly into your soul."
+        },
+        {
+            "id": "robot_eye_thermal",
+            "weight": 10,
+            "rarity": 3,
+            "name": "Thermal Robot Eye",
+            "value": 60,
+            "stackSize": 4,
+            "flavor": "Still detects heat. You feel judged."
+        },
+        {
+            "id": "robot_eye_legendary",
+            "weight": 3,
+            "rarity": 5,
+            "name": "All-Seeing Robot Eye",
+            "value": 1200,
+            "stackSize": 1,
+            "flavor": "It knows things. You wish it didn't."
+        },
+        {
+            "id": "battery_low_charge",
+            "weight": 25,
+            "rarity": 1,
+            "name": "Low-Charge Battery",
+            "value": 12,
+            "stackSize": 10,
+            "flavor": "Barely charged. Like you."
+        },
+        {
+            "id": "battery_half_full",
+            "weight": 18,
+            "rarity": 2,
+            "name": "Half-Full Battery",
+            "value": 20,
+            "stackSize": 8,
+            "flavor": "Optimistically labeled '50%'."
+        },
+        {
+            "id": "battery_high_capacity",
+            "weight": 10,
+            "rarity": 3,
+            "name": "High-Capacity Battery",
+            "value": 55,
+            "stackSize": 5,
+            "flavor": "Hums with potential. And danger."
+        },
+        {
+            "id": "battery_arc_prime",
+            "weight": 3,
+            "rarity": 5,
+            "name": "ARC Prime Battery",
+            "value": 900,
+            "stackSize": 1,
+            "flavor": "Overpowered. Overconfident. Overkill."
+        },
+        {
+            "id": "broken_processor",
+            "weight": 20,
+            "rarity": 2,
+            "name": "Broken Processor",
+            "value": 18,
+            "stackSize": 6,
+            "flavor": "Thinks very slowly. Relatable."
+        },
+        {
+            "id": "processor_dual_core",
+            "weight": 12,
+            "rarity": 3,
+            "name": "Dual-Core Processor",
+            "value": 60,
+            "stackSize": 4,
+            "flavor": "Runs twice as fast as your brain on a good day."
+        },
+        {
+            "id": "processor_quantum",
+            "weight": 3,
+            "rarity": 5,
+            "name": "Quantum Processor",
+            "value": 1500,
+            "stackSize": 1,
+            "flavor": "Simultaneously works and doesn't work."
+        },
+        {
+            "id": "oil_canister_dirty",
+            "weight": 25,
+            "rarity": 1,
+            "name": "Dirty Oil Canister",
+            "value": 10,
+            "stackSize": 8,
+            "flavor": "Smells like robot sweat."
+        },
+        {
+            "id": "oil_canister_clean",
+            "weight": 15,
+            "rarity": 2,
+            "name": "Clean Oil Canister",
+            "value": 20,
+            "stackSize": 6,
+            "flavor": "Surprisingly fresh. Suspiciously fresh."
+        },
+        {
+            "id": "oil_canister_synthetic",
+            "weight": 10,
+            "rarity": 3,
+            "name": "Synthetic Oil Canister",
+            "value": 45,
+            "stackSize": 4,
+            "flavor": "Premium lubrication for premium robots."
+        },
+        {
+            "id": "oil_canister_legendary",
+            "weight": 3,
+            "rarity": 5,
+            "name": "Oil of the Ancients",
+            "value": 800,
+            "stackSize": 1,
+            "flavor": "Glows faintly. Probably haunted."
+        },
+        {
+            "id": "spring_small",
+            "weight": 30,
+            "rarity": 1,
+            "name": "Small Spring",
+            "value": 8,
+            "stackSize": 15,
+            "flavor": "Boing."
+        },
+        {
+            "id": "spring_medium",
+            "weight": 20,
+            "rarity": 2,
+            "name": "Medium Spring",
+            "value": 15,
+            "stackSize": 10,
+            "flavor": "Sproing."
+        },
+        {
+            "id": "spring_large",
+            "weight": 12,
+            "rarity": 3,
+            "name": "Large Spring",
+            "value": 35,
+            "stackSize": 6,
+            "flavor": "SPROING."
+        },
+        {
+            "id": "spring_legendary",
+            "weight": 3,
+            "rarity": 5,
+            "name": "Infinite Spring",
+            "value": 700,
+            "stackSize": 1,
+            "flavor": "Boings forever. You can't stop it."
+        },
+        {
+            "id": "broken_hydraulic_pump",
+            "weight": 18,
+            "rarity": 2,
+            "name": "Broken Hydraulic Pump",
+            "value": 20,
+            "stackSize": 4,
+            "flavor": "Leaking in three places. Impressive."
+        },
+        {
+            "id": "hydraulic_pump_standard",
+            "weight": 12,
+            "rarity": 3,
+            "name": "Standard Hydraulic Pump",
+            "value": 55,
+            "stackSize": 3,
+            "flavor": "Pumps hydraulically. As advertised."
+        },
+        {
+            "id": "hydraulic_pump_legendary",
+            "weight": 3,
+            "rarity": 5,
+            "name": "Hydraulic Pump of Destiny",
+            "value": 1200,
+            "stackSize": 1,
+            "flavor": "You feel stronger just holding it."
+        },
+        {
+            "id": "broken_sensor_array",
+            "weight": 20,
+            "rarity": 2,
+            "name": "Broken Sensor Array",
+            "value": 18,
+            "stackSize": 5,
+            "flavor": "Detects nothing. Except disappointment."
+        },
+        {
+            "id": "sensor_array_standard",
+            "weight": 12,
+            "rarity": 3,
+            "name": "Standard Sensor Array",
+            "value": 50,
+            "stackSize": 4,
+            "flavor": "Detects movement, heat, and your insecurities."
+        },
+        {
+            "id": "sensor_array_legendary",
+            "weight": 3,
+            "rarity": 5,
+            "name": "Omni-Sensor Array",
+            "value": 1500,
+            "stackSize": 1,
+            "flavor": "Sees everything. Even the things you hide."
+        }
+    ]
+}

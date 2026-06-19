@@ -5,6 +5,7 @@
  * Actions and their costs:
  *   ENCOURAGE    → 1 Signal
  *   SCOLD        → 1 Signal
+ *   READY_UP     → 2 Signal
  *   CALL_EXTRACT → 3 Signal
  */
 
@@ -16,22 +17,35 @@ export const SIGNAL_REGEN_MS = 10 * 60 * 1000  // 10 minutes in ms
 export const SIGNAL_COSTS = {
   ENCOURAGE: 1,
   SCOLD: 1,
+  READY_UP: 2,
   CALL_EXTRACT: 3,
 } as const
+
+/** How much greed a scold removes when consumed on the next raid tick. */
+export const SCOLD_GREED_REDUCTION = 12
+export const ENCOURAGE_GREED_INCREASE = 8
 
 export type SignalAction = keyof typeof SIGNAL_COSTS
 
 /** Compute the current signal level based on elapsed time since last regen tick */
 export function computeSignal(signal: SignalState, now: number): SignalState {
+  // While full, don't bank regen time; keep baseline at "now".
+  if (signal.current >= SIGNAL_CAP) {
+    const normalizedCurrent = Math.min(signal.current, SIGNAL_CAP)
+    if (normalizedCurrent === signal.current && signal.lastRegenAt === now) return signal
+    return { ...signal, current: normalizedCurrent, lastRegenAt: now }
+  }
+
   const elapsed = now - signal.lastRegenAt
   const regenTicks = Math.floor(elapsed / SIGNAL_REGEN_MS)
 
   if (regenTicks <= 0) return signal
 
   const newCurrent = Math.min(SIGNAL_CAP, signal.current + regenTicks)
-  const consumed = newCurrent - signal.current
-  // Advance lastRegenAt only by the ticks actually consumed
-  const newLastRegenAt = signal.lastRegenAt + consumed * SIGNAL_REGEN_MS
+  // If we reached cap, reset the baseline to now so full-time cannot be banked.
+  const newLastRegenAt = newCurrent >= SIGNAL_CAP
+    ? now
+    : signal.lastRegenAt + regenTicks * SIGNAL_REGEN_MS
 
   return { ...signal, current: newCurrent, lastRegenAt: newLastRegenAt }
 }
@@ -41,6 +55,15 @@ export function spendSignal(signal: SignalState, action: SignalAction): SignalSt
   const cost = SIGNAL_COSTS[action]
   if (signal.current < cost) return null
   return { ...signal, current: signal.current - cost }
+}
+
+/** Apply the scold action's greed reduction with floor at 0. */
+export function applyScoldGreedReduction(greedLevel: number): number {
+  return Math.max(0, greedLevel - SCOLD_GREED_REDUCTION)
+}
+
+export function applyEncourageGreedIncrease(greedLevel: number): number {
+  return Math.min(100, greedLevel + ENCOURAGE_GREED_INCREASE)
 }
 
 /** Create the initial signal state */

@@ -1,0 +1,356 @@
+{
+    "category": "personal_junk",
+    "items": [
+        {
+            "id": "single_sock",
+            "weight": 25,
+            "rarity": 1,
+            "name": "Single Sock",
+            "value": 5,
+            "stackSize": 10,
+            "flavor": "Its partner is out there somewhere. Probably thriving."
+        },
+        {
+            "id": "single_sock_fancy",
+            "weight": 15,
+            "rarity": 2,
+            "name": "Single Sock (Fancy)",
+            "value": 20,
+            "stackSize": 5,
+            "flavor": "Embroidered with initials you don't recognize."
+        },
+        {
+            "id": "single_sock_legendary",
+            "weight": 3,
+            "rarity": 5,
+            "name": "Single Sock (Mythic Pairmate)",
+            "value": 600,
+            "stackSize": 1,
+            "flavor": "You swear you hear a faint whisper: 'Find them…'"
+        },
+        {
+            "id": "lost_diary_page",
+            "weight": 20,
+            "rarity": 2,
+            "name": "Lost Diary Page",
+            "value": 10,
+            "stackSize": 1,
+            "flavor": "Reads: 'Day 14: Still no snacks.'"
+        },
+        {
+            "id": "lost_diary_page_tearstained",
+            "weight": 12,
+            "rarity": 3,
+            "name": "Tearstained Diary Page",
+            "value": 40,
+            "stackSize": 1,
+            "flavor": "The ink is smudged. The emotions are not."
+        },
+        {
+            "id": "lost_diary_page_final",
+            "weight": 3,
+            "rarity": 5,
+            "name": "Diary Page (Final Entry)",
+            "value": 900,
+            "stackSize": 1,
+            "flavor": "You shouldn't read this. You read it anyway."
+        },
+        {
+            "id": "crumpled_memo",
+            "weight": 20,
+            "rarity": 2,
+            "name": "Crumpled Memo",
+            "value": 10,
+            "stackSize": 5,
+            "flavor": "Subject: MANDATORY FUN. The irony is not lost on you."
+        },
+        {
+            "id": "crumpled_memo_angry",
+            "weight": 12,
+            "rarity": 3,
+            "name": "Crumpled Memo (Angry Reply)",
+            "value": 35,
+            "stackSize": 3,
+            "flavor": "Someone wrote 'NO.' in red marker. Twice."
+        },
+        {
+            "id": "crumpled_memo_legendary",
+            "weight": 3,
+            "rarity": 5,
+            "name": "Crumpled Memo (The Original Email Chain)",
+            "value": 700,
+            "stackSize": 1,
+            "flavor": "Contains 47 replies. All passive-aggressive."
+        },
+        {
+            "id": "old_photograph",
+            "weight": 18,
+            "rarity": 2,
+            "name": "Old Photograph",
+            "value": 15,
+            "stackSize": 1,
+            "flavor": "A smiling family. You hope they're okay."
+        },
+        {
+            "id": "old_photograph_torn",
+            "weight": 12,
+            "rarity": 3,
+            "name": "Old Photograph (Torn)",
+            "value": 40,
+            "stackSize": 1,
+            "flavor": "Half the people are missing. Symbolic."
+        },
+        {
+            "id": "old_photograph_legendary",
+            "weight": 3,
+            "rarity": 5,
+            "name": "Old Photograph (Perfect Condition)",
+            "value": 1200,
+            "stackSize": 1,
+            "flavor": "The colors are impossibly vivid. You feel watched."
+        },
+        {
+            "id": "embarrassing_photo",
+            "weight": 10,
+            "rarity": 4,
+            "name": "Embarrassing Photo",
+            "value": 50,
+            "stackSize": 1,
+            "flavor": "You don't remember taking this. You wish you didn't."
+        },
+        {
+            "id": "embarrassing_photo_signed",
+            "weight": 5,
+            "rarity": 4,
+            "name": "Embarrassing Photo (Signed)",
+            "value": 120,
+            "stackSize": 1,
+            "flavor": "Signed by someone who definitely regrets it."
+        },
+        {
+            "id": "embarrassing_photo_legendary",
+            "weight": 2,
+            "rarity": 5,
+            "name": "Embarrassing Photo (Viral Edition)",
+            "value": 1500,
+            "stackSize": 1,
+            "flavor": "This photo ruined someone's career. Maybe yours."
+        },
+        {
+            "id": "childs_drawing",
+            "weight": 20,
+            "rarity": 2,
+            "name": "Child's Drawing",
+            "value": 12,
+            "stackSize": 3,
+            "flavor": "A stick figure holding hands with a robot. Heartwarming."
+        },
+        {
+            "id": "childs_drawing_crayon",
+            "weight": 12,
+            "rarity": 3,
+            "name": "Child's Drawing (Crayon Masterpiece)",
+            "value": 45,
+            "stackSize": 2,
+            "flavor": "The sun has sunglasses. Peak art."
+        },
+        {
+            "id": "childs_drawing_legendary",
+            "weight": 3,
+            "rarity": 5,
+            "name": "Child's Drawing (Prophetic)",
+            "value": 800,
+            "stackSize": 1,
+            "flavor": "Depicts events that haven't happened yet."
+        },
+        {
+            "id": "love_letter_unsent",
+            "weight": 18,
+            "rarity": 2,
+            "name": "Unsent Love Letter",
+            "value": 20,
+            "stackSize": 1,
+            "flavor": "The handwriting shakes. The feelings don't."
+        },
+        {
+            "id": "love_letter_returned",
+            "weight": 12,
+            "rarity": 3,
+            "name": "Returned Love Letter",
+            "value": 50,
+            "stackSize": 1,
+            "flavor": "Stamped 'NO THANK YOU.' Brutal."
+        },
+        {
+            "id": "love_letter_legendary",
+            "weight": 3,
+            "rarity": 5,
+            "name": "Love Letter (Sealed Forever)",
+            "value": 1000,
+            "stackSize": 1,
+            "flavor": "You feel the emotions radiating through the envelope."
+        },
+        {
+            "id": "old_wallet",
+            "weight": 20,
+            "rarity": 2,
+            "name": "Old Wallet",
+            "value": 15,
+            "stackSize": 1,
+            "flavor": "Contains expired IDs and a coupon for free fries."
+        },
+        {
+            "id": "old_wallet_fancy",
+            "weight": 10,
+            "rarity": 3,
+            "name": "Fancy Wallet",
+            "value": 60,
+            "stackSize": 1,
+            "flavor": "Smells like leather and bad decisions."
+        },
+        {
+            "id": "old_wallet_legendary",
+            "weight": 3,
+            "rarity": 5,
+            "name": "Wallet of Infinite Receipts",
+            "value": 900,
+            "stackSize": 1,
+            "flavor": "Every time you open it, there's a new receipt."
+        },
+        {
+            "id": "keychain_generic",
+            "weight": 20,
+            "rarity": 1,
+            "name": "Generic Keychain",
+            "value": 8,
+            "stackSize": 5,
+            "flavor": "Says 'World's #4 Dad.'"
+        },
+        {
+            "id": "keychain_arc_logo",
+            "weight": 12,
+            "rarity": 3,
+            "name": "ARC Logo Keychain",
+            "value": 45,
+            "stackSize": 3,
+            "flavor": "Corporate pride never dies. Even when everything else does."
+        },
+        {
+            "id": "keychain_legendary",
+            "weight": 3,
+            "rarity": 5,
+            "name": "Keychain of Destiny",
+            "value": 700,
+            "stackSize": 1,
+            "flavor": "You feel strangely important holding it."
+        },
+        {
+            "id": "ticket_stub_concert",
+            "weight": 18,
+            "rarity": 2,
+            "name": "Concert Ticket Stub",
+            "value": 15,
+            "stackSize": 3,
+            "flavor": "The band name is smudged. Probably for the best."
+        },
+        {
+            "id": "ticket_stub_movie",
+            "weight": 15,
+            "rarity": 2,
+            "name": "Movie Ticket Stub",
+            "value": 12,
+            "stackSize": 3,
+            "flavor": "The movie was rated 12%. You understand why."
+        },
+        {
+            "id": "ticket_stub_legendary",
+            "weight": 3,
+            "rarity": 5,
+            "name": "Ticket Stub (Final Show)",
+            "value": 800,
+            "stackSize": 1,
+            "flavor": "The date is impossible. The event never happened."
+        },
+        {
+            "id": "stuffed_animal_small",
+            "weight": 18,
+            "rarity": 2,
+            "name": "Small Stuffed Animal",
+            "value": 20,
+            "stackSize": 1,
+            "flavor": "Missing an eye. Still adorable."
+        },
+        {
+            "id": "stuffed_animal_worn",
+            "weight": 12,
+            "rarity": 3,
+            "name": "Worn Stuffed Animal",
+            "value": 45,
+            "stackSize": 1,
+            "flavor": "Loved too much. Lost too soon."
+        },
+        {
+            "id": "stuffed_animal_legendary",
+            "weight": 3,
+            "rarity": 5,
+            "name": "Stuffed Animal (Sentient?)",
+            "value": 1500,
+            "stackSize": 1,
+            "flavor": "You swear it blinked."
+        },
+        {
+            "id": "broken_phone",
+            "weight": 20,
+            "rarity": 2,
+            "name": "Broken Phone",
+            "value": 18,
+            "stackSize": 1,
+            "flavor": "Screen shattered. Battery swollen. Memories intact."
+        },
+        {
+            "id": "broken_phone_arc",
+            "weight": 12,
+            "rarity": 3,
+            "name": "ARC Employee Phone",
+            "value": 60,
+            "stackSize": 1,
+            "flavor": "Locked behind a password: 'password123'."
+        },
+        {
+            "id": "broken_phone_legendary",
+            "weight": 3,
+            "rarity": 5,
+            "name": "Phone of Infinite Notifications",
+            "value": 1200,
+            "stackSize": 1,
+            "flavor": "It vibrates constantly. No messages appear."
+        },
+        {
+            "id": "old_journal",
+            "weight": 18,
+            "rarity": 2,
+            "name": "Old Journal",
+            "value": 20,
+            "stackSize": 1,
+            "flavor": "Half the pages are blank. The other half are worse."
+        },
+        {
+            "id": "old_journal_arc",
+            "weight": 10,
+            "rarity": 3,
+            "name": "ARC Research Journal",
+            "value": 70,
+            "stackSize": 1,
+            "flavor": "Filled with diagrams and ominous doodles."
+        },
+        {
+            "id": "old_journal_legendary",
+            "weight": 3,
+            "rarity": 5,
+            "name": "Journal of Forbidden Knowledge",
+            "value": 2000,
+            "stackSize": 1,
+            "flavor": "You read one sentence and immediately regret it."
+        }
+    ]
+}

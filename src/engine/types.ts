@@ -13,6 +13,7 @@ export interface EventTemplate extends ContentEntry {
   text: string
   requires?: {
     phase?: Phase | Phase[]
+    dangerLevel?: DangerLevel | DangerLevel[]
     minGreed?: number
     maxGreed?: number
     minHp?: number
@@ -22,6 +23,8 @@ export interface EventTemplate extends ContentEntry {
     backpackValue?: number | string // number or dice string like "+1d6"
     mood?: number
     hp?: number | string // number or dice string like "-15d21"
+    /** General incoming damage that always routes through shield mitigation. */
+    damage?: number | string // number or dice string like "15d6"
     greedLevel?: number
     ratRating?: number
     forcePhase?: Phase
@@ -31,6 +34,8 @@ export interface EventTemplate extends ContentEntry {
     robotDamageMultiplier?: number
     /** Finds a current-raid-only healing item from healing_items.json. */
     healingItem?: boolean
+    /** Finds a manual-use shield recharger and adds it to the backpack. */
+    shieldRecharger?: boolean
   }
 }
 
@@ -44,7 +49,7 @@ export interface LootItem extends ContentEntry {
 
 export interface RobotEntry extends ContentEntry {
   name: string
-  deadliness: 'weak' | 'moderate' | 'nasty' | 'deadly'
+  deadliness: 'weak' | 'moderate' | 'dangerous' | 'nasty' | 'deadly'
   menace: number
   flavorLines: string[]
   successText: string[]
@@ -68,12 +73,23 @@ export interface HealingItem extends ContentEntry {
   rarity: number
 }
 
+export interface ShieldRechargerItem extends ContentEntry {
+  name: string
+  value: number
+  chargeAmount: number
+  /** Number of ticks the recharge animation should take. 0 = instant. */
+  applyTicks?: number
+  flavor?: string
+  /** 1 = Common … 5 = Legendary (higher = rarer). */
+  rarity: number
+}
+
 export interface ZoneEntry extends ContentEntry {
   name: string
   description: string
 }
 
-export type TimeOfDay = 'Day' | 'Night' | 'Stella Red'
+export type DangerLevel = 'Low' | 'Medium' | 'High'
 
 export interface FlavorTable {
   [tableKey: string]: Array<{ id: string; weight: number; text: string }>
@@ -85,6 +101,19 @@ export interface FlavorTable {
 
 export type Phase = 'HUB' | 'DEPLOYING' | 'RAIDING' | 'EXTRACTING' | 'DOWNED'
 
+export type BackpackItemKind = 'loot' | 'shield_recharger'
+
+export interface ShieldState {
+  shieldId: string
+  name: string
+  maxCharge: number
+  charge: number
+  /** Fractional mitigation from 0 to 1 (for example, 0.4 = 40% damage reduction) while active. */
+  mitigation: number
+  /** 0-100; broken shields do not mitigate until a future repair system exists. */
+  durability: number
+}
+
 export interface BackpackItem {
   itemId: string
   name: string
@@ -93,6 +122,10 @@ export interface BackpackItem {
   rarity: number
   flavor?: string
   quantity: number
+  kind?: BackpackItemKind
+  shieldChargeAmount?: number
+  /** Number of ticks the recharge animation should take when this is a shield recharger. */
+  applyTicks?: number
 }
 
 export interface HealingItemStack {
@@ -106,10 +139,40 @@ export interface HealingItemStack {
   quantity: number
 }
 
+export interface HiddenPocketItem {
+  itemId: string
+  name: string
+  value: number
+  rarity: number
+  flavor?: string
+  kind?: BackpackItemKind
+  quantity: number
+}
+
+export interface ActiveShieldRecharge {
+  itemId: string
+  name: string
+  totalCharge: number
+  chargeRemaining: number
+  totalTicks: number
+  ticksRemaining: number
+}
+
+export interface ZoneCondition {
+  id: string
+  name: string
+  description: string
+}
+
 export interface RaidState {
   zone: string | null
-  timeOfDay: TimeOfDay | null
+  dangerLevel: DangerLevel | null
+  zoneCondition?: ZoneCondition | null
+  shield: ShieldState | null
+  activeShieldRecharge: ActiveShieldRecharge | null
   backpack: BackpackItem[]
+  /** Optional manually-selected single item saved on backpack-loss failures. */
+  hiddenPocket: HiddenPocketItem | null
   /** Current-raid-only healing consumables. Lost on death/extraction; never stored at home. */
   healingItems: HealingItemStack[]
   backpackValue: number
@@ -129,6 +192,22 @@ export interface RaiderStats {
   deploysCount: number
   deathCount: number
   extractCount: number
+}
+
+export interface OutcomeContextStats {
+  total: number
+  byZone: Record<string, number>
+  byZoneAndDanger: Record<string, number>
+}
+
+export interface RaiderLifetimeStats {
+  extracts: OutcomeContextStats
+  deaths: OutcomeContextStats
+  robotDefeats: Record<string, number>
+  healingItemsUsed: {
+    total: number
+    byItem: Record<string, number>
+  }
 }
 
 export interface SignalState {
@@ -155,6 +234,7 @@ export interface GameState {
   homeStash: BackpackItem[]
   /** Coin stash from auto-sold overflow loot — value is never deleted, only converted */
   coins: number
+  stats: RaiderLifetimeStats
   // Set by CALL_EXTRACT so the tick driver knows to nudge the next greed check
   pendingEncourage: boolean
   pendingScold: boolean

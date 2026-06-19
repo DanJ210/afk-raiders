@@ -14,16 +14,20 @@
  *   6. Increment tick counter, append events to log.
  */
 
-import type { BackpackItem, GameState, LogEvent, TickResult } from './types.js'
+import type { BackpackItem, GameState, HiddenPocketItem, LogEvent, TickResult } from './types.js'
 import type { RNG } from './rng.js'
 import { tickPhase } from './raidStateMachine.js'
 import { runGreedCheck } from './greedCheck.js'
-import { resolveEvent, resolveFlavorKey, applyEffects, consumeHealingItemIfUseful, resolveHealingItemFind, resolveRobotEncounter, events as allEvents } from './eventResolver.js'
+import { applyScoldGreedReduction } from './signal.js'
+import { describeShieldDamage, resolveEvent, resolveFlavorKey, applyEffects, resolveHealingItemFind, resolveRobotEncounter, resolveShieldRechargerFind, events as allEvents } from './eventResolver.js'
 import { transferBackpackToHomeStash, HOME_STASH_ITEM_LIMIT } from './homeStash.js'
+import { appendLogEntries } from './log.js'
+import { recordOutcome, recordRobotDefeat } from './stats.js'
+import { advanceShieldRecharge } from './shields.js'
 
-/** Maximum log entries to keep in memory (avoids unbounded growth) */
-const MAX_LOG_SIZE = 200
-
+const LOOT_BONUS_HEALING_ITEM_CHANCE = 0.2 // 20% chance to find a healing item on any loot event, independent of normal loot rolls
+const LOOT_BONUS_SHIELD_RECHARGER_CHANCE = 0.15 // 15% chance to find a shield recharger on any loot event, independent of normal loot rolls
+const NEUTRAL_MOOD_THRESHOLD = 0 // Mood above this is positive, below is negative; separate from the "mood" number which can go up to +5 or down to -5
 /**
  * Apply successful-extraction bookkeeping: transfer loot home, heal up, count
  * the win. If the stash overflows the item limit, the lowest-value items are
@@ -33,6 +37,7 @@ const MAX_LOG_SIZE = 200
 function applySuccessfulExtraction(
   state: GameState,
   extractedBackpack: BackpackItem[],
+  context: { zone: string | null; dangerLevel: GameState['raid']['dangerLevel'] },
 ): { state: GameState; coinsGained: number; soldItemCount: number } {
   const transfer = transferBackpackToHomeStash(state.homeStash, extractedBackpack)
   return {
@@ -41,8 +46,10 @@ function applySuccessfulExtraction(
       raider: {
         ...state.raider,
         hp: state.raider.maxHp,
+        mood: NEUTRAL_MOOD_THRESHOLD,
         extractCount: state.raider.extractCount + 1,
       },
+      stats: recordOutcome(state.stats, 'extracts', context.zone, context.dangerLevel),
       homeStash: transfer.homeStash,
       coins: state.coins + transfer.coinsGained,
     },
@@ -62,6 +69,95 @@ function stashSaleEvent(sold: number, coins: number, tick: number, now: number):
   }
 }
 
+function hiddenPocketSavedEvent(itemName: string, tick: number, now: number): LogEvent {
+  return {
+    id: 'hidden_pocket_saved',
+    tick,
+    timestamp: now,
+    text: `Secret Hidden Pocket check: 1x ${itemName} made it home. Very legal, totally declared.`,
+    phase: 'HUB',
+  }
+}
+
+function shieldDamageEvent(
+  text: string,
+  tick: number,
+  now: number,
+  phase: GameState['raid']['phase'],
+  sourceId: string,
+): LogEvent {
+  return {
+    id: `shield_damage_${sourceId}`,
+    tick,
+    timestamp: now,
+    text,
+    phase,
+  }
+}
+
+function totalBackpackQuantity(backpack: BackpackItem[]): number {
+  return backpack.reduce((sum, item) => sum + item.quantity, 0)
+}
+
+export function maybeAwardLootBonusConsumables(
+  state: GameState,
+  rng: RNG,
+  now: number,
+): { state: GameState; events: LogEvent[] } {
+  if (state.raid.phase !== 'RAIDING') {
+    return { state, events: [] }
+  }
+
+  let nextState = state
+  const bonusEvents: LogEvent[] = []
+
+  if (rng.next() < LOOT_BONUS_HEALING_ITEM_CHANCE) {
+    const healingFind = resolveHealingItemFind(nextState, rng, now)
+    nextState = healingFind.state
+    bonusEvents.push(healingFind.event)
+  }
+
+  if (rng.next() < LOOT_BONUS_SHIELD_RECHARGER_CHANCE) {
+    const rechargerFind = resolveShieldRechargerFind(nextState, rng, now)
+    nextState = rechargerFind.state
+    bonusEvents.push(rechargerFind.event)
+  }
+
+  return { state: nextState, events: bonusEvents }
+}
+
+function applyHiddenPocketFailureRecovery(
+  state: GameState,
+  hiddenPocket: HiddenPocketItem | null,
+): { state: GameState; saved: boolean; coinsGained: number; soldItemCount: number; savedItemName: string | null } {
+  if (!hiddenPocket) {
+    return { state, saved: false, coinsGained: 0, soldItemCount: 0, savedItemName: null }
+  }
+
+  const transfer = transferBackpackToHomeStash(state.homeStash, [
+    {
+      itemId: hiddenPocket.itemId,
+      name: hiddenPocket.name,
+      value: hiddenPocket.value,
+      rarity: hiddenPocket.rarity,
+      flavor: hiddenPocket.flavor,
+      quantity: 1,
+    },
+  ])
+
+  return {
+    state: {
+      ...state,
+      homeStash: transfer.homeStash,
+      coins: state.coins + transfer.coinsGained,
+    },
+    saved: true,
+    coinsGained: transfer.coinsGained,
+    soldItemCount: transfer.soldItemCount,
+    savedItemName: hiddenPocket.name,
+  }
+}
+
 export function processTick(state: GameState, rng: RNG, now: number = Date.now()): TickResult {
   const emitted: LogEvent[] = []
 
@@ -72,11 +168,15 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
   let currentState: GameState = { ...state, raid: nextRaid }
 
   if (transition) {
+    const transitionText =
+      transition.from === 'RAIDING' && transition.to === 'DOWNED'
+        ? 'Raid timer hit zero. Zone nuke confirmed. Raider was still in the blast radius.'
+        : transition.eventText
     emitted.push({
       id: `phase_${transition.from}_to_${transition.to}`,
       tick: state.tick,
       timestamp: now,
-      text: transition.eventText,
+      text: transitionText,
       phase: transition.to,
     })
 
@@ -85,16 +185,28 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
     // pre-tick backpack from the input state.
     if (transition.to === 'HUB') {
       if (transition.from === 'DOWNED') {
+        const recovery = applyHiddenPocketFailureRecovery(currentState, state.raid.hiddenPocket)
         currentState = {
-          ...currentState,
+          ...recovery.state,
           raider: {
-            ...currentState.raider,
-            hp: currentState.raider.maxHp,
-            deathCount: currentState.raider.deathCount + 1,
+            ...recovery.state.raider,
+            hp: recovery.state.raider.maxHp,
+            mood: 0,
+            deathCount: recovery.state.raider.deathCount + 1,
           },
+          stats: recordOutcome(currentState.stats, 'deaths', state.raid.zone, state.raid.dangerLevel),
+        }
+        if (recovery.saved && recovery.savedItemName) {
+          emitted.push(hiddenPocketSavedEvent(recovery.savedItemName, state.tick, now))
+        }
+        if (recovery.soldItemCount > 0) {
+          emitted.push(stashSaleEvent(recovery.soldItemCount, recovery.coinsGained, state.tick, now))
         }
       } else if (transition.from === 'EXTRACTING') {
-        const extraction = applySuccessfulExtraction(currentState, state.raid.backpack)
+        const extraction = applySuccessfulExtraction(currentState, state.raid.backpack, {
+          zone: state.raid.zone,
+          dangerLevel: state.raid.dangerLevel,
+        })
         currentState = extraction.state
         if (extraction.soldItemCount > 0) {
           emitted.push(stashSaleEvent(extraction.soldItemCount, extraction.coinsGained, state.tick, now))
@@ -107,8 +219,28 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
   // 2. Greed Check (RAIDING phase only, once per tick)
   // ------------------------------------------------------------------
   if (currentState.raid.phase === 'RAIDING') {
+    const shieldRechargeBefore = currentState.raid.activeShieldRecharge
+    const shieldRechargeResult = advanceShieldRecharge(currentState.raid)
+    currentState = { ...currentState, raid: shieldRechargeResult.raid }
+    if (shieldRechargeResult.completed && shieldRechargeResult.chargeApplied > 0) {
+      emitted.push({
+        id: `shield_recharger_${shieldRechargeBefore?.itemId ?? 'completed'}_completed`,
+        tick: state.tick,
+        timestamp: now,
+        text: `Shield recharge completed. ${shieldRechargeBefore?.name ?? 'The shield recharger'} finished its ${shieldRechargeBefore?.totalTicks ?? 5}-tick crawl.`,
+        phase: currentState.raid.phase,
+      })
+    }
+
+    const raidForGreedCheck = currentState.pendingScold
+      ? {
+          ...currentState.raid,
+          greedLevel: applyScoldGreedReduction(currentState.raid.greedLevel),
+        }
+      : currentState.raid
+
     const greedResult = runGreedCheck(
-      currentState.raid,
+      raidForGreedCheck,
       rng,
       {
         encouraged: currentState.pendingEncourage,
@@ -122,7 +254,7 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
     // Update greed level
     currentState = {
       ...currentState,
-      raid: { ...currentState.raid, greedLevel: greedResult.newGreedLevel },
+      raid: { ...raidForGreedCheck, greedLevel: greedResult.newGreedLevel },
     }
 
     if (greedResult.outcome === 'EXTRACT') {
@@ -153,7 +285,7 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
         })
       }
     }
-    // PUSH_DEEPER → stay in RAIDING (greedLevel already updated above)
+    // PUSH_DEEPER -> stay in RAIDING (greedLevel already updated above)
   }
 
   // ------------------------------------------------------------------
@@ -164,12 +296,39 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
     const template = allEvents.find(e => e.id === event.id)
     emitted.push(event)
     if (template) {
-      currentState = applyEffects(currentState, template, rng)
+      const backpackQuantityBeforeEffects = totalBackpackQuantity(currentState.raid.backpack)
+      const effectResult = applyEffects(currentState, template, rng)
+      currentState = effectResult.state
+
+      if (effectResult.shieldDamage?.mitigated && effectResult.shieldDamage.shieldChargeLost > 0) {
+        emitted.push(
+          shieldDamageEvent(
+            describeShieldDamage(effectResult.shieldDamage),
+            state.tick,
+            now,
+            currentState.raid.phase,
+            template.id,
+          ),
+        )
+      }
+
+      const backpackQuantityAfterEffects = totalBackpackQuantity(currentState.raid.backpack)
+      if (backpackQuantityAfterEffects > backpackQuantityBeforeEffects) {
+        const bonusLoot = maybeAwardLootBonusConsumables(currentState, rng, now)
+        currentState = bonusLoot.state
+        emitted.push(...bonusLoot.events)
+      }
 
       if (template.effects?.healingItem) {
         const healingFind = resolveHealingItemFind(currentState, rng, now)
         currentState = healingFind.state
         emitted.push(healingFind.event)
+      }
+
+      if (template.effects?.shieldRecharger) {
+        const rechargerFind = resolveShieldRechargerFind(currentState, rng, now)
+        currentState = rechargerFind.state
+        emitted.push(rechargerFind.event)
       }
 
       const robotId = template.effects?.robotEncounter
@@ -179,6 +338,12 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
         })
         if (robotResult) {
           currentState = robotResult.state
+          if (robotResult.event.id.endsWith('_defeated')) {
+            currentState = {
+              ...currentState,
+              stats: recordRobotDefeat(currentState.stats, robotId),
+            }
+          }
           emitted.push(robotResult.event)
         }
       }
@@ -191,6 +356,8 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
       if (forcedPhase && forcedPhase !== currentState.raid.phase) {
         const fromPhase = currentState.raid.phase
         const backpackBeforeForce = currentState.raid.backpack
+        const zoneBeforeForce = currentState.raid.zone
+        const dangerLevelBeforeForce = currentState.raid.dangerLevel
         const { raid: forcedRaid, transition: forcedTransition } = tickPhase(
           currentState.raid,
           forcedPhase,
@@ -206,7 +373,10 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
           })
         }
         if (fromPhase === 'EXTRACTING' && forcedPhase === 'HUB') {
-          const extraction = applySuccessfulExtraction(currentState, backpackBeforeForce)
+          const extraction = applySuccessfulExtraction(currentState, backpackBeforeForce, {
+            zone: zoneBeforeForce,
+            dangerLevel: dangerLevelBeforeForce,
+          })
           currentState = extraction.state
           if (extraction.soldItemCount > 0) {
             emitted.push(stashSaleEvent(extraction.soldItemCount, extraction.coinsGained, state.tick, now))
@@ -214,12 +384,6 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
         }
       }
     }
-  }
-
-  const healingUse = consumeHealingItemIfUseful(currentState, now)
-  if (healingUse) {
-    currentState = healingUse.state
-    emitted.push(healingUse.event)
   }
 
   // ------------------------------------------------------------------
@@ -281,7 +445,7 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
   // ------------------------------------------------------------------
   // 5. Finalize: increment tick, append events to log
   // ------------------------------------------------------------------
-  const newLog = [...currentState.log, ...emitted].slice(-MAX_LOG_SIZE)
+  const newLog = appendLogEntries(currentState.log, emitted)
 
   return {
     state: {

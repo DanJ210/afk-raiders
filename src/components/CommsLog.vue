@@ -1,23 +1,30 @@
 <script setup lang="ts">
-import { computed, ref, watch, nextTick, onMounted } from 'vue'
+import { computed } from 'vue'
+import { useDocumentVisibility } from '@vueuse/core'
 import { useGameStore } from '../stores/gameStore'
 import { TICK_INTERVAL_MS } from '../engine/catchUp'
+import { usePinnedTopLog } from '../composables/usePinnedTopLog'
+import ShieldBar from './ShieldBar.vue'
+import HealthBar from './HealthBar.vue'
 
 const store = useGameStore()
-const logEl = ref<HTMLElement | null>(null)
-const userScrolledDown = ref(false)
 const entries = computed(() => [...store.log].reverse())
-const hpPercent = computed(() => {
-  const maxHp = store.raider.maxHp
-  if (maxHp <= 0) return 0
-  const percent = (store.raider.hp / maxHp) * 100
-  return Math.max(0, Math.min(100, Math.round(percent)))
+const logEntryCount = computed(() => store.log.length)
+const raidShield = computed(() => store.raid.shield)
+const raidShieldRecharge = computed(() => store.raid.activeShieldRecharge)
+
+// Re-key the tick bar on every new tick AND whenever the tab becomes visible,
+// so the animation restarts from the correct elapsed offset instead of 0.
+const visibility = useDocumentVisibility()
+const tickBarKey = computed(() => `${store.lastTickAt}-${visibility.value}`)
+const tickAnimationDelay = computed(() => {
+  // Include visibility as a dependency so delay recomputes when the tab becomes visible.
+  void visibility.value
+  const elapsed = Math.min(TICK_INTERVAL_MS, Math.max(0, Date.now() - store.lastTickAt))
+  return `-${elapsed}ms`
 })
-const hpClass = computed(() => {
-  if (hpPercent.value > 60) return 'comms-log__hp-fill--good'
-  if (hpPercent.value > 30) return 'comms-log__hp-fill--warning'
-  return 'comms-log__hp-fill--danger'
-})
+
+const pinnedTopLog = usePinnedTopLog(logEntryCount)
 
 function formatTime(ts: number): string {
   const d = new Date(ts)
@@ -37,25 +44,6 @@ function phaseBadge(phase: string): string {
   return badges[phase] ?? '📡'
 }
 
-function onScroll() {
-  if (!logEl.value) return
-  const { scrollTop } = logEl.value
-  // Consider "scrolled away" if more than 60px from the top
-  userScrolledDown.value = scrollTop > 60
-}
-
-async function scrollToTop() {
-  if (userScrolledDown.value) return
-  await nextTick()
-  if (logEl.value) {
-    logEl.value.scrollTop = 0
-  }
-}
-
-// Auto-scroll when new events arrive
-watch(() => store.log.length, scrollToTop)
-
-onMounted(scrollToTop)
 </script>
 
 <template>
@@ -65,33 +53,23 @@ onMounted(scrollToTop)
       <span class="comms-log__title">COMMS FEED</span>
     </header>
     <div class="comms-log__mobile-health">
-      <span class="comms-log__hp-label">RAIDER HP</span>
-      <div
-        class="comms-log__hp-bar"
-        role="meter"
-        aria-label="Raider health"
-        :aria-valuemin="0"
-        :aria-valuemax="store.raider.maxHp"
-        :aria-valuenow="store.raider.hp"
-      >
-        <div class="comms-log__hp-fill" :class="hpClass" :style="{ width: hpPercent + '%' }" />
-      </div>
-      <span class="comms-log__hp-value">{{ store.raider.hp }}/{{ store.raider.maxHp }}</span>
+      <ShieldBar :shield="raidShield" :recharge="raidShieldRecharge" label="SHIELD" compact />
+      <HealthBar :current="store.raider.hp" :max="store.raider.maxHp" label="RAIDER HP" />
     </div>
     <div class="comms-log__tick-track" aria-hidden="true">
       <div
-        :key="store.lastTickAt"
+        :key="tickBarKey"
         class="comms-log__tick-bar"
-        :style="{ animationDuration: `${TICK_INTERVAL_MS}ms` }"
+        :style="{ animationDuration: `${TICK_INTERVAL_MS}ms`, animationDelay: tickAnimationDelay }"
       ></div>
     </div>
     <div
-      ref="logEl"
+      :ref="pinnedTopLog.logEl"
       class="comms-log__feed"
       role="log"
       aria-live="polite"
       aria-relevant="additions"
-      @scroll="onScroll"
+      @scroll="pinnedTopLog.onScroll"
     >
       <p v-if="store.log.length === 0" class="comms-log__empty">
         Waiting for transmission…
@@ -107,7 +85,7 @@ onMounted(scrollToTop)
         <span class="comms-log__text">{{ entry.text }}</span>
       </div>
     </div>
-    <div v-if="userScrolledDown" class="comms-log__scroll-hint" @click="userScrolledDown = false; scrollToTop()">
+    <div v-if="pinnedTopLog.userScrolledDown.value" class="comms-log__scroll-hint" @click="pinnedTopLog.jumpToTop()">
       ▲ New messages at top
     </div>
   </section>
@@ -139,43 +117,14 @@ onMounted(scrollToTop)
 
 .comms-log__mobile-health {
   display: none;
-  align-items: center;
-  gap: 8px;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
   padding: 8px 14px;
   background: var(--color-surface-raised);
   border-bottom: 1px solid var(--color-border);
   font-family: var(--font-mono);
 }
-
-.comms-log__hp-label,
-.comms-log__hp-value {
-  flex-shrink: 0;
-  color: var(--color-muted);
-  font-size: 0.68rem;
-  letter-spacing: 0.06em;
-}
-
-.comms-log__hp-value {
-  color: var(--color-text);
-}
-
-.comms-log__hp-bar {
-  flex: 1;
-  height: 8px;
-  background: var(--color-bg);
-  border: 1px solid var(--color-border);
-  border-radius: 999px;
-  overflow: hidden;
-}
-
-.comms-log__hp-fill {
-  height: 100%;
-  transition: width 0.2s ease;
-}
-
-.comms-log__hp-fill--good { background: var(--color-success); }
-.comms-log__hp-fill--warning { background: var(--color-warning); }
-.comms-log__hp-fill--danger { background: var(--color-danger); }
 
 .comms-log__tick-track {
   height: 3px;
@@ -196,10 +145,6 @@ onMounted(scrollToTop)
   .comms-log__tick-bar {
     animation: none;
     width: 100%;
-  }
-
-  .comms-log__hp-fill {
-    transition: none;
   }
 }
 

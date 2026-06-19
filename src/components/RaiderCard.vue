@@ -1,12 +1,37 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { useNow } from '@vueuse/core'
 import { useGameStore } from '../stores/gameStore'
-import { zoneName } from '../utils/zones'
+import { zoneConditionByDangerLevel, zoneDescription, zoneName } from '../utils/zones'
+import { TICK_INTERVAL_MS } from '../engine/catchUp'
+import ShieldBar from './ShieldBar.vue'
+import MoodResilienceBadge from './MoodResilienceBadge.vue'
+import RaiderLifetimeStats from './RaiderLifetimeStats.vue'
 
 const store = useGameStore()
 const raider = computed(() => store.raider)
+const lifetimeStats = computed(() => store.state.stats)
+const activeShieldRecharge = computed(() => store.raid.activeShieldRecharge)
 const currentZoneName = computed(() => zoneName(store.raid.zone))
+const currentZoneDescription = computed(() => zoneDescription(store.raid.zone))
 const showCurrentZone = computed(() => store.phase === 'RAIDING' && currentZoneName.value !== null)
+const currentCondition = computed(() =>
+  store.raid.zoneCondition ?? zoneConditionByDangerLevel(store.raid.dangerLevel),
+)
+const showCurrentCondition = computed(() => store.phase === 'RAIDING' && currentCondition.value !== null)
+const showRaidTimer = computed(() => store.phase === 'RAIDING')
+const now = useNow({ interval: 1000 })
+const phaseTimerMs = computed(() => {
+  if (store.raid.phaseTicksRemaining <= 0) return 0
+  const phaseRemainingMs = store.raid.phaseTicksRemaining * TICK_INTERVAL_MS
+  const elapsedSinceLastTick = Math.max(0, now.value.getTime() - store.lastTickAt)
+  return Math.max(0, phaseRemainingMs - elapsedSinceLastTick)
+})
+const raidTimerMs = computed(() => (store.phase === 'RAIDING' ? phaseTimerMs.value : 0))
+const phaseTimerText = computed(() => formatDuration(phaseTimerMs.value))
+const raidTimerText = computed(() => formatDuration(raidTimerMs.value))
+const showPhaseTimer = computed(() => phaseTimerMs.value > 0)
+const raidShield = computed(() => store.raid.shield)
 
 const editingName = ref(false)
 const nameInput = ref('')
@@ -50,6 +75,13 @@ function moodLabel(mood: number): string {
   return '😩 Demoralized'
 }
 
+function formatDuration(ms: number): string {
+  const totalSeconds = Math.max(0, Math.floor(ms / 1000))
+  const minutes = Math.floor(totalSeconds / 60)
+  const seconds = totalSeconds % 60
+  return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
+}
+
 const hpPercent = computed(() =>
   Math.round((raider.value.hp / raider.value.maxHp) * 100),
 )
@@ -79,11 +111,13 @@ const hpClass = computed(() => {
         />
       </span>
       <span class="raider-card__phase-badge" :data-phase="store.phase">
-        {{ phaseLabel(store.phase) }}
+        {{ phaseLabel(store.phase) }}<span v-if="showPhaseTimer"> · {{ phaseTimerText }}</span>
       </span>
     </div>
 
     <div class="raider-card__stats">
+      <ShieldBar :shield="raidShield" :recharge="activeShieldRecharge" />
+
       <div class="raider-card__stat">
         <div
           class="hp-bar"
@@ -99,12 +133,53 @@ const hpClass = computed(() => {
 
       <div class="raider-card__stat">
         <span class="raider-card__stat-label">Mood</span>
-        <span class="raider-card__stat-value">{{ moodLabel(raider.mood) }}</span>
+        <span class="raider-card__stat-value raider-card__mood-value">
+          {{ moodLabel(raider.mood) }}
+          <MoodResilienceBadge :mood="raider.mood" />
+        </span>
       </div>
 
       <div v-if="showCurrentZone" class="raider-card__stat">
         <span class="raider-card__stat-label">Zone</span>
-        <span class="raider-card__stat-value">{{ currentZoneName }}</span>
+        <button
+          v-if="currentZoneName"
+          type="button"
+          class="raider-card__stat-value raider-card__zone-value"
+          :aria-label="currentZoneDescription ? `Zone ${currentZoneName}. ${currentZoneDescription}` : `Zone ${currentZoneName}`"
+        >
+          {{ currentZoneName }}
+          <span
+            v-if="currentZoneDescription"
+            class="raider-card__zone-tooltip"
+            role="tooltip"
+          >
+            {{ currentZoneDescription }}
+          </span>
+        </button>
+      </div>
+
+      <div v-if="showCurrentCondition" class="raider-card__stat">
+        <span class="raider-card__stat-label">Condition</span>
+        <button
+          v-if="currentCondition"
+          type="button"
+          class="raider-card__stat-value raider-card__condition-value"
+          :aria-label="currentCondition.description ? `Condition ${currentCondition.name}. ${currentCondition.description}` : `Condition ${currentCondition.name}`"
+        >
+          {{ currentCondition.name }}
+          <span
+            v-if="currentCondition.description"
+            class="raider-card__condition-tooltip"
+            role="tooltip"
+          >
+            {{ currentCondition.description }}
+          </span>
+        </button>
+      </div>
+
+      <div v-if="showRaidTimer" class="raider-card__stat">
+        <span class="raider-card__stat-label">Zone Nuke In</span>
+        <span class="raider-card__stat-value raider-card__timer">{{ raidTimerText }}</span>
       </div>
 
       <div class="raider-card__stat">
@@ -118,16 +193,22 @@ const hpClass = computed(() => {
         <span title="Extractions">✅ {{ raider.extractCount }}</span>
         <span title="Deaths">💀 {{ raider.deathCount }}</span>
       </div>
+
+      <RaiderLifetimeStats :stats="lifetimeStats" />
     </div>
   </section>
 </template>
 
 <style scoped>
 .raider-card {
+  display: flex;
+  flex-direction: column;
   background: var(--color-surface);
   border-radius: 8px;
   border: 1px solid var(--color-border);
   padding: 14px;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .raider-card__header {
@@ -197,12 +278,16 @@ const hpClass = computed(() => {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 2px;
 }
 
 .raider-card__stat {
   display: flex;
   align-items: center;
   gap: 8px;
+  min-width: 0;
 }
 
 .raider-card__stat-label {
@@ -216,14 +301,99 @@ const hpClass = computed(() => {
   font-size: 0.85rem;
   color: var(--color-text);
   font-family: var(--font-mono);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.raider-card__mood-value {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0;
 }
 
 .raider-card__rat-rating {
   color: var(--color-accent-secondary);
 }
 
+.raider-card__condition-value {
+  position: relative;
+  border: none;
+  background: transparent;
+  padding: 0;
+  text-decoration: underline dotted;
+  text-underline-offset: 2px;
+  cursor: help;
+  text-align: left;
+}
+
+.raider-card__zone-value {
+  position: relative;
+  border: none;
+  background: transparent;
+  padding: 0;
+  text-decoration: underline dotted;
+  text-underline-offset: 2px;
+  cursor: help;
+  text-align: left;
+}
+
+.raider-card__condition-tooltip {
+  position: absolute;
+  left: 0;
+  top: calc(100% + 6px);
+  z-index: 2;
+  display: none;
+  width: min(42ch, 70vw);
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-raised);
+  color: var(--color-text);
+  font-size: 0.75rem;
+  line-height: 1.35;
+  text-decoration: none;
+  letter-spacing: normal;
+  box-shadow: 0 6px 14px color-mix(in srgb, var(--color-bg) 70%, transparent);
+}
+
+
+.raider-card__zone-tooltip {
+  position: absolute;
+  left: 0;
+  top: calc(100% + 6px);
+  z-index: 2;
+  display: none;
+  width: min(42ch, 70vw);
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-raised);
+  color: var(--color-text);
+  font-size: 0.75rem;
+  line-height: 1.35;
+  text-decoration: none;
+  letter-spacing: normal;
+  box-shadow: 0 6px 14px color-mix(in srgb, var(--color-bg) 70%, transparent);
+}
+
+.raider-card__zone-value:hover .raider-card__zone-tooltip,
+.raider-card__zone-value:focus-visible .raider-card__zone-tooltip,
+.raider-card__zone-value:active .raider-card__zone-tooltip,
+.raider-card__condition-value:hover .raider-card__condition-tooltip,
+.raider-card__condition-value:focus-visible .raider-card__condition-tooltip,
+.raider-card__condition-value:active .raider-card__condition-tooltip {
+  display: block;
+}
+
+.raider-card__timer {
+  color: var(--color-danger);
+  font-weight: 700;
+}
+
 .hp-bar {
   flex: 1;
+  min-width: 0;
   height: 8px;
   background: var(--color-surface-raised);
   border-radius: 4px;
@@ -247,6 +417,48 @@ const hpClass = computed(() => {
   font-family: var(--font-mono);
   color: var(--color-muted);
   margin-top: 4px;
+}
+
+@media (max-width: 600px) {
+  .raider-card {
+    padding: 10px;
+  }
+
+  .raider-card__header {
+    flex-wrap: wrap;
+    row-gap: 6px;
+  }
+
+  .raider-card__name {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .raider-card__phase-badge {
+    margin-left: auto;
+  }
+
+  .raider-card__stat {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .raider-card__stat-label {
+    min-width: 0;
+  }
+
+  .raider-card__counters {
+    flex-wrap: wrap;
+    gap: 8px 12px;
+  }
+
+  .raider-card__history {
+    margin-top: 10px;
+  }
+
+  .raider-card__history-grid {
+    gap: 10px;
+  }
 }
 
 @keyframes pulse {

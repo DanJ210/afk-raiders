@@ -1,0 +1,110 @@
+[
+  {
+    "id": "damp_battlegrounds",
+    "weight": 100,
+    "name": "Damp Battlegrounds",
+    "description": "A flooded industrial zone that smells of rust, regret, and someone else's energy drink. Ankle-deep water everywhere. Optimal for ambushes, sub-optimal for dry socks."
+  },
+  {
+    "id": "buried_city",
+    "weight": 80,
+    "name": "Buried City (Now 30% more buried)",
+    "description": "An ancient city partially submerged in sand and rubble. The remnants of buildings poke out like tombstones, and the air is thick with the scent of history and decay."
+  },
+  {
+    "id": "stella",
+    "weight": 60,
+    "name": "Stella Camping Festival",
+    "description": "You'll get camped. You get eighth-partied. Felicia will crash out. It's just Stella."
+  },
+  {
+    "id": "the_sprawl",
+    "weight": 90,
+    "name": "The Sprawl",
+    "description": "A massive suburban wasteland where every house looks the same and every mailbox contains disappointment. Perfect for losing enemies and your sense of direction."
+  },
+  {
+    "id": "old_growth",
+    "weight": 70,
+    "name": "Old Growth Forest",
+    "description": "Towering trees, thick fog, and the constant feeling that something is watching you. It is. Probably a robot. Possibly a raccoon."
+  },
+  {
+    "id": "the_crater",
+    "weight": 50,
+    "name": "The Crater",
+    "description": "A massive impact site filled with twisted metal, scorched earth, and the faint smell of cosmic disappointment."
+  },
+  {
+    "id": "sunken_outskirts",
+    "weight": 65,
+    "name": "Sunken Outskirts",
+    "description": "Half-drowned suburbs where rooftops poke out like desperate hands. Great loot, terrible footing."
+  },
+  {
+    "id": "the_ridge",
+    "weight": 55,
+    "name": "The Ridge",
+    "description": "A rocky highland with excellent sightlines and terrible cover. Bring a scope. And a will."
+  },
+  {
+    "id": "forgotten_fields",
+    "weight": 75,
+    "name": "Forgotten Fields",
+    "description": "Wide-open farmland reclaimed by nature and robots. Wheat, weeds, and wandering death machines."
+  },
+  {
+    "id": "the_hollows",
+    "weight": 45,
+    "name": "The Hollows",
+    "description": "A network of caves and collapsed tunnels. Echoes carry far. So do screams."
+  },
+  {
+    "id": "arc_ruins",
+    "weight": 40,
+    "name": "ARC Ruins",
+    "description": "Crumbling ARC facilities filled with malfunctioning tech, broken dreams, and questionable safety protocols."
+  },
+  {
+    "id": "the_shattered_bridge",
+    "weight": 30,
+    "name": "Shattered Bridge",
+    "description": "A once-grand overpass now split in half. Great vantage point, terrible life choices."
+  },
+  {
+    "id": "the_sunken_freeway",
+    "weight": 50,
+    "name": "Sunken Freeway",
+    "description": "A highway swallowed by mud and water. Cars frozen in time. Some still have snacks."
+  },
+  {
+    "id": "the_breach",
+    "weight": 35,
+    "name": "The Breach",
+    "description": "A massive tear in the landscape caused by something ARC refuses to comment on. The silence is louder than the robots."
+  },
+  {
+    "id": "the_overlook",
+    "weight": 55,
+    "name": "The Overlook",
+    "description": "A scenic cliffside view of the apocalypse. Great for snipers and existential crises."
+  },
+  {
+    "id": "the_sinkhole",
+    "weight": 25,
+    "name": "The Sinkhole",
+    "description": "A deep, ominous pit that swallows everything—including your hopes of an easy extraction."
+  },
+  {
+    "id": "the_derelict_docks",
+    "weight": 60,
+    "name": "Derelict Docks",
+    "description": "Rotting piers, abandoned cargo, and water that definitely violates health codes."
+  },
+  {
+    "id": "the_ashen_quarry",
+    "weight": 45,
+    "name": "Ashen Quarry",
+    "description": "A grey, dusty excavation site where visibility is low and robot aggression is high."
+  }
+]

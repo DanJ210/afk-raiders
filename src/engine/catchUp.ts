@@ -12,8 +12,8 @@ import type { RNG } from './rng.js'
 import { getTotalItemValue } from './homeStash.js'
 import { processTick } from './tick.js'
 
-/** Real-time ms between ticks in the live app (15 seconds) */
-export const TICK_INTERVAL_MS = 15_000
+/** Real-time ms between ticks in the live app (30 seconds) */
+export const TICK_INTERVAL_MS = 30_000
 
 /** 8 hours' worth of ticks at TICK_INTERVAL_MS cadence */
 export const MAX_CATCHUP_TICKS = Math.floor((8 * 60 * 60 * 1000) / TICK_INTERVAL_MS)

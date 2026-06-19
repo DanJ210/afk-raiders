@@ -1,0 +1,383 @@
+{
+    "category": "consumables",
+    "items": [
+        {
+            "id": "protein_cube_sad",
+            "weight": 25,
+            "rarity": 1,
+            "name": "Protein Cube (Sad Flavor)",
+            "value": 8,
+            "stackSize": 10,
+            "flavor": "Tastes like someone gave up halfway through making it."
+        },
+        {
+            "id": "protein_cube_spicy_regret",
+            "weight": 20,
+            "rarity": 2,
+            "name": "Protein Cube (Spicy Regret)",
+            "value": 20,
+            "stackSize": 8,
+            "flavor": "The spice level is labeled 'Why?'."
+        },
+        {
+            "id": "protein_cube_uncertainty",
+            "weight": 18,
+            "rarity": 2,
+            "name": "Protein Cube (Uncertainty Flavor)",
+            "value": 18,
+            "stackSize": 10,
+            "flavor": "You can't tell if it's sweet or savory. It can't either."
+        },
+        {
+            "id": "protein_cube_double_chocolate",
+            "weight": 12,
+            "rarity": 3,
+            "name": "Protein Cube (Double Chocolate)",
+            "value": 40,
+            "stackSize": 6,
+            "flavor": "Surprisingly good. Suspiciously good."
+        },
+        {
+            "id": "protein_cube_legendary",
+            "weight": 3,
+            "rarity": 5,
+            "name": "Protein Cube (Forbidden Recipe)",
+            "value": 600,
+            "stackSize": 1,
+            "flavor": "The label says: 'Do not consume. Ever.'"
+        },
+        {
+            "id": "arc_energy_drink_redacted",
+            "weight": 15,
+            "rarity": 3,
+            "name": "ARC Energy Drink (REDACTED)",
+            "value": 35,
+            "stackSize": 4,
+            "flavor": "Label says: 'Do not consume before, during, or after combat.'"
+        },
+        {
+            "id": "arc_energy_drink_blue",
+            "weight": 20,
+            "rarity": 2,
+            "name": "ARC Energy Drink (Blue Lightning)",
+            "value": 22,
+            "stackSize": 6,
+            "flavor": "Tastes like electricity and poor decisions."
+        },
+        {
+            "id": "arc_energy_drink_green",
+            "weight": 18,
+            "rarity": 2,
+            "name": "ARC Energy Drink (Green Mystery)",
+            "value": 20,
+            "stackSize": 6,
+            "flavor": "The flavor is listed as 'Yes.'"
+        },
+        {
+            "id": "arc_energy_drink_ultra",
+            "weight": 8,
+            "rarity": 4,
+            "name": "ARC Energy Drink (Ultra Overdrive)",
+            "value": 90,
+            "stackSize": 3,
+            "flavor": "You can feel your teeth vibrating."
+        },
+        {
+            "id": "arc_energy_drink_black_label",
+            "weight": 3,
+            "rarity": 5,
+            "name": "ARC Energy Drink (Black Label)",
+            "value": 500,
+            "stackSize": 1,
+            "flavor": "The can is warm. The drink is cold. Physics is confused."
+        },
+        {
+            "id": "mre_spicy_regret",
+            "weight": 20,
+            "rarity": 2,
+            "name": "MRE: Spicy Regret",
+            "value": 20,
+            "stackSize": 3,
+            "flavor": "The spice level is labeled 'Why?'."
+        },
+        {
+            "id": "mre_cold_pasta",
+            "weight": 22,
+            "rarity": 1,
+            "name": "MRE: Cold Pasta",
+            "value": 12,
+            "stackSize": 4,
+            "flavor": "The noodles crunch. They shouldn't."
+        },
+        {
+            "id": "mre_mystery_meat",
+            "weight": 18,
+            "rarity": 2,
+            "name": "MRE: Mystery Meat",
+            "value": 18,
+            "stackSize": 3,
+            "flavor": "The meat is a mystery. The mystery is also a mystery."
+        },
+        {
+            "id": "mre_deluxe",
+            "weight": 10,
+            "rarity": 3,
+            "name": "MRE: Deluxe Edition",
+            "value": 45,
+            "stackSize": 2,
+            "flavor": "Comes with a tiny dessert that tastes like hope."
+        },
+        {
+            "id": "mre_legendary",
+            "weight": 3,
+            "rarity": 5,
+            "name": "MRE: Chef's Final Masterpiece",
+            "value": 700,
+            "stackSize": 1,
+            "flavor": "The packaging whispers your name."
+        },
+        {
+            "id": "half_eaten_energy_bar",
+            "weight": 25,
+            "rarity": 1,
+            "name": "Half-Eaten Energy Bar",
+            "value": 5,
+            "stackSize": 6,
+            "flavor": "Someone took one bite and gave up."
+        },
+        {
+            "id": "energy_bar_crunchy",
+            "weight": 20,
+            "rarity": 2,
+            "name": "Energy Bar (Crunchy)",
+            "value": 15,
+            "stackSize": 6,
+            "flavor": "Crunchy in a way that suggests structural failure."
+        },
+        {
+            "id": "energy_bar_soggy",
+            "weight": 18,
+            "rarity": 2,
+            "name": "Energy Bar (Soggy)",
+            "value": 12,
+            "stackSize": 6,
+            "flavor": "You don't want to know why it's wet."
+        },
+        {
+            "id": "energy_bar_ultra",
+            "weight": 10,
+            "rarity": 4,
+            "name": "Energy Bar (Ultra Boost)",
+            "value": 80,
+            "stackSize": 3,
+            "flavor": "You feel faster just looking at it."
+        },
+        {
+            "id": "energy_bar_cosmic",
+            "weight": 3,
+            "rarity": 5,
+            "name": "Energy Bar (Cosmic Flavor)",
+            "value": 400,
+            "stackSize": 1,
+            "flavor": "Tastes like starlight and existential dread."
+        },
+        {
+            "id": "water_bottle_classic",
+            "weight": 30,
+            "rarity": 1,
+            "name": "Water Bottle (Classic)",
+            "value": 10,
+            "stackSize": 5,
+            "flavor": "Warm. Slightly dented. Perfect."
+        },
+        {
+            "id": "water_bottle_fancy",
+            "weight": 15,
+            "rarity": 2,
+            "name": "Water Bottle (Fancy Label)",
+            "value": 25,
+            "stackSize": 5,
+            "flavor": "Has a logo for a company that no longer exists. Collectible."
+        },
+        {
+            "id": "water_bottle_emotional",
+            "weight": 10,
+            "rarity": 3,
+            "name": "Water Bottle (Half-Empty)",
+            "value": 35,
+            "stackSize": 4,
+            "flavor": "Someone left this. It's not your fault they're gone."
+        },
+        {
+            "id": "water_bottle_tactical",
+            "weight": 8,
+            "rarity": 4,
+            "name": "Tactical Water Bottle",
+            "value": 40,
+            "stackSize": 3,
+            "flavor": "Has MOLLE attachments. Holds water AND attitude."
+        },
+        {
+            "id": "water_bottle_mystery",
+            "weight": 5,
+            "rarity": 5,
+            "name": "Water Bottle (Mystery Fluid)",
+            "value": 90,
+            "stackSize": 1,
+            "flavor": "Moon water. Made with real cranks."
+        },
+        {
+            "id": "expired_medpatch",
+            "weight": 20,
+            "rarity": 2,
+            "name": "Expired Medpatch",
+            "value": 12,
+            "stackSize": 3,
+            "flavor": "Technically still adhesive. Questionably still medicine."
+        },
+        {
+            "id": "medpatch_standard",
+            "weight": 18,
+            "rarity": 2,
+            "name": "Medpatch (Standard)",
+            "value": 20,
+            "stackSize": 3,
+            "flavor": "Fixes wounds and your attitude."
+        },
+        {
+            "id": "medpatch_advanced",
+            "weight": 10,
+            "rarity": 3,
+            "name": "Medpatch (Advanced)",
+            "value": 50,
+            "stackSize": 2,
+            "flavor": "Heals faster than you can complain."
+        },
+        {
+            "id": "medpatch_nanite",
+            "weight": 4,
+            "rarity": 5,
+            "name": "Medpatch (Nanite Swarm)",
+            "value": 800,
+            "stackSize": 1,
+            "flavor": "The nanites whisper encouragement."
+        },
+        {
+            "id": "canned_beans_classic",
+            "weight": 25,
+            "rarity": 1,
+            "name": "Canned Beans (Classic)",
+            "value": 10,
+            "stackSize": 6,
+            "flavor": "A timeless classic. Smells like survival."
+        },
+        {
+            "id": "canned_beans_spicy",
+            "weight": 18,
+            "rarity": 2,
+            "name": "Canned Beans (Spicy)",
+            "value": 18,
+            "stackSize": 6,
+            "flavor": "The spice hits immediately. And then again later."
+        },
+        {
+            "id": "canned_beans_deluxe",
+            "weight": 10,
+            "rarity": 3,
+            "name": "Canned Beans (Deluxe)",
+            "value": 40,
+            "stackSize": 4,
+            "flavor": "Comes with a tiny garnish. Fancy."
+        },
+        {
+            "id": "canned_beans_legendary",
+            "weight": 3,
+            "rarity": 5,
+            "name": "Canned Beans (Mythic Batch)",
+            "value": 500,
+            "stackSize": 1,
+            "flavor": "The can glows faintly. You feel chosen."
+        },
+        {
+            "id": "mysterious_tea_bag",
+            "weight": 15,
+            "rarity": 2,
+            "name": "Mysterious Tea Bag",
+            "value": 18,
+            "stackSize": 10,
+            "flavor": "Smells like herbs and unresolved trauma."
+        },
+        {
+            "id": "tea_bag_arc_special",
+            "weight": 10,
+            "rarity": 3,
+            "name": "ARC Special Tea Bag",
+            "value": 40,
+            "stackSize": 8,
+            "flavor": "The tag reads: 'Steep for 3 minutes. Fear for 5.'"
+        },
+        {
+            "id": "tea_bag_legendary",
+            "weight": 3,
+            "rarity": 5,
+            "name": "Tea Bag (Eternal Brew)",
+            "value": 600,
+            "stackSize": 1,
+            "flavor": "The tea tastes like memories you never had."
+        },
+        {
+            "id": "snack_mix_generic",
+            "weight": 20,
+            "rarity": 1,
+            "name": "Generic Snack Mix",
+            "value": 10,
+            "stackSize": 8,
+            "flavor": "Mostly crumbs. Still edible."
+        },
+        {
+            "id": "snack_mix_deluxe",
+            "weight": 12,
+            "rarity": 3,
+            "name": "Deluxe Snack Mix",
+            "value": 35,
+            "stackSize": 6,
+            "flavor": "Contains at least one whole pretzel."
+        },
+        {
+            "id": "snack_mix_chaos",
+            "weight": 4,
+            "rarity": 5,
+            "name": "Snack Mix (Chaos Blend)",
+            "value": 450,
+            "stackSize": 1,
+            "flavor": "Every handful is a new experience. Not all good."
+        },
+        {
+            "id": "mystery_soup_can",
+            "weight": 18,
+            "rarity": 2,
+            "name": "Mystery Soup Can",
+            "value": 20,
+            "stackSize": 4,
+            "flavor": "The label is blank. The soup is not."
+        },
+        {
+            "id": "soup_can_deluxe",
+            "weight": 10,
+            "rarity": 3,
+            "name": "Deluxe Soup Can",
+            "value": 45,
+            "stackSize": 3,
+            "flavor": "Contains vegetables that look almost fresh."
+        },
+        {
+            "id": "soup_can_legendary",
+            "weight": 3,
+            "rarity": 5,
+            "name": "Soup Can (Prime Batch)",
+            "value": 700,
+            "stackSize": 1,
+            "flavor": "The broth whispers ancient secrets."
+        }
+    ]
+}

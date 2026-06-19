@@ -1,7 +1,7 @@
 [
   {
     "id": "bandage_white",
-    "weight": 40,
+    "weight": 80,
     "rarity": 1,
     "name": "White Bandage",
     "healAmount": 5,
@@ -10,7 +10,7 @@
   },
   {
     "id": "bandage_green",
-    "weight": 25,
+    "weight": 40,
     "rarity": 2,
     "name": "Green Bandage",
     "healAmount": 10,
@@ -19,7 +19,7 @@
   },
   {
     "id": "bandage_blue",
-    "weight": 12,
+    "weight": 25,
     "rarity": 3,
     "name": "Blue Bandage",
     "healAmount": 25,
@@ -28,7 +28,7 @@
   },
   {
     "id": "bandage_purple",
-    "weight": 4,
+    "weight": 10,
     "rarity": 4,
     "name": "Purple Bandage",
     "healAmount": 50,

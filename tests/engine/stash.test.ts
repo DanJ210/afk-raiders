@@ -13,7 +13,7 @@ import { processTick } from '../../src/engine/tick'
 import { createInitialState } from '../../src/engine/initialState'
 import { tickPhase } from '../../src/engine/raidStateMachine'
 import { events } from '../../src/engine/eventResolver'
-import { HOME_STASH_ITEM_LIMIT, sellStashOverflow } from '../../src/engine/homeStash'
+import { HOME_STASH_ITEM_LIMIT, sellItemFromHomeStash, sellStashOverflow } from '../../src/engine/homeStash'
 import type { BackpackItem, GameState, Phase } from '../../src/engine/types'
 
 const FIXED_SEED = 42
@@ -144,6 +144,29 @@ describe('home stash', () => {
     expect(result.homeStash.find(i => i.itemId === 'junk')).toBeUndefined()
     expect(result.homeStash.find(i => i.itemId === 'mid')).toBeUndefined()
     expect(result.homeStash.find(i => i.itemId === 'gold')?.quantity).toBe(HOME_STASH_ITEM_LIMIT)
+  })
+
+  it('sells a selected stash item into coins without affecting other entries', () => {
+    const stash = [
+      makeItem({ itemId: 'water', name: 'Water Bottle', value: 2, quantity: 3 }),
+      makeItem({ itemId: 'artifact', name: 'Artifact', value: 15, rarity: 4, quantity: 2 }),
+    ]
+
+    const result = sellItemFromHomeStash(stash, 'artifact')
+
+    expect(result.coinsGained).toBe(30)
+    expect(result.soldItemCount).toBe(2)
+    expect(result.homeStash).toEqual([makeItem({ itemId: 'water', name: 'Water Bottle', value: 2, quantity: 3 })])
+  })
+
+  it('supports selling part of a stash stack', () => {
+    const stash = [makeItem({ itemId: 'water', name: 'Water Bottle', value: 2, quantity: 4 })]
+
+    const result = sellItemFromHomeStash(stash, 'water', 1)
+
+    expect(result.coinsGained).toBe(2)
+    expect(result.soldItemCount).toBe(1)
+    expect(result.homeStash).toEqual([makeItem({ itemId: 'water', name: 'Water Bottle', value: 2, quantity: 3 })])
   })
 })
 

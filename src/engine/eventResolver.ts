@@ -11,17 +11,29 @@
  *   6. {count}         → random plausible water-bottle count (for flavor)
  */
 
-import type { EventTemplate, GameState, HealingItem, HealingItemStack, LogEvent, LootItem, Phase, RobotEntry, RobotLootItem } from './types.js'
+import type { EventTemplate, GameState, HealingItem, HealingItemStack, LogEvent, LootItem, Phase, RobotEntry, RobotLootItem, ShieldRechargerItem } from './types.js'
 import type { RNG } from './rng.js'
 import hubEventsData from '../content/hub_events.json'
 import deploymentEventsData from '../content/deployment_events.json'
 import raidingEventsData from '../content/raiding_events.json'
 import extractionEventsData from '../content/extraction_events.json'
 import downedEventsData from '../content/downed_events.json'
-import lootData from '../content/loot.json'
 import healingItemsData from '../content/healing_items.json'
+import shieldRechargersData from '../content/shield_rechargers.json'
 import robotsData from '../content/robots.json'
 import flavorData from '../content/flavor.json'
+import apparelAccessoriesData from '../content/loot-tables/apparel_accessories.json'
+import arcTechData from '../content/loot-tables/arc_tech.json'
+import consumablesData from '../content/loot-tables/consumables.json'
+import cursedWeirdItemsData from '../content/loot-tables/cursed_weird_items.json'
+import lootData from '../content/loot-tables/loot.json'
+import personalJunkData from '../content/loot-tables/personal_junk.json'
+import scrapComponentsData from '../content/loot-tables/scrap_components.json'
+import valuablesData from '../content/loot-tables/valuables.json'
+import weaponsPartsData from '../content/loot-tables/weapons_parts.json'
+import { getDangerLevelProfile, rarityWeight, type DangerLevelProfile } from './dangerLevelProfiles.js'
+import { clampMood, getMoodRarityWeightMultiplier, getMoodResilienceMultiplier } from './mood.js'
+import { applyShieldedDamage, startShieldRecharge, type ShieldDamageResult } from './shields.js'
 
 // One events file per phase: HUB, DEPLOYING, RAIDING, EXTRACTING, DOWNED
 const events = [
@@ -31,8 +43,19 @@ const events = [
   ...extractionEventsData,
   ...downedEventsData,
 ] as EventTemplate[]
-const baseLoot = lootData as LootItem[]
+const baseLoot = [
+  ...(apparelAccessoriesData as { items: LootItem[] }).items,
+  ...(arcTechData as { items: LootItem[] }).items,
+  ...(consumablesData as { items: LootItem[] }).items,
+  ...(cursedWeirdItemsData as { items: LootItem[] }).items,
+  ...(lootData as { items: LootItem[] }).items,
+  ...(personalJunkData as { items: LootItem[] }).items,
+  ...(scrapComponentsData as { items: LootItem[] }).items,
+  ...(valuablesData as { items: LootItem[] }).items,
+  ...(weaponsPartsData as { items: LootItem[] }).items,
+]
 const healingItems = healingItemsData as HealingItem[]
+const shieldRechargers = shieldRechargersData as ShieldRechargerItem[]
 const robots = robotsData as RobotEntry[]
 const flavor = flavorData as Record<string, Array<{ id: string; weight: number; text: string }>>
 
@@ -63,18 +86,28 @@ function mergeLootTables(items: LootItem[]): LootItem[] {
 const robotLoot = robots.flatMap(robot => robot.lootTable.map(item => toLootItem(item, robot)))
 const loot = mergeLootTables([...baseLoot, ...robotLoot])
 
-export const HEALING_USE_HP_RATIO = 0.75
 const ROBOT_LETHAL_HP_RATIO = 0.5
 const ROBOT_NONLETHAL_MIN_HP_RATIO = 0.25
-const ROBOT_DAMAGE_PER_MENACE = 3
+const ROBOT_DAMAGE_PER_MENACE = 2
 const LETHAL_ROBOT_DEADLINESS: ReadonlySet<RobotEntry['deadliness']> = new Set(['nasty', 'deadly'])
-
-function clampMood(mood: number): number {
-  return Math.max(-5, Math.min(5, mood))
-}
-
 function healingMoodGain(item: HealingItemStack): number {
   return item.moodGain ?? Math.max(1, Math.min(4, item.rarity))
+}
+
+export function describeShieldDamage(damage: ShieldDamageResult): string {
+  const resilienceText = damage.moodResilienceHpSaved && damage.moodResilienceHpSaved > 0
+    ? ` Mood held together the raider and shaved off ${damage.moodResilienceHpSaved} HP.`
+    : ''
+
+  if (!damage.mitigated || damage.shieldChargeLost <= 0) {
+    return `Took ${damage.hpDamage} damage.${resilienceText}`
+  }
+
+  if (damage.hpDamage <= 0) {
+    return `Shield lost ${damage.shieldChargeLost} charge. No HP damage landed.`
+  }
+
+  return `Shield lost ${damage.shieldChargeLost} charge; ${damage.hpDamage} HP damage landed.${resilienceText}`
 }
 
 /** Filter events valid for the current game context */
@@ -87,12 +120,74 @@ function eligibleEvents(state: GameState): EventTemplate[] {
       const phases: Phase[] = Array.isArray(r.phase) ? r.phase : [r.phase]
       if (!phases.includes(raid.phase)) return false
     }
+    if (r.dangerLevel) {
+      if (!raid.dangerLevel) return false
+      const levels = Array.isArray(r.dangerLevel) ? r.dangerLevel : [r.dangerLevel]
+      if (!levels.includes(raid.dangerLevel)) return false
+    }
     if (r.minGreed !== undefined && raid.greedLevel < r.minGreed) return false
     if (r.maxGreed !== undefined && raid.greedLevel > r.maxGreed) return false
     if (r.minHp !== undefined && state.raider.hp < r.minHp) return false
     if (r.maxHp !== undefined && state.raider.hp > r.maxHp) return false
     return true
   })
+}
+
+function isNegativeHpEffect(hp: number | string | undefined): boolean {
+  if (hp === undefined) return false
+  if (typeof hp === 'number') return hp < 0
+  return hp.trim().startsWith('-')
+}
+
+// review and test in future 
+function isPositiveDamageEffect(damage: number | string | undefined): boolean {
+  if (damage === undefined) return false
+  if (typeof damage === 'number') return damage > 0
+  const trimmed = damage.trim()
+  const match = trimmed.match(/^([+-]?\d+)(?:d(\d+))?$/)
+  if (!match) return false
+
+  const base = parseInt(match[1], 10)
+  const die = match[2] ? parseInt(match[2], 10) : 0
+  if (die <= 0) return base > 0
+
+  // Dice expressions can still resolve to damage when non-negative base + die are used.
+  return base >= 0
+}
+
+function isRiskyExtractionEvent(template: EventTemplate): boolean {
+  const effects = template.effects
+  if (!effects) return false
+  return effects.forcePhase === 'RAIDING' ||
+    effects.forcePhase === 'DOWNED' ||
+    effects.robotEncounter !== undefined ||
+    isPositiveDamageEffect(effects.damage) ||
+    isNegativeHpEffect(effects.hp)
+}
+
+function isSafeExtractionEvent(template: EventTemplate): boolean {
+  const effects = template.effects
+  if (!effects) return false
+  return effects.forcePhase === 'HUB' || (!isRiskyExtractionEvent(template) && (effects.mood ?? 0) > 0)
+}
+
+function adjustedEventWeight(template: EventTemplate, state: GameState): number {
+  const profile = getDangerLevelProfile(state.raid.dangerLevel)
+  let weight = template.weight
+
+  if (template.effects?.robotEncounter) {
+    weight *= profile.robotEncounterWeightMultiplier
+  }
+
+  if (state.raid.phase === 'EXTRACTING') {
+    if (isRiskyExtractionEvent(template)) {
+      weight *= profile.extractionRiskEventWeightMultiplier
+    } else if (isSafeExtractionEvent(template)) {
+      weight *= profile.extractionSafeEventWeightMultiplier
+    }
+  }
+
+  return Math.max(0.001, weight)
 }
 
 /** Fill {slot} placeholders in a template string */
@@ -144,27 +239,41 @@ function fillSlots(text: string, rng: RNG): string {
   })
 }
 
-function pickLootItemForValue(targetValue: number, rng: RNG): LootItem {
+function weightedLootPick(items: LootItem[], rng: RNG, profile: DangerLevelProfile, mood: number): LootItem {
+  return rng.weightedPick(items.map(item => ({
+    ...item,
+    weight: item.weight * rarityWeight(profile, item.rarity) * getMoodRarityWeightMultiplier(item.rarity, mood),
+  })))
+}
+
+function pickLootItemForValue(targetValue: number, rng: RNG, profile: DangerLevelProfile, mood: number): LootItem {
   const exactMatches = loot.filter(item => item.value === targetValue)
   if (exactMatches.length > 0) {
-    return rng.weightedPick(exactMatches)
+    return weightedLootPick(exactMatches, rng, profile, mood)
   }
 
   const lowerMatches = loot.filter(item => item.value <= targetValue)
   if (lowerMatches.length > 0) {
     const highestValue = Math.max(...lowerMatches.map(item => item.value))
     const bestMatches = lowerMatches.filter(item => item.value === highestValue)
-    return rng.weightedPick(bestMatches)
+    return weightedLootPick(bestMatches, rng, profile, mood)
   }
 
-  return rng.weightedPick(loot)
+  return weightedLootPick(loot, rng, profile, mood)
 }
 
 function addBackpackItem(
   raid: GameState['raid'],
-  item: LootItem,
+  item: LootItem | ShieldRechargerItem,
 ): GameState['raid'] {
   const existing = raid.backpack.find(entry => entry.itemId === item.id)
+  const extraFields = 'chargeAmount' in item
+    ? {
+        kind: 'shield_recharger' as const,
+        shieldChargeAmount: item.chargeAmount,
+        applyTicks: item.applyTicks,
+      }
+    : {}
   const backpack = existing
     ? raid.backpack.map(entry => (
         entry.itemId === item.id
@@ -178,12 +287,37 @@ function addBackpackItem(
         rarity: item.rarity,
         flavor: item.flavor,
         quantity: 1,
+        ...extraFields,
       }]
 
   return {
     ...raid,
     backpack,
     backpackValue: raid.backpackValue + item.value,
+  }
+}
+
+function removeBackpackItem(
+  raid: GameState['raid'],
+  itemId: string,
+): GameState['raid'] {
+  const current = raid.backpack.find(entry => entry.itemId === itemId)
+  if (!current) return raid
+
+  const backpack = current.quantity <= 1
+    ? raid.backpack.filter(entry => entry.itemId !== itemId)
+    : raid.backpack.map(entry => (
+        entry.itemId === itemId
+          ? { ...entry, quantity: entry.quantity - 1 }
+          : entry
+      ))
+
+  return {
+    ...raid,
+    backpack,
+    hiddenPocket: current.quantity <= 1 && raid.hiddenPocket?.itemId === itemId
+      ? null
+      : raid.hiddenPocket,
   }
 }
 
@@ -226,12 +360,12 @@ function removeHealingItem(
   return { ...raid, healingItems }
 }
 
-function pickBestHealingItem(items: HealingItemStack[], missingHp: number): HealingItemStack {
-  const sorted = [...items].sort((a, b) => a.healAmount - b.healAmount)
-  return sorted.find(item => item.healAmount >= missingHp) ?? sorted[sorted.length - 1]
+export interface HealingItemResult {
+  state: GameState
+  event: LogEvent
 }
 
-export interface HealingItemResult {
+export interface BackpackConsumableResult {
   state: GameState
   event: LogEvent
 }
@@ -255,18 +389,37 @@ export function resolveHealingItemFind(
   }
 }
 
-/** Uses one current-raid bandage if the raider is hurt and alive. */
-export function consumeHealingItemIfUseful(
+export function resolveShieldRechargerFind(
   state: GameState,
+  rng: RNG,
+  now: number,
+): BackpackConsumableResult {
+  const item = rng.weightedPick(shieldRechargers)
+  return {
+    state: { ...state, raid: addBackpackItem(state.raid, item) },
+    event: {
+      id: `shield_recharger_${item.id}_found`,
+      tick: state.tick,
+      timestamp: now,
+      text: `Found ${item.name}. Into the backpack it goes for a future defensive emergency.`,
+      phase: state.raid.phase,
+    },
+  }
+}
+
+/** Uses one specific current-raid bandage if the raider is hurt and alive. */
+export function consumeHealingItem(
+  state: GameState,
+  itemId: string,
   now: number,
 ): HealingItemResult | null {
   if (state.raid.phase === 'HUB' || state.raid.phase === 'DOWNED') return null
   if (state.raider.hp <= 0 || state.raider.hp >= state.raider.maxHp) return null
   if (state.raid.healingItems.length === 0) return null
-  if (state.raider.hp / state.raider.maxHp > HEALING_USE_HP_RATIO) return null
 
+  const item = state.raid.healingItems.find(entry => entry.itemId === itemId)
+  if (!item) return null
   const missingHp = state.raider.maxHp - state.raider.hp
-  const item = pickBestHealingItem(state.raid.healingItems, missingHp)
   const healed = Math.min(50, item.healAmount, missingHp)
   const moodGain = healingMoodGain(item)
   const hp = Math.min(state.raider.maxHp, state.raider.hp + healed)
@@ -288,6 +441,53 @@ export function consumeHealingItemIfUseful(
   }
 }
 
+export function consumeShieldRecharger(
+  state: GameState,
+  itemId: string,
+  now: number,
+): BackpackConsumableResult | null {
+  if (state.raid.phase !== 'RAIDING') return null
+  if (!state.raid.shield || state.raid.shield.durability <= 0) return null
+  if (state.raid.shield.charge >= state.raid.shield.maxCharge) return null
+  if (state.raid.activeShieldRecharge) return null
+
+  const item = state.raid.backpack.find(entry => entry.itemId === itemId)
+  if (!item || item.kind !== 'shield_recharger' || !item.shieldChargeAmount) return null
+
+  const start = startShieldRecharge(state.raid, {
+    itemId: item.itemId,
+    name: item.name,
+    chargeAmount: item.shieldChargeAmount,
+    applyTicks: item.applyTicks,
+  })
+  if (start.startedCharge <= 0) return null
+
+  const baseRaid = {
+    ...removeBackpackItem(start.raid, item.itemId),
+    backpackValue: Math.max(0, state.raid.backpackValue - item.value),
+  }
+
+  const eventText = start.completedImmediately
+    ? `Used ${item.name}. Restored ${start.startedCharge} shield charge instantly. Confidence field humming again.`
+    : `Used ${item.name}. Shield recharge started and will fill over ${start.raid.activeShieldRecharge!.totalTicks} ticks. The slider is doing tiny heroic work.`
+
+  return {
+    state: {
+      ...state,
+      raid: baseRaid,
+    },
+    event: {
+      id: start.completedImmediately
+        ? `shield_recharger_${item.itemId}_used`
+        : `shield_recharger_${item.itemId}_started`,
+      tick: state.tick,
+      timestamp: now,
+      text: eventText,
+      phase: state.raid.phase,
+    },
+  }
+}
+
 function pickRobotLoot(robot: RobotEntry, rng: RNG): LootItem {
   const item = rng.weightedPick(robot.lootTable)
   return toLootItem(item, robot)
@@ -299,16 +499,66 @@ function canRobotEncounterBeLethal(state: GameState, robot: RobotEntry): boolean
   return state.raider.hp / state.raider.maxHp <= ROBOT_LETHAL_HP_RATIO
 }
 
-function applyRobotDamage(state: GameState, robot: RobotEntry, rawDamage: number): number {
-  if (state.raider.hp <= 0) return 0
-  if (state.raider.maxHp <= 0) return Math.max(0, state.raider.hp - rawDamage)
+function applyRobotDamage(
+  state: GameState,
+  robot: RobotEntry,
+  rawDamage: number,
+): { raider: GameState['raider']; raid: GameState['raid']; damage: number; shieldDamage: ShieldDamageResult } {
+  if (state.raider.hp <= 0) {
+    return {
+      raider: state.raider,
+      raid: state.raid,
+      damage: 0,
+      shieldDamage: {
+        raider: state.raider,
+        raid: state.raid,
+        hpDamage: 0,
+        shieldChargeLost: 0,
+        shieldDurabilityLost: 0,
+        mitigated: false,
+      },
+    }
+  }
+
+  const shielded = applyShieldedDamage(state.raider, state.raid, rawDamage)
+  if (state.raider.maxHp <= 0) {
+    return {
+      raider: shielded.raider,
+      raid: shielded.raid,
+      damage: state.raider.hp - shielded.raider.hp,
+      shieldDamage: shielded,
+    }
+  }
+
+  const hpAfterShield = shielded.raider.hp
+  let hp = hpAfterShield
+  let moodResilienceHpSaved = 0
   if (!canRobotEncounterBeLethal(state, robot)) {
     const nonlethalFloor = state.raider.hp / state.raider.maxHp > ROBOT_LETHAL_HP_RATIO
       ? Math.ceil(state.raider.maxHp * ROBOT_NONLETHAL_MIN_HP_RATIO)
       : 1
-    return Math.max(nonlethalFloor, state.raider.hp - rawDamage)
+    hp = Math.max(nonlethalFloor, hp)
   }
-  return Math.max(0, state.raider.hp - rawDamage)
+
+  const resilienceMultiplier = getMoodResilienceMultiplier(state.raider.mood)
+  if (resilienceMultiplier < 1 && hp < state.raider.hp) {
+    const mitigatedDamage = Math.max(1, Math.floor((state.raider.hp - hp) * resilienceMultiplier))
+    const nextHp = Math.max(state.raider.hp - mitigatedDamage, hp)
+    moodResilienceHpSaved = Math.max(0, nextHp - hp)
+    hp = nextHp
+  }
+
+  return {
+    raider: { ...shielded.raider, hp },
+    raid: shielded.raid,
+    damage: state.raider.hp - hp,
+    shieldDamage: {
+      ...shielded,
+      raider: { ...shielded.raider, hp },
+      hpDamage: state.raider.hp - hp,
+      moodResilienceHpSaved: moodResilienceHpSaved > 0 ? moodResilienceHpSaved : undefined,
+    },
+  }
 }
 
 export interface RobotEncounterResult {
@@ -347,23 +597,21 @@ export function resolveRobotEncounter(
     }
   }
 
-  const damageMultiplier = Math.max(0, opts.damageMultiplier ?? 1)
+  const profile = getDangerLevelProfile(state.raid.dangerLevel)
+  const damageMultiplier = Math.max(0, (opts.damageMultiplier ?? 1) * profile.robotFailureDamageMultiplier)
   const rawDamage = Math.ceil(robot.menace * ROBOT_DAMAGE_PER_MENACE * damageMultiplier)
-  const hp = applyRobotDamage(state, robot, rawDamage)
-  const damage = state.raider.hp - hp
+  const damageResult = applyRobotDamage(state, robot, rawDamage)
   return {
     state: {
       ...state,
-      raider: {
-        ...state.raider,
-        hp,
-      },
+      raider: damageResult.raider,
+      raid: damageResult.raid,
     },
     event: {
       id: `robot_${robot.id}_escaped`,
       tick: state.tick,
       timestamp: now,
-      text: `${robot.name} won that exchange. Took ${damage} damage and ran away with the tactical urgency of someone who just learned a lesson.`,
+      text: `${robot.name} won that exchange. ${describeShieldDamage(damageResult.shieldDamage)} Ran away with the tactical urgency of someone who just learned a lesson.`,
       phase: state.raid.phase,
     },
   }
@@ -378,7 +626,11 @@ export function resolveEvent(
   const eligible = eligibleEvents(state)
   if (eligible.length === 0) return null
 
-  const template = rng.weightedPick(eligible)
+  const weightedEligible = eligible.map(template => ({
+    ...template,
+    weight: adjustedEventWeight(template, state),
+  }))
+  const template = rng.weightedPick(weightedEligible)
   const text = fillSlots(template.text, rng)
 
   return {
@@ -395,22 +647,25 @@ export function applyEffects(
   state: GameState,
   template: EventTemplate,
   rng: RNG,
-): GameState {
+): { state: GameState; shieldDamage?: ShieldDamageResult } {
   const effects = template.effects
-  if (!effects) return state
+  if (!effects) return { state }
 
   let { raider, raid } = state
+  let shieldDamage: ShieldDamageResult | undefined
 
   if (effects.backpackValue !== undefined) {
     const delta = typeof effects.backpackValue === 'string'
       ? parseDice(effects.backpackValue, rng)
       : effects.backpackValue
     if (delta > 0) {
-      const item = pickLootItemForValue(delta, rng)
+      const profile = getDangerLevelProfile(raid.dangerLevel)
+      const profiledDelta = Math.max(1, Math.round(delta * profile.lootValueMultiplier))
+      const item = pickLootItemForValue(profiledDelta, rng, profile, raider.mood)
       raid = addBackpackItem(raid, item)
       raid = {
         ...raid,
-        backpackValue: Math.max(0, raid.backpackValue + (delta - item.value)),
+        backpackValue: Math.max(0, raid.backpackValue + (profiledDelta - item.value)),
       }
     } else {
       raid = { ...raid, backpackValue: Math.max(0, raid.backpackValue + delta) }
@@ -421,11 +676,31 @@ export function applyEffects(
     raider = { ...raider, mood: clampMood(raider.mood + effects.mood) }
   }
 
+  // Compatibility: Keep `effects.hp` support for direct HP adjustments (for example, HUB healing)
+  // and for optional content that should continue using explicit HP semantics.
   if (effects.hp !== undefined) {
     const delta = typeof effects.hp === 'string'
       ? parseDice(effects.hp, rng)
       : effects.hp
-    raider = { ...raider, hp: Math.max(0, Math.min(raider.maxHp, raider.hp + delta)) }
+    if (delta < 0) {
+      const shielded = applyShieldedDamage(raider, raid, Math.abs(delta))
+      raider = shielded.raider
+      raid = shielded.raid
+      shieldDamage = shielded
+    } else {
+      raider = { ...raider, hp: Math.max(0, Math.min(raider.maxHp, raider.hp + delta)) }
+    }
+  }
+
+  if (effects.damage !== undefined) {
+    const parsed = typeof effects.damage === 'string'
+      ? parseDice(effects.damage, rng)
+      : effects.damage
+    if (parsed > 0) {
+      const shielded = applyShieldedDamage(raider, raid, parsed)
+      raider = shielded.raider
+      raid = shielded.raid
+    }
   }
 
   if (effects.greedLevel !== undefined) {
@@ -436,7 +711,7 @@ export function applyEffects(
     raider = { ...raider, ratRating: Math.max(0, raider.ratRating + effects.ratRating) }
   }
 
-  return { ...state, raider, raid }
+  return { state: { ...state, raider, raid }, shieldDamage }
 }
 
 /** Simple dice parser using seeded RNG: "+2", "-5", "+1d6" → integer value. */
@@ -462,4 +737,4 @@ export function resolveFlavorKey(key: string, rng: RNG): string {
 }
 
 /** Exported for content validation tests */
-export { events, flavor, healingItems, loot, robots }
+export { events, flavor, healingItems, loot, robots, shieldRechargers }
