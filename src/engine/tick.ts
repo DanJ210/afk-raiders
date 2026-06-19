@@ -300,7 +300,14 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
       const effectResult = applyEffects(currentState, template, rng)
       currentState = effectResult.state
 
-      if (effectResult.shieldDamage?.mitigated && effectResult.shieldDamage.shieldChargeLost > 0) {
+      if (
+        effectResult.shieldDamage &&
+        (
+          effectResult.shieldDamage.hpDamage > 0 ||
+          effectResult.shieldDamage.shieldChargeLost > 0 ||
+          effectResult.shieldDamage.shieldDurabilityLost > 0
+        )
+      ) {
         emitted.push(
           shieldDamageEvent(
             describeShieldDamage(effectResult.shieldDamage),

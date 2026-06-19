@@ -700,6 +700,7 @@ export function applyEffects(
       const shielded = applyShieldedDamage(raider, raid, parsed)
       raider = shielded.raider
       raid = shielded.raid
+      shieldDamage = shielded
     }
   }
 
