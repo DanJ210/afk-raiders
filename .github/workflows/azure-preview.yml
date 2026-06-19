@@ -17,7 +17,7 @@ permissions:
   pull-requests: write
 
 concurrency:
-  group: azure-preview-${{ github.event.pull_request.number }}
+  group: azure-preview-${{ github.event_name == 'workflow_dispatch' && inputs.pr_number || github.event.pull_request.number }}
   cancel-in-progress: true
 
 jobs:
