@@ -1,7 +1,7 @@
 /**
  * Signal meter — the only player resource in AFK Raiders.
  *
- * Signal regenerates over real time (~1 per 10 minutes), capped at 5.
+ * Signal regenerates over real time (~1 per 10 minutes); the meter cycles 1→5 and overflow banks Signal Amplifiers.
  * Actions and their costs:
  *   CALM         → 1 Signal
  *   PRESSURE     → 1 Signal
