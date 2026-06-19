@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { BackpackItem } from '../engine/types'
 import { rarityLabel, rarityBarClass } from '../utils/rarity'
-import { getCategoryEmoji, formatNumber } from '../utils/stash'
+import { getStashIcon, formatNumber } from '../utils/stash'
 
 const props = defineProps<{
   items: BackpackItem[]
@@ -30,7 +30,15 @@ function handleItemClick(itemId: string) {
         class="stash-item"
         @click="handleItemClick(item.itemId)"
       >
-        <span class="stash-item__emoji">{{ getCategoryEmoji(item.name) }}</span>
+        <span class="stash-item__emoji">
+          <img
+            v-if="getStashIcon(item).kind === 'image'"
+            class="stash-item__icon-image"
+            :src="getStashIcon(item).value"
+            :alt="getStashIcon(item).alt"
+          >
+          <span v-else :aria-label="getStashIcon(item).alt">{{ getStashIcon(item).value }}</span>
+        </span>
         <span :class="rarityBarClass(item.rarity)" :title="rarityLabel(item.rarity)">
           <span class="stash-item__rarity-text">{{ rarityLabel(item.rarity) }}</span>
         </span>
@@ -90,6 +98,15 @@ function handleItemClick(itemId: string) {
   font-size: 1.1rem;
   min-width: 24px;
   text-align: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stash-item__icon-image {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
 }
 
 .stash-item__content {
