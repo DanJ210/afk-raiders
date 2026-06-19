@@ -156,3 +156,7 @@ If RAIDING time expires without extracting, natural transition goes to DOWNED (z
 - One raider, one zone pool, Ready Up/Calm/Pressure/CALL EXTRACT, offline catch-up, PWA installability.
 - localStorage persistence with a schema `version` field for future migrations.
 
+## Planned account-backed save phase
+- Future server-side account/save work is documented in [`docs/SERVER_STORAGE_AND_ACCOUNTS.md`](./SERVER_STORAGE_AND_ACCOUNTS.md).
+- Scope for that phase remains offline-first: local simulation stays authoritative while offline, with remote sync when signed in and online.
+- Backend target for that phase is .NET 8+ with PostgreSQL and revision-based conflict handling.

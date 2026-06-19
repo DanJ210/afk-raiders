@@ -26,6 +26,7 @@ Signal regenerates ~1 per 10 minutes, capped at 5. The Raider plays themselves.
 
 - [`docs/GAME_DESIGN.md`](docs/GAME_DESIGN.md) — game concept, core loop, Greed Check™, Signal/Handler mechanics, parody content table, roadmap
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — tech stack, folder structure, engine design, determinism rules, testing strategy
+- [`docs/SERVER_STORAGE_AND_ACCOUNTS.md`](docs/SERVER_STORAGE_AND_ACCOUNTS.md) — planned account-backed save sync architecture (.NET 8+, PostgreSQL, offline-first model)
 - [`docs/CI_CD_AZURE.md`](docs/CI_CD_AZURE.md) — CI pull request validation, Azure Static Web Apps deployment flow, branch protections, rollback
 
 ---
