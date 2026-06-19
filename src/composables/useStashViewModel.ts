@@ -1,6 +1,5 @@
 import { computed, ref } from 'vue'
 import type { BackpackItem } from '../engine/types'
-import { getCategoryEmoji } from '../utils/stash'
 
 export function useStashViewModel(homeStashRef: { value: BackpackItem[] }, coinsRef: { value: number }) {
   /** Highest-value items at the top (per-unit value; line total breaks ties) */
@@ -41,10 +40,6 @@ export function useStashViewModel(homeStashRef: { value: BackpackItem[] }, coins
     selectedItemId.value = null
   }
 
-  function getCategoryEmojiForItem(itemName: string): string {
-    return getCategoryEmoji(itemName)
-  }
-
   return {
     sortedStash,
     stashValue,
@@ -55,6 +50,5 @@ export function useStashViewModel(homeStashRef: { value: BackpackItem[] }, coins
     selectedItemTotalValue,
     openItemDetails,
     closeItemDetails,
-    getCategoryEmojiForItem,
   }
 }

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { BackpackItem } from '../engine/types'
 import { rarityLabel } from '../utils/rarity'
-import { getCategoryEmoji, formatNumber } from '../utils/stash'
+import { getStashIcon, formatNumber } from '../utils/stash'
 
 const props = defineProps<{
   item: BackpackItem | null
@@ -35,7 +35,15 @@ function handleSell() {
     <div class="stash-dialog__card">
       <div class="stash-dialog__header">
         <div class="stash-dialog__title">
-          <span class="stash-dialog__emoji">{{ getCategoryEmoji(item.name) }}</span>
+          <span class="stash-dialog__emoji">
+            <img
+              v-if="getStashIcon(item).kind === 'image'"
+              class="stash-dialog__icon-image"
+              :src="getStashIcon(item).value"
+              :alt="getStashIcon(item).alt"
+            >
+            <span v-else :aria-label="getStashIcon(item).alt">{{ getStashIcon(item).value }}</span>
+          </span>
           <div>
             <h3 class="stash-dialog__name">{{ item.name }}</h3>
             <p class="stash-dialog__meta">
@@ -99,6 +107,15 @@ function handleSell() {
 .stash-dialog__emoji {
   font-size: 1.5rem;
   line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stash-dialog__icon-image {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
 }
 
 .stash-dialog__name {

@@ -257,6 +257,30 @@ describe('applyEffects — backpack item behavior', () => {
     expect(result.state.raider.hp).toBe(88)
     expect(result.state.raid.shield?.charge).toBe(20)
     expect(result.state.raid.shield?.durability).toBe(95)
+    expect(result.shieldDamage).toMatchObject({
+      hpDamage: 12,
+      shieldChargeLost: 20,
+      mitigated: true,
+    })
+  })
+
+  it('returns damage details for generic damage even without a shield', () => {
+    const initial = createInitialState(0)
+    const state = {
+      ...initial,
+      raid: {
+        ...initial.raid,
+        shield: null,
+      },
+    }
+    const result = applyEffects(state, SHIELD_AWARE_DAMAGE_TEMPLATE, createRNG(1))
+
+    expect(result.state.raider.hp).toBe(80)
+    expect(result.shieldDamage).toMatchObject({
+      hpDamage: 20,
+      shieldChargeLost: 0,
+      mitigated: false,
+    })
   })
 
   it('treats negative generic damage as a no-op', () => {

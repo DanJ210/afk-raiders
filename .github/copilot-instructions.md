@@ -7,6 +7,7 @@ Key docs — read these before making changes:
 - `docs/GAME_DESIGN.md` — game concept, mechanics, comedy content, roadmap
 - `docs/ARCHITECTURE.md` — folder structure, engine design, persistence, testing
 - `docs/CI_CD_AZURE.md` — CI/PR validation and Azure Static Web Apps deployment flow
+- `docs/SERVER_STORAGE_AND_ACCOUNTS.md` — planned account-backed save sync architecture and backend boundaries
 
 ## Tech stack
 - Vue 3 + TypeScript + Vite, Composition API with `<script setup>`

@@ -5,20 +5,26 @@ on:
     branches:
       - main
     types: [opened, synchronize, reopened, closed]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'PR number whose preview environment to close (e.g. 5)'
+        required: true
+        type: string
 
 permissions:
   contents: read
   pull-requests: write
 
 concurrency:
-  group: azure-preview-${{ github.event.pull_request.number }}
+  group: azure-preview-${{ github.event_name == 'workflow_dispatch' && inputs.pr_number || github.event.pull_request.number }}
   cancel-in-progress: true
 
 jobs:
   deploy-preview:
     name: Deploy PR Preview
     runs-on: ubuntu-latest
-    if: ${{ github.event.action != 'closed' }}
+    if: ${{ github.event.action != 'closed' && github.event_name != 'workflow_dispatch' }}
     env:
       AZURE_STATIC_WEB_APPS_API_TOKEN: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
     steps:
@@ -69,7 +75,7 @@ jobs:
   close-preview:
     name: Close PR Preview
     runs-on: ubuntu-latest
-    if: ${{ github.event.action == 'closed' }}
+    if: ${{ github.event.action == 'closed' || github.event_name == 'workflow_dispatch' }}
     env:
       AZURE_STATIC_WEB_APPS_API_TOKEN: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
     steps:
@@ -83,6 +89,22 @@ jobs:
             echo "AZURE_STATIC_WEB_APPS_API_TOKEN is not configured; skipping preview close."
           fi
 
+      - name: Resolve environment name
+        id: env_name
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            raw="${{ inputs.pr_number }}"
+            raw="${raw#pr-}"
+            if ! [[ "$raw" =~ ^[0-9]+$ ]]; then
+              echo "Invalid pr_number: '$raw' (expected digits, e.g. 5)" >&2
+              exit 1
+            fi
+            printf 'name=pr-%s\n' "$raw" >> "$GITHUB_OUTPUT"
+          else
+            printf 'name=pr-%s\n' "${{ github.event.pull_request.number }}" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Close preview environment
         if: ${{ steps.token.outputs.configured == 'true' }}
         uses: Azure/static-web-apps-deploy@4d27395796ac319302594769cfe812bd207490b1
@@ -90,4 +112,4 @@ jobs:
           azure_static_web_apps_api_token: ${{ env.AZURE_STATIC_WEB_APPS_API_TOKEN }}
           action: close
           app_location: /
-          deployment_environment: pr-${{ github.event.pull_request.number }}
+          deployment_environment: ${{ steps.env_name.outputs.name }}
