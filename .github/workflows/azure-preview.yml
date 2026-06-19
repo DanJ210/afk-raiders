@@ -5,6 +5,12 @@ on:
     branches:
       - main
     types: [opened, synchronize, reopened, closed]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'PR number whose preview environment to close (e.g. 5)'
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -18,7 +24,7 @@ jobs:
   deploy-preview:
     name: Deploy PR Preview
     runs-on: ubuntu-latest
-    if: ${{ github.event.action != 'closed' }}
+    if: ${{ github.event.action != 'closed' && github.event_name != 'workflow_dispatch' }}
     env:
       AZURE_STATIC_WEB_APPS_API_TOKEN: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
     steps:
@@ -68,7 +74,7 @@ jobs:
   close-preview:
     name: Close PR Preview
     runs-on: ubuntu-latest
-    if: ${{ github.event.action == 'closed' }}
+    if: ${{ github.event.action == 'closed' || github.event_name == 'workflow_dispatch' }}
     env:
       AZURE_STATIC_WEB_APPS_API_TOKEN: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
     steps:
@@ -82,6 +88,15 @@ jobs:
             echo "AZURE_STATIC_WEB_APPS_API_TOKEN is not configured; skipping preview close."
           fi
 
+      - name: Resolve environment name
+        id: env_name
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "name=pr-${{ inputs.pr_number }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "name=pr-${{ github.event.pull_request.number }}" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Close preview environment
         if: ${{ steps.token.outputs.configured == 'true' }}
         uses: Azure/static-web-apps-deploy@v1
@@ -89,3 +104,4 @@ jobs:
           azure_static_web_apps_api_token: ${{ env.AZURE_STATIC_WEB_APPS_API_TOKEN }}
           action: close
           app_location: /
+          deployment_environment: ${{ steps.env_name.outputs.name }}
