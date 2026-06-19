@@ -17,7 +17,7 @@ import { ref, computed } from 'vue'
 import { createRNG } from '../engine/rng.js'
 import { createInitialState } from '../engine/initialState.js'
 import { computeSignal } from '../engine/signal.js'
-import { catchUp } from '../engine/catchUp.js'
+import { catchUp, MAX_CATCHUP_TICKS, TICK_INTERVAL_MS } from '../engine/catchUp.js'
 import type { GameState, LogEvent } from '../engine/types.js'
 import type { AwaySummary } from '../engine/catchUp.js'
 import { useGamePersistence } from '../composables/useGamePersistence.js'
@@ -39,9 +39,14 @@ export const useGameStore = defineStore('game', () => {
   let initialLastTickAt = saved?.lastTickAt ?? now
   let initialAwaySummary: AwaySummary | null = null
   if (saved) {
+    const elapsed = Math.max(0, now - saved.lastTickAt)
+    const rawTicks = Math.floor(elapsed / TICK_INTERVAL_MS)
     const startupCatchUp = catchUp(saved.state, rngRef.current, saved.lastTickAt, now)
     initialState = startupCatchUp.state
-    initialLastTickAt = now
+    const wasCapped = rawTicks > MAX_CATCHUP_TICKS
+    initialLastTickAt = wasCapped
+      ? now
+      : saved.lastTickAt + (startupCatchUp.summary.ticksReplayed * TICK_INTERVAL_MS)
     if (startupCatchUp.summary.ticksReplayed > 0) {
       initialAwaySummary = startupCatchUp.summary
       persistence.persistSave(initialState, seedValue.value, initialLastTickAt)

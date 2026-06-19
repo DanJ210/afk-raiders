@@ -2,14 +2,14 @@
  * useGameTicker — tick loop, visibility pause/resume, and catch-up integration.
  *
  * Responsibilities:
- * - Drive the main game loop via useIntervalFn (30s cadence)
+ * - Drive the main game loop on a 30s cadence aligned to lastTickAt
  * - Pause ticking when tab is hidden
  * - Replay elapsed ticks on tab return (catch-up)
  * - Coordinate with persistence on each tick
  */
 
 import { ref, watch } from 'vue'
-import { useIntervalFn, useDocumentVisibility } from '@vueuse/core'
+import { useDocumentVisibility } from '@vueuse/core'
 import type { GameState } from '../engine/types.js'
 import type { RNG } from '../engine/rng.js'
 import { processTick } from '../engine/tick.js'
@@ -33,14 +33,33 @@ export function useGameTicker(
   persistCallback: (state: GameState, seed: number, lastTickAt: number) => void,
 ): GameTickerReturn {
   const awaySummary = ref<AwaySummary | null>(null)
+  let timeoutId: ReturnType<typeof setTimeout> | null = null
+
+  function clearScheduledTick() {
+    if (timeoutId !== null) {
+      clearTimeout(timeoutId)
+      timeoutId = null
+    }
+  }
+
+  function scheduleNextTick() {
+    clearScheduledTick()
+    const elapsed = Math.max(0, Date.now() - lastTickAtRef.value)
+    const delay = Math.max(0, TICK_INTERVAL_MS - elapsed)
+    timeoutId = setTimeout(() => {
+      tick()
+      scheduleNextTick()
+    }, delay)
+  }
 
   function runCatchUp(fromTickAt: number, toNow: number) {
     const result = catchUp(stateRef.value as GameState, rngRef.current, fromTickAt, toNow)
     stateRef.value = result.state
     if (result.summary.ticksReplayed > 0) {
       awaySummary.value = result.summary
-      lastTickAtRef.value = toNow
-      persistCallback(stateRef.value, rngRef.current.getSeed(), toNow)
+      const alignedTickAt = fromTickAt + (result.summary.ticksReplayed * TICK_INTERVAL_MS)
+      lastTickAtRef.value = alignedTickAt
+      persistCallback(stateRef.value, rngRef.current.getSeed(), alignedTickAt)
     }
   }
 
@@ -52,24 +71,29 @@ export function useGameTicker(
     persistCallback(stateRef.value, rngRef.current.getSeed(), tickNow)
   }
 
-  const { pause, resume } = useIntervalFn(tick, TICK_INTERVAL_MS)
+  function pause() {
+    clearScheduledTick()
+  }
+
+  function resume() {
+    scheduleNextTick()
+  }
 
   // Pause when tab hidden, catch up on return
   const visibility = useDocumentVisibility()
-  let hiddenAt: number | null = null
 
   watch(visibility, (vis) => {
     if (vis === 'hidden') {
       pause()
-      hiddenAt = Date.now()
     } else {
-      if (hiddenAt !== null) {
-        runCatchUp(hiddenAt, Date.now())
-        hiddenAt = null
-      }
+      runCatchUp(lastTickAtRef.value, Date.now())
       resume()
     }
   })
+
+  if (visibility.value !== 'hidden') {
+    scheduleNextTick()
+  }
 
   return {
     awaySummary,
