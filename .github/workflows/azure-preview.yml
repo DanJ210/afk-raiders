@@ -91,10 +91,17 @@ jobs:
       - name: Resolve environment name
         id: env_name
         run: |
+          set -euo pipefail
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "name=pr-${{ inputs.pr_number }}" >> "$GITHUB_OUTPUT"
+            raw="${{ inputs.pr_number }}"
+            raw="${raw#pr-}"
+            if ! [[ "$raw" =~ ^[0-9]+$ ]]; then
+              echo "Invalid pr_number: '$raw' (expected digits, e.g. 5)" >&2
+              exit 1
+            fi
+            printf 'name=pr-%s\n' "$raw" >> "$GITHUB_OUTPUT"
           else
-            echo "name=pr-${{ github.event.pull_request.number }}" >> "$GITHUB_OUTPUT"
+            printf 'name=pr-%s\n' "${{ github.event.pull_request.number }}" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Close preview environment
