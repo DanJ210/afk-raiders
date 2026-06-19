@@ -17,6 +17,8 @@ import {
   SIGNAL_COSTS,
   CALM_GREED_REDUCTION,
   applyCalmGreedReduction,
+  applyPressureGreedIncrease,
+  refillSignalWithAmplifier,
 } from '../../src/engine/signal'
 import type { SignalState } from '../../src/engine/types'
 
@@ -63,9 +65,10 @@ describe('signal', () => {
     expect(updated.amplifiersGained).toBe(20)
   })
 
-  it('resets lastRegenAt to now when regen reaches cap', () => {
+  it('advances lastRegenAt by consumed regen ticks when reaching cap', () => {
     const s = makeSignal(SIGNAL_CAP - 1, 0)
-    // Enough time for 1 tick to reach cap.
+    // Enough time for 1 tick to reach cap..
+    // This assertion uses a now value aligned to whole ticks.
     const updated = computeSignal(s, SIGNAL_REGEN_MS)
     expect(updated.current).toBe(SIGNAL_CAP)
     expect(updated.lastRegenAt).toBe(SIGNAL_REGEN_MS)
@@ -109,5 +112,24 @@ describe('signal', () => {
 
   it('applyCalmGreedReduction clamps greed at zero', () => {
     expect(applyCalmGreedReduction(5)).toBe(0)
+  })
+
+  it('applyPressureGreedIncrease increases greed by configured amount', () => {
+    expect(applyPressureGreedIncrease(20)).toBe(28)
+  })
+
+  it('applyPressureGreedIncrease clamps greed at 100', () => {
+    expect(applyPressureGreedIncrease(97)).toBe(100)
+  })
+
+  it('refillSignalWithAmplifier refills signal to cap and updates regen baseline', () => {
+    const updated = refillSignalWithAmplifier(makeSignal(1, 0), 12345)
+    expect(updated).not.toBeNull()
+    expect(updated?.current).toBe(SIGNAL_CAP)
+    expect(updated?.lastRegenAt).toBe(12345)
+  })
+
+  it('refillSignalWithAmplifier returns null when signal is already full', () => {
+    expect(refillSignalWithAmplifier(makeSignal(SIGNAL_CAP, 0), 12345)).toBeNull()
   })
 })

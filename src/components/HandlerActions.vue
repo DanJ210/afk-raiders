@@ -12,6 +12,7 @@ onMounted(() => {
   timerInterval = setInterval(() => {
     nowMs.value = Date.now()
   }, 1000) // Update once per second (timer display is second-granularity)
+})
 onUnmounted(() => {
   if (timerInterval) clearInterval(timerInterval)
 })
