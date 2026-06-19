@@ -8,7 +8,7 @@
  * - Coordinate with persistence on each tick
  */
 
-import { ref, watch } from 'vue'
+import { ref, watch, type Ref } from 'vue'
 import { useDocumentVisibility } from '@vueuse/core'
 import type { GameState } from '../engine/types.js'
 import type { RNG } from '../engine/rng.js'
@@ -27,8 +27,8 @@ export interface GameTickerReturn {
  * State and RNG are passed in as refs; this composable manages the tick loop.
  */
 export function useGameTicker(
-  stateRef: ReturnType<typeof ref<GameState>>,
-  lastTickAtRef: ReturnType<typeof ref<number>>,
+  stateRef: Ref<GameState>,
+  lastTickAtRef: Ref<number>,
   rngRef: { current: RNG },
   persistCallback: (state: GameState, seed: number, lastTickAt: number) => void,
 ): GameTickerReturn {

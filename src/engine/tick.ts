@@ -79,22 +79,6 @@ function hiddenPocketSavedEvent(itemName: string, tick: number, now: number): Lo
   }
 }
 
-function shieldDamageEvent(
-  text: string,
-  tick: number,
-  now: number,
-  phase: GameState['raid']['phase'],
-  sourceId: string,
-): LogEvent {
-  return {
-    id: `shield_damage_${sourceId}`,
-    tick,
-    timestamp: now,
-    text,
-    phase,
-  }
-}
-
 function totalBackpackQuantity(backpack: BackpackItem[]): number {
   return backpack.reduce((sum, item) => sum + item.quantity, 0)
 }
@@ -291,11 +275,11 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
   // ------------------------------------------------------------------
   // 3. Resolve flavor event for current phase
   // ------------------------------------------------------------------
-  const event = resolveEvent(currentState, rng, now)
-  if (event) {
-    const template = allEvents.find(e => e.id === event.id)
-    emitted.push(event)
+  const resolvedEvent = resolveEvent(currentState, rng, now)
+  if (resolvedEvent) {
+    const template = allEvents.find(e => e.id === resolvedEvent.id)
     if (template) {
+      let event = resolvedEvent
       const backpackQuantityBeforeEffects = totalBackpackQuantity(currentState.raid.backpack)
       const effectResult = applyEffects(currentState, template, rng)
       currentState = effectResult.state
@@ -308,16 +292,13 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
           effectResult.shieldDamage.shieldDurabilityLost > 0
         )
       ) {
-        emitted.push(
-          shieldDamageEvent(
-            describeShieldDamage(effectResult.shieldDamage),
-            state.tick,
-            now,
-            currentState.raid.phase,
-            template.id,
-          ),
-        )
+        event = {
+          ...event,
+          text: `${event.text} ${describeShieldDamage(effectResult.shieldDamage)}`,
+        }
       }
+
+      emitted.push(event)
 
       const backpackQuantityAfterEffects = totalBackpackQuantity(currentState.raid.backpack)
       if (backpackQuantityAfterEffects > backpackQuantityBeforeEffects) {

@@ -14,6 +14,11 @@
 ## Golden rule: Engine ≠ UI
 The simulation engine is **pure TypeScript with zero framework imports**. Vue renders state and dispatches the rare Handler action. The engine must run identically in Node (tests) and the browser.
 
+## Core engine contracts
+- Determinism: the same seed + state must produce the same outcomes and comms sequence.
+- Single damage pipeline: all incoming HP damage must flow through shared shield-aware helpers (no ad hoc HP subtraction).
+- Damage narration guarantee: whenever damage is processed by the engine (shielded, unshielded, mitigated to zero HP damage, or lethal), a readable damage flavor line must be emitted to the comms feed in that tick.
+
 ## Folder structure
 ```
 afk-raiders/
@@ -108,6 +113,7 @@ Shield rechargers are intentionally different from bandages:
 - HUB currently restores the equipped shield to full charge and 100% durability; loadout/store systems are the future hook for persisted shield state.
 - `src/content/healing_items.json` and `src/content/shield_rechargers.json` are still required: they define weighted type selection for consumables awarded by both dedicated event effects and loot-bonus rolls.
 - Damage events should remain source-first: the event text announces the encounter, then a shield summary line can explain how much shield charge was lost and how much HP damage landed.
+- This is a contract, not a style preference: every processed damage instance must produce a comms damage line, even if the same tick later transitions the raider to DOWNED.
 
 ### 3. Signal as the only real input
 Signal regenerates (~1 per 10 min, capped at 5). Ready Up (2 Signal) starts DEPLOYING from HUB, Encourage/Scold (1 each) nudge hidden behavior weights, and Scold also reduces current greed before the next greed check; CALL EXTRACT (3 Signal) forces an extraction attempt. During RAIDING only one action may be queued at a time, so action buttons lock until the next tick applies the pending action.
