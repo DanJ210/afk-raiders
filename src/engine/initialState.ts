@@ -38,11 +38,12 @@ export function createInitialState(now: number = Date.now()): GameState {
       forceExtract: false,
     },
     signal: initialSignalState(now),
+    signalAmplifiers: 0,
     log: [],
     homeStash: [],
     coins: 0,
     stats: createInitialLifetimeStats(),
-    pendingEncourage: false,
-    pendingScold: false,
+    pendingCalm: false,
+    pendingPressure: false,
   }
 }

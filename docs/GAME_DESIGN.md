@@ -68,10 +68,11 @@ Because the rolls are independent, the same loot event can award both bonus cons
 ## 3. The Handler (player) — Signal
 The only player resource. Regenerates ~1 per 10 minutes, capped at 5.
 - **Ready Up! (2 Signal):** HUB-only action that immediately starts DEPLOYING.
-- **Encourage (1 Signal):** Radio a motivational cliché ("You miss 100% of the loot you don't grab"). Nudges hidden behavior weights toward boldness.
-- **Scold (1 Signal):** Revoke snack privileges. Raider sulks but plays safer.
+- **Calm (1 Signal):** Radio a motivational cliché ("You miss 100% of the loot you don't grab"). Calms the raider and lowers immediate greed before the next check, which makes extraction less likely so they stay in longer.
+- **Pressure (1 Signal):** Revoke snack privileges. Rattles the raider and raises immediate greed before the next check, but also increases extraction tendency so they are more likely to bail out early.
 - **CALL EXTRACT (3 Signal):** Force an extraction attempt. The panic button.
 - During RAIDING, only one handler action can be pending at a time; raid action buttons stay locked until the next tick consumes it.
+- On every return to HUB, raid-phase pressure resets: greed returns to 0, forced-extract is cleared, and pending handler actions are consumed/cleared before the next raid.
 - Possible later: ping a loot stash, bless a piece of gear.
 
 Keeping input this thin is the point — it must remain firmly zero-player.
@@ -127,7 +128,7 @@ Everything funny flows through an autoscrolling text feed:
 ## 8. Roadmap
 | Phase | Scope |
 |---|---|
-| **1 — MVP (the toy)** | One raider, one zone pool, tick engine, comms log, loot/greed/extract loop, Ready Up/Encourage/Scold/CALL EXTRACT, offline catch-up, PWA. **Ship when the log alone makes people laugh.** |
+| **1 — MVP (the toy)** | One raider, one zone pool, tick engine, comms log, loot/greed/extract loop, Ready Up/Calm/Pressure/CALL EXTRACT, offline catch-up, PWA. **Ship when the log alone makes people laugh.** |
 | **2 — Depth** | More zones, robot bestiary, quests, traders, gear-crafting parody, achievements, The Wipe |
 | **3 — Social** | Accounts, leaderboards ("Most Water Bottles"), spectate friends' raiders, squads |
 | **4 — Native** | Capacitor builds, push notifications, app store release |

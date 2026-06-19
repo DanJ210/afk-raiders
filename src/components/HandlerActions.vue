@@ -1,16 +1,44 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { useGameStore } from '../stores/gameStore'
-import { SIGNAL_COSTS, SIGNAL_CAP } from '../engine/signal'
+import { advanceSignal, SIGNAL_COSTS, SIGNAL_CAP, SIGNAL_REGEN_MS } from '../engine/signal'
 
 const store = useGameStore()
+const nowMs = ref(Date.now())
 
-const currentSignal = computed(() => store.signal.current)
-const canEncourage = computed(() => currentSignal.value >= SIGNAL_COSTS.ENCOURAGE)
+// Update current time frequently for real-time timer display
+let timerInterval: ReturnType<typeof setInterval> | null = null
+onMounted(() => {
+  timerInterval = setInterval(() => {
+    nowMs.value = Date.now()
+  }, 100) // Update 10 times per second for smooth display
+})
+onUnmounted(() => {
+  if (timerInterval) clearInterval(timerInterval)
+})
+
+const signalSnapshot = computed(() => advanceSignal(store.state.signal, nowMs.value))
+const currentSignal = computed(() => signalSnapshot.value.signal.current)
+const signalAmplifiers = computed(() => store.state.signalAmplifiers + signalSnapshot.value.amplifiersGained)
+const canCalm = computed(() => currentSignal.value >= SIGNAL_COSTS.CALM)
 const canReadyUp = computed(() => currentSignal.value >= SIGNAL_COSTS.READY_UP)
-const canScold = computed(() => currentSignal.value >= SIGNAL_COSTS.SCOLD)
+const canPressure = computed(() => currentSignal.value >= SIGNAL_COSTS.PRESSURE)
 const canCallExtract = computed(() => currentSignal.value >= SIGNAL_COSTS.CALL_EXTRACT)
+const canUseSignalAmplifier = computed(() => signalAmplifiers.value > 0 && currentSignal.value < SIGNAL_CAP)
 const isActionLocked = computed(() => store.hasPendingHandlerAction)
+
+// Calculate time until next signal regenerates
+const nextRegenMs = computed(() => {
+  const nextRegenAt = signalSnapshot.value.signal.lastRegenAt + SIGNAL_REGEN_MS
+  return Math.max(0, nextRegenAt - nowMs.value)
+})
+
+const regenTimerDisplay = computed(() => {
+  const seconds = Math.ceil(nextRegenMs.value / 1000)
+  const minutes = Math.floor(seconds / 60)
+  const secs = seconds % 60
+  return `${minutes}:${secs.toString().padStart(2, '0')}`
+})
 </script>
 
 <template>
@@ -26,6 +54,20 @@ const isActionLocked = computed(() => store.hasPendingHandlerAction)
       >●</span>
       <span class="signal-meter__count">{{ currentSignal }}/{{ SIGNAL_CAP }}</span>
       <span v-if="isActionLocked" class="signal-meter__pending">Action pending...</span>
+      <span v-else class="signal-meter__regen-timer">Next gain: {{ regenTimerDisplay }}</span>
+    </div>
+
+    <div class="signal-amplifiers">
+      <span class="signal-amplifiers__label">Signal Amplifiers</span>
+      <span class="signal-amplifiers__count">{{ signalAmplifiers }}</span>
+      <button
+        type="button"
+        class="signal-amplifiers__use"
+        :disabled="!canUseSignalAmplifier"
+        @click="store.applySignalAmplifier()"
+      >
+        Refill to 5
+      </button>
     </div>
 
     <div class="handler-actions__buttons">
@@ -40,23 +82,23 @@ const isActionLocked = computed(() => store.hasPendingHandlerAction)
       </button>
 
       <button
-        class="action-btn action-btn--encourage"
-        :disabled="!canEncourage || store.phase !== 'RAIDING' || isActionLocked"
-        @click="store.encourage()"
+        class="action-btn action-btn--calm"
+        :disabled="!canCalm || store.phase !== 'RAIDING' || isActionLocked"
+        @click="() => store.calm()"
       >
         <span class="action-btn__icon">📣</span>
-        <span class="action-btn__label">Encourage</span>
-        <span class="action-btn__cost">{{ SIGNAL_COSTS.ENCOURAGE }}📶</span>
+        <span class="action-btn__label">Calm</span>
+        <span class="action-btn__cost">{{ SIGNAL_COSTS.CALM }}📶</span>
       </button>
 
       <button
-        class="action-btn action-btn--scold"
-        :disabled="!canScold || store.phase !== 'RAIDING' || isActionLocked"
-        @click="store.scold()"
+        class="action-btn action-btn--pressure"
+        :disabled="!canPressure || store.phase !== 'RAIDING' || isActionLocked"
+        @click="() => store.pressure()"
       >
         <span class="action-btn__icon">🔇</span>
-        <span class="action-btn__label">Scold</span>
-        <span class="action-btn__cost">{{ SIGNAL_COSTS.SCOLD }}📶</span>
+        <span class="action-btn__label">Pressure</span>
+        <span class="action-btn__cost">{{ SIGNAL_COSTS.PRESSURE }}📶</span>
       </button>
 
       <button
@@ -121,6 +163,58 @@ const isActionLocked = computed(() => store.hasPendingHandlerAction)
   font-family: var(--font-mono);
   font-size: 0.72rem;
   color: var(--color-accent);
+}
+
+.signal-meter__regen-timer {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--color-muted);
+  letter-spacing: 0.05em;
+}
+
+.signal-amplifiers {
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: var(--color-surface-raised);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+}
+
+.signal-amplifiers__label {
+  color: var(--color-muted);
+}
+
+.signal-amplifiers__count {
+  color: var(--color-accent);
+  font-weight: 700;
+}
+
+.signal-amplifiers__use {
+  justify-self: end;
+  border: 1px solid var(--color-accent);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--color-accent);
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  padding: 2px 8px;
+  cursor: pointer;
+}
+
+.signal-amplifiers__use:hover:not(:disabled) {
+  background: var(--color-accent);
+  color: var(--color-bg);
+}
+
+.signal-amplifiers__use:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 .handler-actions__buttons {

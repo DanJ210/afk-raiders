@@ -45,16 +45,16 @@
     { "id": "es_03", "weight": 25, "text": "Extraction successful. The loot was mostly water bottles. Worth it." },
     { "id": "es_04", "weight": 25, "text": "Got out. Against all probability." }
   ],
-  "encourage_responses": [
-    { "id": "er_01", "weight": 25, "text": "Handler says: 'You miss 100% of the loot you don't grab.' Raider considers this deeply." },
-    { "id": "er_02", "weight": 25, "text": "Handler radio: 'Believe in yourself.' Raider's greed stat quietly ticks up." },
-    { "id": "er_03", "weight": 25, "text": "Handler: 'One more crate.' Raider: 'One more crate.'" },
-    { "id": "er_04", "weight": 25, "text": "Motivational static received. Raider feels inspired and somewhat reckless." }
+  "calm_responses": [
+    { "id": "cr_01", "weight": 25, "text": "Handler says: 'You miss 100% of the loot you don't grab.' Raider considers this deeply." },
+    { "id": "cr_02", "weight": 25, "text": "Handler radio: 'Believe in yourself.' Raider's greed stat quietly ticks up." },
+    { "id": "cr_03", "weight": 25, "text": "Handler: 'One more crate.' Raider: 'One more crate.'" },
+    { "id": "cr_04", "weight": 25, "text": "Motivational static received. Raider feels inspired and somewhat reckless." }
   ],
-  "scold_responses": [
-    { "id": "sr_01", "weight": 25, "text": "Handler revokes snack privileges. Raider sulks but considers the exits." },
-    { "id": "sr_02", "weight": 25, "text": "Handler: 'GET OUT NOW.' Raider re-evaluates the risk-reward math." },
-    { "id": "sr_03", "weight": 25, "text": "Scolding received. Raider's survival instincts briefly override greed instincts." },
-    { "id": "sr_04", "weight": 25, "text": "Handler says they're disappointed. Raider begins passive extraction process." }
+  "pressure_responses": [
+    { "id": "pr_01", "weight": 25, "text": "Handler revokes snack privileges. Raider sulks but considers the exits." },
+    { "id": "pr_02", "weight": 25, "text": "Handler: 'GET OUT NOW.' Raider re-evaluates the risk-reward math." },
+    { "id": "pr_03", "weight": 25, "text": "Scolding received. Raider's survival instincts briefly override greed instincts." },
+    { "id": "pr_04", "weight": 25, "text": "Handler says they're disappointed. Raider begins passive extraction process." }
   ]
 }

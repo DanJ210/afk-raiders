@@ -1,5 +1,5 @@
 /**
- * useHandlerActions — signal-gated player actions (Encourage, Scold, Ready Up, etc.).
+ * useHandlerActions — signal-gated player actions (Calm, Pressure, Ready Up, etc.).
  *
  * Responsibilities:
  * - Signal validation and spending for each action
@@ -10,7 +10,7 @@
 
 import type { GameState } from '../engine/types.js'
 import type { RNG } from '../engine/rng.js'
-import { computeSignal, spendSignal } from '../engine/signal.js'
+import { advanceSignal, refillSignalWithAmplifier, spendSignal, SIGNAL_CAP } from '../engine/signal.js'
 import { tickPhase } from '../engine/raidStateMachine.js'
 import { sellItemFromHomeStash } from '../engine/homeStash.js'
 import { consumeHealingItem, consumeShieldRecharger } from '../engine/eventResolver.js'
@@ -22,8 +22,9 @@ import type { BackpackItem } from '../engine/types.js'
 const RAIDER_NAME_MAX_LENGTH = 25
 
 export interface HandlerActionsReturn {
-  encourage: () => void
-  scold: () => void
+  calm: () => void
+  pressure: () => void
+  applySignalAmplifier: () => void
   readyUp: () => void
   callExtract: () => void
   applyHealingItem: (itemId: string) => void
@@ -50,7 +51,7 @@ function toHiddenPocketItem(item: BackpackItem) {
 }
 
 /**
- * Expose signal-gated Handler actions: encourage, scold, readyUp, callExtract, etc.
+ * Expose signal-gated Handler actions: calm, pressure, readyUp, callExtract, etc.
  * State mutations are applied directly to stateRef; side effects call the persistence callback.
  */
 export function useHandlerActions(
@@ -62,28 +63,40 @@ export function useHandlerActions(
   onResetSave: (newState: GameState, seed: number, lastTickAt: number) => void,
   onAwaySummaryDismiss: () => void,
 ): HandlerActionsReturn {
-  function encourage() {
+  function syncSignalProgress(now: number) {
+    const advancement = advanceSignal(stateRef.value.signal, now)
+    if (advancement.signal !== stateRef.value.signal || advancement.amplifiersGained > 0) {
+      stateRef.value = {
+        ...stateRef.value,
+        signal: advancement.signal,
+        signalAmplifiers: stateRef.value.signalAmplifiers + advancement.amplifiersGained,
+      }
+    }
+    return advancement.signal
+  }
+
+  function calm() {
     if (stateRef.value.raid.phase !== 'RAIDING') return
     if (hasPendingHandlerAction()) return
-    const updated = spendSignal(computeSignal(stateRef.value.signal, Date.now()), 'ENCOURAGE')
+    const updated = spendSignal(syncSignalProgress(Date.now()), 'CALM')
     if (!updated) return
     stateRef.value = {
       ...stateRef.value,
       signal: updated,
-      pendingEncourage: true,
+      pendingCalm: true,
     }
     persistCallback(stateRef.value, rngRef.current.getSeed(), lastTickAtRef.value)
   }
 
-  function scold() {
+  function pressure() {
     if (stateRef.value.raid.phase !== 'RAIDING') return
     if (hasPendingHandlerAction()) return
-    const updated = spendSignal(computeSignal(stateRef.value.signal, Date.now()), 'SCOLD')
+    const updated = spendSignal(syncSignalProgress(Date.now()), 'PRESSURE')
     if (!updated) return
     stateRef.value = {
       ...stateRef.value,
       signal: updated,
-      pendingScold: true,
+      pendingPressure: true,
     }
     persistCallback(stateRef.value, rngRef.current.getSeed(), lastTickAtRef.value)
   }
@@ -91,7 +104,7 @@ export function useHandlerActions(
   function readyUp() {
     if (stateRef.value.raid.phase !== 'HUB') return
     const actionNow = Date.now()
-    const updated = spendSignal(computeSignal(stateRef.value.signal, actionNow), 'READY_UP')
+    const updated = spendSignal(syncSignalProgress(actionNow), 'READY_UP')
     if (!updated) return
 
     const { raid: deployingRaid, transition } = tickPhase(stateRef.value.raid, 'DEPLOYING', rngRef.current)
@@ -118,12 +131,29 @@ export function useHandlerActions(
   function callExtract() {
     if (stateRef.value.raid.phase !== 'RAIDING') return
     if (hasPendingHandlerAction()) return
-    const updated = spendSignal(computeSignal(stateRef.value.signal, Date.now()), 'CALL_EXTRACT')
+    const updated = spendSignal(syncSignalProgress(Date.now()), 'CALL_EXTRACT')
     if (!updated) return
     stateRef.value = {
       ...stateRef.value,
       signal: updated,
       raid: { ...stateRef.value.raid, forceExtract: true },
+    }
+    persistCallback(stateRef.value, rngRef.current.getSeed(), lastTickAtRef.value)
+  }
+
+  function applySignalAmplifier() {
+    const actionNow = Date.now()
+    const currentSignal = syncSignalProgress(actionNow)
+    if (currentSignal.current >= SIGNAL_CAP) return
+    if (stateRef.value.signalAmplifiers <= 0) return
+
+    const refilled = refillSignalWithAmplifier(currentSignal, actionNow)
+    if (!refilled) return
+
+    stateRef.value = {
+      ...stateRef.value,
+      signal: refilled,
+      signalAmplifiers: stateRef.value.signalAmplifiers - 1,
     }
     persistCallback(stateRef.value, rngRef.current.getSeed(), lastTickAtRef.value)
   }
@@ -216,8 +246,9 @@ export function useHandlerActions(
   }
 
   return {
-    encourage,
-    scold,
+    calm,
+    pressure,
+    applySignalAmplifier,
     readyUp,
     callExtract,
     applyHealingItem,

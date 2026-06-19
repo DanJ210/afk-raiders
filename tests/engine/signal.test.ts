@@ -1,21 +1,22 @@
 /**
  * Signal meter tests:
  * - Regen timing: signal increases with elapsed time
- * - Cap at SIGNAL_CAP (5)
+ * - Overflow can bank Signal Amplifiers
  * - Costs correctly deducted
  * - Cannot spend below zero
  */
 
 import { describe, it, expect } from 'vitest'
 import {
+  advanceSignal,
   computeSignal,
   spendSignal,
   initialSignalState,
   SIGNAL_CAP,
   SIGNAL_REGEN_MS,
   SIGNAL_COSTS,
-  SCOLD_GREED_REDUCTION,
-  applyScoldGreedReduction,
+  CALM_GREED_REDUCTION,
+  applyCalmGreedReduction,
 } from '../../src/engine/signal'
 import type { SignalState } from '../../src/engine/types'
 
@@ -48,42 +49,38 @@ describe('signal', () => {
     expect(updated.current).toBe(3)
   })
 
-  it('caps at SIGNAL_CAP regardless of time elapsed', () => {
+  it('banks a Signal Amplifier when signal overflows past cap', () => {
+    const s = makeSignal(SIGNAL_CAP, 0)
+    const updated = advanceSignal(s, SIGNAL_REGEN_MS)
+    expect(updated.signal.current).toBe(1)
+    expect(updated.amplifiersGained).toBe(1)
+  })
+
+  it('banks repeated amplifiers over long elapsed time', () => {
     const s = makeSignal(3, 0)
-    const updated = computeSignal(s, 100 * SIGNAL_REGEN_MS)
-    expect(updated.current).toBe(SIGNAL_CAP)
+    const updated = advanceSignal(s, 100 * SIGNAL_REGEN_MS)
+    expect(updated.signal.current).toBe(3)
+    expect(updated.amplifiersGained).toBe(20)
   })
 
   it('resets lastRegenAt to now when regen reaches cap', () => {
     const s = makeSignal(SIGNAL_CAP - 1, 0)
-    // Enough time for 3 ticks but only 1 is consumable (cap = 5, current = 4)
-    const updated = computeSignal(s, 3 * SIGNAL_REGEN_MS)
+    // Enough time for 1 tick to reach cap.
+    const updated = computeSignal(s, SIGNAL_REGEN_MS)
     expect(updated.current).toBe(SIGNAL_CAP)
-    expect(updated.lastRegenAt).toBe(3 * SIGNAL_REGEN_MS)
+    expect(updated.lastRegenAt).toBe(SIGNAL_REGEN_MS)
   })
 
-  it('does not immediately refill after spending when signal was full for a long time', () => {
-    const now = 100 * SIGNAL_REGEN_MS
-    const fullForAWhile = makeSignal(SIGNAL_CAP, 0)
-
-    const normalized = computeSignal(fullForAWhile, now)
-    const spent = spendSignal(normalized, 'ENCOURAGE')
-    expect(spent).not.toBeNull()
-
-    const afterSpend = computeSignal(spent!, now)
-    expect(afterSpend.current).toBe(SIGNAL_CAP - SIGNAL_COSTS.ENCOURAGE)
-  })
-
-  it('spendSignal deducts cost for ENCOURAGE', () => {
+  it('spendSignal deducts cost for CALM', () => {
     const s = makeSignal(3)
-    const updated = spendSignal(s, 'ENCOURAGE')
-    expect(updated?.current).toBe(3 - SIGNAL_COSTS.ENCOURAGE)
+    const updated = spendSignal(s, 'CALM')
+    expect(updated?.current).toBe(3 - SIGNAL_COSTS.CALM)
   })
 
-  it('spendSignal deducts cost for SCOLD', () => {
+  it('spendSignal deducts cost for PRESSURE', () => {
     const s = makeSignal(3)
-    const updated = spendSignal(s, 'SCOLD')
-    expect(updated?.current).toBe(3 - SIGNAL_COSTS.SCOLD)
+    const updated = spendSignal(s, 'PRESSURE')
+    expect(updated?.current).toBe(3 - SIGNAL_COSTS.PRESSURE)
   })
 
   it('spendSignal deducts cost for CALL_EXTRACT', () => {
@@ -94,7 +91,7 @@ describe('signal', () => {
 
   it('spendSignal returns null when insufficient signal', () => {
     const s = makeSignal(0)
-    expect(spendSignal(s, 'ENCOURAGE')).toBeNull()
+    expect(spendSignal(s, 'CALM')).toBeNull()
   })
 
   it('spendSignal returns null for CALL_EXTRACT when signal < 3', () => {
@@ -106,12 +103,11 @@ describe('signal', () => {
     expect(SIGNAL_COSTS.CALL_EXTRACT).toBe(3)
   })
 
-  it('applyScoldGreedReduction reduces greed by configured amount', () => {
-    expect(applyScoldGreedReduction(30)).toBe(30 - SCOLD_GREED_REDUCTION)
+  it('applyCalmGreedReduction reduces greed by configured amount', () => {
+    expect(applyCalmGreedReduction(30)).toBe(30 - CALM_GREED_REDUCTION)
   })
 
-  it('applyScoldGreedReduction clamps greed at zero', () => {
-    expect(applyScoldGreedReduction(5)).toBe(0)
+  it('applyCalmGreedReduction clamps greed at zero', () => {
+    expect(applyCalmGreedReduction(5)).toBe(0)
   })
 })
-

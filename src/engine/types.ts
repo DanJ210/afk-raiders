@@ -230,14 +230,15 @@ export interface GameState {
   raider: RaiderStats
   raid: RaidState
   signal: SignalState
+  signalAmplifiers: number
   log: LogEvent[]
   homeStash: BackpackItem[]
   /** Coin stash from auto-sold overflow loot — value is never deleted, only converted */
   coins: number
   stats: RaiderLifetimeStats
   // Set by CALL_EXTRACT so the tick driver knows to nudge the next greed check
-  pendingEncourage: boolean
-  pendingScold: boolean
+  pendingCalm: boolean
+  pendingPressure: boolean
 }
 
 // ---------------------------------------------------------------------------

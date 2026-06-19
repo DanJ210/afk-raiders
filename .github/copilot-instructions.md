@@ -48,7 +48,7 @@ AFK Raiders includes a parody safe pocket named **Secret Hidden Pocket**:
 ### Raid Pacing
 Raid aggression is autonomous; there is no extraction preference slider. `runGreedCheck()` uses fixed seeded probabilities so the Raider generally spends more time raiding before choosing to extract. Low HP without any current-raid bandages increases extract probability so the raider tries to survive and cash out. If they do have bandages, this no-bandage extraction bonus is not applied. Scolding also reduces current greed before the next greed check, giving the Handler a direct way to cool risky behavior. Separately, the RAIDING phase has a hard timer cap; timing out in RAIDING transitions to DOWNED.
 
-During RAIDING, only one Handler action can be pending at a time (`pendingEncourage`, `pendingScold`, or `forceExtract`). When any pending action is set, raid action buttons should remain disabled until the next simulation tick consumes the pending action and logs feedback.
+During RAIDING, only one Handler action can be pending at a time (`pendingCalm`, `pendingPressure`, or `forceExtract`). When any pending action is set, raid action buttons should remain disabled until the next simulation tick consumes the pending action and logs feedback.
 
 `Signal` is capped at 5 and currently supports these action costs in `src/engine/signal.ts`: `READY_UP` = 2, `ENCOURAGE` = 1, `SCOLD` = 1, `CALL_EXTRACT` = 3.
 

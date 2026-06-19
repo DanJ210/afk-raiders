@@ -1,7 +1,7 @@
 /**
  * Greed Check unit tests.
  * - Higher backpack value increases push-deeper probability
- * - Scold reduces push-deeper probability
+ * - Pressure reduces push-deeper probability
  * - CALL_EXTRACT forces extraction attempt
  * - forceExtract in raid state forces EXTRACT outcome
  */
@@ -12,8 +12,8 @@ import { runGreedCheck } from '../../src/engine/greedCheck'
 import type { RaidState } from '../../src/engine/types'
 
 interface GreedCheckOpts {
-  encouraged: boolean
-  scolded: boolean
+  calmed: boolean
+  pressured: boolean
   currentHp?: number
   maxHp?: number
   hasHealingItems?: boolean
@@ -48,7 +48,7 @@ function makeRaid(overrides: Partial<RaidState> = {}): RaidState {
 }
 
 /** Run N greed checks with fixed seed, count outcomes */
-function countOutcomes(raid: RaidState, n = 500, opts: GreedCheckOpts = { encouraged: false, scolded: false }) {
+function countOutcomes(raid: RaidState, n = 500, opts: GreedCheckOpts = { calmed: false, pressured: false }) {
   const rng = createRNG(12345)
   let pushDeeper = 0, extract = 0, downed = 0
   for (let i = 0; i < n; i++) {
@@ -81,7 +81,7 @@ describe('greedCheck', () => {
     const rng = createRNG(1)
     const raid = makeRaid({ forceExtract: true, greedLevel: 90 })
     for (let i = 0; i < 20; i++) {
-      const result = runGreedCheck(raid, rng, { encouraged: false, scolded: false })
+      const result = runGreedCheck(raid, rng, { calmed: false, pressured: false })
       expect(result.outcome).toBe('EXTRACT')
     }
   })
@@ -93,16 +93,16 @@ describe('greedCheck', () => {
     expect(highGreed.extract).toBeLessThan(lowGreed.extract)
   })
 
-  it('scolding increases extract rate vs baseline', () => {
+  it('calming decreases extract rate vs baseline', () => {
     const baseline = countOutcomes(makeRaid({ greedLevel: 30 }))
-    const scolded = countOutcomes(makeRaid({ greedLevel: 30 }), 500, { encouraged: false, scolded: true })
-    expect(scolded.extract).toBeGreaterThan(baseline.extract)
+    const calmed = countOutcomes(makeRaid({ greedLevel: 30 }), 500, { calmed: true, pressured: false })
+    expect(calmed.extract).toBeLessThan(baseline.extract)
   })
 
-  it('encouraging decreases extract rate vs baseline', () => {
+  it('pressuring increases extract rate vs baseline', () => {
     const baseline = countOutcomes(makeRaid({ greedLevel: 0 }))
-    const encouraged = countOutcomes(makeRaid({ greedLevel: 0 }), 500, { encouraged: true, scolded: false })
-    expect(encouraged.extract).toBeLessThan(baseline.extract)
+    const pressured = countOutcomes(makeRaid({ greedLevel: 0 }), 500, { calmed: false, pressured: true })
+    expect(pressured.extract).toBeGreaterThan(baseline.extract)
   })
 
   it('very high greed produces some deaths', () => {
@@ -120,7 +120,7 @@ describe('greedCheck', () => {
     const raid = makeRaid({ greedLevel: 0 })
     // Find a push-deeper outcome
     for (let i = 0; i < 100; i++) {
-      const result = runGreedCheck(raid, rng, { encouraged: false, scolded: false })
+      const result = runGreedCheck(raid, rng, { calmed: false, pressured: false })
       if (result.outcome === 'PUSH_DEEPER') {
         expect(result.newGreedLevel).toBeGreaterThan(raid.greedLevel)
         return
@@ -131,10 +131,10 @@ describe('greedCheck', () => {
   })
 
   it('low HP without bandages increases extraction rate', () => {
-    const baseline = countOutcomes(makeRaid({ greedLevel: 20 }), 500, { encouraged: false, scolded: false })
+    const baseline = countOutcomes(makeRaid({ greedLevel: 20 }), 500, { calmed: false, pressured: false })
     const wounded = countOutcomes(makeRaid({ greedLevel: 20 }), 500, {
-      encouraged: false,
-      scolded: false,
+      calmed: false,
+      pressured: false,
       currentHp: 35,
       maxHp: 100,
       hasHealingItems: false,
@@ -145,15 +145,15 @@ describe('greedCheck', () => {
 
   it('low HP with bandages does not get the no-bandage extraction bonus', () => {
     const woundedNoBandages = countOutcomes(makeRaid({ greedLevel: 20 }), 500, {
-      encouraged: false,
-      scolded: false,
+      calmed: false,
+      pressured: false,
       currentHp: 35,
       maxHp: 100,
       hasHealingItems: false,
     })
     const woundedWithBandages = countOutcomes(makeRaid({ greedLevel: 20 }), 500, {
-      encouraged: false,
-      scolded: false,
+      calmed: false,
+      pressured: false,
       currentHp: 35,
       maxHp: 100,
       hasHealingItems: true,
