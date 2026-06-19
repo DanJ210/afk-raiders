@@ -71,6 +71,8 @@ export function useGamePersistence(): GamePersistenceReturn {
           mood: clampMood(loadedState.raider.mood),
         },
         signalAmplifiers: loadedState.signalAmplifiers ?? 0,
+        pendingCalm: (loadedState as any).pendingCalm ?? (loadedState as any).pendingEncourage ?? false,
+        pendingPressure: (loadedState as any).pendingPressure ?? (loadedState as any).pendingScold ?? false,
         homeStash: sale.homeStash,
         coins: (loadedState.coins ?? 0) + sale.coinsGained,
         stats: loadedState.stats ?? seedLegacyLifetimeStats(loadedState),
