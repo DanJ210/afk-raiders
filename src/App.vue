@@ -10,6 +10,7 @@ import BackpackPanel from './components/BackpackPanel.vue'
 import HomeStash from './components/HomeStash.vue'
 import HandlerActions from './components/HandlerActions.vue'
 import AwaySummary from './components/AwaySummary.vue'
+import PWAInstallPrompt from './components/PWAInstallPrompt.vue'
 import PhaseStatusStrip from './components/PhaseStatusStrip.vue'
 
 const store = useGameStore()
@@ -146,6 +147,7 @@ const phaseTimeText = computed(() => {
     </nav>
 
     <AwaySummary />
+    <PWAInstallPrompt />
   </div>
 </template>
 

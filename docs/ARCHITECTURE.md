@@ -11,6 +11,21 @@
 | Testing | Vitest | Deterministic engine → trivial to unit test |
 | Later | Capacitor | Store distribution + native push, no rewrite |
 
+## PWA Installation & Offline Support
+
+The app is configured as a fully installable Progressive Web App targeting web, iOS, and Android:
+
+- **Web installation:** Modern browsers (Chrome, Edge, Brave) show a native install prompt after brief use. The [PWAInstallPrompt.vue](../src/components/PWAInstallPrompt.vue) component surfaces the `beforeinstallprompt` event as a dismissible banner in the UI.
+- **iOS installation:** Users install via "Share → Add to Home Screen" on Safari. Requires `apple-touch-icon` meta tag, `apple-mobile-web-app-capable`, and `apple-mobile-web-app-status-bar-style` for status bar theming.
+- **Android installation:** Native install prompt appears automatically after short engagement. Falls back to "Add to Home Screen" from the browser menu.
+
+Configuration in [vite.config.ts](../vite.config.ts):
+- Manifest is auto-generated with app name, theme colors, icons (192×192 and 512×512 px in `any` and `maskable` variants), app shortcuts (e.g., "Ready Up" to deploy), and screenshot support for installation UI.
+- Service worker uses `registerType: 'autoUpdate'` with Workbox `generateSW`. All built assets (`**/*.{js,css,html,ico,png,svg,woff2}`) are fully precached (cache-first). SPA navigation requests are served from the cached `index.html` via `navigateFallback`, so the app works entirely offline. No network fallback is needed because AFK Raiders currently has no backend calls. **Future:** once server/network calls are introduced (e.g. leaderboards, cloud saves), add Workbox [runtime caching strategies](https://developer.chrome.com/docs/workbox/caching-strategies-overview/) in `vite.config.ts` — typically `NetworkFirst` or `StaleWhileRevalidate` for API routes and `CacheFirst` for static assets fetched from CDNs.
+- Scope and start_url ensure the app launches to `/` in standalone mode.
+
+Meta tags in [index.html](../index.html) enable iOS and desktop browser detection. Installation state is tracked in [useSettingsStore](../src/stores/settingsStore.ts) via `beforeinstallprompt` and `appinstalled` events, plus `window.matchMedia('(display-mode: standalone)')` for PWA mode detection.
+
 ## Golden rule: Engine ≠ UI
 The simulation engine is **pure TypeScript with zero framework imports**. Vue renders state and dispatches the rare Handler action. The engine must run identically in Node (tests) and the browser.
 

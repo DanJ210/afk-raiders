@@ -6,6 +6,7 @@ AFK Raiders is a "zero-player" idle comedy game (inspired by Godville) that paro
 Key docs — read these before making changes:
 - `docs/GAME_DESIGN.md` — game concept, mechanics, comedy content, roadmap
 - `docs/ARCHITECTURE.md` — folder structure, engine design, persistence, testing
+- `docs/CI_CD_AZURE.md` — CI/PR validation and Azure Static Web Apps deployment flow
 - `docs/SERVER_STORAGE_AND_ACCOUNTS.md` — planned account-backed save sync architecture and backend boundaries
 
 ## Tech stack
@@ -23,6 +24,7 @@ Key docs — read these before making changes:
 4. **Tick-based simulation:** Game time advances in discrete ticks via `processTick(state, rng)`. Offline catch-up replays elapsed ticks (capped at ~8 hours) on app load.
 5. **Tests required for engine changes:** Engine PRs must include Vitest unit tests. Prefer deterministic snapshot tests: fixed seed → expected event sequence.
 6. **UI renders state; it never simulates.** Vue components read Pinia stores and dispatch Handler actions. Game logic never lives in components.
+7. **Route gameplay damage through the shield helper:** Damage that should respect shield mitigation must go through `src/engine/shields.ts`, not ad hoc HP subtraction.
 
 ## Content & tone guidelines
 - Comedy tone: deadpan, absurd, affectionate parody of extraction-shooter player behavior (loot greed, hoarding, hiding in lockers, "one more crate" syndrome).
@@ -35,6 +37,20 @@ Key docs — read these before making changes:
 - Event/loot/zone IDs are `snake_case` strings, stable once shipped (saves reference them).
 
 ## Key Game Features
+
+### Danger Level & Zone Conditions
+- Each deployment picks both a zone and a seeded zone condition from `src/content/zones/zone_conditions.json`.
+- Zone conditions set `RaidState.dangerLevel` (`Low` / `Medium` / `High`).
+- Danger-level profiles in `src/engine/dangerLevelProfiles.ts` tune reward/risk globally:
+	- Loot value and rarity bias
+	- Robot encounter pressure
+	- Extraction risk/safety weighting
+- Event templates can gate by `requires.dangerLevel`.
+
+### Loot Tables and Mood Bias
+- Loot is sourced from `src/content/loot-tables/*.json` plus robot loot tables.
+- Mood provides a mild rarity bias (positive mood slightly favors higher rarity, negative mood slightly favors lower rarity).
+- Keep mood effects subtle; danger-level profiles are the primary risk/reward lever.
 
 ### Home Stash
 Items successfully extracted are automatically transferred from the raider's backpack to a persistent `homeStash` array on the GameState. This survives raids, deaths, and sessions. When working with extraction logic or inventory systems, always ensure loot is transferred during the EXTRACTING → HUB phase transition (see `src/engine/tick.ts` for the implementation pattern). The stash holds at most 120 items (`HOME_STASH_ITEM_LIMIT` in `src/engine/homeStash.ts`; quantities count toward the cap). Overflow is never deleted: the lowest-value items are auto-sold and their value is credited to `GameState.coins` (the raider's coin stash), narrated by a `stash_overflow_sale` comms event. The Home Stash UI lists items highest-value first, and separates unsold `Stash Value` from sold `Coin Value`.
@@ -52,6 +68,12 @@ Raid aggression is autonomous; there is no extraction preference slider. `runGre
 During RAIDING, only one Handler action can be pending at a time (`pendingCalm`, `pendingPressure`, or `forceExtract`). When any pending action is set, raid action buttons should remain disabled until the next simulation tick consumes the pending action and logs feedback.
 
 `Signal` is capped at 5 and currently supports these action costs in `src/engine/signal.ts`: `READY_UP` = 2, `ENCOURAGE` = 1, `SCOLD` = 1, `CALL_EXTRACT` = 3.
+
+### Extraction Event Outcomes
+- During `EXTRACTING`, events from `src/content/extraction_events.json` can force phase changes via `effects.forcePhase`:
+	- `HUB`: early successful extraction
+	- `RAIDING`: failed extraction (backpack kept)
+	- `DOWNED`: downed at the LZ (backpack lost, hidden pocket still applied)
 
 ### Raid Duration
 Max raid time is 60 ticks = 30 minutes at the 30 s tick cadence. Phase durations are defined in `src/engine/raidStateMachine.ts` as `PHASE_DURATIONS`: HUB ≤ 10 min (20 ticks), DEPLOYING 2 min (4 ticks, one-person tunnel pods), RAIDING ≤ 30 min (60 ticks), EXTRACTING ~2 min (4 ticks), DOWNED 1 min (2 ticks). When the raid timer expires while still in RAIDING, the natural transition is DOWNED (zone nuke failure), not EXTRACTING. If HP reaches 0 in any non-HUB phase the raider goes DOWNED, loses the backpack, and respawns in the HUB. Each phase has its own events file in `src/content/` (hub_events, deployment_events, raiding_events, extraction_events, downed_events).
@@ -79,17 +101,33 @@ Robot encounter events in `src/content/raiding_events.json` use `effects.robotEn
 
 Only `nasty` and `deadly` robots can kill the raider (lethal encounters trigger only at ≤ 50% HP). `weak`, `moderate`, and `dangerous` robots are non-lethal: damage is capped so HP cannot drop to 0. High-tier robot encounter events (`nasty` and above) must include `"minGreed": 20` in their `requires` clause so they only appear after the raider has pushed deeper.
 
-`resolveRobotEncounter()` rolls 1-10 with the seeded RNG; if the roll is greater than the robot's `menace`, the raider defeats it, emits a `successText` line, and wins an item from that robot's `lootTable`. On failure, the raider takes damage based on menace and runs away. Rare event variants can set `effects.robotDamageMultiplier` to make failed encounters more dangerous or lethal; this multiplier only applies on failure, never when the robot is defeated. Robot loot is also included in the regular loot resolver pool alongside `loot.json`.
+`resolveRobotEncounter()` rolls 1-10 with the seeded RNG; if the roll is greater than the robot's `menace`, the raider defeats it, emits a `successText` line, and wins an item from that robot's `lootTable`. On failure, the raider takes damage based on menace and runs away. Rare event variants can set `effects.robotDamageMultiplier` to make failed encounters more dangerous or lethal; this multiplier only applies on failure, never when the robot is defeated. Robot loot is also included in the regular loot resolver pool alongside the base loot tables.
+
+Positive mood grants a small resilience bonus after shield mitigation on failed robot encounters only. This trims final HP loss, does not alter robot raw damage, and should remain a small modifier.
 
 ### Healing Items
 Bandages live in `src/content/healing_items.json` and are current-raid-only consumables, stored on `RaidState.healingItems`, not in the backpack or home stash. RAIDING events can use `effects.healingItem` to find one bandage. The engine automatically uses the smallest useful bandage when the raider is alive and HP is at or below 75%, capped at 50 HP per use: White +5, Green +10, Blue +25, Purple +50. Each bandage also has a `moodGain`, and higher-tier bandages grant more mood when consumed. The used bandage is removed from `RaidState.healingItems`. Healing items reset when the raid returns to HUB and are lost on death.
 
+When normal loot is added to backpack, the engine also performs independent bonus consumable rolls:
+- Healing item bonus roll
+- Shield recharger bonus roll
+
+Because these rolls are independent, one loot event can grant both.
+
 ### Shields
 Shields are implemented as a deterministic protection layer on `RaidState.shield`, not as bonus HP. All incoming engine damage that should respect shields must route through the shared helper in `src/engine/shields.ts`; do not subtract shielded HP ad hoc in unrelated files. Shield rechargers are backpack items found during RAIDING and are manual-use only from the current raid backpack. They restore shield charge, never durability, and if left unused they extract into the home stash like normal backpack loot.
 
+Additional shield behavior:
+- Returning to HUB restores equipped shield charge and durability to full for MVP.
+- Shield rechargers can apply over multiple ticks via `RaidState.activeShieldRecharge`.
+- Comms should include shield split narration when mitigation occurs (shield charge lost vs HP damage landed).
+
+## Persistence and Migration Notes
+- Saves are local-only (`localStorage`) and versioned.
+- Load migration fills missing fields for legacy saves (for example coins, stats, shield state, hidden pocket, danger level, zone condition).
+- If stash quantity exceeds cap in a legacy save, overflow is auto-sold during migration rather than deleted.
+
 ## Future Development Notes
 - Home stash will eventually persist to IndexedDB when transitioning from localStorage
-- Consider adding sell/trade mechanics in the hub to let players convert stash items to currency
-- Extraction preference could be expanded to affect other raider behaviors (hiding frequency, trading mood, etc.)
+- Consider loadout/store progression for non-starter shield persistence and durability repair loops
 - Consider achievements/milestones for accumulated stash value
-
