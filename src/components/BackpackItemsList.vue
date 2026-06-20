@@ -24,10 +24,10 @@ function handleKeydown(event: KeyboardEvent, itemId: string) {
 
 <template>
   <div class="backpack-items-container mt-3 flex flex-col flex-1 min-h-0">
-    <p v-if="items.length === 0 && phase === 'HUB'" class="text-[0.8rem] text-muted italic mt-2">
+    <p v-if="items.length === 0 && phase === 'HUB'" class="text-raider-meta text-muted italic mt-2">
       Backpack empty. Ready for terrible decisions.
     </p>
-    <p v-else-if="items.length === 0" class="text-[0.8rem] text-muted italic mt-2">
+    <p v-else-if="items.length === 0" class="text-raider-meta text-muted italic mt-2">
       Nothing yet. The zone is full of possibilities and also robots.
     </p>
 
@@ -35,29 +35,42 @@ function handleKeydown(event: KeyboardEvent, itemId: string) {
       <li
         v-for="item in items"
         :key="item.itemId"
-        class="flex flex-col justify-start min-h-[84px] border border-border-subtle rounded-md bg-surface-raised px-2.5 py-2 overflow-visible cursor-pointer hover:border-accent focus-visible:border-accent focus-visible:outline-none max-[600px]:min-h-[92px]"
+        class="backpack-item-row min-h-21 border border-border-subtle rounded-md bg-surface-raised px-2.5 py-2 overflow-visible cursor-pointer hover:border-accent focus-visible:border-accent focus-visible:outline-none max-[600px]:min-h-23"
         role="button"
         tabindex="0"
         @click="$emit('item-click', item.itemId)"
         @keydown="handleKeydown($event, item.itemId)"
       >
-        <div class="flex justify-between gap-2.5 min-w-0">
-          <span :class="rarityBarClass(item.rarity)" :title="rarityLabel(item.rarity)" aria-hidden="true" />
-          <span class="flex-1 min-w-0 text-[0.86rem] text-text">{{ item.name }}</span>
-          <span class="text-[0.72rem] text-muted font-mono">{{ rarityLabel(item.rarity) }}</span>
+        <span :class="[rarityBarClass(item.rarity), 'backpack-item-row__rarity']" :title="rarityLabel(item.rarity)" aria-hidden="true" />
+        <div class="min-w-0">
+          <div class="flex justify-between gap-2.5 min-w-0">
+            <span class="flex-1 min-w-0 text-[0.86rem] text-text wrap-anywhere">{{ item.name }}</span>
+            <span class="text-[0.72rem] text-muted font-mono">{{ rarityLabel(item.rarity) }}</span>
+          </div>
+          <div class="flex justify-between gap-2.5 min-w-0 mt-1 text-[0.72rem] text-muted font-mono">
+            <span>Value {{ item.value }}</span>
+            <span v-if="item.kind === 'shield_recharger'">+{{ item.shieldChargeAmount }} Shield</span>
+            <span v-if="item.quantity > 1">x{{ item.quantity }}</span>
+          </div>
+          <p v-if="item.flavor" class="mt-1.5 mb-0 text-[0.72rem] text-muted font-mono italic leading-[1.4] wrap-anywhere">{{ item.flavor }}</p>
         </div>
-        <div class="flex justify-between gap-2.5 min-w-0 mt-1 text-[0.72rem] text-muted font-mono">
-          <span>Value {{ item.value }}</span>
-          <span v-if="item.kind === 'shield_recharger'">+{{ item.shieldChargeAmount }} Shield</span>
-          <span v-if="item.quantity > 1">x{{ item.quantity }}</span>
-        </div>
-        <p v-if="item.flavor" class="mt-1.5 mb-0 text-[0.72rem] text-muted font-mono italic leading-[1.4] [overflow-wrap:anywhere]">{{ item.flavor }}</p>
       </li>
     </ul>
   </div>
 </template>
 
 <style scoped>
+.backpack-item-row {
+  display: grid;
+  grid-template-columns: 0.25rem minmax(0, 1fr);
+  column-gap: 0.625rem;
+  align-items: stretch;
+}
+
+.backpack-item-row__rarity {
+  grid-column: 1;
+}
+
 /* Desktop: constrain viewport to show exactly 5 rows */
 @media (min-width: 601px) {
   .backpack-items-container {
