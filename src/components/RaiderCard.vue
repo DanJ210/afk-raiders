@@ -62,7 +62,7 @@ function formatDuration(ms: number): string {
         <button
           v-if="currentZoneName"
           type="button"
-          class="relative font-mono text-raider-value text-text min-w-0 wrap-anywhere border-none bg-transparent p-0 underline decoration-dotted underline-offset-2 cursor-help text-left group"
+          class="relative font-mono text-raider-value text-text min-w-0 [overflow-wrap:anywhere] border-none bg-transparent p-0 underline decoration-dotted underline-offset-2 cursor-help text-left group"
           :aria-label="currentZoneDescription ? `Zone ${currentZoneName}. ${currentZoneDescription}` : `Zone ${currentZoneName}`"
         >
           {{ currentZoneName }}
@@ -81,7 +81,7 @@ function formatDuration(ms: number): string {
         <button
           v-if="currentCondition"
           type="button"
-          class="relative font-mono text-raider-value text-text min-w-0 wrap-anywhere border-none bg-transparent p-0 underline decoration-dotted underline-offset-2 cursor-help text-left group"
+          class="relative font-mono text-raider-value text-text min-w-0 [overflow-wrap:anywhere] border-none bg-transparent p-0 underline decoration-dotted underline-offset-2 cursor-help text-left group"
           :aria-label="currentCondition.description ? `Condition ${currentCondition.name}. ${currentCondition.description}` : `Condition ${currentCondition.name}`"
         >
           {{ currentCondition.name }}

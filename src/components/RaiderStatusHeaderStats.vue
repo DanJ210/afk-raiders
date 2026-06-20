@@ -89,7 +89,7 @@ const phaseBadgeClass = computed(() => {
     <div class="flex justify-between items-center mb-1 max-[600px]:flex-wrap max-[600px]:gap-y-1.5">
       <span
         v-if="props.allowRename && !editingName"
-        class="group font-mono text-base font-bold text-text cursor-pointer flex items-center gap-1 max-[600px]:min-w-0 max-[600px]:wrap-anywhere"
+        class="group font-mono text-base font-bold text-text cursor-pointer flex items-center gap-1 max-[600px]:min-w-0 max-[600px]:[overflow-wrap:anywhere]"
         role="button"
         tabindex="0"
         title="Click to rename"
@@ -112,7 +112,7 @@ const phaseBadgeClass = computed(() => {
       </span>
       <span
         v-else
-        class="font-mono text-base font-bold text-text max-[600px]:min-w-0 max-[600px]:wrap-anywhere"
+        class="font-mono text-base font-bold text-text max-[600px]:min-w-0 max-[600px]:[overflow-wrap:anywhere]"
       >
         {{ raider.name }}
       </span>
@@ -136,12 +136,12 @@ const phaseBadgeClass = computed(() => {
       >
         <div class="h-full rounded transition-[width] duration-(--duration-greed-fill) ease-in-out" :class="hpFillColor" :style="{ width: hpPercent + '%' }" />
       </div>
-      <span class="font-mono text-raider-value text-text min-w-0 wrap-anywhere">{{ raider.hp }}/{{ raider.maxHp }}</span>
+      <span class="font-mono text-raider-value text-text min-w-0 [overflow-wrap:anywhere]">{{ raider.hp }}/{{ raider.maxHp }}</span>
     </div>
 
     <div class="flex items-center gap-2 min-w-0 max-[600px]:items-start max-[600px]:flex-wrap">
       <span class="font-mono text-xs text-muted min-w-raider-label max-[600px]:min-w-0">Mood</span>
-      <span class="font-mono text-raider-value text-text min-w-0 wrap-anywhere inline-flex items-center flex-wrap">
+      <span class="font-mono text-raider-value text-text min-w-0 [overflow-wrap:anywhere] inline-flex items-center flex-wrap">
         {{ moodLabel(raider.mood) }}
         <MoodResilienceBadge :mood="raider.mood" />
       </span>
