@@ -51,7 +51,7 @@ function handleKeydown(event: KeyboardEvent, itemId: string) {
           <span v-if="item.kind === 'shield_recharger'">+{{ item.shieldChargeAmount }} Shield</span>
           <span v-if="item.quantity > 1">x{{ item.quantity }}</span>
         </div>
-        <p v-if="item.flavor" class="mt-1.5 mb-0 text-[0.72rem] text-muted font-mono italic leading-[1.4] overflow-wrap-anywhere">{{ item.flavor }}</p>
+        <p v-if="item.flavor" class="mt-1.5 mb-0 text-[0.72rem] text-muted font-mono italic leading-[1.4] [overflow-wrap:anywhere]">{{ item.flavor }}</p>
       </li>
     </ul>
   </div>

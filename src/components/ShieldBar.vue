@@ -109,7 +109,7 @@ const shieldRechargeProgress = computed(() => {
     </div>
 
     <div v-if="!compact" class="flex justify-between gap-2 min-w-0 w-full max-[600px]:pl-[48px] max-[600px]:gap-1.5">
-      <span class="shrink-0 font-mono text-[0.72rem] text-muted min-w-0 overflow-wrap-anywhere max-[600px]:hidden">{{ shieldStatus }}</span>
+      <span class="shrink-0 font-mono text-[0.72rem] text-muted min-w-0 [overflow-wrap:anywhere] max-[600px]:hidden">{{ shieldStatus }}</span>
       <span class="shrink-0 font-mono text-[0.72rem] text-muted max-[600px]:text-[0.68rem]">Durability {{ displayedDurability }}%</span>
     </div>
 

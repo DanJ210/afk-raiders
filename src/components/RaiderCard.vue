@@ -105,7 +105,7 @@ const phaseBadgeClass = computed(() => {
     <div class="flex justify-between items-center mb-3 max-[600px]:flex-wrap max-[600px]:gap-y-1.5">
       <span
         v-if="!editingName"
-        class="font-mono text-base font-bold text-text cursor-pointer flex items-center gap-1 max-[600px]:min-w-0 max-[600px]:overflow-wrap-anywhere"
+        class="group font-mono text-base font-bold text-text cursor-pointer flex items-center gap-1 max-[600px]:min-w-0 max-[600px]:[overflow-wrap:anywhere]"
         role="button"
         tabindex="0"
         title="Click to rename"
@@ -148,12 +148,12 @@ const phaseBadgeClass = computed(() => {
         >
           <div class="h-full rounded transition-[width] duration-[400ms] ease-in-out" :class="hpFillColor" :style="{ width: hpPercent + '%' }" />
         </div>
-        <span class="font-mono text-[0.85rem] text-text min-w-0 overflow-wrap-anywhere">{{ raider.hp }}/{{ raider.maxHp }}</span>
+        <span class="font-mono text-[0.85rem] text-text min-w-0 [overflow-wrap:anywhere]">{{ raider.hp }}/{{ raider.maxHp }}</span>
       </div>
 
       <div class="flex items-center gap-2 min-w-0 max-[600px]:items-start max-[600px]:flex-wrap">
         <span class="font-mono text-[0.75rem] text-muted min-w-[72px] max-[600px]:min-w-0">Mood</span>
-        <span class="font-mono text-[0.85rem] text-text min-w-0 overflow-wrap-anywhere inline-flex items-center flex-wrap">
+        <span class="font-mono text-[0.85rem] text-text min-w-0 [overflow-wrap:anywhere] inline-flex items-center flex-wrap">
           {{ moodLabel(raider.mood) }}
           <MoodResilienceBadge :mood="raider.mood" />
         </span>
@@ -164,7 +164,7 @@ const phaseBadgeClass = computed(() => {
         <button
           v-if="currentZoneName"
           type="button"
-          class="relative font-mono text-[0.85rem] text-text min-w-0 overflow-wrap-anywhere border-none bg-transparent p-0 underline decoration-dotted underline-offset-2 cursor-help text-left group"
+          class="relative font-mono text-[0.85rem] text-text min-w-0 [overflow-wrap:anywhere] border-none bg-transparent p-0 underline decoration-dotted underline-offset-2 cursor-help text-left group"
           :aria-label="currentZoneDescription ? `Zone ${currentZoneName}. ${currentZoneDescription}` : `Zone ${currentZoneName}`"
         >
           {{ currentZoneName }}
@@ -183,7 +183,7 @@ const phaseBadgeClass = computed(() => {
         <button
           v-if="currentCondition"
           type="button"
-          class="relative font-mono text-[0.85rem] text-text min-w-0 overflow-wrap-anywhere border-none bg-transparent p-0 underline decoration-dotted underline-offset-2 cursor-help text-left group"
+          class="relative font-mono text-[0.85rem] text-text min-w-0 [overflow-wrap:anywhere] border-none bg-transparent p-0 underline decoration-dotted underline-offset-2 cursor-help text-left group"
           :aria-label="currentCondition.description ? `Condition ${currentCondition.name}. ${currentCondition.description}` : `Condition ${currentCondition.name}`"
         >
           {{ currentCondition.name }}

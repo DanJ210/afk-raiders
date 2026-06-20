@@ -51,7 +51,7 @@
 @layer base {
   /* Alias so retained scoped styles using var(--font-mono) still work */
   :root {
-    --font-mono: 'Courier New', Courier, monospace;
+    --font-mono: var(--font-family-mono);
   }
 
   html, body, #app {
