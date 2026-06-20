@@ -47,16 +47,17 @@ function phaseBadge(phase: string): string {
 </script>
 
 <template>
-  <section class="comms-log" aria-label="Comms Log">
-    <header class="comms-log__header">
-      <span class="comms-log__icon">📻</span>
-      <span class="comms-log__title">COMMS FEED</span>
+  <section class="comms-log flex flex-col h-full bg-surface rounded-lg overflow-hidden border border-border" aria-label="Comms Log">
+    <header class="flex items-center gap-2 px-3.5 py-2.5 bg-surface-raised border-b border-border font-mono text-[0.75rem] tracking-[0.1em] text-accent">
+      <span>📻</span>
+      <span>COMMS FEED</span>
     </header>
-    <div class="comms-log__mobile-health">
+    <!-- Mobile-only health bars: hidden on desktop, shown on small screens -->
+    <div class="hidden max-[600px]:flex flex-col items-stretch gap-1.5 px-3.5 py-2 bg-surface-raised border-b border-border font-mono">
       <ShieldBar :shield="raidShield" :recharge="raidShieldRecharge" label="SHIELD" compact />
       <HealthBar :current="store.raider.hp" :max="store.raider.maxHp" label="RAIDER HP" />
     </div>
-    <div class="comms-log__tick-track" aria-hidden="true">
+    <div class="h-[3px] bg-surface-raised border-b border-border overflow-hidden" aria-hidden="true">
       <div
         :key="tickBarKey"
         class="comms-log__tick-bar"
@@ -65,74 +66,33 @@ function phaseBadge(phase: string): string {
     </div>
     <div
       :ref="pinnedTopLog.logEl"
-      class="comms-log__feed"
+      class="flex-1 overflow-y-auto py-2 scroll-smooth"
       role="log"
       aria-live="polite"
       aria-relevant="additions"
       @scroll="pinnedTopLog.onScroll"
     >
-      <p v-if="store.log.length === 0" class="comms-log__empty">
+      <p v-if="store.log.length === 0" class="px-4 py-4 text-muted italic text-[0.85rem]">
         Waiting for transmission…
       </p>
       <div
         v-for="entry in entries"
         :key="`${entry.tick}-${entry.id}`"
-        class="comms-log__entry"
+        class="flex gap-2 px-3.5 py-[5px] text-[0.875rem] leading-[1.5] border-b border-border-subtle last:border-b-0"
       >
-        <span class="comms-log__meta">
+        <span class="shrink-0 text-muted font-mono text-[0.75rem] pt-0.5 min-w-[60px]">
           {{ phaseBadge(entry.phase) }} {{ formatTime(entry.timestamp) }}
         </span>
-        <span class="comms-log__text">{{ entry.text }}</span>
+        <span class="text-text font-mono">{{ entry.text }}</span>
       </div>
     </div>
-    <div v-if="pinnedTopLog.userScrolledDown.value" class="comms-log__scroll-hint" @click="pinnedTopLog.jumpToTop()">
+    <div v-if="pinnedTopLog.userScrolledDown.value" class="px-3.5 py-1.5 bg-accent text-bg text-[0.75rem] text-center cursor-pointer font-mono" @click="pinnedTopLog.jumpToTop()">
       ▲ New messages at top
     </div>
   </section>
 </template>
 
 <style scoped>
-.comms-log {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  background: var(--color-surface);
-  border-radius: 8px;
-  overflow: hidden;
-  border: 1px solid var(--color-border);
-}
-
-.comms-log__header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 14px;
-  background: var(--color-surface-raised);
-  border-bottom: 1px solid var(--color-border);
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  letter-spacing: 0.1em;
-  color: var(--color-accent);
-}
-
-.comms-log__mobile-health {
-  display: none;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 6px;
-  padding: 8px 14px;
-  background: var(--color-surface-raised);
-  border-bottom: 1px solid var(--color-border);
-  font-family: var(--font-mono);
-}
-
-.comms-log__tick-track {
-  height: 3px;
-  background: var(--color-surface-raised);
-  border-bottom: 1px solid var(--color-border);
-  overflow: hidden;
-}
-
 .comms-log__tick-bar {
   height: 100%;
   width: 0%;
@@ -149,68 +109,7 @@ function phaseBadge(phase: string): string {
 }
 
 @keyframes tick-fill {
-  from {
-    width: 0%;
-  }
-  to {
-    width: 100%;
-  }
-}
-
-.comms-log__feed {
-  flex: 1;
-  overflow-y: auto;
-  padding: 8px 0;
-  scroll-behavior: smooth;
-}
-
-.comms-log__empty {
-  padding: 16px;
-  color: var(--color-muted);
-  font-style: italic;
-  font-size: 0.85rem;
-}
-
-.comms-log__entry {
-  display: flex;
-  gap: 8px;
-  padding: 5px 14px;
-  font-size: 0.875rem;
-  line-height: 1.5;
-  border-bottom: 1px solid var(--color-border-subtle);
-}
-
-.comms-log__entry:last-child {
-  border-bottom: none;
-}
-
-.comms-log__meta {
-  flex-shrink: 0;
-  color: var(--color-muted);
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  padding-top: 2px;
-  min-width: 60px;
-}
-
-.comms-log__text {
-  color: var(--color-text);
-  font-family: var(--font-mono);
-}
-
-.comms-log__scroll-hint {
-  padding: 6px 14px;
-  background: var(--color-accent);
-  color: var(--color-bg);
-  font-size: 0.75rem;
-  text-align: center;
-  cursor: pointer;
-  font-family: var(--font-mono);
-}
-
-@media (max-width: 600px) {
-  .comms-log__mobile-health {
-    display: flex;
-  }
+  from { width: 0%; }
+  to   { width: 100%; }
 }
 </style>

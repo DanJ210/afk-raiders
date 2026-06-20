@@ -42,27 +42,27 @@ const regenTimerDisplay = computed(() => {
 </script>
 
 <template>
-  <section class="handler-actions" aria-label="Handler Actions">
-    <header class="handler-actions__header">📶 SIGNAL</header>
-    <div class="signal-meter" role="meter" aria-valuemin="0" :aria-valuenow="currentSignal" :aria-valuemax="SIGNAL_CAP">
+  <section class="handler-actions panel-card" aria-label="Handler Actions">
+    <header class="section-header">📶 SIGNAL</header>
+    <div class="flex items-center gap-1.5 mb-3.5" role="meter" aria-valuemin="0" :aria-valuenow="currentSignal" :aria-valuemax="SIGNAL_CAP">
       <span
         v-for="i in SIGNAL_CAP"
         :key="i"
-        class="signal-pip"
-        :class="{ 'signal-pip--active': i <= currentSignal }"
+        class="text-[1.1rem] transition-colors duration-200"
+        :class="i <= currentSignal ? 'text-accent' : 'text-surface-raised'"
         aria-hidden="true"
       >●</span>
-      <span class="signal-meter__count">{{ currentSignal }}/{{ SIGNAL_CAP }}</span>
-      <span v-if="isActionLocked" class="signal-meter__pending">Action pending...</span>
-      <span v-else class="signal-meter__regen-timer">Next gain: {{ regenTimerDisplay }}</span>
+      <span class="font-mono text-[0.75rem] text-muted ml-1">{{ currentSignal }}/{{ SIGNAL_CAP }}</span>
+      <span v-if="isActionLocked" class="ml-auto font-mono text-[0.72rem] text-accent">Action pending...</span>
+      <span v-else class="ml-auto font-mono text-[0.72rem] text-muted tracking-[0.05em]">Next gain: {{ regenTimerDisplay }}</span>
     </div>
 
-    <div class="signal-amplifiers">
-      <span class="signal-amplifiers__label">Signal Amplifiers</span>
-      <span class="signal-amplifiers__count">{{ signalAmplifiers }}</span>
+    <div class="grid grid-cols-[auto_auto_1fr] items-center gap-2 mb-3 px-2.5 py-2 rounded-md bg-surface-raised font-mono text-[0.75rem]">
+      <span class="text-muted">Signal Amplifiers</span>
+      <span class="text-accent font-bold">{{ signalAmplifiers }}</span>
       <button
         type="button"
-        class="signal-amplifiers__use"
+        class="btn-ghost justify-self-end"
         :disabled="!canUseSignalAmplifier"
         @click="store.applySignalAmplifier()"
       >
@@ -70,233 +70,46 @@ const regenTimerDisplay = computed(() => {
       </button>
     </div>
 
-    <div class="handler-actions__buttons">
+    <div class="flex flex-col gap-2 min-h-0 overflow-y-auto pr-0.5 max-[600px]:gap-1.5">
       <button
-        class="action-btn action-btn--ready-up"
+        class="flex items-center gap-2 px-3 py-[9px] rounded-md border border-border bg-surface-raised text-text font-mono text-[0.85rem] cursor-pointer transition-[background,opacity] duration-150 text-left hover:not-disabled:bg-border disabled:opacity-40 disabled:cursor-not-allowed max-[600px]:px-2.5 max-[600px]:py-2 max-[600px]:text-[0.8rem]"
         :disabled="!canReadyUp || store.phase !== 'HUB'"
         @click="store.readyUp()"
       >
-        <span class="action-btn__icon">🎮</span>
-        <span class="action-btn__label">Ready Up!</span>
-        <span class="action-btn__cost">{{ SIGNAL_COSTS.READY_UP }}📶</span>
+        <span class="text-[1rem]">🎮</span>
+        <span class="flex-1 font-semibold">Ready Up!</span>
+        <span class="text-[0.75rem] text-muted max-[600px]:text-[0.7rem]">{{ SIGNAL_COSTS.READY_UP }}📶</span>
       </button>
 
       <button
-        class="action-btn action-btn--calm"
+        class="flex items-center gap-2 px-3 py-[9px] rounded-md border border-border bg-surface-raised text-text font-mono text-[0.85rem] cursor-pointer transition-[background,opacity] duration-150 text-left hover:not-disabled:bg-border disabled:opacity-40 disabled:cursor-not-allowed max-[600px]:px-2.5 max-[600px]:py-2 max-[600px]:text-[0.8rem]"
         :disabled="!canCalm || store.phase !== 'RAIDING' || isActionLocked"
         @click="() => store.calm()"
       >
-        <span class="action-btn__icon">📣</span>
-        <span class="action-btn__label">Calm</span>
-        <span class="action-btn__cost">{{ SIGNAL_COSTS.CALM }}📶</span>
+        <span class="text-[1rem]">📣</span>
+        <span class="flex-1 font-semibold">Calm</span>
+        <span class="text-[0.75rem] text-muted max-[600px]:text-[0.7rem]">{{ SIGNAL_COSTS.CALM }}📶</span>
       </button>
 
       <button
-        class="action-btn action-btn--pressure"
+        class="flex items-center gap-2 px-3 py-[9px] rounded-md border border-border bg-surface-raised text-text font-mono text-[0.85rem] cursor-pointer transition-[background,opacity] duration-150 text-left hover:not-disabled:bg-border disabled:opacity-40 disabled:cursor-not-allowed max-[600px]:px-2.5 max-[600px]:py-2 max-[600px]:text-[0.8rem]"
         :disabled="!canPressure || store.phase !== 'RAIDING' || isActionLocked"
         @click="() => store.pressure()"
       >
-        <span class="action-btn__icon">🔇</span>
-        <span class="action-btn__label">Pressure</span>
-        <span class="action-btn__cost">{{ SIGNAL_COSTS.PRESSURE }}📶</span>
+        <span class="text-[1rem]">🔇</span>
+        <span class="flex-1 font-semibold">Pressure</span>
+        <span class="text-[0.75rem] text-muted max-[600px]:text-[0.7rem]">{{ SIGNAL_COSTS.PRESSURE }}📶</span>
       </button>
 
       <button
-        class="action-btn action-btn--extract"
+        class="flex items-center gap-2 px-3 py-[9px] rounded-md border border-danger text-danger font-mono text-[0.85rem] cursor-pointer transition-[background,opacity] duration-150 text-left hover:not-disabled:bg-danger hover:not-disabled:text-bg disabled:opacity-40 disabled:cursor-not-allowed max-[600px]:px-2.5 max-[600px]:py-2 max-[600px]:text-[0.8rem]"
         :disabled="!canCallExtract || store.phase !== 'RAIDING' || isActionLocked"
         @click="store.callExtract()"
       >
-        <span class="action-btn__icon">🚨</span>
-        <span class="action-btn__label">CALL EXTRACT</span>
-        <span class="action-btn__cost">{{ SIGNAL_COSTS.CALL_EXTRACT }}📶</span>
+        <span class="text-[1rem]">🚨</span>
+        <span class="flex-1 font-semibold">CALL EXTRACT</span>
+        <span class="text-[0.75rem] max-[600px]:text-[0.7rem]">{{ SIGNAL_COSTS.CALL_EXTRACT }}📶</span>
       </button>
     </div>
   </section>
 </template>
-
-<style scoped>
-.handler-actions {
-  display: flex;
-  flex-direction: column;
-  background: var(--color-surface);
-  border-radius: 8px;
-  border: 1px solid var(--color-border);
-  padding: 14px;
-  min-height: 0;
-  overflow: hidden;
-}
-
-.handler-actions__header {
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  letter-spacing: 0.1em;
-  color: var(--color-accent);
-  margin-bottom: 12px;
-}
-
-.signal-meter {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 14px;
-}
-
-.signal-pip {
-  font-size: 1.1rem;
-  color: var(--color-surface-raised);
-  transition: color 0.2s;
-}
-
-.signal-pip--active {
-  color: var(--color-accent);
-}
-
-.signal-meter__count {
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  color: var(--color-muted);
-  margin-left: 4px;
-}
-
-.signal-meter__pending {
-  margin-left: auto;
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  color: var(--color-accent);
-}
-
-.signal-meter__regen-timer {
-  margin-left: auto;
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  color: var(--color-muted);
-  letter-spacing: 0.05em;
-}
-
-.signal-amplifiers {
-  display: grid;
-  grid-template-columns: auto auto 1fr;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 12px;
-  padding: 8px 10px;
-  border-radius: 6px;
-  background: var(--color-surface-raised);
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-}
-
-.signal-amplifiers__label {
-  color: var(--color-muted);
-}
-
-.signal-amplifiers__count {
-  color: var(--color-accent);
-  font-weight: 700;
-}
-
-.signal-amplifiers__use {
-  justify-self: end;
-  border: 1px solid var(--color-accent);
-  border-radius: 4px;
-  background: transparent;
-  color: var(--color-accent);
-  font-family: var(--font-mono);
-  font-size: 0.68rem;
-  padding: 2px 8px;
-  cursor: pointer;
-}
-
-.signal-amplifiers__use:hover:not(:disabled) {
-  background: var(--color-accent);
-  color: var(--color-bg);
-}
-
-.signal-amplifiers__use:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.handler-actions__buttons {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  min-height: 0;
-  overflow-y: auto;
-  padding-right: 2px;
-}
-
-.action-btn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 9px 12px;
-  border-radius: 6px;
-  border: 1px solid var(--color-border);
-  background: var(--color-surface-raised);
-  color: var(--color-text);
-  font-family: var(--font-mono);
-  font-size: 0.85rem;
-  cursor: pointer;
-  transition: background 0.15s, opacity 0.15s;
-  text-align: left;
-}
-
-.action-btn:hover:not(:disabled) {
-  background: var(--color-border);
-}
-
-.action-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.action-btn__icon { font-size: 1rem; }
-
-.action-btn__label {
-  flex: 1;
-  font-weight: 600;
-}
-
-.action-btn__cost {
-  font-size: 0.75rem;
-  color: var(--color-muted);
-}
-
-.action-btn--extract {
-  border-color: var(--color-danger);
-  color: var(--color-danger);
-}
-
-.action-btn--extract:hover:not(:disabled) {
-  background: var(--color-danger);
-  color: var(--color-bg);
-}
-
-@media (max-width: 600px) {
-  .handler-actions {
-    padding: 10px;
-  }
-
-  .handler-actions__header {
-    margin-bottom: 8px;
-  }
-
-  .signal-meter {
-    margin-bottom: 10px;
-  }
-
-  .handler-actions__buttons {
-    gap: 6px;
-  }
-
-  .action-btn {
-    padding: 8px 10px;
-    font-size: 0.8rem;
-  }
-
-  .action-btn__cost {
-    font-size: 0.7rem;
-  }
-}
-</style>

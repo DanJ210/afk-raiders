@@ -86,71 +86,91 @@ const hpPercent = computed(() =>
   Math.round((raider.value.hp / raider.value.maxHp) * 100),
 )
 
-const hpClass = computed(() => {
-  if (hpPercent.value > 60) return 'hp-bar--good'
-  if (hpPercent.value > 30) return 'hp-bar--warning'
-  return 'hp-bar--danger'
+const hpFillColor = computed(() => {
+  if (hpPercent.value > 60) return 'bg-success'
+  if (hpPercent.value > 30) return 'bg-warning'
+  return 'bg-danger'
+})
+
+// Phase badge classes — replaces [data-phase] selectors
+const phaseBadgeClass = computed(() => {
+  if (store.phase === 'DOWNED') return 'text-danger border-danger'
+  if (store.phase === 'EXTRACTING') return 'text-success border-success animate-pulse'
+  return 'text-accent border-accent'
 })
 </script>
 
 <template>
-  <section class="raider-card" aria-label="Raider Status">
-    <div class="raider-card__header">
-      <span v-if="!editingName" class="raider-card__name" role="button" tabindex="0" title="Click to rename" @click="startEdit" @keydown.enter.prevent="startEdit" @keydown.space.prevent="startEdit">
+  <section class="raider-card panel-card max-[600px]:p-2.5" aria-label="Raider Status">
+    <div class="flex justify-between items-center mb-3 max-[600px]:flex-wrap max-[600px]:gap-y-1.5">
+      <span
+        v-if="!editingName"
+        class="font-mono text-base font-bold text-text cursor-pointer flex items-center gap-1 max-[600px]:min-w-0 max-[600px]:overflow-wrap-anywhere"
+        role="button"
+        tabindex="0"
+        title="Click to rename"
+        @click="startEdit"
+        @keydown.enter.prevent="startEdit"
+        @keydown.space.prevent="startEdit"
+      >
         {{ raider.name }}
-        <span class="raider-card__name-edit-icon">✏️</span>
+        <span class="text-[0.7rem] opacity-30 transition-opacity duration-150 group-hover:opacity-100">✏️</span>
       </span>
-      <span v-else class="raider-card__name-edit">
+      <span v-else>
         <input
           v-model="nameInput"
-          class="raider-card__name-input"
+          class="font-mono text-base font-bold bg-surface-raised border border-accent rounded text-text px-1.5 py-px w-[14ch] outline-none"
           :maxlength="store.RAIDER_NAME_MAX_LENGTH"
           autofocus
           @keydown="onNameKeydown"
           @blur="commitEdit"
         />
       </span>
-      <span class="raider-card__phase-badge" :data-phase="store.phase">
+      <span
+        class="font-mono text-[0.7rem] px-2 py-0.5 rounded border bg-surface-raised tracking-[0.05em] max-[600px]:ml-auto"
+        :class="phaseBadgeClass"
+      >
         {{ phaseLabel(store.phase) }}<span v-if="showPhaseTimer"> · {{ phaseTimerText }}</span>
       </span>
     </div>
 
-    <div class="raider-card__stats">
+    <div class="flex flex-col gap-2 min-h-0 overflow-y-auto pr-0.5">
       <ShieldBar :shield="raidShield" :recharge="activeShieldRecharge" />
 
-      <div class="raider-card__stat">
+      <!-- HP bar row -->
+      <div class="flex items-center gap-2 min-w-0 max-[600px]:items-start max-[600px]:flex-wrap">
         <div
-          class="hp-bar"
+          class="flex-1 min-w-0 h-2 bg-surface-raised rounded overflow-hidden"
           role="progressbar"
           aria-valuemin="0"
           :aria-valuenow="raider.hp"
           :aria-valuemax="raider.maxHp"
         >
-          <div class="hp-bar__fill" :class="hpClass" :style="{ width: hpPercent + '%' }" />
+          <div class="h-full rounded transition-[width] duration-[400ms] ease-in-out" :class="hpFillColor" :style="{ width: hpPercent + '%' }" />
         </div>
-        <span class="raider-card__stat-value">{{ raider.hp }}/{{ raider.maxHp }}</span>
+        <span class="font-mono text-[0.85rem] text-text min-w-0 overflow-wrap-anywhere">{{ raider.hp }}/{{ raider.maxHp }}</span>
       </div>
 
-      <div class="raider-card__stat">
-        <span class="raider-card__stat-label">Mood</span>
-        <span class="raider-card__stat-value raider-card__mood-value">
+      <div class="flex items-center gap-2 min-w-0 max-[600px]:items-start max-[600px]:flex-wrap">
+        <span class="font-mono text-[0.75rem] text-muted min-w-[72px] max-[600px]:min-w-0">Mood</span>
+        <span class="font-mono text-[0.85rem] text-text min-w-0 overflow-wrap-anywhere inline-flex items-center flex-wrap">
           {{ moodLabel(raider.mood) }}
           <MoodResilienceBadge :mood="raider.mood" />
         </span>
       </div>
 
-      <div v-if="showCurrentZone" class="raider-card__stat">
-        <span class="raider-card__stat-label">Zone</span>
+      <div v-if="showCurrentZone" class="flex items-center gap-2 min-w-0 max-[600px]:items-start max-[600px]:flex-wrap">
+        <span class="font-mono text-[0.75rem] text-muted min-w-[72px] max-[600px]:min-w-0">Zone</span>
         <button
           v-if="currentZoneName"
           type="button"
-          class="raider-card__stat-value raider-card__zone-value"
+          class="relative font-mono text-[0.85rem] text-text min-w-0 overflow-wrap-anywhere border-none bg-transparent p-0 underline decoration-dotted underline-offset-2 cursor-help text-left group"
           :aria-label="currentZoneDescription ? `Zone ${currentZoneName}. ${currentZoneDescription}` : `Zone ${currentZoneName}`"
         >
           {{ currentZoneName }}
           <span
             v-if="currentZoneDescription"
-            class="raider-card__zone-tooltip"
+            class="tooltip"
             role="tooltip"
           >
             {{ currentZoneDescription }}
@@ -158,18 +178,18 @@ const hpClass = computed(() => {
         </button>
       </div>
 
-      <div v-if="showCurrentCondition" class="raider-card__stat">
-        <span class="raider-card__stat-label">Condition</span>
+      <div v-if="showCurrentCondition" class="flex items-center gap-2 min-w-0 max-[600px]:items-start max-[600px]:flex-wrap">
+        <span class="font-mono text-[0.75rem] text-muted min-w-[72px] max-[600px]:min-w-0">Condition</span>
         <button
           v-if="currentCondition"
           type="button"
-          class="raider-card__stat-value raider-card__condition-value"
+          class="relative font-mono text-[0.85rem] text-text min-w-0 overflow-wrap-anywhere border-none bg-transparent p-0 underline decoration-dotted underline-offset-2 cursor-help text-left group"
           :aria-label="currentCondition.description ? `Condition ${currentCondition.name}. ${currentCondition.description}` : `Condition ${currentCondition.name}`"
         >
           {{ currentCondition.name }}
           <span
             v-if="currentCondition.description"
-            class="raider-card__condition-tooltip"
+            class="tooltip"
             role="tooltip"
           >
             {{ currentCondition.description }}
@@ -177,19 +197,17 @@ const hpClass = computed(() => {
         </button>
       </div>
 
-      <div v-if="showRaidTimer" class="raider-card__stat">
-        <span class="raider-card__stat-label">Zone Nuke In</span>
-        <span class="raider-card__stat-value raider-card__timer">{{ raidTimerText }}</span>
+      <div v-if="showRaidTimer" class="flex items-center gap-2 min-w-0">
+        <span class="font-mono text-[0.75rem] text-muted min-w-[72px]">Zone Nuke In</span>
+        <span class="font-mono text-[0.85rem] text-danger font-bold">{{ raidTimerText }}</span>
       </div>
 
-      <div class="raider-card__stat">
-        <span class="raider-card__stat-label">Rat Rating</span>
-        <span class="raider-card__stat-value raider-card__rat-rating">
-          🐀 {{ raider.ratRating }}
-        </span>
+      <div class="flex items-center gap-2 min-w-0">
+        <span class="font-mono text-[0.75rem] text-muted min-w-[72px]">Rat Rating</span>
+        <span class="font-mono text-[0.85rem] text-accent-secondary">🐀 {{ raider.ratRating }}</span>
       </div>
 
-      <div class="raider-card__counters">
+      <div class="flex gap-4 font-mono text-[0.8rem] text-muted mt-1 max-[600px]:flex-wrap max-[600px]:gap-x-3 max-[600px]:gap-y-2">
         <span title="Extractions">✅ {{ raider.extractCount }}</span>
         <span title="Deaths">💀 {{ raider.deathCount }}</span>
       </div>
@@ -200,145 +218,8 @@ const hpClass = computed(() => {
 </template>
 
 <style scoped>
-.raider-card {
-  display: flex;
-  flex-direction: column;
-  background: var(--color-surface);
-  border-radius: 8px;
-  border: 1px solid var(--color-border);
-  padding: 14px;
-  min-height: 0;
-  overflow: hidden;
-}
-
-.raider-card__header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12px;
-}
-
-.raider-card__name {
-  font-family: var(--font-mono);
-  font-size: 1rem;
-  font-weight: 700;
-  color: var(--color-text);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.raider-card__name:hover .raider-card__name-edit-icon {
-  opacity: 1;
-}
-
-.raider-card__name-edit-icon {
-  font-size: 0.7rem;
-  opacity: 0.3;
-  transition: opacity 0.15s;
-}
-
-.raider-card__name-input {
-  font-family: var(--font-mono);
-  font-size: 1rem;
-  font-weight: 700;
-  background: var(--color-surface-raised);
-  border: 1px solid var(--color-accent);
-  border-radius: 4px;
-  color: var(--color-text);
-  padding: 1px 6px;
-  width: 14ch;
-  outline: none;
-}
-
-.raider-card__phase-badge {
-  font-size: 0.7rem;
-  font-family: var(--font-mono);
-  padding: 2px 8px;
-  border-radius: 4px;
-  letter-spacing: 0.05em;
-  background: var(--color-surface-raised);
-  color: var(--color-accent);
-  border: 1px solid var(--color-accent);
-}
-
-.raider-card__phase-badge[data-phase="DOWNED"] {
-  color: var(--color-danger);
-  border-color: var(--color-danger);
-}
-
-.raider-card__phase-badge[data-phase="EXTRACTING"] {
-  color: var(--color-success);
-  border-color: var(--color-success);
-  animation: pulse 1s infinite;
-}
-
-.raider-card__stats {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  min-height: 0;
-  overflow-y: auto;
-  padding-right: 2px;
-}
-
-.raider-card__stat {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-}
-
-.raider-card__stat-label {
-  font-size: 0.75rem;
-  color: var(--color-muted);
-  font-family: var(--font-mono);
-  min-width: 72px;
-}
-
-.raider-card__stat-value {
-  font-size: 0.85rem;
-  color: var(--color-text);
-  font-family: var(--font-mono);
-  min-width: 0;
-  overflow-wrap: anywhere;
-}
-
-.raider-card__mood-value {
-  display: inline-flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 0;
-}
-
-.raider-card__rat-rating {
-  color: var(--color-accent-secondary);
-}
-
-.raider-card__condition-value {
-  position: relative;
-  border: none;
-  background: transparent;
-  padding: 0;
-  text-decoration: underline dotted;
-  text-underline-offset: 2px;
-  cursor: help;
-  text-align: left;
-}
-
-.raider-card__zone-value {
-  position: relative;
-  border: none;
-  background: transparent;
-  padding: 0;
-  text-decoration: underline dotted;
-  text-underline-offset: 2px;
-  cursor: help;
-  text-align: left;
-}
-
-.raider-card__condition-tooltip {
+/* Shared tooltip — used for Zone and Condition */
+.tooltip {
   position: absolute;
   left: 0;
   top: calc(100% + 6px);
@@ -357,112 +238,18 @@ const hpClass = computed(() => {
   box-shadow: 0 6px 14px color-mix(in srgb, var(--color-bg) 70%, transparent);
 }
 
-
-.raider-card__zone-tooltip {
-  position: absolute;
-  left: 0;
-  top: calc(100% + 6px);
-  z-index: 2;
-  display: none;
-  width: min(42ch, 70vw);
-  padding: 6px 8px;
-  border-radius: 6px;
-  border: 1px solid var(--color-border);
-  background: var(--color-surface-raised);
-  color: var(--color-text);
-  font-size: 0.75rem;
-  line-height: 1.35;
-  text-decoration: none;
-  letter-spacing: normal;
-  box-shadow: 0 6px 14px color-mix(in srgb, var(--color-bg) 70%, transparent);
-}
-
-.raider-card__zone-value:hover .raider-card__zone-tooltip,
-.raider-card__zone-value:focus-visible .raider-card__zone-tooltip,
-.raider-card__zone-value:active .raider-card__zone-tooltip,
-.raider-card__condition-value:hover .raider-card__condition-tooltip,
-.raider-card__condition-value:focus-visible .raider-card__condition-tooltip,
-.raider-card__condition-value:active .raider-card__condition-tooltip {
+.group:hover .tooltip,
+.group:focus-visible .tooltip,
+.group:active .tooltip {
   display: block;
-}
-
-.raider-card__timer {
-  color: var(--color-danger);
-  font-weight: 700;
-}
-
-.hp-bar {
-  flex: 1;
-  min-width: 0;
-  height: 8px;
-  background: var(--color-surface-raised);
-  border-radius: 4px;
-  overflow: hidden;
-}
-
-.hp-bar__fill {
-  height: 100%;
-  border-radius: 4px;
-  transition: width 0.4s ease;
-}
-
-.hp-bar--good   { background: var(--color-success); }
-.hp-bar--warning { background: var(--color-warning); }
-.hp-bar--danger  { background: var(--color-danger); }
-
-.raider-card__counters {
-  display: flex;
-  gap: 16px;
-  font-size: 0.8rem;
-  font-family: var(--font-mono);
-  color: var(--color-muted);
-  margin-top: 4px;
-}
-
-@media (max-width: 600px) {
-  .raider-card {
-    padding: 10px;
-  }
-
-  .raider-card__header {
-    flex-wrap: wrap;
-    row-gap: 6px;
-  }
-
-  .raider-card__name {
-    min-width: 0;
-    overflow-wrap: anywhere;
-  }
-
-  .raider-card__phase-badge {
-    margin-left: auto;
-  }
-
-  .raider-card__stat {
-    align-items: flex-start;
-    flex-wrap: wrap;
-  }
-
-  .raider-card__stat-label {
-    min-width: 0;
-  }
-
-  .raider-card__counters {
-    flex-wrap: wrap;
-    gap: 8px 12px;
-  }
-
-  .raider-card__history {
-    margin-top: 10px;
-  }
-
-  .raider-card__history-grid {
-    gap: 10px;
-  }
 }
 
 @keyframes pulse {
   0%, 100% { opacity: 1; }
   50%       { opacity: 0.5; }
+}
+
+.animate-pulse {
+  animation: pulse 1s infinite;
 }
 </style>
