@@ -76,12 +76,12 @@ const phaseTimeText = computed(() => {
 </script>
 
 <template>
-  <div class="flex flex-col min-h-dvh max-w-225 mx-auto p-3 gap-3 max-[600px]:h-dvh max-[600px]:min-h-0 max-[600px]:pb-0">
+  <div class="flex flex-col min-h-dvh max-w-app-shell-max mx-auto p-3 gap-3 max-[600px]:h-dvh max-[600px]:min-h-0 max-[600px]:pb-0">
     <header class="flex items-baseline gap-3 flex-wrap max-[600px]:items-center">
       <h1 class="font-mono text-[1.1rem] font-bold text-accent m-0 tracking-[0.08em]">📡 AFK RAIDERS</h1>
       <span class="font-mono text-[0.75rem] text-muted flex-1 max-[600px]:w-full max-[600px]:flex-none">Handler Console — Desperanza Underground</span>
       <button
-        class="font-mono text-[0.7rem] bg-transparent border border-border text-muted rounded px-2 py-0.5 cursor-pointer hover:text-danger hover:border-danger"
+        class="font-mono text-raider-tiny bg-transparent border border-border text-muted rounded px-2 py-0.5 cursor-pointer hover:text-danger hover:border-danger"
         title="Reset save data"
         @click="store.resetSave()"
       >↺ Reset</button>

@@ -45,6 +45,7 @@
   --font-family-mono: 'Courier New', Courier, monospace;
 
   /* Component sizing */
+  --spacing-app-shell-max: 56.25rem;
   --spacing-backpack-mobile-min: 35rem;
   --spacing-backpack-desktop-min: 40rem;
   --spacing-greed-label: 5.625rem;
