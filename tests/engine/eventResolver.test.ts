@@ -382,7 +382,7 @@ describe('applyEffects — backpack item behavior', () => {
     expect(upbeatResult).not.toBeNull()
     expect(neutralResult!.event.text).toContain('Shield lost 16 charge')
     expect(upbeatResult!.event.text).toContain('Shield lost 16 charge')
-    expect(upbeatResult!.event.text).toContain('Mood held together the raider')
+    expect(upbeatResult!.event.text).toContain('Resilience saved 1 HP')
     expect(upbeatResult!.state.raider.hp).toBeGreaterThan(neutralResult!.state.raider.hp)
     expect(upbeatResult!.state.raid.shield?.charge).toBe(neutralResult!.state.raid.shield?.charge)
     expect(upbeatResult!.state.raid.shield?.durability).toBe(neutralResult!.state.raid.shield?.durability)
@@ -399,7 +399,7 @@ describe('applyEffects — backpack item behavior', () => {
 
     expect(result).not.toBeNull()
     expect(result!.event.text).toContain('Took 14 damage')
-    expect(result!.event.text).toContain('Mood held together the raider')
+    expect(result!.event.text).toContain('Resilience saved 2 HP')
     expect(result!.state.raider.hp).toBe(86)
   })
 
