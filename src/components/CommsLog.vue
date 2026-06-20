@@ -60,7 +60,7 @@ function phaseBadge(phase: string): string {
         :raider="store.raider"
         :phase="store.phase"
         :show-phase-timer="false"
-        :phase-timer-text="''"
+        phase-timer-text=""
         :raid-shield="raidShield"
         :active-shield-recharge="raidShieldRecharge"
         :name-max-length="0"
