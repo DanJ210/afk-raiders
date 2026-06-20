@@ -80,6 +80,21 @@ export default defineConfig({
       },
     }),
   ],
+  build: {
+    rollupOptions: {
+      onwarn(warning, defaultHandler) {
+        if (
+          warning.code === 'INVALID_ANNOTATION'
+          && typeof warning.id === 'string'
+          && warning.id.includes('@vueuse/core')
+        ) {
+          return
+        }
+
+        defaultHandler(warning)
+      },
+    },
+  },
   test: {
     // Engine tests run in Node — no DOM required
     environment: 'node',

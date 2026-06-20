@@ -76,12 +76,12 @@ const phaseTimeText = computed(() => {
 </script>
 
 <template>
-  <div class="flex flex-col min-h-dvh max-w-[900px] mx-auto p-3 gap-3 max-[600px]:h-dvh max-[600px]:min-h-0 max-[600px]:pb-0">
+  <div class="flex flex-col min-h-dvh max-w-app-shell-max mx-auto p-3 gap-3 max-[600px]:h-dvh max-[600px]:min-h-0 max-[600px]:pb-0">
     <header class="flex items-baseline gap-3 flex-wrap max-[600px]:items-center">
       <h1 class="font-mono text-[1.1rem] font-bold text-accent m-0 tracking-[0.08em]">📡 AFK RAIDERS</h1>
       <span class="font-mono text-[0.75rem] text-muted flex-1 max-[600px]:w-full max-[600px]:flex-none">Handler Console — Desperanza Underground</span>
       <button
-        class="font-mono text-[0.7rem] bg-transparent border border-border text-muted rounded px-2 py-0.5 cursor-pointer hover:text-danger hover:border-danger"
+        class="font-mono text-raider-tiny bg-transparent border border-border text-muted rounded px-2 py-0.5 cursor-pointer hover:text-danger hover:border-danger"
         title="Reset save data"
         @click="store.resetSave()"
       >↺ Reset</button>
@@ -121,7 +121,7 @@ const phaseTimeText = computed(() => {
         <BackpackPanel />
       </section>
 
-      <section v-if="activeMobileTab === 'raider'" class="min-h-0 flex-1 flex flex-col gap-2.5 overflow-y-auto">
+      <section v-if="activeMobileTab === 'raider'" class="min-h-0 flex-1 flex flex-col gap-2.5 overflow-y-auto pb-3">
         <HandlerActions />
         <RaiderCard />
       </section>
@@ -150,7 +150,7 @@ const phaseTimeText = computed(() => {
           <span class="text-[1rem]" aria-hidden="true">{{ tab.icon }}</span>
           <span
             v-if="tab.id === 'comms' && unseenCommsCount > 0"
-            class="absolute -top-1.5 -right-2 min-w-[16px] h-4 px-1 rounded-full bg-danger text-bg text-[0.58rem] font-mono font-bold leading-4 text-center pointer-events-none"
+            class="absolute -top-1.5 -right-2 min-w-4 h-4 px-1 rounded-full bg-danger text-bg text-[0.58rem] font-mono font-bold leading-4 text-center pointer-events-none"
             :aria-label="`${unseenCommsCount} unread messages`"
           >
             {{ unseenCommsCount > 99 ? '99+' : unseenCommsCount }}
