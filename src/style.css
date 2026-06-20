@@ -3,37 +3,80 @@
    Dark-first, mobile-friendly, monospace-heavy
 ----------------------------------------------------------------------- */
 
-*, *::before, *::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
+@import "tailwindcss";
 
-:root {
+/* -----------------------------------------------------------------------
+   Theme tokens — map design-system values to Tailwind utility classes.
+   Using `inline` keeps variables as literal hex values so that
+   var(--color-*) usage in retained scoped styles always resolves cleanly
+   and color-mix() calls work as expected.
+----------------------------------------------------------------------- */
+@theme inline {
+  /* Background / surface */
   --color-bg:              #0d0d1a;
   --color-surface:         #12122a;
   --color-surface-raised:  #1a1a38;
+
+  /* Borders */
   --color-border:          #2a2a4a;
   --color-border-subtle:   #1e1e3a;
+
+  /* Text */
   --color-text:            #d4d4f0;
   --color-muted:           #6666a0;
+
+  /* Accent */
   --color-accent:          #7b9ef0;
   --color-accent-secondary:#f0a04b;
+
+  /* Status */
   --color-success:         #4bde9f;
   --color-warning:         #f0c84b;
   --color-danger:          #f05a5a;
 
-  /* Item rarity colors (tiers 1–5, industry-standard) */
-  --color-rarity-1: #9d9da8; /* gray */
-  --color-rarity-2: #4bde9f; /* green */
-  --color-rarity-3: #4b9ef0; /* blue */
-  --color-rarity-4: #b06af0; /* purple */
-  --color-rarity-5: #f0c84b; /* yellow */
+  /* Item rarity tiers 1–5 */
+  --color-rarity-1: #9d9da8;
+  --color-rarity-2: #4bde9f;
+  --color-rarity-3: #4b9ef0;
+  --color-rarity-4: #b06af0;
+  --color-rarity-5: #f0c84b;
 
-  --font-mono: 'Courier New', Courier, monospace;
+  /* Typography — overrides Tailwind's system monospace stack */
+  --font-family-mono: 'Courier New', Courier, monospace;
 }
 
-/* Rarity color bar shown in front of item names */
+/* -----------------------------------------------------------------------
+   Base overrides — things Tailwind preflight doesn't cover
+----------------------------------------------------------------------- */
+@layer base {
+  /* Alias so retained scoped styles using var(--font-mono) still work */
+  :root {
+    --font-mono: 'Courier New', Courier, monospace;
+  }
+
+  html, body, #app {
+    height: 100%;
+  }
+
+  body {
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    font-family: var(--font-family-mono);
+    font-size: 16px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Scrollbar styling */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--color-bg); }
+  ::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 3px; }
+}
+
+/* -----------------------------------------------------------------------
+   Rarity color bars — class names are assembled dynamically in JS
+   (rarityBarClass()), so they must live here as named classes.
+----------------------------------------------------------------------- */
 .rarity-bar {
   display: inline-block;
   width: 4px;
@@ -49,20 +92,109 @@
 .rarity-bar--4 { background: var(--color-rarity-4); }
 .rarity-bar--5 { background: var(--color-rarity-5); }
 
-html, body, #app {
-  height: 100%;
-}
+/* -----------------------------------------------------------------------
+   Shared component patterns — reduces duplication across 18+ components
+----------------------------------------------------------------------- */
+@layer components {
+  /* Panel card — surface container used by most top-level sections */
+  .panel-card {
+    background: var(--color-surface);
+    border-radius: 8px;
+    border: 1px solid var(--color-border);
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+  }
 
-body {
-  background: var(--color-bg);
-  color: var(--color-text);
-  font-family: var(--font-mono);
-  font-size: 16px;
-  line-height: 1.5;
-  -webkit-font-smoothing: antialiased;
-}
+  /* Section header — monospace caps label at the top of each panel */
+  .section-header {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    color: var(--color-accent);
+    margin-bottom: 12px;
+  }
 
-/* Scrollbar styling */
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: var(--color-bg); }
-::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 3px; }
+  /* Sub-panel label — smaller muted label above item lists */
+  .subpanel-label {
+    font-size: 0.75rem;
+    color: var(--color-muted);
+    font-family: var(--font-mono);
+  }
+
+  /* Progress bar track */
+  .progress-track {
+    flex: 1;
+    height: 8px;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+
+  /* Progress bar fill */
+  .progress-fill {
+    height: 100%;
+    transition: width 0.2s ease;
+  }
+
+  /* Ghost button — transparent border button with hover accent fill */
+  .btn-ghost {
+    border: 1px solid var(--color-accent);
+    border-radius: 4px;
+    background: transparent;
+    color: var(--color-accent);
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    padding: 2px 8px;
+    cursor: pointer;
+  }
+
+  .btn-ghost:hover:not(:disabled) {
+    background: var(--color-accent);
+    color: var(--color-bg);
+  }
+
+  .btn-ghost:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  /* Modal overlay */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgb(5 10 16 / 78%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    z-index: 50;
+  }
+
+  /* Modal card */
+  .modal-card {
+    width: min(100%, 420px);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    padding: 16px;
+    box-shadow: 0 16px 40px rgb(0 0 0 / 35%);
+  }
+
+  /* Item row — grid layout for consumable item lists */
+  .item-row {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto auto auto auto;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 8px;
+    background: var(--color-surface-raised);
+    border-radius: 4px;
+    color: var(--color-text);
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+  }
+}
