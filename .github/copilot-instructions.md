@@ -35,6 +35,7 @@ Key docs — read these before making changes:
 - TypeScript strict mode; no `any` unless unavoidable and commented.
 - Engine state is immutable-style: `processTick` returns new state + emitted events; it does not mutate input.
 - Event/loot/zone IDs are `snake_case` strings, stable once shipped (saves reference them).
+- Tailwind v4 custom sizing, spacing, text, and duration utilities must be backed by explicit tokens in `src/style.css` (`@theme inline`). Prefer standard Tailwind utilities when they match; otherwise add a semantic token instead of relying on ambiguous numeric utilities.
 
 ## Key Game Features
 
@@ -51,6 +52,7 @@ Key docs — read these before making changes:
 - Loot is sourced from `src/content/loot-tables/*.json` plus robot loot tables.
 - Mood provides a mild rarity bias (positive mood slightly favors higher rarity, negative mood slightly favors lower rarity).
 - Keep mood effects subtle; danger-level profiles are the primary risk/reward lever.
+- Event-driven mood changes are appended to the comms event text as the actual signed post-clamp delta (for example `Mood +2.` or `Mood -1.`).
 
 ### Home Stash
 Items successfully extracted are automatically transferred from the raider's backpack to a persistent `homeStash` array on the GameState. This survives raids, deaths, and sessions. When working with extraction logic or inventory systems, always ensure loot is transferred during the EXTRACTING → HUB phase transition (see `src/engine/tick.ts` for the implementation pattern). The stash holds at most 120 items (`HOME_STASH_ITEM_LIMIT` in `src/engine/homeStash.ts`; quantities count toward the cap). Overflow is never deleted: the lowest-value items are auto-sold and their value is credited to `GameState.coins` (the raider's coin stash), narrated by a `stash_overflow_sale` comms event. The Home Stash UI lists items highest-value first, and separates unsold `Stash Value` from sold `Coin Value`.
@@ -64,6 +66,8 @@ AFK Raiders includes a parody safe pocket named **Secret Hidden Pocket**:
 
 ### Raid Pacing
 Raid aggression is autonomous; there is no extraction preference slider. `runGreedCheck()` uses fixed seeded probabilities so the Raider generally spends more time raiding before choosing to extract. Low HP without any current-raid bandages increases extract probability so the raider tries to survive and cash out. If they do have bandages, this no-bandage extraction bonus is not applied. Scolding also reduces current greed before the next greed check, giving the Handler a direct way to cool risky behavior. Separately, the RAIDING phase has a hard timer cap; timing out in RAIDING transitions to DOWNED.
+
+Event-driven greed changes are appended to the comms event text as the actual signed post-clamp delta (for example `Greed +5.` or `Greed -3.`). If an effect is fully swallowed by the 0–100 clamp, do not add a noise line.
 
 During RAIDING, only one Handler action can be pending at a time (`pendingCalm`, `pendingPressure`, or `forceExtract`). When any pending action is set, raid action buttons should remain disabled until the next simulation tick consumes the pending action and logs feedback.
 
@@ -103,7 +107,7 @@ Only `nasty` and `deadly` robots can kill the raider (lethal encounters trigger 
 
 `resolveRobotEncounter()` rolls 1-10 with the seeded RNG; if the roll is greater than the robot's `menace`, the raider defeats it, emits a `successText` line, and wins an item from that robot's `lootTable`. On failure, the raider takes damage based on menace and runs away. Rare event variants can set `effects.robotDamageMultiplier` to make failed encounters more dangerous or lethal; this multiplier only applies on failure, never when the robot is defeated. Robot loot is also included in the regular loot resolver pool alongside the base loot tables.
 
-Positive mood grants a small resilience bonus after shield mitigation on failed robot encounters only. This trims final HP loss, does not alter robot raw damage, and should remain a small modifier.
+Positive mood grants a small resilience bonus after shield mitigation on failed robot encounters only. This trims final HP loss, does not alter robot raw damage, and should remain a small modifier. When resilience saves HP, the comms damage narration must explicitly include the saved amount (for example `Resilience saved 2 HP.`).
 
 ### Healing Items
 Bandages live in `src/content/healing_items.json` and are current-raid-only consumables, stored on `RaidState.healingItems`, not in the backpack or home stash. RAIDING events can use `effects.healingItem` to find one bandage. The engine automatically uses the smallest useful bandage when the raider is alive and HP is at or below 75%, capped at 50 HP per use: White +5, Green +10, Blue +25, Purple +50. Each bandage also has a `moodGain`, and higher-tier bandages grant more mood when consumed. The used bandage is removed from `RaidState.healingItems`. Healing items reset when the raid returns to HUB and are lost on death.
