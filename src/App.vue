@@ -76,30 +76,34 @@ const phaseTimeText = computed(() => {
 </script>
 
 <template>
-  <div class="app">
-    <header class="app__header">
-      <h1 class="app__title">📡 AFK RAIDERS</h1>
-      <span class="app__subtitle">Handler Console — Desperanza Underground</span>
-      <button class="app__reset" title="Reset save data" @click="store.resetSave()">↺ Reset</button>
+  <div class="flex flex-col min-h-dvh max-w-[900px] mx-auto p-3 gap-3 max-[600px]:h-dvh max-[600px]:min-h-0 max-[600px]:pb-0">
+    <header class="flex items-baseline gap-3 flex-wrap max-[600px]:items-center">
+      <h1 class="font-mono text-[1.1rem] font-bold text-accent m-0 tracking-[0.08em]">📡 AFK RAIDERS</h1>
+      <span class="font-mono text-[0.75rem] text-muted flex-1 max-[600px]:w-full max-[600px]:flex-none">Handler Console — Desperanza Underground</span>
+      <button
+        class="font-mono text-[0.7rem] bg-transparent border border-border text-muted rounded px-2 py-0.5 cursor-pointer hover:text-danger hover:border-danger"
+        title="Reset save data"
+        @click="store.resetSave()"
+      >↺ Reset</button>
     </header>
 
-    <main v-if="!isMobile" class="app__main">
-      <aside class="app__sidebar">
+    <main v-if="!isMobile" class="app__desktop-main flex-1 grid gap-3 min-h-0" style="grid-template-columns: minmax(240px,260px) minmax(0,1fr) minmax(240px,260px)">
+      <aside class="flex flex-col gap-2.5 overflow-visible">
         <HandlerActions />
         <RaiderCard />
         <HomeStash />
       </aside>
 
-      <div class="app__log">
+      <div class="min-h-0">
         <CommsLog />
       </div>
 
-      <aside class="app__raid">
+      <aside class="app__raid flex flex-col min-h-0">
         <BackpackPanel />
       </aside>
     </main>
 
-    <main v-else class="app__main-mobile">
+    <main v-else class="flex-1 min-h-0 flex flex-col gap-2">
       <PhaseStatusStrip
         :phase="store.phase"
         :zone-name="currentZoneName"
@@ -109,40 +113,50 @@ const phaseTimeText = computed(() => {
         :condition-description="currentConditionDescription"
       />
 
-      <section v-if="activeMobileTab === 'comms'" class="app__mobile-panel app__mobile-panel--fill">
+      <section v-if="activeMobileTab === 'comms'" class="app__mobile-fill min-h-0 flex-1 flex flex-col gap-2.5 overflow-y-auto">
         <CommsLog />
       </section>
 
-      <section v-if="activeMobileTab === 'raid'" class="app__mobile-panel app__mobile-panel--fill">
+      <section v-if="activeMobileTab === 'raid'" class="app__mobile-fill min-h-0 flex-1 flex flex-col gap-2.5 overflow-y-auto">
         <BackpackPanel />
       </section>
 
-      <section v-if="activeMobileTab === 'raider'" class="app__mobile-panel app__mobile-panel--fill">
+      <section v-if="activeMobileTab === 'raider'" class="min-h-0 flex-1 flex flex-col gap-2.5 overflow-y-auto">
         <HandlerActions />
         <RaiderCard />
       </section>
 
-      <section v-if="activeMobileTab === 'stash'" class="app__mobile-panel app__mobile-panel--fill">
+      <section v-if="activeMobileTab === 'stash'" class="app__mobile-fill min-h-0 flex-1 flex flex-col gap-2.5 overflow-y-auto">
         <HomeStash />
       </section>
     </main>
 
-    <nav v-if="isMobile" class="app__mobile-nav" aria-label="Primary">
+    <nav
+      v-if="isMobile"
+      class="sticky bottom-0 grid grid-cols-4 gap-1.5 bg-bg border-t border-border pt-2"
+      :style="{ paddingBottom: 'calc(8px + env(safe-area-inset-bottom))' }"
+      aria-label="Primary"
+    >
       <button
         v-for="tab in mobileTabs"
         :key="tab.id"
         type="button"
-        class="app__mobile-nav-btn"
-        :class="{ 'app__mobile-nav-btn--active': activeMobileTab === tab.id }"
+        class="flex flex-col items-center gap-1 bg-transparent border border-transparent text-muted rounded-lg py-1.5 px-1 cursor-pointer font-mono"
+        :class="activeMobileTab === tab.id ? 'text-accent bg-surface border-border' : ''"
         :aria-current="activeMobileTab === tab.id ? 'page' : undefined"
-        @click="activeMobileTab = tab.id">
-        <span class="app__mobile-nav-icon-wrap">
-          <span class="app__mobile-nav-icon" aria-hidden="true">{{ tab.icon }}</span>
-          <span v-if="tab.id === 'comms' && unseenCommsCount > 0" class="app__mobile-nav-badge" :aria-label="`${unseenCommsCount} unread messages`">
+        @click="activeMobileTab = tab.id"
+      >
+        <span class="relative inline-flex items-center justify-center">
+          <span class="text-[1rem]" aria-hidden="true">{{ tab.icon }}</span>
+          <span
+            v-if="tab.id === 'comms' && unseenCommsCount > 0"
+            class="absolute -top-1.5 -right-2 min-w-[16px] h-4 px-1 rounded-full bg-danger text-bg text-[0.58rem] font-mono font-bold leading-4 text-center pointer-events-none"
+            :aria-label="`${unseenCommsCount} unread messages`"
+          >
             {{ unseenCommsCount > 99 ? '99+' : unseenCommsCount }}
           </span>
         </span>
-        <span class="app__mobile-nav-label">{{ tab.label }}</span>
+        <span class="text-[0.62rem] tracking-[0.03em] text-center">{{ tab.label }}</span>
       </button>
     </nav>
 
@@ -152,202 +166,22 @@ const phaseTimeText = computed(() => {
 </template>
 
 <style scoped>
-.app {
-  display: flex;
-  flex-direction: column;
-  min-height: 100dvh;
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 12px;
-  gap: 12px;
-}
-
-.app__header {
-  display: flex;
-  align-items: baseline;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.app__title {
-  font-family: var(--font-mono);
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: var(--color-accent);
-  margin: 0;
-  letter-spacing: 0.08em;
-}
-
-.app__subtitle {
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  color: var(--color-muted);
-  flex: 1;
-}
-
-.app__reset {
-  font-family: var(--font-mono);
-  font-size: 0.7rem;
-  background: none;
-  border: 1px solid var(--color-border);
-  color: var(--color-muted);
-  border-radius: 4px;
-  padding: 3px 8px;
-  cursor: pointer;
-}
-
-.app__reset:hover {
-  color: var(--color-danger);
-  border-color: var(--color-danger);
-}
-
-.app__main {
-  flex: 1;
-  display: grid;
-  grid-template-columns: minmax(240px, 260px) minmax(0, 1fr) minmax(240px, 260px);
-  gap: 12px;
-  min-height: 0;
-}
-
-.app__sidebar {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  overflow: visible;
-}
-
-.app__log {
-  min-height: 0;
-}
-
-.app__raid {
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-}
-
+/* Desktop: force backpack panel to fill the column height */
 .app__raid :deep(.backpack-panel) {
   height: 100%;
   max-height: none;
 }
 
-.app__main-mobile {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-
-.app__mobile-panel {
-  min-height: 0;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  overflow-y: auto;
-}
-
-.app__mobile-panel--fill > * {
+/* Mobile: force full-bleed panels to fill available height */
+.app__mobile-fill > * {
   flex: 1;
   min-height: 0;
 }
 
-.app__mobile-nav {
-  position: sticky;
-  bottom: 0;
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 6px;
-  background: var(--color-bg);
-  border-top: 1px solid var(--color-border);
-  padding: 8px 0 calc(8px + env(safe-area-inset-bottom));
-}
-
-.app__mobile-nav-btn {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  background: none;
-  border: 1px solid transparent;
-  color: var(--color-muted);
-  border-radius: 8px;
-  padding: 6px 4px;
-  cursor: pointer;
-  font-family: var(--font-mono);
-}
-
-.app__mobile-nav-btn--active {
-  color: var(--color-accent);
-  background: var(--color-surface);
-  border-color: var(--color-border);
-}
-
-.app__mobile-nav-icon-wrap {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.app__mobile-nav-icon {
-  font-size: 1rem;
-}
-
-.app__mobile-nav-badge {
-  position: absolute;
-  top: -5px;
-  right: -8px;
-  min-width: 16px;
-  height: 16px;
-  padding: 0 4px;
-  border-radius: 999px;
-  background: var(--color-danger);
-  color: var(--color-bg);
-  font-size: 0.58rem;
-  font-family: var(--font-mono);
-  font-weight: 700;
-  line-height: 16px;
-  text-align: center;
-  pointer-events: none;
-}
-
-.app__mobile-nav-label {
-  font-size: 0.62rem;
-  letter-spacing: 0.03em;
-  text-align: center;
-}
-
-@media (max-width: 600px) {
-  .app {
-    height: 100dvh;
-    min-height: 0;
-    padding-bottom: 0;
-  }
-
-  .app__header {
-    align-items: center;
-  }
-
-  .app__subtitle {
-    width: 100%;
-    flex: none;
-  }
-
-  .app__mobile-panel--fill :deep(.comms-log),
-  .app__mobile-panel--fill :deep(.home-stash),
-  .app__mobile-panel--fill :deep(.backpack-panel) {
-    height: 100%;
-    max-height: none;
-  }
-
-  .app__mobile-panel--fill :deep(.raider-card),
-  .app__mobile-panel--fill :deep(.handler-actions) {
-    flex: none;
-    height: auto;
-    min-height: 0;
-  }
+.app__mobile-fill :deep(.comms-log),
+.app__mobile-fill :deep(.home-stash),
+.app__mobile-fill :deep(.backpack-panel) {
+  height: 100%;
+  max-height: none;
 }
 </style>

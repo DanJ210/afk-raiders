@@ -13,102 +13,27 @@ defineEmits<{
 </script>
 
 <template>
-  <div class="hidden-pocket">
-    <div class="hidden-pocket-header">
-      <span class="hidden-pocket-label">Secret Hidden Pocket</span>
+  <div class="flex flex-col gap-1.5 mb-2.5 p-2.5 rounded-md font-mono" style="border: 1px solid color-mix(in oklab, var(--color-accent-secondary) 70%, var(--color-border)); background: linear-gradient(135deg, rgb(255 255 255 / 2%), rgb(0 0 0 / 8%)), var(--color-surface-raised); box-shadow: inset 0 0 0 1px rgb(255 255 255 / 3%);">
+    <div class="flex items-center justify-between gap-2">
+      <span class="subpanel-label">Secret Hidden Pocket</span>
       <button
         v-if="hiddenPocket"
         type="button"
-        class="hidden-pocket-clear"
+        class="border border-border rounded bg-transparent text-muted font-mono text-[0.68rem] px-2 py-0.5 cursor-pointer hover:border-danger hover:text-danger disabled:opacity-40 disabled:cursor-not-allowed"
         :disabled="!canManage"
         @click="$emit('clear')"
       >
         Remove
       </button>
     </div>
-    <p v-if="!hiddenPocket" class="hidden-pocket-empty">
+    <p v-if="!hiddenPocket" class="m-0 text-[0.72rem] text-accent-secondary italic">
       The dark safe spot that no one wants to check 😬
     </p>
-    <div v-else class="hidden-pocket-item">
+    <div v-else class="flex items-center gap-2 text-[0.75rem] text-text">
       <span :class="rarityBarClass(hiddenPocket.rarity)" :title="rarityLabel(hiddenPocket.rarity)" aria-hidden="true" />
-      <span class="hidden-pocket-name">{{ hiddenPocket.name }}</span>
-      <span class="hidden-pocket-meta">Value {{ hiddenPocket.value }}</span>
-      <span v-if="hiddenPocket.quantity > 1" class="hidden-pocket-quantity">×{{ hiddenPocket.quantity }}</span>
+      <span class="flex-1">{{ hiddenPocket.name }}</span>
+      <span class="text-accent-secondary">Value {{ hiddenPocket.value }}</span>
+      <span v-if="hiddenPocket.quantity > 1">×{{ hiddenPocket.quantity }}</span>
     </div>
   </div>
 </template>
-
-<style scoped>
-.hidden-pocket {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-bottom: 10px;
-  padding: 10px;
-  border: 1px solid color-mix(in oklab, var(--color-accent-secondary) 70%, var(--color-border));
-  border-radius: 6px;
-  background:
-    linear-gradient(135deg, rgb(255 255 255 / 2%), rgb(0 0 0 / 8%)),
-    var(--color-surface-raised);
-  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 3%);
-}
-
-.hidden-pocket-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-
-.hidden-pocket-label {
-  font-size: 0.75rem;
-  color: var(--color-muted);
-  font-family: var(--font-mono);
-}
-
-.hidden-pocket-clear {
-  border: 1px solid var(--color-border);
-  border-radius: 4px;
-  background: transparent;
-  color: var(--color-muted);
-  font-family: var(--font-mono);
-  font-size: 0.68rem;
-  padding: 2px 8px;
-  cursor: pointer;
-}
-
-.hidden-pocket-clear:hover:not(:disabled) {
-  border-color: var(--color-danger);
-  color: var(--color-danger);
-}
-
-.hidden-pocket-clear:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.hidden-pocket-empty {
-  margin: 0;
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  color: var(--color-accent-secondary);
-  font-style: italic;
-}
-
-.hidden-pocket-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  color: var(--color-text);
-}
-
-.hidden-pocket-name {
-  flex: 1;
-}
-
-.hidden-pocket-meta {
-  color: var(--color-accent-secondary);
-}
-</style>

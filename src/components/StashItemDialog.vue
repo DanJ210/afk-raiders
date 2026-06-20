@@ -25,159 +25,47 @@ function handleSell() {
 <template>
   <div
     v-if="item"
-    class="stash-dialog"
+    class="modal-overlay"
     role="dialog"
     aria-modal="true"
     aria-label="Sell stash item"
     @click.self="handleClose"
     @keydown.esc="handleClose"
   >
-    <div class="stash-dialog__card">
-      <div class="stash-dialog__header">
-        <div class="stash-dialog__title">
-          <span class="stash-dialog__emoji">
+    <div class="modal-card w-[min(100%,420px)] shadow-[0_16px_40px_rgb(0_0_0/35%)]">
+      <div class="flex items-start justify-between gap-3">
+        <div class="flex gap-2.5 min-w-0">
+          <span class="text-[1.5rem] leading-none inline-flex items-center justify-center">
             <img
               v-if="getStashIcon(item).kind === 'image'"
-              class="stash-dialog__icon-image"
+              class="w-7 h-7 object-contain"
               :src="getStashIcon(item).value"
               :alt="getStashIcon(item).alt"
             >
             <span v-else :aria-label="getStashIcon(item).alt">{{ getStashIcon(item).value }}</span>
           </span>
           <div>
-            <h3 class="stash-dialog__name">{{ item.name }}</h3>
-            <p class="stash-dialog__meta">
+            <h3 class="m-0 text-[1rem] text-text">{{ item.name }}</h3>
+            <p class="mt-1 mb-0 text-muted text-[0.75rem] font-mono">
               {{ rarityLabel(item.rarity) }} · ×{{ item.quantity }} · {{ formatNumber(totalValue) }} value
             </p>
           </div>
         </div>
-        <button type="button" class="stash-dialog__close" autofocus @click="handleClose">✕</button>
+        <button type="button" class="border-0 bg-transparent text-muted text-[1rem] cursor-pointer" autofocus @click="handleClose">✕</button>
       </div>
 
-      <p class="stash-dialog__description">
+      <p class="mt-3.5 mb-0 text-text leading-[1.5]">
         {{ item.flavor || 'No description available.' }}
       </p>
 
-      <div class="stash-dialog__actions">
-        <button type="button" class="stash-dialog__button stash-dialog__button--secondary" @click="handleClose">
+      <div class="flex justify-end gap-2 mt-4 max-[600px]:flex-col-reverse">
+        <button type="button" class="rounded-md px-3.5 py-2.5 font-mono cursor-pointer border border-border bg-surface-raised text-text max-[600px]:w-full" @click="handleClose">
           Cancel
         </button>
-        <button type="button" class="stash-dialog__button stash-dialog__button--primary" @click="handleSell">
+        <button type="button" class="rounded-md px-3.5 py-2.5 font-mono cursor-pointer border border-accent bg-accent text-bg max-[600px]:w-full" @click="handleSell">
           Sell for {{ formatNumber(totalValue) }}
         </button>
       </div>
     </div>
   </div>
 </template>
-
-<style scoped>
-.stash-dialog {
-  position: fixed;
-  inset: 0;
-  background: rgb(5 10 16 / 78%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 16px;
-  z-index: 50;
-}
-
-.stash-dialog__card {
-  width: min(100%, 420px);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 10px;
-  padding: 16px;
-  box-shadow: 0 16px 40px rgb(0 0 0 / 35%);
-}
-
-.stash-dialog__header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.stash-dialog__title {
-  display: flex;
-  gap: 10px;
-  min-width: 0;
-}
-
-.stash-dialog__emoji {
-  font-size: 1.5rem;
-  line-height: 1;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.stash-dialog__icon-image {
-  width: 28px;
-  height: 28px;
-  object-fit: contain;
-}
-
-.stash-dialog__name {
-  margin: 0;
-  font-size: 1rem;
-  color: var(--color-text);
-}
-
-.stash-dialog__meta {
-  margin: 4px 0 0;
-  color: var(--color-muted);
-  font-size: 0.75rem;
-  font-family: var(--font-mono);
-}
-
-.stash-dialog__close {
-  border: 0;
-  background: transparent;
-  color: var(--color-muted);
-  font-size: 1rem;
-  cursor: pointer;
-}
-
-.stash-dialog__description {
-  margin: 14px 0 0;
-  color: var(--color-text);
-  line-height: 1.5;
-}
-
-.stash-dialog__actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  margin-top: 16px;
-}
-
-.stash-dialog__button {
-  border-radius: 6px;
-  padding: 10px 14px;
-  font-family: var(--font-mono);
-  cursor: pointer;
-  border: 1px solid var(--color-border);
-}
-
-.stash-dialog__button--secondary {
-  background: var(--color-surface-raised);
-  color: var(--color-text);
-}
-
-.stash-dialog__button--primary {
-  background: var(--color-accent);
-  color: var(--color-background);
-  border-color: var(--color-accent);
-}
-
-@media (max-width: 600px) {
-  .stash-dialog__actions {
-    flex-direction: column-reverse;
-  }
-
-  .stash-dialog__button {
-    width: 100%;
-  }
-}
-</style>

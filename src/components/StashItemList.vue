@@ -17,150 +17,40 @@ function handleItemClick(itemId: string) {
 </script>
 
 <template>
-  <div class="stash-items">
-    <div v-if="items.length === 0" class="stash-items__empty">
+  <div class="flex flex-col flex-1 min-h-0">
+    <div v-if="items.length === 0" class="text-[0.8rem] text-muted italic text-center py-5">
       <p>No loot yet. Send the raider to bring treasures home.</p>
     </div>
 
-    <div v-else class="stash-items__list">
+    <div v-else class="flex flex-col gap-2 overflow-y-auto flex-1 pr-0.5">
       <button
         v-for="item in items"
         :key="item.itemId"
         type="button"
-        class="stash-item"
+        class="item-row bg-surface-raised border border-border-subtle rounded text-[0.8rem] w-full text-left text-inherit cursor-pointer hover:border-accent focus-visible:border-accent focus-visible:outline-none"
         @click="handleItemClick(item.itemId)"
       >
-        <span class="stash-item__emoji">
+        <span class="text-[1.1rem] min-w-[24px] text-center inline-flex items-center justify-center">
           <img
             v-if="getStashIcon(item).kind === 'image'"
-            class="stash-item__icon-image"
+            class="w-5 h-5 object-contain"
             :src="getStashIcon(item).value"
             :alt="getStashIcon(item).alt"
           >
           <span v-else :aria-label="getStashIcon(item).alt">{{ getStashIcon(item).value }}</span>
         </span>
         <span :class="rarityBarClass(item.rarity)" :title="rarityLabel(item.rarity)">
-          <span class="stash-item__rarity-text">{{ rarityLabel(item.rarity) }}</span>
+          <span class="sr-only">{{ rarityLabel(item.rarity) }}</span>
         </span>
-        <div class="stash-item__content">
-          <div class="stash-item__topline">
-            <span class="stash-item__name">{{ item.name }}</span>
-            <span class="stash-item__qty">×{{ item.quantity }}</span>
+        <div class="flex flex-col gap-1 flex-1 min-w-0">
+          <div class="flex items-baseline gap-2">
+            <span class="text-text font-mono flex-1">{{ item.name }}</span>
+            <span class="text-muted text-[0.7rem] font-mono">×{{ item.quantity }}</span>
           </div>
-          <p v-if="item.flavor" class="stash-item__flavor">{{ item.flavor }}</p>
+          <p v-if="item.flavor" class="m-0 text-muted text-[0.72rem] font-mono italic leading-[1.4]">{{ item.flavor }}</p>
         </div>
-        <span class="stash-item__value">{{ formatNumber(item.value * item.quantity) }}</span>
+        <span class="text-accent font-semibold font-mono text-[0.9rem] self-center">{{ formatNumber(item.value * item.quantity) }}</span>
       </button>
     </div>
   </div>
 </template>
-
-<style scoped>
-.stash-items__empty {
-  font-size: 0.8rem;
-  color: var(--color-muted);
-  font-style: italic;
-  text-align: center;
-  padding: 20px 0;
-}
-
-.stash-items__list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  overflow-y: auto;
-  flex: 1;
-  padding-right: 2px;
-}
-
-.stash-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  padding: 8px;
-  background: var(--color-surface-raised);
-  border-radius: 4px;
-  font-size: 0.8rem;
-  border: 1px solid var(--color-border-subtle);
-  width: 100%;
-  text-align: left;
-  color: inherit;
-  cursor: pointer;
-}
-
-.stash-item:hover,
-.stash-item:focus-visible {
-  border-color: var(--color-accent);
-  outline: none;
-}
-
-.stash-item__emoji {
-  font-size: 1.1rem;
-  min-width: 24px;
-  text-align: center;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.stash-item__icon-image {
-  width: 20px;
-  height: 20px;
-  object-fit: contain;
-}
-
-.stash-item__content {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.stash-item__topline {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-}
-
-.stash-item__name {
-  color: var(--color-text);
-  font-family: var(--font-mono);
-  flex: 1;
-}
-
-.stash-item__qty {
-  color: var(--color-muted);
-  font-size: 0.7rem;
-  font-family: var(--font-mono);
-}
-
-.stash-item__flavor {
-  margin: 0;
-  color: var(--color-muted);
-  font-size: 0.72rem;
-  font-family: var(--font-mono);
-  font-style: italic;
-  line-height: 1.4;
-}
-
-.stash-item__value {
-  color: var(--color-accent);
-  font-weight: 600;
-  font-family: var(--font-mono);
-  font-size: 0.9rem;
-  align-self: center;
-}
-
-.stash-item__rarity-text {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-}
-</style>
