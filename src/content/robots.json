@@ -4,7 +4,7 @@
     "weight": 50,
     "name": "Anxietick",
     "deadliness": "weak",
-    "menace": 2,
+    "menace": 1,
     "flavorLines": [
       "skitters nervously and then freezes when you look at it",
       "makes a sound like a worried metronome",

@@ -7,7 +7,9 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import { events, flavor, healingItems, loot, robots, shieldRechargers } from '../../src/engine/eventResolver'
+import { events, flavor, healingItems, loot, robots, resolveRobotEncounter, shieldRechargers } from '../../src/engine/eventResolver'
+import { createInitialState } from '../../src/engine/initialState'
+import { createRNG } from '../../src/engine/rng'
 import type { Phase, DangerLevel } from '../../src/engine/types'
 import apparelAccessoriesData from '../../src/content/loot-tables/apparel_accessories.json'
 import arcTechData from '../../src/content/loot-tables/arc_tech.json'
@@ -54,6 +56,14 @@ const DEADLINESS_RANK = {
   deadly: 5,
 } as const
 
+const MENACE_BANDS_BY_DEADLINESS: Record<keyof typeof DEADLINESS_RANK, { min: number; max: number }> = {
+  weak: { min: 1, max: 2 },
+  moderate: { min: 3, max: 5 },
+  dangerous: { min: 6, max: 6 },
+  nasty: { min: 7, max: 7 },
+  deadly: { min: 8, max: 10 },
+}
+
 // Known non-table slot names handled directly in fillSlots()
 const BUILT_IN_SLOTS = new Set(['mundane_item', 'water_item', 'healing_item', 'count'])
 const VALID_PHASES = new Set<Phase>(['HUB', 'DEPLOYING', 'RAIDING', 'EXTRACTING', 'DOWNED'])
@@ -88,6 +98,25 @@ function getMaxFailureDamage(robotId: string): number {
 
 function getTotalEncounterWeight(robotId: string): number {
   return getRobotEncounterEvents(robotId).reduce((sum, event) => sum + event.weight, 0)
+}
+
+function sampleRobotWinRate(robotId: string, sampleSize = 2000): number {
+  let wins = 0
+  for (let seed = 1; seed <= sampleSize; seed += 1) {
+    const state = {
+      ...createInitialState(0),
+      raid: {
+        ...createInitialState(0).raid,
+        phase: 'RAIDING' as const,
+        zone: 'damp_battlegrounds',
+        dangerLevel: 'Low' as const,
+      },
+    }
+    const result = resolveRobotEncounter(state, robotId, createRNG(seed), 0)
+    expect(result, `robot encounter result was null for ${robotId}`).not.toBeNull()
+    if (result?.event.id.endsWith('_defeated')) wins += 1
+  }
+  return wins / sampleSize
 }
 
 describe('content validation', () => {
@@ -376,6 +405,20 @@ describe('content validation', () => {
       }
     })
 
+    it('all robot menace values stay within the deadliness target bands', () => {
+      for (const robot of robots) {
+        const band = MENACE_BANDS_BY_DEADLINESS[robot.deadliness]
+        expect(
+          robot.menace,
+          `robot "${robot.id}" menace ${robot.menace} is below ${robot.deadliness} band minimum ${band.min}`,
+        ).toBeGreaterThanOrEqual(band.min)
+        expect(
+          robot.menace,
+          `robot "${robot.id}" menace ${robot.menace} is above ${robot.deadliness} band maximum ${band.max}`,
+        ).toBeLessThanOrEqual(band.max)
+      }
+    })
+
     it('robot menace rises and robot-table abundance falls with deadliness', () => {
       for (const current of robots) {
         for (const other of robots) {
@@ -403,6 +446,27 @@ describe('content validation', () => {
           expect(item.value, `robot loot "${item.id}" has value ${item.value}`).toBeGreaterThanOrEqual(0)
         }
       }
+    })
+
+    it('robot encounter win rates descend by deadliness tier', () => {
+      const tierRates = {
+        weak: 0,
+        moderate: 0,
+        dangerous: 0,
+        nasty: 0,
+        deadly: 0,
+      }
+
+      for (const tier of Object.keys(tierRates) as Array<keyof typeof tierRates>) {
+        const tierRobots = robots.filter(robot => robot.deadliness === tier)
+        const average = tierRobots.reduce((sum, robot) => sum + sampleRobotWinRate(robot.id), 0) / tierRobots.length
+        tierRates[tier] = average
+      }
+
+      expect(tierRates.weak, 'weak robots should be easiest to defeat').toBeGreaterThan(tierRates.moderate)
+      expect(tierRates.moderate, 'moderate robots should be easier than dangerous').toBeGreaterThan(tierRates.dangerous)
+      expect(tierRates.dangerous, 'dangerous robots should be easier than nasty').toBeGreaterThan(tierRates.nasty)
+      expect(tierRates.nasty, 'nasty robots should be easier than deadly').toBeGreaterThan(tierRates.deadly)
     })
   })
 

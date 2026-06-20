@@ -65,6 +65,22 @@ When normal loot is received, the raid also rolls independent bonus chances for:
 
 Because the rolls are independent, the same loot event can award both bonus consumables in addition to normal loot.
 
+### Robot Balance Guardrails
+To keep robot balance stable as content grows, robot tuning follows these guardrails:
+- `deadliness` is the design tier and lethality policy label.
+- `menace` is the numeric combat stat used for win chance and failed-encounter damage.
+- Menace bands by deadliness tier are intentionally constrained:
+
+| Deadliness | Target menace band |
+|---|---|
+| `weak` | 1-2 |
+| `moderate` | 3-5 |
+| `dangerous` | 6 |
+| `nasty` | 7 |
+| `deadly` | 8-10 |
+
+Automated tests enforce both the tier bands and tiered encounter outcome rates, so changes that drift out of balance fail CI early.
+
 ## 3. The Handler (player) — Signal
 The only player resource. Regenerates ~1 per 10 minutes, capped at 5.
 - **Ready Up! (2 Signal):** HUB-only action that immediately starts DEPLOYING.
