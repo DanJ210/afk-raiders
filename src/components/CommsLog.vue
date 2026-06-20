@@ -84,7 +84,7 @@ function phaseBadge(phase: string): string {
         :allow-rename="false"
       />
     </div>
-    <div class="h-0.75 bg-surface-raised border-b border-border overflow-hidden" aria-hidden="true">
+    <div class="h-comms-tick-bar bg-surface-raised border-b border-border overflow-hidden" aria-hidden="true">
       <div
         :key="tickBarKey"
         class="comms-log__tick-bar"
@@ -105,9 +105,9 @@ function phaseBadge(phase: string): string {
       <div
         v-for="entry in entries"
         :key="`${entry.tick}-${entry.id}`"
-        class="flex gap-2 px-3.5 py-1.25 text-[0.875rem] leading-normal border-b border-border-subtle last:border-b-0"
+        class="flex gap-2 px-3.5 py-comms-entry-y text-sm leading-normal border-b border-border-subtle last:border-b-0"
       >
-        <span class="shrink-0 text-muted font-mono text-[0.75rem] pt-0.5 min-w-15">
+        <span class="shrink-0 text-muted font-mono text-[0.75rem] pt-0.5 min-w-comms-timestamp">
           {{ phaseBadge(entry.phase) }} {{ formatTime(entry.timestamp) }}
         </span>
         <span class="text-text font-mono">{{ entry.text }}</span>

@@ -72,7 +72,7 @@ const regenTimerDisplay = computed(() => {
 
     <div class="flex flex-col gap-2 min-h-0 overflow-y-auto pr-0.5 max-[600px]:gap-1.5">
       <button
-        class="flex items-center gap-2 px-3 py-2.25 rounded-md border border-border bg-surface-raised text-text font-mono text-[0.85rem] cursor-pointer transition-[background,opacity] duration-150 text-left hover:not-disabled:bg-border disabled:opacity-40 disabled:cursor-not-allowed max-[600px]:px-2.5 max-[600px]:py-2 max-[600px]:text-[0.8rem]"
+        class="flex items-center gap-2 px-3 py-handler-action-button-y rounded-md border border-border bg-surface-raised text-text font-mono text-[0.85rem] cursor-pointer transition-[background,opacity] duration-150 text-left hover:not-disabled:bg-border disabled:opacity-40 disabled:cursor-not-allowed max-[600px]:px-2.5 max-[600px]:py-2 max-[600px]:text-[0.8rem]"
         :disabled="!canReadyUp || store.phase !== 'HUB'"
         @click="store.readyUp()"
       >
@@ -82,7 +82,7 @@ const regenTimerDisplay = computed(() => {
       </button>
 
       <button
-        class="flex items-center gap-2 px-3 py-2.25 rounded-md border border-border bg-surface-raised text-text font-mono text-[0.85rem] cursor-pointer transition-[background,opacity] duration-150 text-left hover:not-disabled:bg-border disabled:opacity-40 disabled:cursor-not-allowed max-[600px]:px-2.5 max-[600px]:py-2 max-[600px]:text-[0.8rem]"
+        class="flex items-center gap-2 px-3 py-handler-action-button-y rounded-md border border-border bg-surface-raised text-text font-mono text-[0.85rem] cursor-pointer transition-[background,opacity] duration-150 text-left hover:not-disabled:bg-border disabled:opacity-40 disabled:cursor-not-allowed max-[600px]:px-2.5 max-[600px]:py-2 max-[600px]:text-[0.8rem]"
         :disabled="!canCalm || store.phase !== 'RAIDING' || isActionLocked"
         @click="() => store.calm()"
       >
@@ -92,7 +92,7 @@ const regenTimerDisplay = computed(() => {
       </button>
 
       <button
-        class="flex items-center gap-2 px-3 py-2.25 rounded-md border border-border bg-surface-raised text-text font-mono text-[0.85rem] cursor-pointer transition-[background,opacity] duration-150 text-left hover:not-disabled:bg-border disabled:opacity-40 disabled:cursor-not-allowed max-[600px]:px-2.5 max-[600px]:py-2 max-[600px]:text-[0.8rem]"
+        class="flex items-center gap-2 px-3 py-handler-action-button-y rounded-md border border-border bg-surface-raised text-text font-mono text-[0.85rem] cursor-pointer transition-[background,opacity] duration-150 text-left hover:not-disabled:bg-border disabled:opacity-40 disabled:cursor-not-allowed max-[600px]:px-2.5 max-[600px]:py-2 max-[600px]:text-[0.8rem]"
         :disabled="!canPressure || store.phase !== 'RAIDING' || isActionLocked"
         @click="() => store.pressure()"
       >
@@ -102,7 +102,7 @@ const regenTimerDisplay = computed(() => {
       </button>
 
       <button
-        class="flex items-center gap-2 px-3 py-2.25 rounded-md border border-danger text-danger font-mono text-[0.85rem] cursor-pointer transition-[background,opacity] duration-150 text-left hover:not-disabled:bg-danger hover:not-disabled:text-bg disabled:opacity-40 disabled:cursor-not-allowed max-[600px]:px-2.5 max-[600px]:py-2 max-[600px]:text-[0.8rem]"
+        class="flex items-center gap-2 px-3 py-handler-action-button-y rounded-md border border-danger text-danger font-mono text-[0.85rem] cursor-pointer transition-[background,opacity] duration-150 text-left hover:not-disabled:bg-danger hover:not-disabled:text-bg disabled:opacity-40 disabled:cursor-not-allowed max-[600px]:px-2.5 max-[600px]:py-2 max-[600px]:text-[0.8rem]"
         :disabled="!canCallExtract || store.phase !== 'RAIDING' || isActionLocked"
         @click="store.callExtract()"
       >

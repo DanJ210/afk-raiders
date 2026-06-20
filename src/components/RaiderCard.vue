@@ -58,11 +58,11 @@ function formatDuration(ms: number): string {
     <div class="flex flex-col gap-2 min-h-0">
 
       <div v-if="showCurrentZone" class="flex items-center gap-2 min-w-0 max-[600px]:items-start max-[600px]:flex-wrap">
-        <span class="font-mono text-[0.75rem] text-muted min-w-18 max-[600px]:min-w-0">Zone</span>
+        <span class="font-mono text-xs text-muted min-w-raider-label max-[600px]:min-w-0">Zone</span>
         <button
           v-if="currentZoneName"
           type="button"
-          class="relative font-mono text-[0.85rem] text-text min-w-0 wrap-anywhere border-none bg-transparent p-0 underline decoration-dotted underline-offset-2 cursor-help text-left group"
+          class="relative font-mono text-raider-value text-text min-w-0 wrap-anywhere border-none bg-transparent p-0 underline decoration-dotted underline-offset-2 cursor-help text-left group"
           :aria-label="currentZoneDescription ? `Zone ${currentZoneName}. ${currentZoneDescription}` : `Zone ${currentZoneName}`"
         >
           {{ currentZoneName }}
@@ -77,11 +77,11 @@ function formatDuration(ms: number): string {
       </div>
 
       <div v-if="showCurrentCondition" class="flex items-center gap-2 min-w-0 max-[600px]:items-start max-[600px]:flex-wrap">
-        <span class="font-mono text-[0.75rem] text-muted min-w-18 max-[600px]:min-w-0">Condition</span>
+        <span class="font-mono text-xs text-muted min-w-raider-label max-[600px]:min-w-0">Condition</span>
         <button
           v-if="currentCondition"
           type="button"
-          class="relative font-mono text-[0.85rem] text-text min-w-0 wrap-anywhere border-none bg-transparent p-0 underline decoration-dotted underline-offset-2 cursor-help text-left group"
+          class="relative font-mono text-raider-value text-text min-w-0 wrap-anywhere border-none bg-transparent p-0 underline decoration-dotted underline-offset-2 cursor-help text-left group"
           :aria-label="currentCondition.description ? `Condition ${currentCondition.name}. ${currentCondition.description}` : `Condition ${currentCondition.name}`"
         >
           {{ currentCondition.name }}
@@ -96,16 +96,16 @@ function formatDuration(ms: number): string {
       </div>
 
       <div v-if="showRaidTimer" class="flex items-center gap-2 min-w-0">
-        <span class="font-mono text-[0.75rem] text-muted min-w-18">Zone Nuke In</span>
-        <span class="font-mono text-[0.85rem] text-danger font-bold">{{ raidTimerText }}</span>
+        <span class="font-mono text-xs text-muted min-w-raider-label">Zone Nuke In</span>
+        <span class="font-mono text-raider-value text-danger font-bold">{{ raidTimerText }}</span>
       </div>
 
       <div class="flex items-center gap-2 min-w-0">
-        <span class="font-mono text-[0.75rem] text-muted min-w-18">Rat Rating</span>
-        <span class="font-mono text-[0.85rem] text-accent-secondary">🐀 {{ raider.ratRating }}</span>
+        <span class="font-mono text-xs text-muted min-w-raider-label">Rat Rating</span>
+        <span class="font-mono text-raider-value text-accent-secondary">🐀 {{ raider.ratRating }}</span>
       </div>
 
-      <div class="flex gap-4 font-mono text-[0.8rem] text-muted mt-1 max-[600px]:flex-wrap max-[600px]:gap-x-3 max-[600px]:gap-y-2">
+      <div class="flex gap-4 font-mono text-raider-meta text-muted mt-1 max-[600px]:flex-wrap max-[600px]:gap-x-3 max-[600px]:gap-y-2">
         <span title="Extractions">✅ {{ raider.extractCount }}</span>
         <span title="Deaths">💀 {{ raider.deathCount }}</span>
       </div>

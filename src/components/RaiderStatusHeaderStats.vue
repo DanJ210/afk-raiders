@@ -98,7 +98,7 @@ const phaseBadgeClass = computed(() => {
         @keydown.space.prevent="startEdit"
       >
         {{ raider.name }}
-        <span class="text-[0.7rem] opacity-30 transition-opacity duration-150 group-hover:opacity-100">✏️</span>
+        <span class="text-raider-tiny opacity-30 transition-opacity duration-150 group-hover:opacity-100">✏️</span>
       </span>
       <span v-else-if="props.allowRename && editingName">
         <input
@@ -117,7 +117,7 @@ const phaseBadgeClass = computed(() => {
         {{ raider.name }}
       </span>
       <span
-        class="font-mono text-[0.7rem] px-2 py-0.5 rounded border bg-surface-raised tracking-wider max-[600px]:ml-auto"
+        class="font-mono text-raider-tiny px-2 py-0.5 rounded border bg-surface-raised tracking-wider max-[600px]:ml-auto"
         :class="phaseBadgeClass"
       >
         {{ phaseLabel(phase) }}<span v-if="showPhaseTimer"> · {{ phaseTimerText }}</span>
@@ -134,14 +134,14 @@ const phaseBadgeClass = computed(() => {
         :aria-valuenow="raider.hp"
         :aria-valuemax="raider.maxHp"
       >
-        <div class="h-full rounded transition-[width] duration-400 ease-in-out" :class="hpFillColor" :style="{ width: hpPercent + '%' }" />
+        <div class="h-full rounded transition-[width] duration-(--duration-greed-fill) ease-in-out" :class="hpFillColor" :style="{ width: hpPercent + '%' }" />
       </div>
-      <span class="font-mono text-[0.85rem] text-text min-w-0 wrap-anywhere">{{ raider.hp }}/{{ raider.maxHp }}</span>
+      <span class="font-mono text-raider-value text-text min-w-0 wrap-anywhere">{{ raider.hp }}/{{ raider.maxHp }}</span>
     </div>
 
     <div class="flex items-center gap-2 min-w-0 max-[600px]:items-start max-[600px]:flex-wrap">
-      <span class="font-mono text-[0.75rem] text-muted min-w-18 max-[600px]:min-w-0">Mood</span>
-      <span class="font-mono text-[0.85rem] text-text min-w-0 wrap-anywhere inline-flex items-center flex-wrap">
+      <span class="font-mono text-xs text-muted min-w-raider-label max-[600px]:min-w-0">Mood</span>
+      <span class="font-mono text-raider-value text-text min-w-0 wrap-anywhere inline-flex items-center flex-wrap">
         {{ moodLabel(raider.mood) }}
         <MoodResilienceBadge :mood="raider.mood" />
       </span>
