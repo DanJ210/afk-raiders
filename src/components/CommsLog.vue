@@ -1,17 +1,26 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useNow } from '@vueuse/core'
 import { useDocumentVisibility } from '@vueuse/core'
 import { useGameStore } from '../stores/gameStore'
 import { TICK_INTERVAL_MS } from '../engine/catchUp'
 import { usePinnedTopLog } from '../composables/usePinnedTopLog'
-import ShieldBar from './ShieldBar.vue'
-import HealthBar from './HealthBar.vue'
+import RaiderStatusHeaderStats from './RaiderStatusHeaderStats.vue'
 
 const store = useGameStore()
 const entries = computed(() => [...store.log].reverse())
 const logEntryCount = computed(() => store.log.length)
 const raidShield = computed(() => store.raid.shield)
 const raidShieldRecharge = computed(() => store.raid.activeShieldRecharge)
+
+const now = useNow({ interval: 1000 })
+const phaseTimerMs = computed(() => {
+  if (store.raid.phaseTicksRemaining <= 0) return 0
+  const phaseRemainingMs = store.raid.phaseTicksRemaining * TICK_INTERVAL_MS
+  const elapsedSinceLastTick = Math.max(0, now.value.getTime() - store.lastTickAt)
+  return Math.max(0, phaseRemainingMs - elapsedSinceLastTick)
+})
+const phaseTimerText = computed(() => formatDuration(phaseTimerMs.value))
 
 // Re-key the tick bar on every new tick AND whenever the tab becomes visible,
 // so the animation restarts from the correct elapsed offset instead of 0.
@@ -25,6 +34,13 @@ const tickAnimationDelay = computed(() => {
 })
 
 const pinnedTopLog = usePinnedTopLog(logEntryCount)
+
+function formatDuration(ms: number): string {
+  const totalSeconds = Math.max(0, Math.floor(ms / 1000))
+  const minutes = Math.floor(totalSeconds / 60)
+  const seconds = totalSeconds % 60
+  return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
+}
 
 function formatTime(ts: number): string {
   const d = new Date(ts)
@@ -48,16 +64,27 @@ function phaseBadge(phase: string): string {
 
 <template>
   <section class="comms-log flex flex-col h-full bg-surface rounded-lg overflow-hidden border border-border" aria-label="Comms Log">
-    <header class="flex items-center gap-2 px-3.5 py-2.5 bg-surface-raised border-b border-border font-mono text-[0.75rem] tracking-[0.1em] text-accent">
+    <header class="flex items-center gap-2 px-3.5 py-2.5 bg-surface-raised border-b border-border font-mono text-[0.75rem] tracking-widest text-accent">
       <span>📻</span>
       <span>COMMS FEED</span>
     </header>
     <!-- Mobile-only health bars: hidden on desktop, shown on small screens -->
-    <div class="hidden max-[600px]:flex flex-col items-stretch gap-1.5 px-3.5 py-2 bg-surface-raised border-b border-border font-mono">
-      <ShieldBar :shield="raidShield" :recharge="raidShieldRecharge" label="SHIELD" compact />
-      <HealthBar :current="store.raider.hp" :max="store.raider.maxHp" label="RAIDER HP" />
+    <div
+      v-if="store.phase === 'RAIDING'"
+      class="mt-2 px-3.5 py-2 border-b border-border bg-surface-raised md:hidden"
+    >
+      <RaiderStatusHeaderStats
+        :raider="store.raider"
+        :phase="store.phase"
+        :show-phase-timer="false"
+        :phase-timer-text="phaseTimerText"
+        :raid-shield="raidShield"
+        :active-shield-recharge="raidShieldRecharge"
+        :name-max-length="0"
+        :allow-rename="false"
+      />
     </div>
-    <div class="h-[3px] bg-surface-raised border-b border-border overflow-hidden" aria-hidden="true">
+    <div class="h-0.75 bg-surface-raised border-b border-border overflow-hidden" aria-hidden="true">
       <div
         :key="tickBarKey"
         class="comms-log__tick-bar"
@@ -78,9 +105,9 @@ function phaseBadge(phase: string): string {
       <div
         v-for="entry in entries"
         :key="`${entry.tick}-${entry.id}`"
-        class="flex gap-2 px-3.5 py-[5px] text-[0.875rem] leading-[1.5] border-b border-border-subtle last:border-b-0"
+        class="flex gap-2 px-3.5 py-1.25 text-[0.875rem] leading-normal border-b border-border-subtle last:border-b-0"
       >
-        <span class="shrink-0 text-muted font-mono text-[0.75rem] pt-0.5 min-w-[60px]">
+        <span class="shrink-0 text-muted font-mono text-[0.75rem] pt-0.5 min-w-15">
           {{ phaseBadge(entry.phase) }} {{ formatTime(entry.timestamp) }}
         </span>
         <span class="text-text font-mono">{{ entry.text }}</span>

@@ -69,7 +69,7 @@ const greedColorClass = computed(() => {
       />
     </div>
 
-    <section class="backpack-panel panel-card max-[600px]:min-h-[560px] min-[601px]:min-h-[640px]" aria-label="Backpack">
+    <section class="backpack-panel panel-card max-[600px]:min-h-140 min-[601px]:min-h-160" aria-label="Backpack">
       <header class="section-header">🎒 BACKPACK</header>
 
       <div class="flex justify-between items-center mb-2.5">
@@ -81,12 +81,12 @@ const greedColorClass = computed(() => {
         <span class="subpanel-label">Greed Level</span>
         <div class="flex-1 h-2 bg-surface-raised rounded overflow-hidden" :title="`Greed: ${raid.greedLevel}/100`">
           <div
-            class="h-full rounded transition-[width] duration-[400ms] ease-in-out"
+            class="h-full rounded transition-[width] duration-400 ease-in-out"
             :class="greedColorClass.bar"
             :style="{ width: raid.greedLevel + '%' }"
           />
         </div>
-        <span class="font-mono text-[0.75rem] min-w-[90px] text-right" :class="greedColorClass.text">
+        <span class="font-mono text-[0.75rem] min-w-22.5 text-right" :class="greedColorClass.text">
           {{ viewModel.greedLabel(raid.greedLevel) }}
         </span>
       </div>
