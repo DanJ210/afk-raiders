@@ -295,6 +295,13 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
       const effectResult = applyEffects(currentState, template, rng)
       currentState = effectResult.state
 
+      if (effectResult.effectLogText) {
+        event = {
+          ...event,
+          text: `${event.text} ${effectResult.effectLogText}`,
+        }
+      }
+
       if (
         effectResult.shieldDamage &&
         (

@@ -647,12 +647,15 @@ export function applyEffects(
   state: GameState,
   template: EventTemplate,
   rng: RNG,
-): { state: GameState; shieldDamage?: ShieldDamageResult } {
+): { state: GameState; shieldDamage?: ShieldDamageResult; effectLogText?: string } {
   const effects = template.effects
   if (!effects) return { state }
 
   let { raider, raid } = state
   let shieldDamage: ShieldDamageResult | undefined
+  const effectLogParts: string[] = []
+
+  const formatSignedDelta = (delta: number): string => delta > 0 ? `+${delta}` : String(delta)
 
   if (effects.backpackValue !== undefined) {
     const delta = typeof effects.backpackValue === 'string'
@@ -673,7 +676,12 @@ export function applyEffects(
   }
 
   if (effects.mood !== undefined) {
-    raider = { ...raider, mood: clampMood(raider.mood + effects.mood) }
+    const mood = clampMood(raider.mood + effects.mood)
+    const moodDelta = mood - raider.mood
+    raider = { ...raider, mood }
+    if (moodDelta !== 0) {
+      effectLogParts.push(`Mood ${formatSignedDelta(moodDelta)}.`)
+    }
   }
 
   // Compatibility: Keep `effects.hp` support for direct HP adjustments (for example, HUB healing)
@@ -705,14 +713,23 @@ export function applyEffects(
   }
 
   if (effects.greedLevel !== undefined) {
-    raid = { ...raid, greedLevel: Math.min(100, Math.max(0, raid.greedLevel + effects.greedLevel)) }
+    const greedLevel = Math.min(100, Math.max(0, raid.greedLevel + effects.greedLevel))
+    const greedDelta = greedLevel - raid.greedLevel
+    raid = { ...raid, greedLevel }
+    if (greedDelta !== 0) {
+      effectLogParts.push(`Greed ${formatSignedDelta(greedDelta)}.`)
+    }
   }
 
   if (effects.ratRating !== undefined) {
     raider = { ...raider, ratRating: Math.max(0, raider.ratRating + effects.ratRating) }
   }
 
-  return { state: { ...state, raider, raid }, shieldDamage }
+  return {
+    state: { ...state, raider, raid },
+    shieldDamage,
+    effectLogText: effectLogParts.length > 0 ? effectLogParts.join(' ') : undefined,
+  }
 }
 
 /** Simple dice parser using seeded RNG: "+2", "-5", "+1d6" → integer value. */

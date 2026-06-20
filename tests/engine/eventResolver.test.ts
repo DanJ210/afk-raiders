@@ -319,6 +319,44 @@ describe('applyEffects — backpack item behavior', () => {
     expect(dropped.state.raid.greedLevel).toBe(0)
   })
 
+  it('reports mood and greed deltas for event effects', () => {
+    const initial = createInitialState(0)
+
+    const raised = applyEffects(
+      { ...initial, raider: { ...initial.raider, mood: 1 }, raid: { ...initial.raid, greedLevel: 10 } },
+      { ...GREED_EFFECT_TEMPLATE, effects: { mood: 2, greedLevel: 5 } },
+      createRNG(1),
+    )
+    expect(raised.effectLogText).toBe('Mood +2. Greed +5.')
+
+    const dropped = applyEffects(
+      { ...initial, raider: { ...initial.raider, mood: 1 }, raid: { ...initial.raid, greedLevel: 10 } },
+      { ...GREED_EFFECT_TEMPLATE, effects: { mood: -3, greedLevel: -4 } },
+      createRNG(1),
+    )
+    expect(dropped.effectLogText).toBe('Mood -3. Greed -4.')
+  })
+
+  it('reports only actual mood and greed deltas after clamping', () => {
+    const initial = createInitialState(0)
+
+    const capped = applyEffects(
+      { ...initial, raider: { ...initial.raider, mood: 4 }, raid: { ...initial.raid, greedLevel: 98 } },
+      { ...GREED_EFFECT_TEMPLATE, effects: { mood: 5, greedLevel: 5 } },
+      createRNG(1),
+    )
+    expect(capped.state.raider.mood).toBe(5)
+    expect(capped.state.raid.greedLevel).toBe(100)
+    expect(capped.effectLogText).toBe('Mood +1. Greed +2.')
+
+    const unchanged = applyEffects(
+      { ...initial, raider: { ...initial.raider, mood: 5 }, raid: { ...initial.raid, greedLevel: 100 } },
+      { ...GREED_EFFECT_TEMPLATE, effects: { mood: 5, greedLevel: 5 } },
+      createRNG(1),
+    )
+    expect(unchanged.effectLogText).toBeUndefined()
+  })
+
   it('still mitigates a full hit when the shield only has 1 charge left', () => {
     const initial = createInitialState(0)
     const state = {
