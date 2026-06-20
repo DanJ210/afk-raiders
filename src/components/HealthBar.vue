@@ -13,67 +13,26 @@ const hpPercent = computed(() => {
   return Math.max(0, Math.min(100, Math.round(percent)))
 })
 
-const hpClass = computed(() => {
-  if (hpPercent.value > 60) return 'health-bar__fill--good'
-  if (hpPercent.value > 30) return 'health-bar__fill--warning'
-  return 'health-bar__fill--danger'
+const hpFillColor = computed(() => {
+  if (hpPercent.value > 60) return 'bg-success'
+  if (hpPercent.value > 30) return 'bg-warning'
+  return 'bg-danger'
 })
 </script>
 
 <template>
-  <div class="health-bar">
-    <span class="health-bar__label">{{ label ?? 'HP' }}</span>
+  <div class="flex items-center gap-2 w-full min-w-0">
+    <span class="shrink-0 text-muted font-mono text-[0.68rem] tracking-[0.06em]">{{ label ?? 'HP' }}</span>
     <div
-      class="health-bar__track"
+      class="progress-track"
       role="meter"
       aria-label="Raider health"
       aria-valuemin="0"
       :aria-valuemax="max"
       :aria-valuenow="current"
     >
-      <div class="health-bar__fill" :class="hpClass" :style="{ width: hpPercent + '%' }" />
+      <div class="progress-fill" :class="hpFillColor" :style="{ width: hpPercent + '%' }" />
     </div>
-    <span class="health-bar__value">{{ current }}/{{ max }}</span>
+    <span class="shrink-0 text-text font-mono text-[0.68rem] tracking-[0.06em]">{{ current }}/{{ max }}</span>
   </div>
 </template>
-
-<style scoped>
-.health-bar {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-  min-width: 0;
-}
-
-.health-bar__label,
-.health-bar__value {
-  flex-shrink: 0;
-  color: var(--color-muted);
-  font-size: 0.68rem;
-  letter-spacing: 0.06em;
-  font-family: var(--font-mono);
-}
-
-.health-bar__value {
-  color: var(--color-text);
-}
-
-.health-bar__track {
-  flex: 1;
-  height: 8px;
-  background: var(--color-bg);
-  border: 1px solid var(--color-border);
-  border-radius: 999px;
-  overflow: hidden;
-}
-
-.health-bar__fill {
-  height: 100%;
-  transition: width 0.2s ease;
-}
-
-.health-bar__fill--good { background: var(--color-success); }
-.health-bar__fill--warning { background: var(--color-warning); }
-.health-bar__fill--danger { background: var(--color-danger); }
-</style>

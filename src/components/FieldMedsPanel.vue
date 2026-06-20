@@ -24,10 +24,10 @@ function apply(itemId: string) {
 </script>
 
 <template>
-  <div v-if="hasItems" class="field-meds">
-    <span class="backpack-panel__label">Field Meds</span>
-    <ul class="field-meds__list">
-      <li v-for="item in items" :key="item.itemId" class="field-meds__item">
+  <div v-if="hasItems" class="flex flex-col gap-1.5 mb-2.5">
+    <span class="subpanel-label">Field Meds</span>
+    <ul class="flex flex-col gap-[5px] list-none p-0 m-0">
+      <li v-for="item in items" :key="item.itemId" class="item-row">
         <span :class="rarityBarClass(item.rarity)" :title="rarityLabel(item.rarity)" aria-hidden="true" />
         <span>{{ item.name }}</span>
         <span>+{{ item.healAmount }} HP</span>
@@ -35,7 +35,7 @@ function apply(itemId: string) {
         <span v-if="item.quantity > 1">x{{ item.quantity }}</span>
         <button
           type="button"
-          class="field-meds__use"
+          class="btn-ghost"
           :disabled="!canApply"
           @click="apply(item.itemId)"
         >
@@ -45,61 +45,3 @@ function apply(itemId: string) {
     </ul>
   </div>
 </template>
-
-<style scoped>
-.field-meds {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-bottom: 10px;
-}
-
-.backpack-panel__label {
-  font-size: 0.75rem;
-  color: var(--color-muted);
-  font-family: var(--font-mono);
-}
-
-.field-meds__list {
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  padding: 0;
-  margin: 0;
-}
-
-.field-meds__item {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto auto auto auto;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 8px;
-  background: var(--color-surface-raised);
-  border-radius: 4px;
-  color: var(--color-text);
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-}
-
-.field-meds__use {
-  border: 1px solid var(--color-accent);
-  border-radius: 4px;
-  background: transparent;
-  color: var(--color-accent);
-  font-family: var(--font-mono);
-  font-size: 0.68rem;
-  padding: 2px 8px;
-  cursor: pointer;
-}
-
-.field-meds__use:hover:not(:disabled) {
-  background: var(--color-accent);
-  color: var(--color-bg);
-}
-
-.field-meds__use:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-</style>
