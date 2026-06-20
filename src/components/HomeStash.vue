@@ -30,21 +30,21 @@ function handleDialogSell() {
 </script>
 
 <template>
-  <section class="home-stash" aria-label="Home Stash">
-    <header class="home-stash__header">🏠 HOME STASH</header>
+  <section class="home-stash panel-card max-h-[400px]" aria-label="Home Stash">
+    <header class="section-header">🏠 HOME STASH</header>
 
-    <div class="home-stash__stats">
-      <div class="home-stash__stat" title="Value of unsold items currently in the stash">
-        <span class="home-stash__stat-label">Stash Value</span>
-        <span class="home-stash__stat-value">{{ formatNumber(viewModel.stashValue.value) }}</span>
+    <div class="grid grid-cols-3 gap-2 mb-3">
+      <div class="flex flex-col gap-1 bg-surface-raised p-2 rounded" title="Value of unsold items currently in the stash">
+        <span class="text-[0.7rem] text-muted font-mono">Stash Value</span>
+        <span class="text-[1rem] font-bold text-text font-mono">{{ formatNumber(viewModel.stashValue.value) }}</span>
       </div>
-      <div class="home-stash__stat" title="Coins earned by selling stash items or auto-selling overflow">
-        <span class="home-stash__stat-label">🪙 Coin Value</span>
-        <span class="home-stash__stat-value">{{ formatNumber(viewModel.coinValue.value) }}</span>
+      <div class="flex flex-col gap-1 bg-surface-raised p-2 rounded" title="Coins earned by selling stash items or auto-selling overflow">
+        <span class="text-[0.7rem] text-muted font-mono">🪙 Coin Value</span>
+        <span class="text-[1rem] font-bold text-text font-mono">{{ formatNumber(viewModel.coinValue.value) }}</span>
       </div>
-      <div class="home-stash__stat">
-        <span class="home-stash__stat-label">Items</span>
-        <span class="home-stash__stat-value">{{ viewModel.totalItemCount.value }} / {{ HOME_STASH_ITEM_LIMIT }}</span>
+      <div class="flex flex-col gap-1 bg-surface-raised p-2 rounded">
+        <span class="text-[0.7rem] text-muted font-mono">Items</span>
+        <span class="text-[1rem] font-bold text-text font-mono">{{ viewModel.totalItemCount.value }} / {{ HOME_STASH_ITEM_LIMIT }}</span>
       </div>
     </div>
 
@@ -58,52 +58,3 @@ function handleDialogSell() {
     />
   </section>
 </template>
-
-<style scoped>
-.home-stash {
-  background: var(--color-surface);
-  border-radius: 8px;
-  border: 1px solid var(--color-border);
-  padding: 14px;
-  display: flex;
-  flex-direction: column;
-  max-height: 400px;
-}
-
-.home-stash__header {
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  letter-spacing: 0.1em;
-  color: var(--color-accent);
-  margin-bottom: 12px;
-}
-
-.home-stash__stats {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
-  margin-bottom: 12px;
-}
-
-.home-stash__stat {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  background: var(--color-surface-raised);
-  padding: 8px;
-  border-radius: 4px;
-}
-
-.home-stash__stat-label {
-  font-size: 0.7rem;
-  color: var(--color-muted);
-  font-family: var(--font-mono);
-}
-
-.home-stash__stat-value {
-  font-size: 1rem;
-  font-weight: 700;
-  color: var(--color-text);
-  font-family: var(--font-mono);
-}
-</style>

@@ -57,11 +57,11 @@ const shieldPercent = computed(() => {
   return Math.max(0, Math.min(100, Math.round(percent)))
 })
 
-const shieldClass = computed(() => {
-  if (!shield.value || shield.value.durability <= 0) return 'shield-bar__fill--broken'
-  if (shieldPercent.value > 60) return 'shield-bar__fill--strong'
-  if (shieldPercent.value > 30) return 'shield-bar__fill--warning'
-  return 'shield-bar__fill--weak'
+const shieldFillClass = computed(() => {
+  if (!shield.value || shield.value.durability <= 0) return 'bg-muted'
+  if (shieldPercent.value > 60) return 'bg-accent'
+  if (shieldPercent.value > 30) return 'bg-warning'
+  return 'bg-danger'
 })
 
 const shieldStatus = computed(() => {
@@ -88,199 +88,50 @@ const shieldRechargeProgress = computed(() => {
 </script>
 
 <template>
-  <div class="shield-bar" :class="{ 'shield-bar--compact': compact }">
-    <p v-if="recharge" class="shield-bar__recharge-note">
+  <div class="flex flex-col gap-1 w-full min-w-0">
+    <p v-if="recharge" class="m-0 text-[0.68rem] text-accent font-mono">
       Shield is still recharging...
     </p>
 
-    <div class="shield-bar__row">
-      <span class="shield-bar__label">{{ label ?? 'Shield' }}</span>
+    <div class="flex items-center gap-2 min-w-0 w-full max-[600px]:gap-1.5">
+      <span class="shrink-0 font-mono text-[0.72rem] tracking-[0.04em] text-muted max-[600px]:text-[0.68rem]" :class="compact ? 'min-w-[42px]' : 'min-w-[58px]'">{{ label ?? 'Shield' }}</span>
       <div
-        class="shield-bar__track"
+        class="flex-1 min-w-0 h-2 rounded-full overflow-hidden border border-border bg-bg"
         role="progressbar"
         aria-valuemin="0"
         :aria-valuenow="displayedCharge"
         :aria-valuemax="displayedMaxCharge"
         aria-label="Raider shield"
       >
-        <div class="shield-bar__fill" :class="shieldClass" :style="{ width: shieldPercent + '%' }" />
+        <div class="h-full transition-[width] duration-200 ease-in-out" :class="shieldFillClass" :style="{ width: shieldPercent + '%' }" />
       </div>
-      <span class="shield-bar__value">{{ displayedCharge }}/{{ displayedMaxCharge }}</span>
+      <span class="shrink-0 font-mono text-[0.72rem] text-text max-[600px]:text-[0.68rem]">{{ displayedCharge }}/{{ displayedMaxCharge }}</span>
     </div>
 
-    <div v-if="!compact" class="shield-bar__details-row">
-      <span class="shield-bar__status">{{ shieldStatus }}</span>
-      <span class="shield-bar__durability">Durability {{ displayedDurability }}%</span>
+    <div v-if="!compact" class="flex justify-between gap-2 min-w-0 w-full max-[600px]:pl-[48px] max-[600px]:gap-1.5">
+      <span class="shrink-0 font-mono text-[0.72rem] text-muted min-w-0 overflow-wrap-anywhere max-[600px]:hidden">{{ shieldStatus }}</span>
+      <span class="shrink-0 font-mono text-[0.72rem] text-muted max-[600px]:text-[0.68rem]">Durability {{ displayedDurability }}%</span>
     </div>
 
-    <div v-if="!compact && recharge" class="shield-recharge">
-      <div class="shield-recharge__header">
-        <span class="shield-bar__label">Recharge</span>
-        <span class="shield-bar__value">
+    <div v-if="!compact && recharge" class="flex flex-col gap-1 w-full">
+      <div class="flex justify-between gap-2 flex-wrap">
+        <span class="shrink-0 font-mono text-[0.72rem] tracking-[0.04em] text-muted" :class="compact ? 'min-w-[42px]' : 'min-w-[58px]'">Recharge</span>
+        <span class="shrink-0 font-mono text-[0.72rem] text-text">
           {{ recharge.name }} · {{ recharge.totalTicks - recharge.ticksRemaining }}/{{ recharge.totalTicks }} ticks
         </span>
       </div>
-      <div class="shield-recharge__bar" role="progressbar" aria-valuemin="0" :aria-valuenow="shieldRechargeProgress" aria-valuemax="100">
-        <div class="shield-recharge__fill" :style="{ width: shieldRechargeProgress + '%' }" />
+      <div
+        class="h-2 bg-border-subtle border border-border rounded-full overflow-hidden"
+        role="progressbar"
+        aria-valuemin="0"
+        :aria-valuenow="shieldRechargeProgress"
+        aria-valuemax="100"
+      >
+        <div
+          class="w-full h-full transition-[width] duration-[250ms] ease-in-out"
+          :style="{ width: shieldRechargeProgress + '%', background: 'linear-gradient(90deg, #4b9ef0, #7b9ef0, #f0c84b)' }"
+        />
       </div>
     </div>
   </div>
 </template>
-
-<style scoped>
-.shield-bar {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  width: 100%;
-  min-width: 0;
-}
-
-.shield-bar__row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-  width: 100%;
-}
-
-.shield-bar__recharge-note {
-  margin: 0;
-  font-size: 0.68rem;
-  color: var(--color-accent);
-  font-family: var(--font-mono);
-}
-
-.shield-bar__details-row {
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
-  min-width: 0;
-  width: 100%;
-}
-
-.shield-bar__label {
-  flex-shrink: 0;
-  min-width: 58px;
-  font-size: 0.72rem;
-  letter-spacing: 0.04em;
-  color: var(--color-muted);
-  font-family: var(--font-mono);
-}
-
-.shield-bar__track {
-  flex: 1;
-  min-width: 0;
-  height: 8px;
-  border-radius: 999px;
-  overflow: hidden;
-  border: 1px solid var(--color-border);
-  background: var(--color-bg);
-}
-
-.shield-bar__fill {
-  height: 100%;
-  transition: width 0.2s ease;
-}
-
-.shield-bar__fill--strong {
-  background: var(--color-accent);
-}
-
-.shield-bar__fill--warning {
-  background: var(--color-warning);
-}
-
-.shield-bar__fill--weak {
-  background: var(--color-danger);
-}
-
-.shield-bar__fill--broken {
-  background: var(--color-muted);
-}
-
-.shield-bar__value,
-.shield-bar__status,
-.shield-bar__durability {
-  flex-shrink: 0;
-  font-size: 0.72rem;
-  color: var(--color-text);
-  font-family: var(--font-mono);
-  
-}
-
-.shield-bar__status {
-  color: var(--color-muted);
-  min-width: 0;
-  overflow-wrap: anywhere;
-}
-
-.shield-bar__durability {
-  color: var(--color-muted);
-}
-
-.shield-recharge {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  width: 100%;
-}
-
-.shield-recharge__header {
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.shield-recharge__bar {
-  height: 8px;
-  background: var(--color-border-subtle);
-  border: 1px solid var(--color-border);
-  border-radius: 999px;
-  overflow: hidden;
-}
-
-.shield-recharge__fill {
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, #4b9ef0, #7b9ef0, #f0c84b);
-  transition: width 0.25s ease;
-}
-
-.shield-bar--compact .shield-bar__label {
-  min-width: 42px;
-}
-
-.shield-bar--compact .shield-bar__details-row,
-.shield-bar--compact .shield-bar__status,
-.shield-bar--compact .shield-bar__durability {
-  display: none;
-}
-
-@media (max-width: 600px) {
-  .shield-bar__row {
-    gap: 6px;
-  }
-
-  .shield-bar__details-row {
-    padding-left: 48px;
-    gap: 6px;
-  }
-
-  .shield-bar__label {
-    min-width: 42px;
-    font-size: 0.68rem;
-  }
-
-  .shield-bar__value,
-  .shield-bar__status,
-  .shield-bar__durability {
-    font-size: 0.68rem;
-  }
-
-  .shield-bar__status {
-    display: none;
-  }
-}
-</style>

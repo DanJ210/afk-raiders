@@ -7,108 +7,21 @@ const store = useGameStore()
 <template>
   <div
     v-if="store.awaySummary"
-    class="away-summary"
+    class="modal-overlay z-[100]"
     role="alert"
     aria-live="assertive"
   >
-    <div class="away-summary__inner">
-      <div class="away-summary__header">
-        <span class="away-summary__icon">📡</span>
-        <span class="away-summary__title">WHILE YOU WERE AWAY…</span>
+    <div class="w-[min(100%,420px)] bg-surface border border-accent rounded-[10px] p-6">
+      <div class="flex items-center gap-2 mb-4">
+        <span class="text-[1.4rem]">📡</span>
+        <span class="font-mono text-[0.85rem] tracking-[0.1em] text-accent font-bold">WHILE YOU WERE AWAY…</span>
       </div>
-      <ul class="away-summary__lines">
-        <li v-for="line in store.awaySummary.lines" :key="line">{{ line }}</li>
+      <ul class="list-none p-0 m-0 mb-5 flex flex-col gap-2">
+        <li v-for="line in store.awaySummary.lines" :key="line" class="font-mono text-[0.875rem] text-text pl-4 relative before:absolute before:left-0 before:text-accent before:content-['>']">{{ line }}</li>
       </ul>
-      <button class="away-summary__dismiss" @click="store.dismissAwaySummary()">
+      <button class="block w-full py-2.5 bg-accent text-bg border-none rounded font-mono text-[0.85rem] font-bold cursor-pointer tracking-[0.05em] hover:opacity-85" @click="store.dismissAwaySummary()">
         Acknowledged
       </button>
     </div>
   </div>
 </template>
-
-<style scoped>
-.away-summary {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 100;
-  padding: 16px;
-}
-
-.away-summary__inner {
-  background: var(--color-surface);
-  border: 1px solid var(--color-accent);
-  border-radius: 10px;
-  padding: 24px;
-  max-width: 420px;
-  width: 100%;
-}
-
-.away-summary__header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 16px;
-}
-
-.away-summary__icon {
-  font-size: 1.4rem;
-}
-
-.away-summary__title {
-  font-family: var(--font-mono);
-  font-size: 0.85rem;
-  letter-spacing: 0.1em;
-  color: var(--color-accent);
-  font-weight: 700;
-}
-
-.away-summary__lines {
-  list-style: none;
-  padding: 0;
-  margin: 0 0 20px 0;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.away-summary__lines li {
-  font-family: var(--font-mono);
-  font-size: 0.875rem;
-  color: var(--color-text);
-  padding-left: 16px;
-  position: relative;
-}
-
-.away-summary__lines li::before {
-  content: '>';
-  position: absolute;
-  left: 0;
-  color: var(--color-accent);
-}
-
-.away-summary__dismiss {
-  display: block;
-  width: 100%;
-  padding: 10px;
-  background: var(--color-accent);
-  color: var(--color-bg);
-  border: none;
-  border-radius: 6px;
-  font-family: var(--font-mono);
-  font-size: 0.85rem;
-  font-weight: 700;
-  cursor: pointer;
-  letter-spacing: 0.05em;
-}
-
-.away-summary__dismiss:hover {
-  opacity: 0.85;
-}
-</style>

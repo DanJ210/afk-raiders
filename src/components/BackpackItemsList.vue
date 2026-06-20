@@ -23,132 +23,42 @@ function handleKeydown(event: KeyboardEvent, itemId: string) {
 </script>
 
 <template>
-  <div class="backpack-items-container">
-    <p v-if="items.length === 0 && phase === 'HUB'" class="backpack-items-empty">
+  <div class="backpack-items-container mt-3 flex flex-col flex-1 min-h-0">
+    <p v-if="items.length === 0 && phase === 'HUB'" class="text-[0.8rem] text-muted italic mt-2">
       Backpack empty. Ready for terrible decisions.
     </p>
-    <p v-else-if="items.length === 0" class="backpack-items-empty">
+    <p v-else-if="items.length === 0" class="text-[0.8rem] text-muted italic mt-2">
       Nothing yet. The zone is full of possibilities and also robots.
     </p>
 
-    <ul v-else class="backpack-items-list">
+    <ul v-else class="list-none p-0 m-0 grid gap-2 overflow-y-auto flex-1 min-h-0 pr-0.5" style="grid-auto-rows: max-content; align-content: start;">
       <li
         v-for="item in items"
         :key="item.itemId"
-        class="backpack-item backpack-item--clickable"
+        class="flex flex-col justify-start min-h-[84px] border border-border-subtle rounded-md bg-surface-raised px-2.5 py-2 overflow-visible cursor-pointer hover:border-accent focus-visible:border-accent focus-visible:outline-none max-[600px]:min-h-[92px]"
         role="button"
         tabindex="0"
         @click="$emit('item-click', item.itemId)"
         @keydown="handleKeydown($event, item.itemId)"
       >
-        <div class="backpack-item-main">
+        <div class="flex justify-between gap-2.5 min-w-0">
           <span :class="rarityBarClass(item.rarity)" :title="rarityLabel(item.rarity)" aria-hidden="true" />
-          <span class="backpack-item-name">{{ item.name }}</span>
-          <span class="backpack-item-meta">{{ rarityLabel(item.rarity) }}</span>
+          <span class="flex-1 min-w-0 text-[0.86rem] text-text">{{ item.name }}</span>
+          <span class="text-[0.72rem] text-muted font-mono">{{ rarityLabel(item.rarity) }}</span>
         </div>
-        <div class="backpack-item-sub">
+        <div class="flex justify-between gap-2.5 min-w-0 mt-1 text-[0.72rem] text-muted font-mono">
           <span>Value {{ item.value }}</span>
           <span v-if="item.kind === 'shield_recharger'">+{{ item.shieldChargeAmount }} Shield</span>
           <span v-if="item.quantity > 1">x{{ item.quantity }}</span>
         </div>
-        <p v-if="item.flavor" class="backpack-item-flavor">{{ item.flavor }}</p>
+        <p v-if="item.flavor" class="mt-1.5 mb-0 text-[0.72rem] text-muted font-mono italic leading-[1.4] overflow-wrap-anywhere">{{ item.flavor }}</p>
       </li>
     </ul>
   </div>
 </template>
 
 <style scoped>
-.backpack-items-container {
-  margin-top: 12px;
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-height: 0;
-}
-
-.backpack-items-empty {
-  font-size: 0.8rem;
-  color: var(--color-muted);
-  font-style: italic;
-  margin-top: 8px;
-}
-
-.backpack-items-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: grid;
-  grid-auto-rows: max-content;
-  gap: 8px;
-  align-content: start;
-  overflow-y: auto;
-  flex: 1;
-  min-height: 0;
-  padding-right: 2px;
-}
-
-.backpack-item {
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  min-height: 84px;
-  border: 1px solid var(--color-border-subtle);
-  border-radius: 6px;
-  background: var(--color-surface-raised);
-  padding: 8px 10px;
-  overflow: visible;
-}
-
-.backpack-item--clickable {
-  cursor: pointer;
-}
-
-.backpack-item--clickable:hover,
-.backpack-item--clickable:focus-visible {
-  border-color: var(--color-accent);
-  outline: none;
-}
-
-.backpack-item-main,
-.backpack-item-sub {
-  display: flex;
-  justify-content: space-between;
-  gap: 10px;
-  min-width: 0;
-}
-
-.backpack-item-name {
-  flex: 1;
-  min-width: 0;
-  font-size: 0.86rem;
-  color: var(--color-text);
-}
-
-.backpack-item-meta,
-.backpack-item-sub,
-.backpack-item-flavor {
-  font-size: 0.72rem;
-  color: var(--color-muted);
-  font-family: var(--font-mono);
-}
-
-.backpack-item-sub {
-  margin-top: 4px;
-}
-
-.backpack-item-flavor {
-  margin: 6px 0 0;
-  font-style: italic;
-  line-height: 1.4;
-  overflow-wrap: anywhere;
-}
-
-@media (max-width: 600px) {
-  .backpack-item {
-    min-height: 92px;
-  }
-}
-
+/* Desktop: constrain viewport to show exactly 5 rows */
 @media (min-width: 601px) {
   .backpack-items-container {
     --backpack-item-row-height: 84px;

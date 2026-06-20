@@ -43,11 +43,19 @@ function handleApplyShieldRecharger(itemId: string) {
   if (!viewModel.canApplyShieldCharge.value) return
   store.applyShieldRecharger(itemId)
 }
+
+// Greed bar fill color + text color
+const greedColorClass = computed(() => {
+  const c = viewModel.greedClass.value
+  if (c === 'greed--low') return { bar: 'bg-success', text: 'text-success' }
+  if (c === 'greed--mid') return { bar: 'bg-warning', text: 'text-warning' }
+  return { bar: 'bg-danger', text: 'text-danger' }
+})
 </script>
 
 <template>
-  <div class="backpack-container">
-    <div class="consumables-container">
+  <div class="backpack-container flex flex-col gap-3 w-full">
+    <div class="flex flex-col gap-2 w-full">
       <ShieldRechargersPanel
         :items="viewModel.shieldRechargerItems.value"
         :can-apply="viewModel.canApplyAnyShieldRecharger.value"
@@ -61,20 +69,24 @@ function handleApplyShieldRecharger(itemId: string) {
       />
     </div>
 
-    <section class="backpack-panel" aria-label="Backpack">
-      <header class="backpack-panel__header">🎒 BACKPACK</header>
+    <section class="backpack-panel panel-card max-[600px]:min-h-[560px] min-[601px]:min-h-[640px]" aria-label="Backpack">
+      <header class="section-header">🎒 BACKPACK</header>
 
-      <div class="backpack-panel__value">
-        <span class="backpack-panel__label">Total Value</span>
-        <span class="backpack-panel__amount">{{ raid.backpackValue }}</span>
+      <div class="flex justify-between items-center mb-2.5">
+        <span class="subpanel-label">Total Value</span>
+        <span class="font-mono font-bold text-[1.2rem] text-text">{{ raid.backpackValue }}</span>
       </div>
 
-      <div class="backpack-panel__greed">
-        <span class="backpack-panel__label">Greed Level</span>
-        <div class="greed-bar" :title="`Greed: ${raid.greedLevel}/100`">
-          <div class="greed-bar__fill" :class="viewModel.greedClass.value" :style="{ width: raid.greedLevel + '%' }" />
+      <div class="flex items-center gap-2 mb-2.5">
+        <span class="subpanel-label">Greed Level</span>
+        <div class="flex-1 h-2 bg-surface-raised rounded overflow-hidden" :title="`Greed: ${raid.greedLevel}/100`">
+          <div
+            class="h-full rounded transition-[width] duration-[400ms] ease-in-out"
+            :class="greedColorClass.bar"
+            :style="{ width: raid.greedLevel + '%' }"
+          />
         </div>
-        <span class="backpack-panel__greed-label" :class="viewModel.greedClass.value">
+        <span class="font-mono text-[0.75rem] min-w-[90px] text-right" :class="greedColorClass.text">
           {{ viewModel.greedLabel(raid.greedLevel) }}
         </span>
       </div>
@@ -104,113 +116,3 @@ function handleApplyShieldRecharger(itemId: string) {
     </section>
   </div>
 </template>
-
-<style scoped>
-.backpack-container {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  width: 100%;
-}
-
-.consumables-container {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  width: 100%;
-}
-
-.backpack-panel {
-  background: var(--color-surface);
-  border-radius: 8px;
-  border: 1px solid var(--color-border);
-  padding: 14px;
-  display: flex;
-  flex-direction: column;
-  max-height: none;
-  min-height: 0;
-}
-
-.backpack-panel__header {
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  letter-spacing: 0.1em;
-  color: var(--color-accent);
-  margin-bottom: 12px;
-}
-
-.backpack-panel__value {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
-}
-
-.backpack-panel__label {
-  font-size: 0.75rem;
-  color: var(--color-muted);
-  font-family: var(--font-mono);
-}
-
-.backpack-panel__amount {
-  font-size: 1.2rem;
-  font-family: var(--font-mono);
-  font-weight: 700;
-  color: var(--color-text);
-}
-
-.backpack-panel__greed {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 10px;
-}
-
-.greed-bar {
-  flex: 1;
-  height: 8px;
-  background: var(--color-surface-raised);
-  border-radius: 4px;
-  overflow: hidden;
-}
-
-.greed-bar__fill {
-  height: 100%;
-  border-radius: 4px;
-  transition: width 0.4s ease;
-}
-
-.greed--low {
-  background: var(--color-success);
-  color: var(--color-success);
-}
-.greed--mid {
-  background: var(--color-warning);
-  color: var(--color-warning);
-}
-.greed--high {
-  background: var(--color-danger);
-  color: var(--color-danger);
-}
-
-.backpack-panel__greed-label {
-  font-size: 0.75rem;
-  font-family: var(--font-mono);
-  min-width: 90px;
-  text-align: right;
-}
-
-@media (max-width: 600px) {
-  .backpack-panel {
-    min-height: 560px;
-    max-height: none;
-  }
-}
-
-@media (min-width: 601px) {
-  .backpack-panel {
-    min-height: 640px;
-    max-height: none;
-  }
-}
-</style>
