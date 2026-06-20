@@ -47,6 +47,7 @@ afk-raiders/
 │   │   ├── dangerLevelProfiles.ts # Low/Medium/High risk/reward tuning
 │   │   ├── signal.ts            # Signal regen + spend rules
 │   │   ├── shields.ts           # Shared shield damage + recharge rules
+│   │   ├── skills.ts            # Autonomous Raider skill progression + tiny modifiers
 │   │   ├── homeStash.ts         # Stash transfer and overflow auto-sell
 │   │   ├── stats.ts             # Lifetime stat aggregation helpers
 │   │   ├── log.ts               # Centralized log append/capping
@@ -60,6 +61,7 @@ afk-raiders/
 │   │   ├── loot.json            # Many varieties of original comedy/parody loot items
 │   │   ├── healing_items.json   # Current-raid-only bandages
 │   │   ├── shield_rechargers.json # Manual-use backpack shield consumables
+│   │   ├── skills.json          # Cardio/Hoarding/Hiding definitions and level-up text
 │   │   ├── robots.json          # Anxieticks, Tattletales, Roomba Prime…
 │   │   ├── zones.json           # Damp Battlegrounds, etc.
 │   │   └── flavor.json          # Hub gossip, death quips, mood lines
@@ -137,6 +139,18 @@ Signal regenerates (~1 per 10 min, capped at 5). Ready Up (2 Signal) starts DEPL
 `GameState.stats` tracks long-lived outcomes: extraction/death totals and context (zone + zone/time), robot defeats, and healing item usage.
 
 Save migration in `gameStore.ts` backfills missing legacy stats from pre-existing `raider.extractCount` and `raider.deathCount` so historical totals remain consistent.
+
+### 4b. Autonomous Raider skills
+`GameState.raider.skills` stores persistent parody skill progress for Cardio, Hoarding, and Hiding in Lockers. Skills are raider-level state, not raid-level state, so they survive deaths, extractions, and sessions.
+
+Skill definitions and visible level-up text live in `src/content/skills.json`. The pure engine helper in `src/engine/skills.ts` owns initial state, save normalization, seeded practice rolls, level thresholds, and small modifier derivation. `processTick()` records explicit practice triggers from existing simulation outcomes, then applies XP before appending the tick log so level-up comms land in the same tick that earned them.
+
+The Handler never spends skill points. Skill power should stay subtle and inspectable:
+- Cardio nudges extraction chance and greed-death safety.
+- Hoarding nudges loot value and bonus consumable find chance.
+- Hiding in Lockers trims failed robot encounter damage before shield-aware damage is applied, with damage narration showing the reduction when it matters.
+
+Save migration must preserve compatible local saves. Version 3 saves are upgraded to the current save version by backfilling initialized skill state rather than being discarded.
 
 ### 5. Phase timings and failure states
 - Tick cadence remains 30 seconds.

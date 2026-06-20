@@ -84,6 +84,21 @@ export interface ShieldRechargerItem extends ContentEntry {
   rarity: number
 }
 
+export type SkillTrackId = 'cardio' | 'hoarding' | 'hiding_in_lockers'
+
+export interface SkillDefinition {
+  id: SkillTrackId
+  name: string
+  description: string
+  maxLevel: number
+  /** Total XP thresholds required to reach levels 1..maxLevel. */
+  xpThresholds: number[]
+  /** Index 0 describes no learned level; indexes 1..maxLevel describe active level effects. */
+  effectTextByLevel: string[]
+  /** Index 0 narrates reaching level 1; indexes 1..maxLevel-1 narrate later levels. */
+  levelUpTextByLevel: string[]
+}
+
 export interface ZoneEntry extends ContentEntry {
   name: string
   description: string
@@ -192,7 +207,17 @@ export interface RaiderStats {
   deploysCount: number
   deathCount: number
   extractCount: number
+  skills: RaiderSkillsState
 }
+
+export interface RaiderSkillProgress {
+  id: SkillTrackId
+  level: number
+  xp: number
+  discovered: boolean
+}
+
+export type RaiderSkillsState = Record<SkillTrackId, RaiderSkillProgress>
 
 export interface OutcomeContextStats {
   total: number

@@ -5,11 +5,9 @@ import { useGameStore } from '../stores/gameStore'
 import { zoneConditionByDangerLevel, zoneDescription, zoneName } from '../utils/zones'
 import { TICK_INTERVAL_MS } from '../engine/catchUp'
 import RaiderStatusHeaderStats from './RaiderStatusHeaderStats.vue'
-import RaiderLifetimeStats from './RaiderLifetimeStats.vue'
 
 const store = useGameStore()
 const raider = computed(() => store.raider)
-const lifetimeStats = computed(() => store.state.stats)
 const activeShieldRecharge = computed(() => store.raid.activeShieldRecharge)
 const currentZoneName = computed(() => zoneName(store.raid.zone))
 const currentZoneDescription = computed(() => zoneDescription(store.raid.zone))
@@ -62,7 +60,7 @@ function formatDuration(ms: number): string {
         <button
           v-if="currentZoneName"
           type="button"
-          class="relative font-mono text-raider-value text-text min-w-0 [overflow-wrap:anywhere] border-none bg-transparent p-0 underline decoration-dotted underline-offset-2 cursor-help text-left group"
+          class="relative font-mono text-raider-value text-text min-w-0 wrap-anywhere border-none bg-transparent p-0 underline decoration-dotted underline-offset-2 cursor-help text-left group"
           :aria-label="currentZoneDescription ? `Zone ${currentZoneName}. ${currentZoneDescription}` : `Zone ${currentZoneName}`"
         >
           {{ currentZoneName }}
@@ -81,7 +79,7 @@ function formatDuration(ms: number): string {
         <button
           v-if="currentCondition"
           type="button"
-          class="relative font-mono text-raider-value text-text min-w-0 [overflow-wrap:anywhere] border-none bg-transparent p-0 underline decoration-dotted underline-offset-2 cursor-help text-left group"
+          class="relative font-mono text-raider-value text-text min-w-0 wrap-anywhere border-none bg-transparent p-0 underline decoration-dotted underline-offset-2 cursor-help text-left group"
           :aria-label="currentCondition.description ? `Condition ${currentCondition.name}. ${currentCondition.description}` : `Condition ${currentCondition.name}`"
         >
           {{ currentCondition.name }}
@@ -109,8 +107,6 @@ function formatDuration(ms: number): string {
         <span title="Extractions">✅ {{ raider.extractCount }}</span>
         <span title="Deaths">💀 {{ raider.deathCount }}</span>
       </div>
-
-      <RaiderLifetimeStats :stats="lifetimeStats" />
     </div>
   </section>
 </template>

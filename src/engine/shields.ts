@@ -40,6 +40,7 @@ export interface ShieldDamageResult {
   shieldDurabilityLost: number
   mitigated: boolean
   moodResilienceHpSaved?: number
+  skillDamageReduced?: number
 }
 
 export interface ShieldRechargeStartResult {

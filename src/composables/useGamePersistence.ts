@@ -13,8 +13,10 @@ import { SAVE_VERSION } from '../engine/initialState.js'
 import { createInitialLifetimeStats } from '../engine/stats.js'
 import { sellStashOverflow } from '../engine/homeStash.js'
 import { createStarterShieldState } from '../engine/shields.js'
+import { normalizeSkills } from '../engine/skills.js'
 
 const STORAGE_KEY = 'afk-raiders-save'
+const MIN_SUPPORTED_SAVE_VERSION = 3
 
 export interface SaveData {
   state: GameState
@@ -59,7 +61,7 @@ export function useGamePersistence(): GamePersistenceReturn {
       const raw = localStorage.getItem(STORAGE_KEY)
       if (!raw) return null
       const data = JSON.parse(raw) as SaveData
-      if (data.version !== SAVE_VERSION) return null
+      if (data.version > SAVE_VERSION || data.version < MIN_SUPPORTED_SAVE_VERSION) return null
       // Migration: older saves lack coins, and stashes saved while the limit
       // was not enforced may exceed it — sell the overflow rather than delete it.
       const { pendingReadyUp: _pendingReadyUp, ...loadedState } = data.state as GameState & { pendingReadyUp?: boolean }
@@ -69,6 +71,7 @@ export function useGamePersistence(): GamePersistenceReturn {
         raider: {
           ...loadedState.raider,
           mood: clampMood(loadedState.raider.mood),
+          skills: normalizeSkills(loadedState.raider.skills),
         },
         signalAmplifiers: loadedState.signalAmplifiers ?? 0,
         pendingCalm: (loadedState as any).pendingCalm ?? (loadedState as any).pendingEncourage ?? false,
@@ -86,6 +89,8 @@ export function useGamePersistence(): GamePersistenceReturn {
           zoneCondition: loadedState.raid.zoneCondition ?? null,
         },
       }
+      data.version = SAVE_VERSION
+      data.state.version = SAVE_VERSION
       return data
     } catch {
       return null

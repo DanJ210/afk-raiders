@@ -34,6 +34,7 @@ import weaponsPartsData from '../content/loot-tables/weapons_parts.json'
 import { getDangerLevelProfile, rarityWeight, type DangerLevelProfile } from './dangerLevelProfiles.js'
 import { clampMood, getMoodRarityWeightMultiplier, getMoodResilienceMultiplier } from './mood.js'
 import { applyShieldedDamage, startShieldRecharge, type ShieldDamageResult } from './shields.js'
+import { getSkillModifierProfile } from './skills.js'
 
 // One events file per phase: HUB, DEPLOYING, RAIDING, EXTRACTING, DOWNED
 const events = [
@@ -98,16 +99,19 @@ export function describeShieldDamage(damage: ShieldDamageResult): string {
   const resilienceText = damage.moodResilienceHpSaved && damage.moodResilienceHpSaved > 0
     ? ` Resilience saved ${damage.moodResilienceHpSaved} HP.`
     : ''
+  const skillText = damage.skillDamageReduced && damage.skillDamageReduced > 0
+    ? ` Hiding in Lockers ducked ${damage.skillDamageReduced} incoming damage.`
+    : ''
 
   if (!damage.mitigated || damage.shieldChargeLost <= 0) {
-    return `Took ${damage.hpDamage} damage.${resilienceText}`
+    return `Took ${damage.hpDamage} damage.${resilienceText}${skillText}`
   }
 
   if (damage.hpDamage <= 0) {
-    return `Shield lost ${damage.shieldChargeLost} charge. No HP damage landed.${resilienceText}`
+    return `Shield lost ${damage.shieldChargeLost} charge. No HP damage landed.${resilienceText}${skillText}`
   }
 
-  return `Shield lost ${damage.shieldChargeLost} charge; ${damage.hpDamage} HP damage landed.${resilienceText}`
+  return `Shield lost ${damage.shieldChargeLost} charge; ${damage.hpDamage} HP damage landed.${resilienceText}${skillText}`
 }
 
 /** Filter events valid for the current game context */
@@ -503,6 +507,7 @@ function applyRobotDamage(
   state: GameState,
   robot: RobotEntry,
   rawDamage: number,
+  skillDamageReduced: number = 0,
 ): { raider: GameState['raider']; raid: GameState['raid']; damage: number; shieldDamage: ShieldDamageResult } {
   if (state.raider.hp <= 0) {
     return {
@@ -516,6 +521,7 @@ function applyRobotDamage(
         shieldChargeLost: 0,
         shieldDurabilityLost: 0,
         mitigated: false,
+        skillDamageReduced: skillDamageReduced > 0 ? skillDamageReduced : undefined,
       },
     }
   }
@@ -557,6 +563,7 @@ function applyRobotDamage(
       raider: { ...shielded.raider, hp },
       hpDamage: state.raider.hp - hp,
       moodResilienceHpSaved: moodResilienceHpSaved > 0 ? moodResilienceHpSaved : undefined,
+      skillDamageReduced: skillDamageReduced > 0 ? skillDamageReduced : undefined,
     },
   }
 }
@@ -598,9 +605,12 @@ export function resolveRobotEncounter(
   }
 
   const profile = getDangerLevelProfile(state.raid.dangerLevel)
+  const skillModifiers = getSkillModifierProfile(state.raider.skills)
   const damageMultiplier = Math.max(0, (opts.damageMultiplier ?? 1) * profile.robotFailureDamageMultiplier)
-  const rawDamage = Math.ceil(robot.menace * ROBOT_DAMAGE_PER_MENACE * damageMultiplier)
-  const damageResult = applyRobotDamage(state, robot, rawDamage)
+  const rawDamageBeforeSkills = Math.ceil(robot.menace * ROBOT_DAMAGE_PER_MENACE * damageMultiplier)
+  const rawDamage = Math.ceil(rawDamageBeforeSkills * skillModifiers.robotFailureDamageMultiplier)
+  const skillDamageReduced = Math.max(0, rawDamageBeforeSkills - rawDamage)
+  const damageResult = applyRobotDamage(state, robot, rawDamage, skillDamageReduced)
   return {
     state: {
       ...state,
@@ -663,7 +673,8 @@ export function applyEffects(
       : effects.backpackValue
     if (delta > 0) {
       const profile = getDangerLevelProfile(raid.dangerLevel)
-      const profiledDelta = Math.max(1, Math.round(delta * profile.lootValueMultiplier))
+      const skillModifiers = getSkillModifierProfile(raider.skills)
+      const profiledDelta = Math.max(1, Math.round(delta * profile.lootValueMultiplier * skillModifiers.lootValueMultiplier))
       const item = pickLootItemForValue(profiledDelta, rng, profile, raider.mood)
       raid = addBackpackItem(raid, item)
       raid = {

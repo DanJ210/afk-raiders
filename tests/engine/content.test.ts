@@ -18,6 +18,8 @@ import personalJunkData from '../../src/content/loot-tables/personal_junk.json'
 import scrapComponentsData from '../../src/content/loot-tables/scrap_components.json'
 import valuablesData from '../../src/content/loot-tables/valuables.json'
 import weaponsPartsData from '../../src/content/loot-tables/weapons_parts.json'
+import skillsData from '../../src/content/skills.json'
+import type { SkillDefinition, SkillTrackId } from '../../src/engine/types'
 
 const rawLoot = [
   ...(apparelAccessoriesData as { items: typeof loot }).items,
@@ -58,6 +60,8 @@ const DEADLINESS_RANK = {
 const BUILT_IN_SLOTS = new Set(['mundane_item', 'water_item', 'healing_item', 'count'])
 const VALID_PHASES = new Set<Phase>(['HUB', 'DEPLOYING', 'RAIDING', 'EXTRACTING', 'DOWNED'])
 const VALID_DANGER_LEVELS = new Set<DangerLevel>(['Low', 'Medium', 'High'])
+const VALID_SKILL_IDS = new Set<SkillTrackId>(['cardio', 'hoarding', 'hiding_in_lockers'])
+const skills = skillsData as SkillDefinition[]
 
 // Robot flavor slots: {robot_flavor_<robotId>}
 function isRobotFlavorSlot(slot: string): boolean {
@@ -467,6 +471,37 @@ describe('content validation', () => {
               `shield recharger "${a.id}" is more valuable than "${b.id}" but more common`,
             ).toBeLessThanOrEqual(b.weight)
           }
+        }
+      }
+    })
+  })
+
+  describe('skills.json', () => {
+    it('defines exactly the supported parody skill ids once', () => {
+      const ids = skills.map(skill => skill.id)
+      expect(new Set(ids).size).toBe(ids.length)
+      expect(new Set(ids)).toEqual(VALID_SKILL_IDS)
+    })
+
+    it('uses valid level caps, thresholds, and display text', () => {
+      for (const skill of skills) {
+        expect(skill.name.trim(), `skill "${skill.id}" is missing a name`).not.toBe('')
+        expect(skill.description.trim(), `skill "${skill.id}" is missing a description`).not.toBe('')
+        expect(Number.isInteger(skill.maxLevel), `skill "${skill.id}" maxLevel must be an integer`).toBe(true)
+        expect(skill.maxLevel, `skill "${skill.id}" maxLevel`).toBeGreaterThan(0)
+        expect(skill.xpThresholds, `skill "${skill.id}" threshold count`).toHaveLength(skill.maxLevel)
+        expect(skill.effectTextByLevel, `skill "${skill.id}" effect text count`).toHaveLength(skill.maxLevel + 1)
+        expect(skill.levelUpTextByLevel, `skill "${skill.id}" level-up text count`).toHaveLength(skill.maxLevel)
+
+        let previousThreshold = 0
+        for (const threshold of skill.xpThresholds) {
+          expect(Number.isInteger(threshold), `skill "${skill.id}" threshold must be an integer`).toBe(true)
+          expect(threshold, `skill "${skill.id}" thresholds must ascend`).toBeGreaterThan(previousThreshold)
+          previousThreshold = threshold
+        }
+
+        for (const text of [...skill.effectTextByLevel, ...skill.levelUpTextByLevel]) {
+          expect(text.trim(), `skill "${skill.id}" has empty text`).not.toBe('')
         }
       }
     })

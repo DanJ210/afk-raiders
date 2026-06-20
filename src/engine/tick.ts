@@ -24,6 +24,7 @@ import { transferBackpackToHomeStash, HOME_STASH_ITEM_LIMIT } from './homeStash.
 import { appendLogEntries } from './log.js'
 import { recordOutcome, recordRobotDefeat } from './stats.js'
 import { advanceShieldRecharge } from './shields.js'
+import { applySkillPractice, getSkillModifierProfile, rollSkillPractice, type SkillLevelUp, type SkillPracticeTrigger } from './skills.js'
 
 const LOOT_BONUS_HEALING_ITEM_CHANCE = 0.2 // 20% chance to find a healing item on any loot event, independent of normal loot rolls
 const LOOT_BONUS_SHIELD_RECHARGER_CHANCE = 0.15 // 15% chance to find a shield recharger on any loot event, independent of normal loot rolls
@@ -83,6 +84,46 @@ function totalBackpackQuantity(backpack: BackpackItem[]): number {
   return backpack.reduce((sum, item) => sum + item.quantity, 0)
 }
 
+function queueSuccessfulExtractionSkillPractice(
+  queue: SkillPracticeTrigger[],
+  params: {
+    backpack: BackpackItem[]
+    backpackValue: number
+    dangerLevel: GameState['raid']['dangerLevel']
+    hp: number
+    maxHp: number
+  },
+) {
+  const backpackQuantity = totalBackpackQuantity(params.backpack)
+  queue.push({ skillId: 'cardio', reason: 'extraction_success', minXp: 2, maxXp: 4 })
+
+  if (params.maxHp > 0 && params.hp / params.maxHp <= 0.5) {
+    queue.push({ skillId: 'cardio', reason: 'low_hp_extraction', minXp: 2, maxXp: 3 })
+  }
+
+  if (backpackQuantity > 0) {
+    queue.push({ skillId: 'hoarding', reason: 'loot_added', minXp: 1, maxXp: Math.min(4, Math.max(1, Math.ceil(backpackQuantity / 3))) })
+  }
+
+  if (params.backpackValue >= 500) {
+    queue.push({ skillId: 'hoarding', reason: 'valuable_extraction', minXp: 2, maxXp: 5 })
+  }
+
+  if (params.dangerLevel === 'High') {
+    queue.push({ skillId: 'hiding_in_lockers', reason: 'high_danger_survived', minXp: 2, maxXp: 4 })
+  }
+}
+
+function skillLevelUpEvent(levelUp: SkillLevelUp, tick: number, now: number, phase: GameState['raid']['phase']): LogEvent {
+  return {
+    id: `skill_${levelUp.skillId}_level_${levelUp.level}`,
+    tick,
+    timestamp: now,
+    text: levelUp.text,
+    phase,
+  }
+}
+
 export function maybeAwardLootBonusConsumables(
   state: GameState,
   rng: RNG,
@@ -94,14 +135,17 @@ export function maybeAwardLootBonusConsumables(
 
   let nextState = state
   const bonusEvents: LogEvent[] = []
+  const skillModifiers = getSkillModifierProfile(state.raider.skills)
+  const healingItemChance = Math.min(0.5, LOOT_BONUS_HEALING_ITEM_CHANCE + skillModifiers.lootBonusConsumableChanceBonus)
+  const shieldRechargerChance = Math.min(0.5, LOOT_BONUS_SHIELD_RECHARGER_CHANCE + skillModifiers.lootBonusConsumableChanceBonus)
 
-  if (rng.next() < LOOT_BONUS_HEALING_ITEM_CHANCE) {
+  if (rng.next() < healingItemChance) {
     const healingFind = resolveHealingItemFind(nextState, rng, now)
     nextState = healingFind.state
     bonusEvents.push(healingFind.event)
   }
 
-  if (rng.next() < LOOT_BONUS_SHIELD_RECHARGER_CHANCE) {
+  if (rng.next() < shieldRechargerChance) {
     const rechargerFind = resolveShieldRechargerFind(nextState, rng, now)
     nextState = rechargerFind.state
     bonusEvents.push(rechargerFind.event)
@@ -144,6 +188,7 @@ function applyHiddenPocketFailureRecovery(
 
 export function processTick(state: GameState, rng: RNG, now: number = Date.now()): TickResult {
   const emitted: LogEvent[] = []
+  const skillPracticeTriggers: SkillPracticeTrigger[] = []
   const signalAdvance = advanceSignal(state.signal, now)
 
   // ------------------------------------------------------------------
@@ -187,18 +232,28 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
           stats: recordOutcome(currentState.stats, 'deaths', state.raid.zone, state.raid.dangerLevel),
         }
         if (recovery.saved && recovery.savedItemName) {
+          skillPracticeTriggers.push({ skillId: 'hiding_in_lockers', reason: 'hidden_pocket_saved', minXp: 2, maxXp: 4 })
           emitted.push(hiddenPocketSavedEvent(recovery.savedItemName, state.tick, now))
         }
         if (recovery.soldItemCount > 0) {
+          skillPracticeTriggers.push({ skillId: 'hoarding', reason: 'stash_overflow_sale', minXp: 2, maxXp: 4 })
           emitted.push(stashSaleEvent(recovery.soldItemCount, recovery.coinsGained, state.tick, now))
         }
       } else if (transition.from === 'EXTRACTING') {
+        queueSuccessfulExtractionSkillPractice(skillPracticeTriggers, {
+          backpack: state.raid.backpack,
+          backpackValue: state.raid.backpackValue,
+          dangerLevel: state.raid.dangerLevel,
+          hp: state.raider.hp,
+          maxHp: state.raider.maxHp,
+        })
         const extraction = applySuccessfulExtraction(currentState, state.raid.backpack, {
           zone: state.raid.zone,
           dangerLevel: state.raid.dangerLevel,
         })
         currentState = extraction.state
         if (extraction.soldItemCount > 0) {
+          skillPracticeTriggers.push({ skillId: 'hoarding', reason: 'stash_overflow_sale', minXp: 2, maxXp: 4 })
           emitted.push(stashSaleEvent(extraction.soldItemCount, extraction.coinsGained, state.tick, now))
         }
       }
@@ -243,6 +298,8 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
         currentHp: currentState.raider.hp,
         maxHp: currentState.raider.maxHp,
         hasHealingItems: currentState.raid.healingItems.length > 0,
+        extractionChanceBonus: getSkillModifierProfile(currentState.raider.skills).extractionChanceBonus,
+        deathChanceMultiplier: getSkillModifierProfile(currentState.raider.skills).greedDeathChanceMultiplier,
       },
     )
 
@@ -253,6 +310,7 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
     }
 
     if (greedResult.outcome === 'EXTRACT') {
+      skillPracticeTriggers.push({ skillId: 'cardio', reason: 'extraction_started', minXp: 1, maxXp: 2 })
       const { raid: r2, transition: t2 } = tickPhase(
         { ...currentState.raid, forceExtract: false },
         'EXTRACTING',
@@ -320,6 +378,7 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
 
       const backpackQuantityAfterEffects = totalBackpackQuantity(currentState.raid.backpack)
       if (backpackQuantityAfterEffects > backpackQuantityBeforeEffects) {
+        skillPracticeTriggers.push({ skillId: 'hoarding', reason: 'loot_added', minXp: 1, maxXp: 2 })
         const bonusLoot = maybeAwardLootBonusConsumables(currentState, rng, now)
         currentState = bonusLoot.state
         emitted.push(...bonusLoot.events)
@@ -349,6 +408,8 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
               ...currentState,
               stats: recordRobotDefeat(currentState.stats, robotId),
             }
+          } else if (robotResult.event.id.endsWith('_escaped') && currentState.raider.hp > 0) {
+            skillPracticeTriggers.push({ skillId: 'hiding_in_lockers', reason: 'robot_survived', minXp: 1, maxXp: 3 })
           }
           emitted.push(robotResult.event)
         }
@@ -362,6 +423,7 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
       if (forcedPhase && forcedPhase !== currentState.raid.phase) {
         const fromPhase = currentState.raid.phase
         const backpackBeforeForce = currentState.raid.backpack
+        const backpackValueBeforeForce = currentState.raid.backpackValue
         const zoneBeforeForce = currentState.raid.zone
         const dangerLevelBeforeForce = currentState.raid.dangerLevel
         const { raid: forcedRaid, transition: forcedTransition } = tickPhase(
@@ -379,14 +441,24 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
           })
         }
         if (fromPhase === 'EXTRACTING' && forcedPhase === 'HUB') {
+          queueSuccessfulExtractionSkillPractice(skillPracticeTriggers, {
+            backpack: backpackBeforeForce,
+            backpackValue: backpackValueBeforeForce,
+            dangerLevel: dangerLevelBeforeForce,
+            hp: currentState.raider.hp,
+            maxHp: currentState.raider.maxHp,
+          })
           const extraction = applySuccessfulExtraction(currentState, backpackBeforeForce, {
             zone: zoneBeforeForce,
             dangerLevel: dangerLevelBeforeForce,
           })
           currentState = extraction.state
           if (extraction.soldItemCount > 0) {
+            skillPracticeTriggers.push({ skillId: 'hoarding', reason: 'stash_overflow_sale', minXp: 2, maxXp: 4 })
             emitted.push(stashSaleEvent(extraction.soldItemCount, extraction.coinsGained, state.tick, now))
           }
+        } else if (fromPhase === 'EXTRACTING' && forcedPhase === 'RAIDING') {
+          skillPracticeTriggers.push({ skillId: 'hiding_in_lockers', reason: 'failed_extraction', minXp: 1, maxXp: 3 })
         }
       }
     }
@@ -446,6 +518,19 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
     pendingCalm: false,
     pendingPressure: false,
     raid: { ...currentState.raid, forceExtract: false },
+  }
+
+  if (skillPracticeTriggers.length > 0) {
+    const skillGains = rollSkillPractice(skillPracticeTriggers, rng)
+    const skillResult = applySkillPractice(currentState.raider.skills, skillGains)
+    currentState = {
+      ...currentState,
+      raider: {
+        ...currentState.raider,
+        skills: skillResult.skills,
+      },
+    }
+    emitted.push(...skillResult.levelUps.map(levelUp => skillLevelUpEvent(levelUp, state.tick, now, currentState.raid.phase)))
   }
 
   // ------------------------------------------------------------------

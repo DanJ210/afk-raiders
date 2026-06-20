@@ -63,6 +63,8 @@ export function runGreedCheck(
     currentHp?: number
     maxHp?: number
     hasHealingItems?: boolean
+    extractionChanceBonus?: number
+    deathChanceMultiplier?: number
   },
 ): GreedCheckResult {
   const { greedLevel, forceExtract } = raid
@@ -76,13 +78,14 @@ export function runGreedCheck(
   if (opts.calmed) extractChance -= CALM_EXTRACT_PENALTY
   if (opts.pressured) extractChance += PRESSURE_EXTRACT_BONUS
   extractChance += lowHpExtractionBonus(opts.currentHp, opts.maxHp, opts.hasHealingItems ?? false)
+  extractChance += opts.extractionChanceBonus ?? 0
   extractChance = Math.min(MAX_EXTRACT_CHANCE, Math.max(MIN_EXTRACT_CHANCE, extractChance))
 
   // Calculate death probability (only kicks in above greed threshold)
   const deathChance = Math.max(
     0,
     (greedLevel - GREED_DEATH_THRESHOLD) * GREED_DEATH_RATE,
-  )
+  ) * Math.max(0, opts.deathChanceMultiplier ?? 1)
 
   const roll = rng.next()
 

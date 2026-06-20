@@ -12,17 +12,20 @@ import HandlerActions from './components/HandlerActions.vue'
 import AwaySummary from './components/AwaySummary.vue'
 import PWAInstallPrompt from './components/PWAInstallPrompt.vue'
 import PhaseStatusStrip from './components/PhaseStatusStrip.vue'
+import SkillsPanel from './components/SkillsPanel.vue'
+import RaiderLifetimeStats from './components/RaiderLifetimeStats.vue'
 
 const store = useGameStore()
 const isMobile = useMediaQuery('(max-width: 600px)')
 
-type MobileTabId = 'comms' | 'stash' | 'raider' | 'raid'
+type MobileTabId = 'comms' | 'stash' | 'raider' | 'raid' | 'stats'
 
 const mobileTabs: Array<{ id: MobileTabId; label: string; icon: string }> = [
-  { id: 'comms', label: 'Comms Feed', icon: '📻' },
-  { id: 'raid', label: 'Current Raid', icon: '🎒' },
+  { id: 'comms', label: 'Comms', icon: '📻' },
+  { id: 'raid', label: 'Raid', icon: '🎒' },
   { id: 'raider', label: 'Raider', icon: '🧍' },
-  { id: 'stash', label: 'Home Stash', icon: '🏠' },
+  { id: 'stash', label: 'Stash', icon: '🏠' },
+  { id: 'stats', label: 'Stats', icon: '📊' },
 ]
 
 const activeMobileTab = ref<MobileTabId>('comms')
@@ -58,6 +61,7 @@ const currentDangerLevel = computed(() => store.raid.dangerLevel)
 const fallbackCondition = computed(() => zoneConditionByDangerLevel(store.raid.dangerLevel))
 const currentConditionName = computed(() => store.raid.zoneCondition?.name ?? fallbackCondition.value?.name ?? null)
 const currentConditionDescription = computed(() => store.raid.zoneCondition?.description ?? fallbackCondition.value?.description ?? null)
+const lifetimeStats = computed(() => store.state.stats)
 
 const phaseTimerMs = computed(() => {
   if (store.raid.phaseTicksRemaining <= 0) return 0
@@ -91,7 +95,11 @@ const phaseTimeText = computed(() => {
       <aside class="flex flex-col gap-2.5 overflow-visible">
         <HandlerActions />
         <RaiderCard />
+        <SkillsPanel />
         <HomeStash />
+        <section class="panel-card shrink-0" aria-label="Lifetime Stats">
+          <RaiderLifetimeStats :stats="lifetimeStats" />
+        </section>
       </aside>
 
       <div class="min-h-0">
@@ -124,6 +132,13 @@ const phaseTimeText = computed(() => {
       <section v-if="activeMobileTab === 'raider'" class="min-h-0 flex-1 flex flex-col gap-2.5 overflow-y-auto pb-3">
         <HandlerActions />
         <RaiderCard />
+        <SkillsPanel />
+      </section>
+
+      <section v-if="activeMobileTab === 'stats'" class="min-h-0 flex-1 flex flex-col gap-2.5 overflow-y-auto pb-3">
+        <section class="panel-card shrink-0 max-[600px]:p-2.5" aria-label="Lifetime Stats">
+          <RaiderLifetimeStats :stats="lifetimeStats" />
+        </section>
       </section>
 
       <section v-if="activeMobileTab === 'stash'" class="app__mobile-fill min-h-0 flex-1 flex flex-col gap-2.5 overflow-y-auto">
@@ -133,7 +148,7 @@ const phaseTimeText = computed(() => {
 
     <nav
       v-if="isMobile"
-      class="sticky bottom-0 grid grid-cols-4 gap-1.5 bg-bg border-t border-border pt-2"
+      class="sticky bottom-0 grid grid-cols-5 gap-1.5 bg-bg border-t border-border pt-2"
       :style="{ paddingBottom: 'calc(8px + env(safe-area-inset-bottom))' }"
       aria-label="Primary"
     >

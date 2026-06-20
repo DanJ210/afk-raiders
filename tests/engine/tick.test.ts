@@ -200,6 +200,49 @@ describe('deterministic snapshot', () => {
     expect(result.state.stats.extracts.byZoneAndDanger['damp_battlegrounds__Medium']).toBe(1)
   })
 
+  it('awards autonomous skill practice and level-up comms on extraction', () => {
+    const rng = createRNG(FIXED_SEED)
+    const initial = createInitialState(0)
+    const state = {
+      ...initial,
+      raider: {
+        ...initial.raider,
+        hp: 40,
+        skills: {
+          ...initial.raider.skills,
+          cardio: {
+            ...initial.raider.skills.cardio,
+            xp: 7,
+          },
+        },
+      },
+      raid: {
+        ...initial.raid,
+        zone: 'damp_battlegrounds',
+        dangerLevel: 'High' as const,
+        phase: 'EXTRACTING' as const,
+        phaseTicksRemaining: 1,
+        backpack: [
+          {
+            itemId: 'water_bottle',
+            name: 'Water Bottle',
+            value: 5,
+            rarity: 1,
+            quantity: 4,
+          },
+        ],
+        backpackValue: 20,
+      },
+    }
+
+    const result = processTick(state, rng, 0)
+
+    expect(result.state.raider.skills.cardio.level).toBe(1)
+    expect(result.state.raider.skills.hoarding.xp).toBeGreaterThan(0)
+    expect(result.state.raider.skills.hiding_in_lockers.xp).toBeGreaterThan(0)
+    expect(result.events.some(event => event.id === 'skill_cardio_level_1')).toBe(true)
+  })
+
   it('downs the raider when HP reaches 0, losing the backpack', () => {
     const initial = createInitialState(0)
     const state = {

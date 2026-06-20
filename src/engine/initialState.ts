@@ -5,8 +5,9 @@ import { initialSignalState } from './signal.js'
 import { PHASE_DURATIONS } from './raidStateMachine.js'
 import { createInitialLifetimeStats } from './stats.js'
 import { createStarterShieldState } from './shields.js'
+import { createInitialSkills } from './skills.js'
 
-export const SAVE_VERSION = 3
+export const SAVE_VERSION = 4
 
 export function createInitialState(now: number = Date.now()): GameState {
   return {
@@ -21,6 +22,7 @@ export function createInitialState(now: number = Date.now()): GameState {
       deploysCount: 0,
       deathCount: 0,
       extractCount: 0,
+      skills: createInitialSkills(),
     },
     raid: {
       zone: null,

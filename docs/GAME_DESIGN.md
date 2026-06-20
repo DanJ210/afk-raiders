@@ -107,6 +107,11 @@ Everything funny flows through an autoscrolling text feed:
 | A.R.C. acronym | **Aggressively Roaming Chassis** |
 
 ## 6. Progression & Gags
+- **Parody Skill System:** The Raider autonomously learns three questionable skill tracks: **Cardio**, **Hoarding**, and **Hiding in Lockers**. The Handler does not spend points or pick builds. Each skill is discovered once, then levels from 1–5 through seeded practice gained from real engine outcomes:
+   - **Cardio** improves from extraction attempts, successful returns, and low-HP escapes.
+   - **Hoarding** improves from looting, extracting stuffed backpacks, valuable hauls, and stash-overflow pawn-shop disasters.
+   - **Hiding in Lockers** improves from surviving robot encounters, botched extractions, High-danger survival, and Secret Hidden Pocket saves.
+   Skill effects stay intentionally small: tiny extraction-odds help, tiny loot/bonus-find help, and tiny robot-damage mitigation. Level-ups are narrated in the comms feed because the joke is that the Raider is slowly becoming good at the wrong things.
 - **Gear with cursed flavor text** (e.g., "Helmet of Mild Confidence: +2 defense, -1 awareness of exits").
 - **Rat Rating** — a stat tracking how cowardly/looty the Raider plays. Both a badge of shame and pride.
 - **Achievements:** "Died to an Anxietick — Twice", "Extracted with 50 water bottles", "Befriended a vending machine."

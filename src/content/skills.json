@@ -1,0 +1,68 @@
+[
+  {
+    "id": "cardio",
+    "name": "Cardio",
+    "description": "The Raider's suspicious ability to run away while still explaining why this was tactical.",
+    "maxLevel": 5,
+    "xpThresholds": [8, 24, 52, 90, 140],
+    "effectTextByLevel": [
+      "No measurable benefit. Knees remain theoretical.",
+      "Extraction instinct gets a tiny nudge.",
+      "Extraction instinct improves, mostly through panic.",
+      "Greed-related disaster odds soften slightly.",
+      "Low-HP sprint choices look almost intentional.",
+      "Peak emergency jogging. Still not athletic, but louder."
+    ],
+    "levelUpTextByLevel": [
+      "Skill acquired: Cardio. Raider discovered lungs can be negotiated with.",
+      "Cardio reached Level {level}. Raider now calls fleeing a mobility doctrine.",
+      "Cardio reached Level {level}. Breathing noises upgraded from alarming to tactical.",
+      "Cardio reached Level {level}. Raider can panic-sprint while complaining in complete sentences.",
+      "Cardio reached Level {level}. Raider has become a world-class practitioner of leaving."
+    ]
+  },
+  {
+    "id": "hoarding",
+    "name": "Hoarding",
+    "description": "Advanced backpack theology: every bottle cap has a destiny and the destiny is resale value.",
+    "maxLevel": 5,
+    "xpThresholds": [8, 24, 52, 90, 140],
+    "effectTextByLevel": [
+      "No measurable benefit. The backpack is merely a container.",
+      "Loot value gets a tiny suspicious bump.",
+      "Bonus finds become slightly more likely.",
+      "The backpack develops opinions about valuables.",
+      "Questionable items arrive with better excuses.",
+      "Peak junk magnetism. Desperanza pawn economy trembles."
+    ],
+    "levelUpTextByLevel": [
+      "Skill acquired: Hoarding. Raider learned the difference between trash and pre-profit.",
+      "Hoarding reached Level {level}. Backpack zipper filed a formal concern.",
+      "Hoarding reached Level {level}. Raider can now justify three identical objects as a strategy.",
+      "Hoarding reached Level {level}. Inventory management has become a belief system.",
+      "Hoarding reached Level {level}. The backpack is now legally a small warehouse."
+    ]
+  },
+  {
+    "id": "hiding_in_lockers",
+    "name": "Hiding in Lockers",
+    "description": "A discipline built on staying very still and hoping robots respect furniture.",
+    "maxLevel": 5,
+    "xpThresholds": [8, 24, 52, 90, 140],
+    "effectTextByLevel": [
+      "No measurable benefit. Lockers remain emotionally supportive only.",
+      "Failed robot encounters hurt a little less.",
+      "Duck-and-cover reflexes become slightly believable.",
+      "Robot panic damage softens through excellent crouching.",
+      "The Raider finds safer corners in unsafe places.",
+      "Peak decorative stealth. Nearly indistinguishable from shelving."
+    ],
+    "levelUpTextByLevel": [
+      "Skill acquired: Hiding in Lockers. Raider learned that doors can be emotional armor.",
+      "Hiding in Lockers reached Level {level}. Raider now closes locker doors with professional fear.",
+      "Hiding in Lockers reached Level {level}. Breathing quietly has entered the build.",
+      "Hiding in Lockers reached Level {level}. Raider can occupy one square meter with heroic commitment.",
+      "Hiding in Lockers reached Level {level}. Raider has achieved furniture-adjacent enlightenment."
+    ]
+  }
+]
