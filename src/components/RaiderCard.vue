@@ -249,6 +249,7 @@ const phaseBadgeClass = computed(() => {
   50%       { opacity: 0.5; }
 }
 
+/* Override Tailwind's built-in animate-pulse (opacity 0→1) with our 1→0.5→1 cycle */
 .animate-pulse {
   animation: pulse 1s infinite;
 }
