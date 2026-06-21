@@ -64,6 +64,7 @@
 
   /* Component motion */
   --duration-greed-fill: 400ms;
+  --duration-shield-recharge: 250ms;
 }
 
 /* -----------------------------------------------------------------------

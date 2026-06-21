@@ -128,7 +128,7 @@ const shieldRechargeProgress = computed(() => {
         aria-valuemax="100"
       >
         <div
-          class="w-full h-full transition-[width] duration-250 ease-in-out"
+          class="w-full h-full transition-[width] duration-(--duration-shield-recharge) ease-in-out"
           :style="{ width: shieldRechargeProgress + '%', background: 'linear-gradient(90deg, #4b9ef0, #7b9ef0, #f0c84b)' }"
         />
       </div>
