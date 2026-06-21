@@ -628,9 +628,8 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
   }
 
   if (raiderXpTriggers.length > 0) {
-    const xpGains = rollRaiderXp(raiderXpTriggers, rng)
+    const xpGains = rollRaiderXp(raiderXpTriggers, rng.clone())
     const xpResult = applyRaiderXpGain(currentState.raider.levelXp, xpGains)
-    currentState = {
       ...currentState,
       raider: {
         ...currentState.raider,
