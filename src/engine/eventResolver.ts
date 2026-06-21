@@ -32,9 +32,10 @@ import scrapComponentsData from '../content/loot-tables/scrap_components.json'
 import valuablesData from '../content/loot-tables/valuables.json'
 import weaponsPartsData from '../content/loot-tables/weapons_parts.json'
 import { getDangerLevelProfile, rarityWeight, type DangerLevelProfile } from './dangerLevelProfiles.js'
-import { clampMood, getMoodRarityWeightMultiplier, getMoodResilienceMultiplier } from './mood.js'
+import { clampMood, getMoodRarityWeightMultiplier, getMoodResilienceReductionPercent } from './mood.js'
 import { applyShieldedDamage, startShieldRecharge, type ShieldDamageResult } from './shields.js'
 import { getSkillModifierProfile } from './skills.js'
+import { getRaiderLevelBenefitProfile } from './raiderLevel.js'
 
 // One events file per phase: HUB, DEPLOYING, RAIDING, EXTRACTING, DOWNED
 const events = [
@@ -546,7 +547,9 @@ function applyRobotDamage(
     hp = Math.max(nonlethalFloor, hp)
   }
 
-  const resilienceMultiplier = getMoodResilienceMultiplier(state.raider.mood)
+  const moodResilienceReductionPercent = getMoodResilienceReductionPercent(state.raider.mood)
+  const levelResilienceReductionPercent = getRaiderLevelBenefitProfile(state.raider.levelXp).resilienceReductionPercent
+  const resilienceMultiplier = 1 - ((moodResilienceReductionPercent + levelResilienceReductionPercent) / 100)
   if (resilienceMultiplier < 1 && hp < state.raider.hp) {
     const mitigatedDamage = Math.max(1, Math.floor((state.raider.hp - hp) * resilienceMultiplier))
     const nextHp = Math.max(state.raider.hp - mitigatedDamage, hp)

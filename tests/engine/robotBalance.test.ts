@@ -99,13 +99,16 @@ describe('robot balance guardrails', () => {
     }
   })
 
-  it('keeps Raider Level from passively reducing robot damage', () => {
+  it('keeps Raider Level resilience tiny and below the danger jump', () => {
     const starter = createRobotState({ dangerLevel: 'High', shielded: false, levelXp: 0 })
     const maxLevel = createRobotState({ dangerLevel: 'High', shielded: false, levelXp: xpRequiredForLevel(75) })
+    const mediumStarter = createRobotState({ dangerLevel: 'Medium', shielded: false, levelXp: 0 })
+    const starterDamage = failedRobotHpDamage('tank_overcompensation', starter)
+    const maxLevelDamage = failedRobotHpDamage('tank_overcompensation', maxLevel)
 
-    expect(failedRobotHpDamage('tank_overcompensation', maxLevel)).toBe(
-      failedRobotHpDamage('tank_overcompensation', starter),
-    )
+    expect(maxLevelDamage).toBeLessThan(starterDamage)
+    expect(maxLevelDamage).toBeGreaterThan(failedRobotHpDamage('tank_overcompensation', mediumStarter))
+    expect(starterDamage - maxLevelDamage).toBeLessThanOrEqual(2)
   })
 
   it('keeps mood resilience helpful but smaller than the danger jump', () => {

@@ -184,8 +184,10 @@ describe('raid balance', () => {
     expect(Object.keys(maxLevelBenefits).sort()).toEqual([
       'extractionCoinBonus',
       'level',
+      'resilienceReductionPercent',
       'titleBandIndex',
     ])
+    expect(maxLevelBenefits.resilienceReductionPercent).toBeLessThanOrEqual(1.6)
   })
 
   it('lets manual healing and shield intervention rescue an otherwise lethal high-danger hit', () => {
