@@ -279,6 +279,40 @@ describe('deterministic snapshot', () => {
     expect(result.events.some(event => event.id === 'raider_level_2')).toBe(true)
   })
 
+  it('pays the Raider Level extraction stipend from unlocked title bands', () => {
+    const rng = createRNG(FIXED_SEED)
+    const initial = createInitialState(0)
+    const state = {
+      ...initial,
+      raider: {
+        ...initial.raider,
+        levelXp: xpRequiredForLevel(10),
+      },
+      raid: {
+        ...initial.raid,
+        zone: 'damp_battlegrounds',
+        dangerLevel: 'Low' as const,
+        phase: 'EXTRACTING' as const,
+        phaseTicksRemaining: 1,
+        backpack: [
+          {
+            itemId: 'water_bottle',
+            name: 'Water Bottle',
+            value: 5,
+            rarity: 1,
+            quantity: 1,
+          },
+        ],
+        backpackValue: 5,
+      },
+    }
+
+    const result = processTick(state, rng, 0)
+
+    expect(result.state.coins).toBe(1)
+    expect(result.events.some(event => event.id === 'raider_level_extraction_stipend')).toBe(true)
+  })
+
   it('downs the raider when HP reaches 0, losing the backpack', () => {
     const initial = createInitialState(0)
     const state = {

@@ -3,6 +3,7 @@ import { createRNG } from '../../src/engine/rng'
 import {
   MAX_RAIDER_LEVEL,
   applyRaiderXpGain,
+  getRaiderLevelBenefitProfile,
   getRaiderLevelFromXp,
   getRaiderLevelProgress,
   getRaiderTitleBand,
@@ -23,9 +24,10 @@ describe('Raider Level helpers', () => {
 
   it('uses an ascending XP curve capped at level 75', () => {
     expect(xpRequiredForLevel(1)).toBe(0)
-    expect(xpRequiredForLevel(2)).toBeGreaterThan(0)
+    expect(xpRequiredForLevel(2)).toBeGreaterThanOrEqual(140)
     expect(xpRequiredForLevel(30)).toBeGreaterThan(xpRequiredForLevel(20))
     expect(xpRequiredForLevel(MAX_RAIDER_LEVEL)).toBeGreaterThan(xpRequiredForLevel(60))
+    expect(xpRequiredForLevel(MAX_RAIDER_LEVEL)).toBeGreaterThanOrEqual(450000)
     expect(xpRequiredForLevel(MAX_RAIDER_LEVEL + 1)).toBe(xpRequiredForLevel(MAX_RAIDER_LEVEL))
   })
 
@@ -80,5 +82,11 @@ describe('Raider Level helpers', () => {
     expect(getRaiderTitleBand(1).name).toBe('Freshly Briefed Liability')
     expect(getRaiderTitleBand(28).name).toBe('Questionable Competence')
     expect(getRaiderTitleBand(75).name).toBe('Myth of Desperanza')
+  })
+
+  it('derives small title-band extraction stipend benefits', () => {
+    expect(getRaiderLevelBenefitProfile(0).extractionCoinBonus).toBe(0)
+    expect(getRaiderLevelBenefitProfile(xpRequiredForLevel(10)).extractionCoinBonus).toBe(1)
+    expect(getRaiderLevelBenefitProfile(xpRequiredForLevel(75)).extractionCoinBonus).toBe(8)
   })
 })

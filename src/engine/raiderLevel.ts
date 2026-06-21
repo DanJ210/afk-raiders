@@ -59,6 +59,12 @@ export interface RaiderLevelProgress {
   title: RaiderLevelTitleBand
 }
 
+export interface RaiderLevelBenefitProfile {
+  level: number
+  titleBandIndex: number
+  extractionCoinBonus: number
+}
+
 function clampLevel(level: number): number {
   if (!Number.isFinite(level)) return 1
   return Math.max(1, Math.min(MAX_RAIDER_LEVEL, Math.floor(level)))
@@ -67,7 +73,7 @@ function clampLevel(level: number): number {
 function xpNeededToAdvanceFromLevel(level: number): number {
   const clampedLevel = clampLevel(level)
   if (clampedLevel >= MAX_RAIDER_LEVEL) return 0
-  return Math.floor(35 + clampedLevel * 8 + Math.pow(clampedLevel, 1.35) * 4)
+  return Math.floor(110 + clampedLevel * 28 + Math.pow(clampedLevel, 1.62) * 10 + Math.pow(clampedLevel, 2) * 0.7)
 }
 
 export function xpRequiredForLevel(level: number): number {
@@ -127,6 +133,18 @@ export function getRaiderLevelProgress(rawXp: unknown): RaiderLevelProgress {
     progressPercent,
     isMaxLevel,
     title: getRaiderTitleBand(level),
+  }
+}
+
+export function getRaiderLevelBenefitProfile(rawXp: unknown): RaiderLevelBenefitProfile {
+  const level = getRaiderLevelFromXp(rawXp)
+  const title = getRaiderTitleBand(level)
+  const titleBandIndex = Math.max(0, titleBands.findIndex(entry => entry.id === title.id))
+
+  return {
+    level,
+    titleBandIndex,
+    extractionCoinBonus: titleBandIndex,
   }
 }
 

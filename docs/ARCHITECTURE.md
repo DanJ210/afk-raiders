@@ -155,7 +155,7 @@ The Handler never spends skill points. Skill power should stay subtle and inspec
 Save migration must preserve compatible local saves. Version 3 saves are upgraded to the current save version by backfilling initialized skill state rather than being discarded.
 
 ### 4c. Raider Level
-`GameState.raider.levelXp` stores cumulative Raider Level XP. The current level is derived by `src/engine/raiderLevel.ts`, starts at 1, and caps at 75. The save never stores a separate level number, which prevents XP/level drift during migration or catch-up.
+`GameState.raider.levelXp` stores cumulative Raider Level XP. The current level is derived by `src/engine/raiderLevel.ts`, starts at 1, and caps at 75. The save never stores a separate level number, which prevents XP/level drift during migration or catch-up. The XP curve is intentionally long: Level 2 requires multiple meaningful outcomes rather than one lucky extraction, and the Level 75 cap requires hundreds of thousands of cumulative XP so automatic/offline play does not burn through progression quickly.
 
 Raider Level is the long-term career spine, separate from both Rat Rating and the three skill tracks:
 - Rat Rating remains an unbounded cowardly/looty shame-pride score.
@@ -164,7 +164,22 @@ Raider Level is the long-term career spine, separate from both Rat Rating and th
 
 `processTick()` queues Raider XP from meaningful autonomous outcomes: successful extraction, extracted loot value/quantity, robot defeat or survival, High-danger survival, close-call extraction, hidden-pocket saves, stash overflow, death recovery, failed extraction, and skill level-ups. XP rolls use the seeded RNG, and level-up comms are emitted before the final log append. If multiple levels are crossed in one tick or offline catch-up step, the engine emits a single compact level-up line for the highest crossed level to avoid log spam.
 
-Visible Raider Level title bands and level-up text live in `src/content/raider_levels.json`. The first UI surface is `RaiderCard.vue`, which shows the derived level, title, and progress to next level while keeping Rat Rating visible as its own row.
+Routine XP awards stay small by design. Normal loot finds are a trickle, death recovery is a consolation prize, and the biggest repeatable gains come from successful extractions with meaningful loot. Danger, close calls, robots, hidden-pocket saves, and skill level-ups add flavor-weighted bonuses without turning Raider Level into a fast grind.
+
+Raider Level benefits are intentionally light-power and title-band based:
+- Levels 1-9: title/progress only, no stipend.
+- Levels 10-18: +1 coin extraction stipend.
+- Levels 19-27: +2 coin extraction stipend.
+- Levels 28-36: +3 coin extraction stipend.
+- Levels 37-45: +4 coin extraction stipend.
+- Levels 46-54: +5 coin extraction stipend.
+- Levels 55-63: +6 coin extraction stipend.
+- Levels 64-70: +7 coin extraction stipend.
+- Levels 71-75: +8 coin extraction stipend.
+
+The stipend is paid only on successful extraction and is narrated with `raider_level_extraction_stipend`. Levels deliberately do not add HP, raw damage, or major extraction safety; skills and danger-level profiles remain the mechanical tuning levers. Future content can use Raider Level for title-gated comms variants, hub gags, achievements, or prestige requirements.
+
+Visible Raider Level title bands and level-up text live in `src/content/raider_levels.json`. The first UI surface is `RaiderCard.vue`, which shows the derived level, title, progress to next level, and current stipend benefit while keeping Rat Rating visible as its own row.
 
 Save migration upgrades older saves to version 5 by backfilling missing `levelXp`. Legacy profiles receive a small deterministic XP estimate from extracts, deaths, and deploys, not from raw Rat Rating.
 

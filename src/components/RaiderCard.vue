@@ -117,6 +117,10 @@ function formatDuration(ms: number): string {
           </div>
           <span class="shrink-0 font-mono text-raider-tiny text-muted">{{ levelView.xpLabel.value }}</span>
         </div>
+        <div class="flex items-center gap-2 min-w-0">
+          <span class="min-w-raider-label max-[600px]:hidden" aria-hidden="true"></span>
+          <span class="font-mono text-raider-tiny text-muted min-w-0 wrap-anywhere">{{ levelView.benefitLabel.value }}</span>
+        </div>
       </div>
 
       <div class="flex items-center gap-2 min-w-0">
