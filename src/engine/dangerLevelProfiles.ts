@@ -8,6 +8,8 @@ export interface DangerLevelProfile {
   lootRarityWeights: Record<number, number>
   robotEncounterWeightMultiplier: number
   robotFailureDamageMultiplier: number
+  /** Small per-tick autonomous downed chance during RAIDING, before greed-specific failure. */
+  ambientRaidDeathChance: number
   extractionRiskEventWeightMultiplier: number
   extractionSafeEventWeightMultiplier: number
 }
@@ -19,6 +21,7 @@ export const DANGER_LEVEL_PROFILES: Record<DangerLevel, DangerLevelProfile> = {
     lootRarityWeights: { 1: 1.25, 2: 1, 3: 0.75, 4: 0.5, 5: 0.25 },
     robotEncounterWeightMultiplier: 0.95,
     robotFailureDamageMultiplier: 0.95,
+    ambientRaidDeathChance: 0,
     extractionRiskEventWeightMultiplier: 1.25,
     extractionSafeEventWeightMultiplier: 1,
   },
@@ -28,6 +31,7 @@ export const DANGER_LEVEL_PROFILES: Record<DangerLevel, DangerLevelProfile> = {
     lootRarityWeights: { 1: 0.85, 2: 1, 3: 1.25, 4: 1.5, 5: 1.8 },
     robotEncounterWeightMultiplier: 1.45,
     robotFailureDamageMultiplier: 1.5,
+    ambientRaidDeathChance: 0.007,
     extractionRiskEventWeightMultiplier: 1.6,
     extractionSafeEventWeightMultiplier: 0.8,
   },
@@ -37,6 +41,7 @@ export const DANGER_LEVEL_PROFILES: Record<DangerLevel, DangerLevelProfile> = {
     lootRarityWeights: { 1: 0.55, 2: 0.75, 3: 1.35, 4: 2.1, 5: 3.25 },
     robotEncounterWeightMultiplier: 2,
     robotFailureDamageMultiplier: 2,
+    ambientRaidDeathChance: 0.02,
     extractionRiskEventWeightMultiplier: 2.25,
     extractionSafeEventWeightMultiplier: 0.55,
   },
@@ -48,6 +53,7 @@ const BASELINE_PROFILE: DangerLevelProfile = {
   lootRarityWeights: { 1: 1, 2: 1, 3: 1, 4: 1, 5: 1 },
   robotEncounterWeightMultiplier: 1,
   robotFailureDamageMultiplier: 1,
+  ambientRaidDeathChance: 0,
   extractionRiskEventWeightMultiplier: 1,
   extractionSafeEventWeightMultiplier: 1,
 }

@@ -189,6 +189,10 @@ The same test file also protects the tuning hierarchy. Danger-level profiles mus
 
 When changing robot weights, danger profiles, greed/extraction math, healing, shields, or progression modifiers, update the tests only if the new design intentionally changes these contracts. Handler survivability should be proven through explicit intervention paths such as manual healing, shield recharger use, and CALL EXTRACT rather than by making autonomous High-danger raids broadly safe.
 
+Robot balance has its own focused guardrail in `tests/engine/robotBalance.test.ts`. It forces failed combat rolls against the real `robots.json` entries and verifies the tier math directly: max failed damage rises by deadliness tier, nasty/deadly robots can kill wounded starter raiders, weak/moderate/dangerous robots remain nonlethal, Raider Level does not passively reduce robot damage, and existing mitigation sources help without making High-danger robot damage softer than Medium baseline.
+
+Do not add passive Raider Level damage resistance for the MVP. That would make the broad level spine behave like a hidden combat stat and would flatten the danger curve. Keep resistance simple: positive mood already provides the soft resilience trim, Hiding in Lockers is the tiny skill-specific robot mitigation, and shields/consumables/Handler actions are the meaningful survival levers.
+
 Visible Raider Level title bands and level-up text live in `src/content/raider_levels.json`. The first UI surface is `RaiderCard.vue`, which shows the derived level, title, progress to next level, and current stipend benefit while keeping Rat Rating visible as its own row.
 
 Save migration upgrades older saves to version 5 by backfilling missing `levelXp`. Legacy profiles receive a small deterministic XP estimate from extracts, deaths, and deploys, not from raw Rat Rating.
