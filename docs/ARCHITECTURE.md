@@ -48,6 +48,7 @@ afk-raiders/
 │   │   ├── signal.ts            # Signal regen + spend rules
 │   │   ├── shields.ts           # Shared shield damage + recharge rules
 │   │   ├── skills.ts            # Autonomous Raider skill progression + tiny modifiers
+│   │   ├── raiderLevel.ts       # Raider Level 1-75 XP curve, titles, and level-up text
 │   │   ├── homeStash.ts         # Stash transfer and overflow auto-sell
 │   │   ├── stats.ts             # Lifetime stat aggregation helpers
 │   │   ├── log.ts               # Centralized log append/capping
@@ -62,6 +63,7 @@ afk-raiders/
 │   │   ├── healing_items.json   # Current-raid-only bandages
 │   │   ├── shield_rechargers.json # Manual-use backpack shield consumables
 │   │   ├── skills.json          # Cardio/Hoarding/Hiding definitions and level-up text
+│   │   ├── raider_levels.json   # Raider Level title bands and level-up comms text
 │   │   ├── robots.json          # Anxieticks, Tattletales, Roomba Prime…
 │   │   ├── zones.json           # Damp Battlegrounds, etc.
 │   │   └── flavor.json          # Hub gossip, death quips, mood lines
@@ -70,7 +72,7 @@ afk-raiders/
 │   │   └── settingsStore.ts
 │   ├── components/
 │   │   ├── CommsLog.vue         # THE star — autoscrolling feed
-│   │   ├── RaiderCard.vue       # Stats, mood, Rat Rating
+│   │   ├── RaiderCard.vue       # Stats, mood, Raider Level, Rat Rating
 │   │   ├── BackpackPanel.vue
 │   │   ├── HomeStash.vue        # Persistent stash — extracted loot, ×N stacking
 │   │   ├── HandlerActions.vue   # Ready Up / Calm / Pressure / CALL EXTRACT
@@ -151,6 +153,20 @@ The Handler never spends skill points. Skill power should stay subtle and inspec
 - Hiding in Lockers trims failed robot encounter damage before shield-aware damage is applied, with damage narration showing the reduction when it matters.
 
 Save migration must preserve compatible local saves. Version 3 saves are upgraded to the current save version by backfilling initialized skill state rather than being discarded.
+
+### 4c. Raider Level
+`GameState.raider.levelXp` stores cumulative Raider Level XP. The current level is derived by `src/engine/raiderLevel.ts`, starts at 1, and caps at 75. The save never stores a separate level number, which prevents XP/level drift during migration or catch-up.
+
+Raider Level is the long-term career spine, separate from both Rat Rating and the three skill tracks:
+- Rat Rating remains an unbounded cowardly/looty shame-pride score.
+- Skills are specific bad habits that level 1-5 and provide tiny modifiers.
+- Raider Level summarizes broad accumulated field experience and title-band status.
+
+`processTick()` queues Raider XP from meaningful autonomous outcomes: successful extraction, extracted loot value/quantity, robot defeat or survival, High-danger survival, close-call extraction, hidden-pocket saves, stash overflow, death recovery, failed extraction, and skill level-ups. XP rolls use the seeded RNG, and level-up comms are emitted before the final log append. If multiple levels are crossed in one tick or offline catch-up step, the engine emits a single compact level-up line for the highest crossed level to avoid log spam.
+
+Visible Raider Level title bands and level-up text live in `src/content/raider_levels.json`. The first UI surface is `RaiderCard.vue`, which shows the derived level, title, and progress to next level while keeping Rat Rating visible as its own row.
+
+Save migration upgrades older saves to version 5 by backfilling missing `levelXp`. Legacy profiles receive a small deterministic XP estimate from extracts, deaths, and deploys, not from raw Rat Rating.
 
 ### 5. Phase timings and failure states
 - Tick cadence remains 30 seconds.

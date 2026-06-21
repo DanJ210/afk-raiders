@@ -7,7 +7,7 @@ import { createInitialLifetimeStats } from './stats.js'
 import { createStarterShieldState } from './shields.js'
 import { createInitialSkills } from './skills.js'
 
-export const SAVE_VERSION = 4
+export const SAVE_VERSION = 5
 
 export function createInitialState(now: number = Date.now()): GameState {
   return {
@@ -18,6 +18,7 @@ export function createInitialState(now: number = Date.now()): GameState {
       hp: 100,
       maxHp: 100,
       mood: 0,
+      levelXp: 0,
       ratRating: 0,
       deploysCount: 0,
       deathCount: 0,

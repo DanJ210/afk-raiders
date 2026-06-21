@@ -19,7 +19,9 @@ import scrapComponentsData from '../../src/content/loot-tables/scrap_components.
 import valuablesData from '../../src/content/loot-tables/valuables.json'
 import weaponsPartsData from '../../src/content/loot-tables/weapons_parts.json'
 import skillsData from '../../src/content/skills.json'
-import type { SkillDefinition, SkillTrackId } from '../../src/engine/types'
+import raiderLevelsData from '../../src/content/raider_levels.json'
+import { MAX_RAIDER_LEVEL } from '../../src/engine/raiderLevel'
+import type { RaiderLevelContent, SkillDefinition, SkillTrackId } from '../../src/engine/types'
 
 const rawLoot = [
   ...(apparelAccessoriesData as { items: typeof loot }).items,
@@ -62,6 +64,7 @@ const VALID_PHASES = new Set<Phase>(['HUB', 'DEPLOYING', 'RAIDING', 'EXTRACTING'
 const VALID_DANGER_LEVELS = new Set<DangerLevel>(['Low', 'Medium', 'High'])
 const VALID_SKILL_IDS = new Set<SkillTrackId>(['cardio', 'hoarding', 'hiding_in_lockers'])
 const skills = skillsData as SkillDefinition[]
+const raiderLevels = raiderLevelsData as RaiderLevelContent
 
 // Robot flavor slots: {robot_flavor_<robotId>}
 function isRobotFlavorSlot(slot: string): boolean {
@@ -504,6 +507,40 @@ describe('content validation', () => {
           expect(text.trim(), `skill "${skill.id}" has empty text`).not.toBe('')
         }
       }
+    })
+  })
+
+  describe('raider_levels.json', () => {
+    it('defines contiguous title bands for Raider Levels 1-75', () => {
+      const ids = raiderLevels.titleBands.map(band => band.id)
+      expect(new Set(ids).size).toBe(ids.length)
+
+      const coveredLevels = new Set<number>()
+      for (const band of raiderLevels.titleBands) {
+        expect(band.id.trim(), 'title band id is empty').not.toBe('')
+        expect(band.name.trim(), `title band "${band.id}" missing name`).not.toBe('')
+        expect(band.description.trim(), `title band "${band.id}" missing description`).not.toBe('')
+        expect(Number.isInteger(band.minLevel), `title band "${band.id}" minLevel`).toBe(true)
+        expect(Number.isInteger(band.maxLevel), `title band "${band.id}" maxLevel`).toBe(true)
+        expect(band.minLevel, `title band "${band.id}" minLevel`).toBeGreaterThanOrEqual(1)
+        expect(band.maxLevel, `title band "${band.id}" maxLevel`).toBeLessThanOrEqual(MAX_RAIDER_LEVEL)
+        expect(band.maxLevel, `title band "${band.id}" maxLevel`).toBeGreaterThanOrEqual(band.minLevel)
+        expect(band.levelUpText.length, `title band "${band.id}" needs level-up text`).toBeGreaterThan(0)
+
+        for (const text of band.levelUpText) {
+          expect(text.trim(), `title band "${band.id}" has empty level-up text`).not.toBe('')
+          expect(text, `title band "${band.id}" level-up text should include {level}`).toContain('{level}')
+        }
+
+        for (let level = band.minLevel; level <= band.maxLevel; level += 1) {
+          expect(coveredLevels.has(level), `Raider Level ${level} covered more than once`).toBe(false)
+          coveredLevels.add(level)
+        }
+      }
+
+      expect([...coveredLevels].sort((a, b) => a - b)).toEqual(
+        Array.from({ length: MAX_RAIDER_LEVEL }, (_, index) => index + 1),
+      )
     })
   })
 })
