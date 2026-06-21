@@ -30,20 +30,20 @@ function handleDialogSell() {
 </script>
 
 <template>
-  <section class="home-stash panel-card max-h-[400px]" aria-label="Home Stash">
+  <section class="home-stash panel-card max-h-100" aria-label="Home Stash">
     <header class="section-header">🏠 HOME STASH</header>
 
     <div class="grid grid-cols-3 gap-2 mb-3">
       <div class="flex flex-col gap-1 bg-surface-raised p-2 rounded" title="Value of unsold items currently in the stash">
-        <span class="text-[0.7rem] text-muted font-mono">Stash Value</span>
+        <span class="text-raider-tiny text-muted font-mono">Stash Value</span>
         <span class="text-[1rem] font-bold text-text font-mono">{{ formatNumber(viewModel.stashValue.value) }}</span>
       </div>
       <div class="flex flex-col gap-1 bg-surface-raised p-2 rounded" title="Coins earned by selling stash items or auto-selling overflow">
-        <span class="text-[0.7rem] text-muted font-mono">🪙 Coin Value</span>
+        <span class="text-raider-tiny text-muted font-mono">🪙 Coin Value</span>
         <span class="text-[1rem] font-bold text-text font-mono">{{ formatNumber(viewModel.coinValue.value) }}</span>
       </div>
       <div class="flex flex-col gap-1 bg-surface-raised p-2 rounded">
-        <span class="text-[0.7rem] text-muted font-mono">Items</span>
+        <span class="text-raider-tiny text-muted font-mono">Items</span>
         <span class="text-[1rem] font-bold text-text font-mono">{{ viewModel.totalItemCount.value }} / {{ HOME_STASH_ITEM_LIMIT }}</span>
       </div>
     </div>
