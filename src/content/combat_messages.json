@@ -1,0 +1,37 @@
+{
+  "battleStarted": [
+    {
+      "id": "battle_started_status",
+      "weight": 1,
+      "text": "{robot} engaged. {weapon} up. Robot integrity {robotHp}/{robotMaxHp}."
+    }
+  ],
+  "battleHit": [
+    {
+      "id": "battle_hit_status",
+      "weight": 1,
+      "text": "{weapon} tagged {robot} for {damage} damage. Robot integrity {robotHp}/{robotMaxHp}. {damageText}"
+    }
+  ],
+  "battleCrit": [
+    {
+      "id": "battle_crit_status",
+      "weight": 1,
+      "text": "{weapon} found a very rude angle on {robot} for {damage} damage. Robot integrity {robotHp}/{robotMaxHp}. {damageText}"
+    }
+  ],
+  "battleMiss": [
+    {
+      "id": "battle_miss_status",
+      "weight": 1,
+      "text": "{weapon} missed {robot}. The air has been thoroughly suppressed. {damageText}"
+    }
+  ],
+  "battleVictory": [
+    {
+      "id": "battle_victory_status",
+      "weight": 1,
+      "text": "{successText} Salvaged {item}."
+    }
+  ]
+}

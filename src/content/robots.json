@@ -5,6 +5,7 @@
     "name": "Anxietick",
     "deadliness": "weak",
     "menace": 2,
+    "maxHp": 10,
     "flavorLines": [
       "skitters nervously and then freezes when you look at it",
       "makes a sound like a worried metronome",
@@ -58,6 +59,7 @@
     "name": "Overthinker Tick",
     "deadliness": "weak",
     "menace": 2,
+    "maxHp": 12,
     "flavorLines": [
       "approaches, stops, reconsiders, backs up, reconsiders again",
       "emits a soft humming sound that might be anxiety or overheating",
@@ -111,6 +113,7 @@
     "name": "Tattletale drone",
     "deadliness": "moderate",
     "menace": 3,
+    "maxHp": 18,
     "flavorLines": [
       "broadcasts your location to everything in a 200-metre radius",
       "plays a cheerful jingle before alerting every robot in the zone",
@@ -164,6 +167,7 @@
     "name": "Passive-Aggressor Drone",
     "deadliness": "moderate",
     "menace": 4,
+    "maxHp": 22,
     "flavorLines": [
       "hovers nearby making disappointed beeping noises",
       "follows you silently until you feel judged",
@@ -217,6 +221,7 @@
     "name": "Seeker of Validation",
     "deadliness": "moderate",
     "menace": 5,
+    "maxHp": 28,
     "flavorLines": [
       "locks onto you and waits for approval before attacking",
       "emits a hopeful chirp when you look at it",
@@ -270,6 +275,7 @@
     "name": "Roomba Prime",
     "deadliness": "deadly",
     "menace": 8,
+    "maxHp": 54,
     "flavorLines": [
       "vacuums aggressively in your direction",
       "has cleaned this floor fourteen times and will not tolerate intruders",
@@ -323,6 +329,7 @@
     "name": "Walker Texas Malfunction",
     "deadliness": "dangerous",
     "menace": 6,
+    "maxHp": 34,
     "flavorLines": [
       "stomps around dramatically but trips over small rocks",
       "fires wildly in the wrong direction",
@@ -376,6 +383,7 @@
     "name": "Enforcer of Minor Inconveniences",
     "deadliness": "dangerous",
     "menace": 6,
+    "maxHp": 36,
     "flavorLines": [
       "blocks your path at the worst possible moment",
       "fires suppressive fire that mostly hits your cover",
@@ -429,6 +437,7 @@
     "name": "Crusher of Dreams",
     "deadliness": "deadly",
     "menace": 8,
+    "maxHp": 58,
     "flavorLines": [
       "slams the ground with enough force to ruin your plans",
       "charges with the energy of someone who hates hope",
@@ -482,6 +491,7 @@
     "name": "Sniper of Poor Decisions",
     "deadliness": "deadly",
     "menace": 9,
+    "maxHp": 52,
     "flavorLines": [
       "aims at you from across the map while you're looting",
       "fires exactly when you stand still for one second",
@@ -535,6 +545,7 @@
     "name": "Bomber Who Misreads the Room",
     "deadliness": "nasty",
     "menace": 7,
+    "maxHp": 44,
     "flavorLines": [
       "charges in enthusiastically at the worst possible moment",
       "explodes prematurely out of excitement",
@@ -588,6 +599,7 @@
     "name": "Harvester of Mild Annoyances",
     "deadliness": "moderate",
     "menace": 4,
+    "maxHp": 24,
     "flavorLines": [
       "collects scrap loudly and inefficiently",
       "blocks narrow paths while pretending not to notice you",
@@ -641,6 +653,7 @@
     "name": "Tank of Overcompensation",
     "deadliness": "deadly",
     "menace": 10,
+    "maxHp": 65,
     "flavorLines": [
       "fires missiles at anything that moves, including tumbleweeds",
       "announces its attacks loudly to seem intimidating",

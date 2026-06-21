@@ -20,8 +20,10 @@ import valuablesData from '../../src/content/loot-tables/valuables.json'
 import weaponsPartsData from '../../src/content/loot-tables/weapons_parts.json'
 import skillsData from '../../src/content/skills.json'
 import raiderLevelsData from '../../src/content/raider_levels.json'
+import weaponsData from '../../src/content/weapons.json'
+import combatMessagesData from '../../src/content/combat_messages.json'
 import { MAX_RAIDER_LEVEL } from '../../src/engine/raiderLevel'
-import type { RaiderLevelContent, SkillDefinition, SkillTrackId } from '../../src/engine/types'
+import type { CombatMessageEntry, RaiderLevelContent, SkillDefinition, SkillTrackId, WeaponClass, WeaponEntry, WeaponFireRateStyle } from '../../src/engine/types'
 
 const rawLoot = [
   ...(apparelAccessoriesData as { items: typeof loot }).items,
@@ -63,8 +65,12 @@ const BUILT_IN_SLOTS = new Set(['mundane_item', 'water_item', 'healing_item', 'c
 const VALID_PHASES = new Set<Phase>(['HUB', 'DEPLOYING', 'RAIDING', 'EXTRACTING', 'DOWNED'])
 const VALID_DANGER_LEVELS = new Set<DangerLevel>(['Low', 'Medium', 'High'])
 const VALID_SKILL_IDS = new Set<SkillTrackId>(['cardio', 'hoarding', 'hiding_in_lockers'])
+const VALID_WEAPON_CLASSES = new Set<WeaponClass>(['sidearm', 'hand_cannon', 'smg', 'assault_rifle', 'battle_rifle', 'shotgun', 'lmg', 'sniper', 'launcher', 'energy_oddity'])
+const VALID_FIRE_RATE_STYLES = new Set<WeaponFireRateStyle>(['steady', 'burst', 'slow', 'wild', 'charged'])
 const skills = skillsData as SkillDefinition[]
 const raiderLevels = raiderLevelsData as RaiderLevelContent
+const weapons = weaponsData as WeaponEntry[]
+const combatMessages = combatMessagesData as Record<string, CombatMessageEntry[]>
 
 // Robot flavor slots: {robot_flavor_<robotId>}
 function isRobotFlavorSlot(slot: string): boolean {
@@ -383,6 +389,28 @@ describe('content validation', () => {
       }
     })
 
+    it('all robots have battle HP that rises with deadliness', () => {
+      for (const robot of robots) {
+        expect(Number.isInteger(robot.maxHp), `robot "${robot.id}" maxHp must be an integer`).toBe(true)
+        expect(robot.maxHp, `robot "${robot.id}" maxHp must be positive`).toBeGreaterThan(0)
+      }
+
+      const minHpByTier = new Map<number, number>()
+      const maxHpByTier = new Map<number, number>()
+      for (const robot of robots) {
+        const tier = DEADLINESS_RANK[robot.deadliness]
+        minHpByTier.set(tier, Math.min(minHpByTier.get(tier) ?? Number.POSITIVE_INFINITY, robot.maxHp))
+        maxHpByTier.set(tier, Math.max(maxHpByTier.get(tier) ?? 0, robot.maxHp))
+      }
+
+      for (let tier = 2; tier <= DEADLINESS_RANK.deadly; tier += 1) {
+        expect(
+          minHpByTier.get(tier),
+          `deadliness tier ${tier} should have more HP than tier ${tier - 1}`,
+        ).toBeGreaterThan(maxHpByTier.get(tier - 1)!)
+      }
+    })
+
     it('robot menace rises and robot-table abundance falls with deadliness', () => {
       for (const current of robots) {
         for (const other of robots) {
@@ -474,6 +502,58 @@ describe('content validation', () => {
               `shield recharger "${a.id}" is more valuable than "${b.id}" but more common`,
             ).toBeLessThanOrEqual(b.weight)
           }
+        }
+      }
+    })
+  })
+
+  describe('weapons.json', () => {
+    it('defines legally distinct weapon records with valid tuning fields', () => {
+      expect(weapons.length).toBeGreaterThanOrEqual(5)
+
+      for (const weapon of weapons) {
+        expect(weapon.weight, `weapon "${weapon.id}" has invalid weight`).toBeGreaterThan(0)
+        expect(weapon.name.trim(), `weapon "${weapon.id}" missing name`).not.toBe('')
+        expect(VALID_WEAPON_CLASSES.has(weapon.class), `weapon "${weapon.id}" has invalid class`).toBe(true)
+        expect(Number.isInteger(weapon.rarity), `weapon "${weapon.id}" rarity must be an integer`).toBe(true)
+        expect(weapon.rarity, `weapon "${weapon.id}" rarity must be >= 1`).toBeGreaterThanOrEqual(1)
+        expect(weapon.rarity, `weapon "${weapon.id}" rarity must be <= 5`).toBeLessThanOrEqual(5)
+        expect(weapon.baseDamage, `weapon "${weapon.id}" baseDamage must be positive`).toBeGreaterThan(0)
+        expect(weapon.accuracy, `weapon "${weapon.id}" accuracy must be > 0`).toBeGreaterThan(0)
+        expect(weapon.accuracy, `weapon "${weapon.id}" accuracy must be <= 1`).toBeLessThanOrEqual(1)
+        expect(weapon.critChance, `weapon "${weapon.id}" critChance must be >= 0`).toBeGreaterThanOrEqual(0)
+        expect(weapon.critChance, `weapon "${weapon.id}" critChance must be <= 1`).toBeLessThanOrEqual(1)
+        expect(weapon.armorPierce, `weapon "${weapon.id}" armorPierce must be >= 0`).toBeGreaterThanOrEqual(0)
+        expect(weapon.durability, `weapon "${weapon.id}" durability must be positive`).toBeGreaterThan(0)
+        expect(VALID_FIRE_RATE_STYLES.has(weapon.fireRateStyle), `weapon "${weapon.id}" has invalid fireRateStyle`).toBe(true)
+        expect(weapon.flavor?.trim(), `weapon "${weapon.id}" missing flavor`).not.toBe('')
+      }
+    })
+
+    it('all weapon IDs are unique and include the starter weapon', () => {
+      const ids = weapons.map(weapon => weapon.id)
+      expect(new Set(ids).size).toBe(ids.length)
+      expect(ids).toContain('committee_sidearm')
+    })
+
+    it('higher rarity weapons increase offensive ceiling without changing defense', () => {
+      const maxDamageByRarity = new Map<number, number>()
+      for (const weapon of weapons) {
+        maxDamageByRarity.set(weapon.rarity, Math.max(maxDamageByRarity.get(weapon.rarity) ?? 0, weapon.baseDamage + weapon.armorPierce))
+      }
+
+      expect(maxDamageByRarity.get(5)).toBeGreaterThan(maxDamageByRarity.get(1)!)
+      expect(weapons.every(weapon => !('damageResistance' in weapon))).toBe(true)
+    })
+  })
+
+  describe('combat_messages.json', () => {
+    it('has valid weighted templates for robot battle logs', () => {
+      for (const [tableName, entries] of Object.entries(combatMessages)) {
+        expect(entries.length, `combat message table "${tableName}" is empty`).toBeGreaterThan(0)
+        for (const entry of entries) {
+          expect(entry.weight, `combat message "${entry.id}" has invalid weight`).toBeGreaterThan(0)
+          expect(entry.text.trim(), `combat message "${entry.id}" has empty text`).not.toBe('')
         }
       }
     })

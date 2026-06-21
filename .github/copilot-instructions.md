@@ -6,6 +6,7 @@ AFK Raiders is a "zero-player" idle comedy game (inspired by Godville) that paro
 Key docs — read these before making changes:
 - `docs/GAME_DESIGN.md` — game concept, mechanics, comedy content, roadmap
 - `docs/ARCHITECTURE.md` — folder structure, engine design, persistence, testing
+- `docs/ROBOT_BATTLES_AND_WEAPONS_PLAN.md` — staged robot HP, active battle, and weapon implementation plan
 - `docs/CI_CD_AZURE.md` — CI/PR validation and Azure Static Web Apps deployment flow
 - `docs/SERVER_STORAGE_AND_ACCOUNTS.md` — planned account-backed save sync architecture and backend boundaries
 
@@ -107,6 +108,8 @@ Robot encounter events in `src/content/raiding_events.json` use `effects.robotEn
 Only `nasty` and `deadly` robots can kill the raider (lethal encounters trigger only at ≤ 50% HP). `weak`, `moderate`, and `dangerous` robots are non-lethal: damage is capped so HP cannot drop to 0. High-tier robot encounter events (`nasty` and above) must include `"minGreed": 20` in their `requires` clause so they only appear after the raider has pushed deeper.
 
 `resolveRobotEncounter()` rolls 1-10 with the seeded RNG; if the roll is greater than the robot's `menace`, the raider defeats it, emits a `successText` line, and wins an item from that robot's `lootTable`. On failure, the raider takes damage based on menace and runs away. Rare event variants can set `effects.robotDamageMultiplier` to make failed encounters more dangerous or lethal; this multiplier only applies on failure, never when the robot is defeated. Robot loot is also included in the regular loot resolver pool alongside the base loot tables.
+
+Active robot battles are being introduced in `src/engine/robotCombat.ts` and tracked on `RaidState.activeRobotBattle`. Robot `maxHp` controls battle duration, while `menace`, `deadliness`, and danger profiles continue to control threat. Weapon content lives in `src/content/weapons.json` and must use original parody names and stats. Weapons improve offensive pacing only; do not use them to add passive Raider toughness.
 
 Positive mood grants a small resilience bonus after shield mitigation on failed robot encounters only. This trims final HP loss, does not alter robot raw damage, and should remain a small modifier. When resilience saves HP, the comms damage narration must explicitly include the saved amount (for example `Resilience saved 2 HP.`).
 

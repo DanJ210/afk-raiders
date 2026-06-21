@@ -6,6 +6,7 @@ import { PHASE_DURATIONS } from './raidStateMachine.js'
 import { createInitialLifetimeStats } from './stats.js'
 import { createStarterShieldState } from './shields.js'
 import { createInitialSkills } from './skills.js'
+import { createStarterEquippedWeaponState } from './weapons.js'
 
 export const SAVE_VERSION = 5
 
@@ -24,6 +25,7 @@ export function createInitialState(now: number = Date.now()): GameState {
       deathCount: 0,
       extractCount: 0,
       skills: createInitialSkills(),
+      equippedWeapon: createStarterEquippedWeaponState(),
     },
     raid: {
       zone: null,
@@ -31,6 +33,7 @@ export function createInitialState(now: number = Date.now()): GameState {
       zoneCondition: null,
       shield: createStarterShieldState(),
       activeShieldRecharge: null,
+      activeRobotBattle: null,
       backpack: [],
       hiddenPocket: null,
       healingItems: [],

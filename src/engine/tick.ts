@@ -24,6 +24,7 @@ import { transferBackpackToHomeStash, HOME_STASH_ITEM_LIMIT } from './homeStash.
 import { appendLogEntries } from './log.js'
 import { recordOutcome, recordRobotDefeat } from './stats.js'
 import { advanceShieldRecharge } from './shields.js'
+import { processRobotBattleTick } from './robotCombat.js'
 import { applySkillPractice, getSkillModifierProfile, rollSkillPractice, type SkillLevelUp, type SkillPracticeTrigger } from './skills.js'
 import { applyRaiderXpGain, getRaiderLevelBenefitProfile, rollRaiderXp, type RaiderLevelUp, type RaiderXpTrigger } from './raiderLevel.js'
 
@@ -420,7 +421,26 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
   // ------------------------------------------------------------------
   // 3. Resolve flavor event for current phase
   // ------------------------------------------------------------------
-  const resolvedEvent = resolveEvent(currentState, rng, now)
+  const battleResult = currentState.raid.phase === 'RAIDING' && currentState.raid.activeRobotBattle
+    ? processRobotBattleTick(currentState, rng, now)
+    : null
+
+  if (battleResult) {
+    currentState = battleResult.state
+    emitted.push(battleResult.event)
+    if (battleResult.outcome === 'defeated' && battleResult.defeatedRobotId) {
+      currentState = {
+        ...currentState,
+        stats: recordRobotDefeat(currentState.stats, battleResult.defeatedRobotId),
+      }
+      raiderXpTriggers.push({ reason: 'robot_defeated', minXp: 4, maxXp: 7 })
+    } else if (battleResult.outcome === 'ongoing' && currentState.raider.hp > 0) {
+      skillPracticeTriggers.push({ skillId: 'hiding_in_lockers', reason: 'robot_survived', minXp: 1, maxXp: 2 })
+      raiderXpTriggers.push({ reason: 'robot_survived', minXp: 1, maxXp: 3 })
+    }
+  }
+
+  const resolvedEvent = battleResult ? null : resolveEvent(currentState, rng, now)
   if (resolvedEvent) {
     const template = allEvents.find(e => e.id === resolvedEvent.id)
     if (template) {
@@ -630,6 +650,7 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
   if (raiderXpTriggers.length > 0) {
     const xpGains = rollRaiderXp(raiderXpTriggers, rng.clone())
     const xpResult = applyRaiderXpGain(currentState.raider.levelXp, xpGains)
+    currentState = {
       ...currentState,
       raider: {
         ...currentState.raider,

@@ -509,12 +509,12 @@
     {
       "id": "raid_teammate_falls",
       "weight": 12,
-      "text": "Teammate fell off a ledge. I pretended not to laugh.",
+      "text": "Teammate failed to press X and grab the rope. I pretended not to laugh.",
       "requires": {
         "phase": "RAIDING"
       },
       "effects": {
-        "mood": -1
+        "mood": 3
       }
     },
     {

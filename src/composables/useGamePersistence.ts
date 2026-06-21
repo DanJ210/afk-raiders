@@ -15,6 +15,7 @@ import { sellStashOverflow } from '../engine/homeStash.js'
 import { createStarterShieldState } from '../engine/shields.js'
 import { normalizeSkills } from '../engine/skills.js'
 import { normalizeRaiderLevelXp } from '../engine/raiderLevel.js'
+import { createStarterEquippedWeaponState } from '../engine/weapons.js'
 
 const STORAGE_KEY = 'afk-raiders-save'
 const MIN_SUPPORTED_SAVE_VERSION = 3
@@ -86,6 +87,7 @@ export function useGamePersistence(): GamePersistenceReturn {
             ? seedLegacyRaiderLevelXp(loadedRaider)
             : normalizeRaiderLevelXp(loadedRaider.levelXp),
           skills: normalizeSkills(loadedState.raider.skills),
+          equippedWeapon: loadedState.raider.equippedWeapon ?? createStarterEquippedWeaponState(),
         },
         signalAmplifiers: loadedState.signalAmplifiers ?? 0,
         pendingCalm: (loadedState as any).pendingCalm ?? (loadedState as any).pendingEncourage ?? false,
@@ -97,6 +99,7 @@ export function useGamePersistence(): GamePersistenceReturn {
           ...loadedState.raid,
           shield: loadedState.raid.shield ?? createStarterShieldState(),
           activeShieldRecharge: loadedState.raid.activeShieldRecharge ?? null,
+          activeRobotBattle: loadedState.raid.activeRobotBattle ?? null,
           hiddenPocket: loadedState.raid.hiddenPocket ?? null,
           healingItems: loadedState.raid.healingItems ?? [],
           dangerLevel: loadedState.raid.dangerLevel ?? null,

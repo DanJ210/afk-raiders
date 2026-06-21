@@ -51,6 +51,8 @@ export interface RobotEntry extends ContentEntry {
   name: string
   deadliness: 'weak' | 'moderate' | 'dangerous' | 'nasty' | 'deadly'
   menace: number
+  /** Battle health pool. HP controls fight duration; menace controls threat. */
+  maxHp: number
   flavorLines: string[]
   successText: string[]
   lootTable: RobotLootItem[]
@@ -82,6 +84,31 @@ export interface ShieldRechargerItem extends ContentEntry {
   flavor?: string
   /** 1 = Common … 5 = Legendary (higher = rarer). */
   rarity: number
+}
+
+export type WeaponClass = 'sidearm' | 'hand_cannon' | 'smg' | 'assault_rifle' | 'battle_rifle' | 'shotgun' | 'lmg' | 'sniper' | 'launcher' | 'energy_oddity'
+
+export type WeaponFireRateStyle = 'steady' | 'burst' | 'slow' | 'wild' | 'charged'
+
+export interface WeaponEntry extends ContentEntry {
+  name: string
+  class: WeaponClass
+  /** 1 = Common ... 5 = Legendary (higher = rarer). */
+  rarity: number
+  baseDamage: number
+  /** 0-1 hit chance before robot menace pressure. */
+  accuracy: number
+  /** 0-1 chance for a larger hit after a successful shot. */
+  critChance: number
+  /** Reduces menace pressure against hit chance and adds a small flat damage kicker. */
+  armorPierce: number
+  durability: number
+  fireRateStyle: WeaponFireRateStyle
+  flavor?: string
+}
+
+export interface CombatMessageEntry extends ContentEntry {
+  text: string
 }
 
 export type SkillTrackId = 'cardio' | 'hoarding' | 'hiding_in_lockers'
@@ -186,6 +213,23 @@ export interface ActiveShieldRecharge {
   ticksRemaining: number
 }
 
+export interface EquippedWeaponState {
+  weaponId: string
+  durability: number
+}
+
+export interface ActiveRobotBattle {
+  robotId: string
+  robotName: string
+  hp: number
+  maxHp: number
+  roundsElapsed: number
+  startedAtTick: number
+  weaponId: string
+  /** Encounter-specific danger spike from event content; applies to robot retaliation only. */
+  damageMultiplier: number
+}
+
 export interface ZoneCondition {
   id: string
   name: string
@@ -198,6 +242,7 @@ export interface RaidState {
   zoneCondition?: ZoneCondition | null
   shield: ShieldState | null
   activeShieldRecharge: ActiveShieldRecharge | null
+  activeRobotBattle: ActiveRobotBattle | null
   backpack: BackpackItem[]
   /** Optional manually-selected single item saved on backpack-loss failures. */
   hiddenPocket: HiddenPocketItem | null
@@ -222,6 +267,7 @@ export interface RaiderStats {
   deathCount: number
   extractCount: number
   skills: RaiderSkillsState
+  equippedWeapon: EquippedWeaponState
 }
 
 export interface RaiderSkillProgress {

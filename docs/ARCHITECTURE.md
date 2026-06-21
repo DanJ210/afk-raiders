@@ -45,6 +45,8 @@ afk-raiders/
 │   │   ├── greedCheck.ts        # The signature mechanic
 │   │   ├── eventResolver.ts     # Weighted event tables by context
 │   │   ├── dangerLevelProfiles.ts # Low/Medium/High risk/reward tuning
+│   │   ├── robotCombat.ts       # Active multi-tick robot battle resolver
+│   │   ├── weapons.ts           # Weapon catalog lookup and starter weapon state
 │   │   ├── signal.ts            # Signal regen + spend rules
 │   │   ├── shields.ts           # Shared shield damage + recharge rules
 │   │   ├── skills.ts            # Autonomous Raider skill progression + tiny modifiers
@@ -65,6 +67,7 @@ afk-raiders/
 │   │   ├── skills.json          # Cardio/Hoarding/Hiding definitions and level-up text
 │   │   ├── raider_levels.json   # Raider Level title bands and level-up comms text
 │   │   ├── robots.json          # Anxieticks, Tattletales, Roomba Prime…
+│   │   ├── weapons.json         # Original parody weapon stats for robot battles
 │   │   ├── zones.json           # Damp Battlegrounds, etc.
 │   │   └── flavor.json          # Hub gossip, death quips, mood lines
 │   ├── stores/
@@ -125,6 +128,10 @@ The stash has an enforced item cap (`HOME_STASH_ITEM_LIMIT`). Overflow items are
 
 Positive raider mood adds a small derived resilience bonus in `eventResolver.ts` for failed robot encounters only. It does not change robot raw damage; it slightly reduces the final HP loss after shield mitigation when mood is above zero.
 The resulting shield-damage log line includes a short note when that bonus applies so the effect stays visible in the comms UI.
+
+Robot battles are being introduced as a pure engine layer in `src/engine/robotCombat.ts`. `RaidState.activeRobotBattle` stores the current robot, HP, battle round, weapon id, and encounter damage multiplier so combat can persist across ticks. `processTick()` advances an existing active battle before resolving a normal phase event; the existing instant `resolveRobotEncounter()` path remains available for focused damage and balance tests while event start behavior migrates in smaller slices. Robot `maxHp` controls battle duration, while menace/deadliness and danger profiles continue to control threat.
+
+Weapon content lives in `src/content/weapons.json`, with catalog helpers in `src/engine/weapons.ts`. Weapons are offensive pacing tools only: do not use them to add passive Raider toughness or flatten danger-level survival curves. The staged plan is tracked in [ROBOT_BATTLES_AND_WEAPONS_PLAN.md](./ROBOT_BATTLES_AND_WEAPONS_PLAN.md).
 
 Shield rechargers are intentionally different from bandages:
 - Bandages live in `RaidState.healingItems` and never extract.

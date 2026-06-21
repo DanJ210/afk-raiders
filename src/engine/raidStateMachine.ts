@@ -80,14 +80,14 @@ export function tickPhase(
     }
     // Reset raid state when forced back to HUB (mirror of the natural-expiry path)
     if (forced === 'HUB') {
-      forcedRaid = { ...forcedRaid, activeShieldRecharge: null, shield: restoreShieldAtHub(forcedRaid.shield), backpack: [], hiddenPocket: null, healingItems: [], backpackValue: 0, greedLevel: 0, forceExtract: false, zone: null, dangerLevel: null, zoneCondition: null }
+      forcedRaid = { ...forcedRaid, activeShieldRecharge: null, activeRobotBattle: null, shield: restoreShieldAtHub(forcedRaid.shield), backpack: [], hiddenPocket: null, healingItems: [], backpackValue: 0, greedLevel: 0, forceExtract: false, zone: null, dangerLevel: null, zoneCondition: null }
     }
     // Healing items are lost on death — clear immediately so they aren't visible during DOWNED phase
     if (forced === 'DOWNED') {
-      forcedRaid = { ...forcedRaid, activeShieldRecharge: null, healingItems: [] }
+      forcedRaid = { ...forcedRaid, activeShieldRecharge: null, activeRobotBattle: null, healingItems: [] }
     }
     if (forced === 'EXTRACTING') {
-      forcedRaid = { ...forcedRaid, activeShieldRecharge: null }
+      forcedRaid = { ...forcedRaid, activeShieldRecharge: null, activeRobotBattle: null }
     }
     if (forced === 'DEPLOYING') {
       forcedRaid = enterDeploying(forcedRaid, rng)
@@ -118,16 +118,16 @@ export function tickPhase(
 
   // Reset raid state when returning to HUB
   if (next === 'HUB') {
-    updatedRaid = { ...updatedRaid, activeShieldRecharge: null, shield: restoreShieldAtHub(updatedRaid.shield), backpack: [], hiddenPocket: null, healingItems: [], backpackValue: 0, greedLevel: 0, forceExtract: false, zone: null, dangerLevel: null, zoneCondition: null }
+    updatedRaid = { ...updatedRaid, activeShieldRecharge: null, activeRobotBattle: null, shield: restoreShieldAtHub(updatedRaid.shield), backpack: [], hiddenPocket: null, healingItems: [], backpackValue: 0, greedLevel: 0, forceExtract: false, zone: null, dangerLevel: null, zoneCondition: null }
   }
 
   // Healing items are lost on death — clear on natural DOWNED transitions too.
   if (next === 'DOWNED') {
-    updatedRaid = { ...updatedRaid, activeShieldRecharge: null, healingItems: [] }
+    updatedRaid = { ...updatedRaid, activeShieldRecharge: null, activeRobotBattle: null, healingItems: [] }
   }
 
   if (next === 'EXTRACTING') {
-    updatedRaid = { ...updatedRaid, activeShieldRecharge: null }
+    updatedRaid = { ...updatedRaid, activeShieldRecharge: null, activeRobotBattle: null }
   }
 
   // Pick a zone and condition when deploying
