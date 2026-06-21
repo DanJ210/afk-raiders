@@ -7,7 +7,7 @@ const store = useGameStore()
 <template>
   <div
     v-if="store.awaySummary"
-    class="modal-overlay z-100"
+    class="modal-overlay z-away-summary"
     role="alert"
     aria-live="assertive"
   >

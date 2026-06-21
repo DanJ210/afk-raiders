@@ -30,7 +30,7 @@ function handleDialogSell() {
 </script>
 
 <template>
-  <section class="home-stash panel-card max-h-100" aria-label="Home Stash">
+  <section class="home-stash panel-card max-h-home-stash-max" aria-label="Home Stash">
     <header class="section-header">🏠 HOME STASH</header>
 
     <div class="grid grid-cols-3 gap-2 mb-3">
