@@ -105,7 +105,7 @@ Writing jokes never touches engine code — and this is the future community-con
 
 Events may also set `"effects": { "forcePhase": "..." }` to force a phase change. This powers `extraction_events.json`: during the EXTRACTING window (~90s extraction + a final tick to call the return shuttle, 4 ticks total) events can make extraction fail (`forcePhase: "RAIDING"` — backpack kept), succeed early (`forcePhase: "HUB"` — loot transferred to the home stash), or end in tragedy (`forcePhase: "DOWNED"` — bag lost).
 
-Events may also gate themselves by `requires.dangerLevel` (`Low`, `Medium`, or `High`). The danger level is determined by a seeded combination of zone selection and zone condition selection (from `src/content/zones/zone_conditions.json`). The engine applies the matching danger-level profile in `src/engine/dangerLevelProfiles.ts`: Low has lower loot value and rarity bias, Medium raises loot upside and robot/extraction pressure, and High has the highest loot ceiling with the harshest robot and LZ risk. These profiles are the economy guardrail for risk/reward tuning.
+Events may also gate themselves by `requires.dangerLevel` (`Low`, `Medium`, or `High`). The danger level is determined by a seeded combination of zone selection and zone condition selection (from `src/content/zones/zone_conditions.json`). The engine applies the matching danger-level profile in `src/engine/dangerLevelProfiles.ts`: Low has lower loot value and rarity bias, Medium raises loot upside and ambient/robot/extraction pressure, and High has the highest loot ceiling with the harshest ambient pressure, robot pressure, and LZ risk. These profiles are the economy guardrail for risk/reward tuning.
 
 Loot rarity selection also applies a small raider-mood bias in `eventResolver.ts`: positive mood nudges weights toward higher rarity and negative mood nudges toward lower rarity. The effect is intentionally mild and always secondary to danger-level profile tuning.
 
@@ -135,7 +135,7 @@ Shield rechargers are intentionally different from bandages:
 - This is a contract, not a style preference: every processed damage instance must produce a comms damage line, even if the same tick later transitions the raider to DOWNED.
 
 ### 3. Signal as the only real input
-Signal regenerates (~1 per 10 min, capped at 5). Ready Up (2 Signal) starts DEPLOYING from HUB. Calm (1 Signal, internal action ID `CALM`) reduces current greed before the next greed check and lowers extraction chance (calm raider stays in longer). Pressure (1 Signal, internal action ID `PRESSURE`) increases current greed before the next greed check and raises extraction chance (rattled raider wants out sooner). CALL EXTRACT (3 Signal) forces an extraction attempt. During RAIDING only one action may be queued at a time, so action buttons lock until the next tick applies and clears the pending action. On every HUB return, raid pressure state resets (greed 0, force-extract cleared).
+Signal regenerates (~1 per 10 min, capped at 5). Ready Up (2 Signal) starts DEPLOYING from HUB. Calm (1 Signal, internal action ID `CALM`) reduces current greed before the next greed check and lowers extraction chance (calm raider stays in longer). Pressure (1 Signal, internal action ID `PRESSURE`) increases current greed before the next check and raises extraction chance (rattled raider wants out sooner). CALL EXTRACT (3 Signal) forces an extraction attempt. When the Raider is low on HP and has no current-raid bandages, the Greed Check adds a survival-instinct extraction bonus, but that bonus is dampened by danger level so Medium and High conditions still punish unattended raids. During RAIDING only one action may be queued at a time, so action buttons lock until the next tick applies and clears the pending action. On every HUB return, raid pressure state resets (greed 0, force-extract cleared).
 
 ### 4. Lifetime stat collection
 `GameState.stats` tracks long-lived outcomes: extraction/death totals and context (zone + zone/time), robot defeats, and healing item usage.
@@ -178,6 +178,16 @@ Raider Level benefits are intentionally light-power and title-band based:
 - Levels 71-75: +8 coin extraction stipend.
 
 The stipend is paid only on successful extraction and is narrated with `raider_level_extraction_stipend`. Levels deliberately do not add HP, raw damage, or major extraction safety; skills and danger-level profiles remain the mechanical tuning levers. Future content can use Raider Level for title-gated comms variants, hub gags, achievements, or prestige requirements.
+
+### 4d. Balance guardrails
+Raid balance is guarded as an engine contract, not just a table of current constants. `tests/engine/raidBalance.test.ts` runs seeded starter-raider simulations across Low, Medium, and High danger and asserts the shape we want:
+- Low danger remains extractable often enough for the idle comedy loop.
+- Medium danger downs starter raiders frequently when the Handler does not intervene.
+- High danger is deadlier than Medium and should feel like a manual-intervention zone.
+
+The same test file also protects the tuning hierarchy. Danger-level profiles must stay monotonic: loot upside, ambient RAIDING downed pressure, robot encounter pressure, robot failure damage, and extraction risk all rise from Low to Medium to High, while safe extraction weighting falls. Skill and Raider Level benefits are capped so progression never flattens that curve; Raider Level remains title/stipend progression, and max skill mitigation still leaves High-danger robot failures harsher than Medium.
+
+When changing robot weights, danger profiles, greed/extraction math, healing, shields, or progression modifiers, update the tests only if the new design intentionally changes these contracts. Handler survivability should be proven through explicit intervention paths such as manual healing, shield recharger use, and CALL EXTRACT rather than by making autonomous High-danger raids broadly safe.
 
 Visible Raider Level title bands and level-up text live in `src/content/raider_levels.json`. The first UI surface is `RaiderCard.vue`, which shows the derived level, title, progress to next level, and current stipend benefit while keeping Rat Rating visible as its own row.
 

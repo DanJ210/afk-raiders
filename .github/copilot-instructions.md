@@ -44,6 +44,7 @@ Key docs — read these before making changes:
 - Zone conditions set `RaidState.dangerLevel` (`Low` / `Medium` / `High`).
 - Danger-level profiles in `src/engine/dangerLevelProfiles.ts` tune reward/risk globally:
 	- Loot value and rarity bias
+	- Small ambient RAIDING downed pressure
 	- Robot encounter pressure
 	- Extraction risk/safety weighting
 - Event templates can gate by `requires.dangerLevel`.
@@ -65,7 +66,7 @@ AFK Raiders includes a parody safe pocket named **Secret Hidden Pocket**:
 - On successful extraction, do not duplicate this item; normal backpack extraction already transfers all loot.
 
 ### Raid Pacing
-Raid aggression is autonomous; there is no extraction preference slider. `runGreedCheck()` uses fixed seeded probabilities so the Raider generally spends more time raiding before choosing to extract. Low HP without any current-raid bandages increases extract probability so the raider tries to survive and cash out. If they do have bandages, this no-bandage extraction bonus is not applied. Scolding also reduces current greed before the next greed check, giving the Handler a direct way to cool risky behavior. Separately, the RAIDING phase has a hard timer cap; timing out in RAIDING transitions to DOWNED.
+Raid aggression is autonomous; there is no extraction preference slider. `runGreedCheck()` uses fixed seeded probabilities so the Raider generally spends more time raiding before choosing to extract. Low HP without any current-raid bandages increases extract probability so the raider tries to survive and cash out, but that no-bandage extraction bonus is dampened by danger level so Medium/High conditions still punish unattended raids. If they do have bandages, this no-bandage extraction bonus is not applied. Scolding also reduces current greed before the next greed check, giving the Handler a direct way to cool risky behavior. Separately, the RAIDING phase has a hard timer cap; timing out in RAIDING transitions to DOWNED.
 
 Event-driven greed changes are appended to the comms event text as the actual signed post-clamp delta (for example `Greed +5.` or `Greed -3.`). If an effect is fully swallowed by the 0–100 clamp, do not add a noise line.
 
