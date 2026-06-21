@@ -1,0 +1,103 @@
+{
+  "titleBands": [
+    {
+      "id": "freshly_briefed_liability",
+      "minLevel": 1,
+      "maxLevel": 9,
+      "name": "Freshly Briefed Liability",
+      "description": "Still believes the safety briefing was for someone else.",
+      "levelUpText": [
+        "Raider Level {level}: {title}. The clipboard says this counts as growth.",
+        "Raider Level {level}: {title}. Training confirms the Raider can now identify most doors."
+      ]
+    },
+    {
+      "id": "crate_whisperer",
+      "minLevel": 10,
+      "maxLevel": 18,
+      "name": "Crate Whisperer",
+      "description": "Hears loot calling from inside containers with no handles.",
+      "levelUpText": [
+        "Raider Level {level}: {title}. They saluted a crate and it felt mutual.",
+        "Raider Level {level}: {title}. Backpack confidence has reached committee-review levels."
+      ]
+    },
+    {
+      "id": "tactical_bystander",
+      "minLevel": 19,
+      "maxLevel": 27,
+      "name": "Tactical Bystander",
+      "description": "Present during major incidents, rarely in a way investigators can prove.",
+      "levelUpText": [
+        "Raider Level {level}: {title}. Their survival strategy now has plausible terminology.",
+        "Raider Level {level}: {title}. Several bad decisions have been reclassified as field research."
+      ]
+    },
+    {
+      "id": "questionable_competence",
+      "minLevel": 28,
+      "maxLevel": 36,
+      "name": "Questionable Competence",
+      "description": "Technically improving, emotionally still under investigation.",
+      "levelUpText": [
+        "Raider Level {level}: {title}. Nobody is comfortable with how well this is working.",
+        "Raider Level {level}: {title}. Performance review notes: effective, somehow."
+      ]
+    },
+    {
+      "id": "insurance_incident",
+      "minLevel": 37,
+      "maxLevel": 45,
+      "name": "Insurance Incident",
+      "description": "A walking claim form with surprisingly good extraction timing.",
+      "levelUpText": [
+        "Raider Level {level}: {title}. The actuarial table made a small frightened noise.",
+        "Raider Level {level}: {title}. The hub insurer has started using first-name basis fees."
+      ]
+    },
+    {
+      "id": "professional_door_listener",
+      "minLevel": 46,
+      "maxLevel": 54,
+      "name": "Professional Door Listener",
+      "description": "Can distinguish danger, opportunity, and vending machines through sheet metal.",
+      "levelUpText": [
+        "Raider Level {level}: {title}. The doors have begun asking for privacy.",
+        "Raider Level {level}: {title}. Silence now counts as actionable intelligence."
+      ]
+    },
+    {
+      "id": "certified_problem_extractor",
+      "minLevel": 55,
+      "maxLevel": 63,
+      "name": "Certified Problem Extractor",
+      "description": "Extracts loot, stress, and consequences with equal dedication.",
+      "levelUpText": [
+        "Raider Level {level}: {title}. Certification arrived in a bent envelope marked probably fine.",
+        "Raider Level {level}: {title}. Extraction paperwork now has a dedicated apology field."
+      ]
+    },
+    {
+      "id": "veteran_of_bad_ideas",
+      "minLevel": 64,
+      "maxLevel": 70,
+      "name": "Veteran of Bad Ideas",
+      "description": "Has survived enough terrible plans to start recognizing the opening moves.",
+      "levelUpText": [
+        "Raider Level {level}: {title}. Experience has hardened into a suspicious little wisdom.",
+        "Raider Level {level}: {title}. The Raider now flinches before the mission briefing gets interesting."
+      ]
+    },
+    {
+      "id": "myth_of_desperanza",
+      "minLevel": 71,
+      "maxLevel": 75,
+      "name": "Myth of Desperanza",
+      "description": "Spoken of in hushed tones by people who still refuse to lend them gear.",
+      "levelUpText": [
+        "Raider Level {level}: {title}. Desperanza folklore has lowered its standards and accepted them.",
+        "Raider Level {level}: {title}. The legend remains legally nonbinding."
+      ]
+    }
+  ]
+}

@@ -25,6 +25,7 @@ import { appendLogEntries } from './log.js'
 import { recordOutcome, recordRobotDefeat } from './stats.js'
 import { advanceShieldRecharge } from './shields.js'
 import { applySkillPractice, getSkillModifierProfile, rollSkillPractice, type SkillLevelUp, type SkillPracticeTrigger } from './skills.js'
+import { applyRaiderXpGain, getRaiderLevelBenefitProfile, rollRaiderXp, type RaiderLevelUp, type RaiderXpTrigger } from './raiderLevel.js'
 
 const LOOT_BONUS_HEALING_ITEM_CHANCE = 0.2 // 20% chance to find a healing item on any loot event, independent of normal loot rolls
 const LOOT_BONUS_SHIELD_RECHARGER_CHANCE = 0.15 // 15% chance to find a shield recharger on any loot event, independent of normal loot rolls
@@ -39,8 +40,9 @@ function applySuccessfulExtraction(
   state: GameState,
   extractedBackpack: BackpackItem[],
   context: { zone: string | null; dangerLevel: GameState['raid']['dangerLevel'] },
-): { state: GameState; coinsGained: number; soldItemCount: number } {
+): { state: GameState; coinsGained: number; soldItemCount: number; levelCoinBonus: number } {
   const transfer = transferBackpackToHomeStash(state.homeStash, extractedBackpack)
+  const levelCoinBonus = getRaiderLevelBenefitProfile(state.raider.levelXp).extractionCoinBonus
   return {
     state: {
       ...state,
@@ -52,10 +54,11 @@ function applySuccessfulExtraction(
       },
       stats: recordOutcome(state.stats, 'extracts', context.zone, context.dangerLevel),
       homeStash: transfer.homeStash,
-      coins: state.coins + transfer.coinsGained,
+      coins: state.coins + transfer.coinsGained + levelCoinBonus,
     },
     coinsGained: transfer.coinsGained,
     soldItemCount: transfer.soldItemCount,
+    levelCoinBonus,
   }
 }
 
@@ -76,6 +79,16 @@ function hiddenPocketSavedEvent(itemName: string, tick: number, now: number): Lo
     tick,
     timestamp: now,
     text: `Secret Hidden Pocket check: 1x ${itemName} made it home. Very legal, totally declared.`,
+    phase: 'HUB',
+  }
+}
+
+function raiderLevelExtractionBonusEvent(coins: number, tick: number, now: number): LogEvent {
+  return {
+    id: 'raider_level_extraction_stipend',
+    tick,
+    timestamp: now,
+    text: `Raider Level stipend approved: +${coins} coin${coins === 1 ? '' : 's'} for surviving the paperwork portion of extraction.`,
     phase: 'HUB',
   }
 }
@@ -114,9 +127,57 @@ function queueSuccessfulExtractionSkillPractice(
   }
 }
 
+function queueSuccessfulExtractionRaiderXp(
+  queue: RaiderXpTrigger[],
+  params: {
+    backpack: BackpackItem[]
+    backpackValue: number
+    dangerLevel: GameState['raid']['dangerLevel']
+    hp: number
+    maxHp: number
+  },
+) {
+  const backpackQuantity = totalBackpackQuantity(params.backpack)
+  const dangerBonus = params.dangerLevel === 'High' ? 6 : params.dangerLevel === 'Medium' ? 4 : 2
+  queue.push({ reason: 'extraction_success', minXp: 12 + dangerBonus, maxXp: 18 + dangerBonus })
+
+  if (params.backpackValue > 0) {
+    const valueXp = Math.min(24, Math.max(1, Math.floor(params.backpackValue / 60)))
+    queue.push({ reason: 'loot_extracted', minXp: valueXp, maxXp: valueXp + Math.min(4, Math.ceil(valueXp / 4)) })
+  }
+
+  if (backpackQuantity > 0) {
+    const quantityXp = Math.min(8, Math.max(1, Math.ceil(backpackQuantity / 4)))
+    queue.push({ reason: 'loot_extracted', minXp: quantityXp, maxXp: quantityXp + 2 })
+  }
+
+  if (params.maxHp > 0 && params.hp / params.maxHp <= 0.5) {
+    queue.push({ reason: 'close_call_extraction', minXp: 4, maxXp: 8 })
+  }
+
+  if (params.dangerLevel === 'High') {
+    queue.push({ reason: 'high_danger_survived', minXp: 5, maxXp: 9 })
+  }
+}
+
+function queueDeathRecoveryRaiderXp(queue: RaiderXpTrigger[], dangerLevel: GameState['raid']['dangerLevel']) {
+  const dangerBonus = dangerLevel === 'High' ? 2 : dangerLevel === 'Medium' ? 1 : 0
+  queue.push({ reason: 'death_recovered', minXp: 3 + dangerBonus, maxXp: 6 + dangerBonus })
+}
+
 function skillLevelUpEvent(levelUp: SkillLevelUp, tick: number, now: number, phase: GameState['raid']['phase']): LogEvent {
   return {
     id: `skill_${levelUp.skillId}_level_${levelUp.level}`,
+    tick,
+    timestamp: now,
+    text: levelUp.text,
+    phase,
+  }
+}
+
+function raiderLevelUpEvent(levelUp: RaiderLevelUp, tick: number, now: number, phase: GameState['raid']['phase']): LogEvent {
+  return {
+    id: `raider_level_${levelUp.level}`,
     tick,
     timestamp: now,
     text: levelUp.text,
@@ -189,6 +250,7 @@ function applyHiddenPocketFailureRecovery(
 export function processTick(state: GameState, rng: RNG, now: number = Date.now()): TickResult {
   const emitted: LogEvent[] = []
   const skillPracticeTriggers: SkillPracticeTrigger[] = []
+  const raiderXpTriggers: RaiderXpTrigger[] = []
   const signalAdvance = advanceSignal(state.signal, now)
 
   // ------------------------------------------------------------------
@@ -220,6 +282,7 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
     // pre-tick backpack from the input state.
     if (transition.to === 'HUB') {
       if (transition.from === 'DOWNED') {
+        queueDeathRecoveryRaiderXp(raiderXpTriggers, state.raid.dangerLevel)
         const recovery = applyHiddenPocketFailureRecovery(currentState, state.raid.hiddenPocket)
         currentState = {
           ...recovery.state,
@@ -233,14 +296,23 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
         }
         if (recovery.saved && recovery.savedItemName) {
           skillPracticeTriggers.push({ skillId: 'hiding_in_lockers', reason: 'hidden_pocket_saved', minXp: 2, maxXp: 4 })
+          raiderXpTriggers.push({ reason: 'hidden_pocket_saved', minXp: 3, maxXp: 6 })
           emitted.push(hiddenPocketSavedEvent(recovery.savedItemName, state.tick, now))
         }
         if (recovery.soldItemCount > 0) {
           skillPracticeTriggers.push({ skillId: 'hoarding', reason: 'stash_overflow_sale', minXp: 2, maxXp: 4 })
+          raiderXpTriggers.push({ reason: 'stash_overflow_sale', minXp: 2, maxXp: 4 })
           emitted.push(stashSaleEvent(recovery.soldItemCount, recovery.coinsGained, state.tick, now))
         }
       } else if (transition.from === 'EXTRACTING') {
         queueSuccessfulExtractionSkillPractice(skillPracticeTriggers, {
+          backpack: state.raid.backpack,
+          backpackValue: state.raid.backpackValue,
+          dangerLevel: state.raid.dangerLevel,
+          hp: state.raider.hp,
+          maxHp: state.raider.maxHp,
+        })
+        queueSuccessfulExtractionRaiderXp(raiderXpTriggers, {
           backpack: state.raid.backpack,
           backpackValue: state.raid.backpackValue,
           dangerLevel: state.raid.dangerLevel,
@@ -252,8 +324,12 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
           dangerLevel: state.raid.dangerLevel,
         })
         currentState = extraction.state
+        if (extraction.levelCoinBonus > 0) {
+          emitted.push(raiderLevelExtractionBonusEvent(extraction.levelCoinBonus, state.tick, now))
+        }
         if (extraction.soldItemCount > 0) {
           skillPracticeTriggers.push({ skillId: 'hoarding', reason: 'stash_overflow_sale', minXp: 2, maxXp: 4 })
+          raiderXpTriggers.push({ reason: 'stash_overflow_sale', minXp: 2, maxXp: 4 })
           emitted.push(stashSaleEvent(extraction.soldItemCount, extraction.coinsGained, state.tick, now))
         }
       }
@@ -379,6 +455,7 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
       const backpackQuantityAfterEffects = totalBackpackQuantity(currentState.raid.backpack)
       if (backpackQuantityAfterEffects > backpackQuantityBeforeEffects) {
         skillPracticeTriggers.push({ skillId: 'hoarding', reason: 'loot_added', minXp: 1, maxXp: 2 })
+        raiderXpTriggers.push({ reason: 'loot_found', minXp: 1, maxXp: 2 })
         const bonusLoot = maybeAwardLootBonusConsumables(currentState, rng, now)
         currentState = bonusLoot.state
         emitted.push(...bonusLoot.events)
@@ -408,8 +485,10 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
               ...currentState,
               stats: recordRobotDefeat(currentState.stats, robotId),
             }
+            raiderXpTriggers.push({ reason: 'robot_defeated', minXp: 4, maxXp: 7 })
           } else if (robotResult.event.id.endsWith('_escaped') && currentState.raider.hp > 0) {
             skillPracticeTriggers.push({ skillId: 'hiding_in_lockers', reason: 'robot_survived', minXp: 1, maxXp: 3 })
+            raiderXpTriggers.push({ reason: 'robot_survived', minXp: 2, maxXp: 4 })
           }
           emitted.push(robotResult.event)
         }
@@ -448,17 +527,29 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
             hp: currentState.raider.hp,
             maxHp: currentState.raider.maxHp,
           })
+          queueSuccessfulExtractionRaiderXp(raiderXpTriggers, {
+            backpack: backpackBeforeForce,
+            backpackValue: backpackValueBeforeForce,
+            dangerLevel: dangerLevelBeforeForce,
+            hp: currentState.raider.hp,
+            maxHp: currentState.raider.maxHp,
+          })
           const extraction = applySuccessfulExtraction(currentState, backpackBeforeForce, {
             zone: zoneBeforeForce,
             dangerLevel: dangerLevelBeforeForce,
           })
           currentState = extraction.state
+          if (extraction.levelCoinBonus > 0) {
+            emitted.push(raiderLevelExtractionBonusEvent(extraction.levelCoinBonus, state.tick, now))
+          }
           if (extraction.soldItemCount > 0) {
             skillPracticeTriggers.push({ skillId: 'hoarding', reason: 'stash_overflow_sale', minXp: 2, maxXp: 4 })
+            raiderXpTriggers.push({ reason: 'stash_overflow_sale', minXp: 2, maxXp: 4 })
             emitted.push(stashSaleEvent(extraction.soldItemCount, extraction.coinsGained, state.tick, now))
           }
         } else if (fromPhase === 'EXTRACTING' && forcedPhase === 'RAIDING') {
           skillPracticeTriggers.push({ skillId: 'hiding_in_lockers', reason: 'failed_extraction', minXp: 1, maxXp: 3 })
+          raiderXpTriggers.push({ reason: 'failed_extraction', minXp: 2, maxXp: 4 })
         }
       }
     }
@@ -530,7 +621,22 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
         skills: skillResult.skills,
       },
     }
+    for (const levelUp of skillResult.levelUps) {
+      raiderXpTriggers.push({ reason: 'skill_level_up', minXp: 5 + levelUp.level, maxXp: 7 + levelUp.level * 2 })
+    }
     emitted.push(...skillResult.levelUps.map(levelUp => skillLevelUpEvent(levelUp, state.tick, now, currentState.raid.phase)))
+  }
+
+  if (raiderXpTriggers.length > 0) {
+    const xpGains = rollRaiderXp(raiderXpTriggers, rng.clone())
+    const xpResult = applyRaiderXpGain(currentState.raider.levelXp, xpGains)
+      ...currentState,
+      raider: {
+        ...currentState.raider,
+        levelXp: xpResult.levelXp,
+      },
+    }
+    emitted.push(...xpResult.levelUps.map(levelUp => raiderLevelUpEvent(levelUp, state.tick, now, currentState.raid.phase)))
   }
 
   // ------------------------------------------------------------------

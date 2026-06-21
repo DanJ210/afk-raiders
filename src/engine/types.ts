@@ -99,6 +99,19 @@ export interface SkillDefinition {
   levelUpTextByLevel: string[]
 }
 
+export interface RaiderLevelTitleBand {
+  id: string
+  minLevel: number
+  maxLevel: number
+  name: string
+  description: string
+  levelUpText: string[]
+}
+
+export interface RaiderLevelContent {
+  titleBands: RaiderLevelTitleBand[]
+}
+
 export interface ZoneEntry extends ContentEntry {
   name: string
   description: string
@@ -203,6 +216,7 @@ export interface RaiderStats {
   hp: number
   maxHp: number
   mood: number        // -5 to +5
+  levelXp: number     // cumulative Raider Level XP; level is derived from this, capped at 75
   ratRating: number   // lifetime cowardice/looter score; both a shame and a badge
   deploysCount: number
   deathCount: number

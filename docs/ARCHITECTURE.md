@@ -48,6 +48,7 @@ afk-raiders/
 │   │   ├── signal.ts            # Signal regen + spend rules
 │   │   ├── shields.ts           # Shared shield damage + recharge rules
 │   │   ├── skills.ts            # Autonomous Raider skill progression + tiny modifiers
+│   │   ├── raiderLevel.ts       # Raider Level 1-75 XP curve, titles, and level-up text
 │   │   ├── homeStash.ts         # Stash transfer and overflow auto-sell
 │   │   ├── stats.ts             # Lifetime stat aggregation helpers
 │   │   ├── log.ts               # Centralized log append/capping
@@ -62,6 +63,7 @@ afk-raiders/
 │   │   ├── healing_items.json   # Current-raid-only bandages
 │   │   ├── shield_rechargers.json # Manual-use backpack shield consumables
 │   │   ├── skills.json          # Cardio/Hoarding/Hiding definitions and level-up text
+│   │   ├── raider_levels.json   # Raider Level title bands and level-up comms text
 │   │   ├── robots.json          # Anxieticks, Tattletales, Roomba Prime…
 │   │   ├── zones.json           # Damp Battlegrounds, etc.
 │   │   └── flavor.json          # Hub gossip, death quips, mood lines
@@ -70,7 +72,7 @@ afk-raiders/
 │   │   └── settingsStore.ts
 │   ├── components/
 │   │   ├── CommsLog.vue         # THE star — autoscrolling feed
-│   │   ├── RaiderCard.vue       # Stats, mood, Rat Rating
+│   │   ├── RaiderCard.vue       # Stats, mood, Raider Level, Rat Rating
 │   │   ├── BackpackPanel.vue
 │   │   ├── HomeStash.vue        # Persistent stash — extracted loot, ×N stacking
 │   │   ├── HandlerActions.vue   # Ready Up / Calm / Pressure / CALL EXTRACT
@@ -103,7 +105,7 @@ Writing jokes never touches engine code — and this is the future community-con
 
 Events may also set `"effects": { "forcePhase": "..." }` to force a phase change. This powers `extraction_events.json`: during the EXTRACTING window (~90s extraction + a final tick to call the return shuttle, 4 ticks total) events can make extraction fail (`forcePhase: "RAIDING"` — backpack kept), succeed early (`forcePhase: "HUB"` — loot transferred to the home stash), or end in tragedy (`forcePhase: "DOWNED"` — bag lost).
 
-Events may also gate themselves by `requires.dangerLevel` (`Low`, `Medium`, or `High`). The danger level is determined by a seeded combination of zone selection and zone condition selection (from `src/content/zones/zone_conditions.json`). The engine applies the matching danger-level profile in `src/engine/dangerLevelProfiles.ts`: Low has lower loot value and rarity bias, Medium raises loot upside and robot/extraction pressure, and High has the highest loot ceiling with the harshest robot and LZ risk. These profiles are the economy guardrail for risk/reward tuning.
+Events may also gate themselves by `requires.dangerLevel` (`Low`, `Medium`, or `High`). The danger level is determined by a seeded combination of zone selection and zone condition selection (from `src/content/zones/zone_conditions.json`). The engine applies the matching danger-level profile in `src/engine/dangerLevelProfiles.ts`: Low has lower loot value and rarity bias, Medium raises loot upside and ambient/robot/extraction pressure, and High has the highest loot ceiling with the harshest ambient pressure, robot pressure, and LZ risk. These profiles are the economy guardrail for risk/reward tuning.
 
 Loot rarity selection also applies a small raider-mood bias in `eventResolver.ts`: positive mood nudges weights toward higher rarity and negative mood nudges toward lower rarity. The effect is intentionally mild and always secondary to danger-level profile tuning.
 
@@ -133,7 +135,7 @@ Shield rechargers are intentionally different from bandages:
 - This is a contract, not a style preference: every processed damage instance must produce a comms damage line, even if the same tick later transitions the raider to DOWNED.
 
 ### 3. Signal as the only real input
-Signal regenerates (~1 per 10 min, capped at 5). Ready Up (2 Signal) starts DEPLOYING from HUB. Calm (1 Signal, internal action ID `CALM`) reduces current greed before the next greed check and lowers extraction chance (calm raider stays in longer). Pressure (1 Signal, internal action ID `PRESSURE`) increases current greed before the next greed check and raises extraction chance (rattled raider wants out sooner). CALL EXTRACT (3 Signal) forces an extraction attempt. During RAIDING only one action may be queued at a time, so action buttons lock until the next tick applies and clears the pending action. On every HUB return, raid pressure state resets (greed 0, force-extract cleared).
+Signal regenerates (~1 per 10 min, capped at 5). Ready Up (2 Signal) starts DEPLOYING from HUB. Calm (1 Signal, internal action ID `CALM`) reduces current greed before the next greed check and lowers extraction chance (calm raider stays in longer). Pressure (1 Signal, internal action ID `PRESSURE`) increases current greed before the next check and raises extraction chance (rattled raider wants out sooner). CALL EXTRACT (3 Signal) forces an extraction attempt. When the Raider is low on HP and has no current-raid bandages, the Greed Check adds a survival-instinct extraction bonus, but that bonus is dampened by danger level so Medium and High conditions still punish unattended raids. During RAIDING only one action may be queued at a time, so action buttons lock until the next tick applies and clears the pending action. On every HUB return, raid pressure state resets (greed 0, force-extract cleared).
 
 ### 4. Lifetime stat collection
 `GameState.stats` tracks long-lived outcomes: extraction/death totals and context (zone + zone/time), robot defeats, and healing item usage.
@@ -151,6 +153,49 @@ The Handler never spends skill points. Skill power should stay subtle and inspec
 - Hiding in Lockers trims failed robot encounter damage before shield-aware damage is applied, with damage narration showing the reduction when it matters.
 
 Save migration must preserve compatible local saves. Version 3 saves are upgraded to the current save version by backfilling initialized skill state rather than being discarded.
+
+### 4c. Raider Level
+`GameState.raider.levelXp` stores cumulative Raider Level XP. The current level is derived by `src/engine/raiderLevel.ts`, starts at 1, and caps at 75. The save never stores a separate level number, which prevents XP/level drift during migration or catch-up. The XP curve is intentionally long: Level 2 requires multiple meaningful outcomes rather than one lucky extraction, and the Level 75 cap requires hundreds of thousands of cumulative XP so automatic/offline play does not burn through progression quickly.
+
+Raider Level is the long-term career spine, separate from both Rat Rating and the three skill tracks:
+- Rat Rating remains an unbounded cowardly/looty shame-pride score.
+- Skills are specific bad habits that level 1-5 and provide tiny modifiers.
+- Raider Level summarizes broad accumulated field experience and title-band status.
+
+`processTick()` queues Raider XP from meaningful autonomous outcomes: successful extraction, extracted loot value/quantity, robot defeat or survival, High-danger survival, close-call extraction, hidden-pocket saves, stash overflow, death recovery, failed extraction, and skill level-ups. XP rolls use the seeded RNG, and level-up comms are emitted before the final log append. If multiple levels are crossed in one tick or offline catch-up step, the engine emits a single compact level-up line for the highest crossed level to avoid log spam.
+
+Routine XP awards stay small by design. Normal loot finds are a trickle, death recovery is a consolation prize, and the biggest repeatable gains come from successful extractions with meaningful loot. Danger, close calls, robots, hidden-pocket saves, and skill level-ups add flavor-weighted bonuses without turning Raider Level into a fast grind.
+
+Raider Level benefits are intentionally light-power and title-band based:
+- Levels 1-9: title/progress only, no stipend.
+- Levels 10-18: +1 coin extraction stipend.
+- Levels 19-27: +2 coin extraction stipend.
+- Levels 28-36: +3 coin extraction stipend.
+- Levels 37-45: +4 coin extraction stipend.
+- Levels 46-54: +5 coin extraction stipend.
+- Levels 55-63: +6 coin extraction stipend.
+- Levels 64-70: +7 coin extraction stipend.
+- Levels 71-75: +8 coin extraction stipend.
+
+The stipend is paid only on successful extraction and is narrated with `raider_level_extraction_stipend`. Levels deliberately do not add HP, raw damage, or major extraction safety; skills and danger-level profiles remain the mechanical tuning levers. Future content can use Raider Level for title-gated comms variants, hub gags, achievements, or prestige requirements.
+
+### 4d. Balance guardrails
+Raid balance is guarded as an engine contract, not just a table of current constants. `tests/engine/raidBalance.test.ts` runs seeded starter-raider simulations across Low, Medium, and High danger and asserts the shape we want:
+- Low danger remains extractable often enough for the idle comedy loop.
+- Medium danger downs starter raiders frequently when the Handler does not intervene.
+- High danger is deadlier than Medium and should feel like a manual-intervention zone.
+
+The same test file also protects the tuning hierarchy. Danger-level profiles must stay monotonic: loot upside, ambient RAIDING downed pressure, robot encounter pressure, robot failure damage, and extraction risk all rise from Low to Medium to High, while safe extraction weighting falls. Skill and Raider Level benefits are capped so progression never flattens that curve; Raider Level remains title/stipend progression, and max skill mitigation still leaves High-danger robot failures harsher than Medium.
+
+When changing robot weights, danger profiles, greed/extraction math, healing, shields, or progression modifiers, update the tests only if the new design intentionally changes these contracts. Handler survivability should be proven through explicit intervention paths such as manual healing, shield recharger use, and CALL EXTRACT rather than by making autonomous High-danger raids broadly safe.
+
+Robot balance has its own focused guardrail in `tests/engine/robotBalance.test.ts`. It forces failed combat rolls against the real `robots.json` entries and verifies the tier math directly: max failed damage rises by deadliness tier, nasty/deadly robots can kill wounded starter raiders, weak/moderate/dangerous robots remain nonlethal, Raider Level does not passively reduce robot damage, and existing mitigation sources help without making High-danger robot damage softer than Medium baseline.
+
+Do not add passive Raider Level damage resistance for the MVP. That would make the broad level spine behave like a hidden combat stat and would flatten the danger curve. Keep resistance simple: positive mood already provides the soft resilience trim, Hiding in Lockers is the tiny skill-specific robot mitigation, and shields/consumables/Handler actions are the meaningful survival levers.
+
+Visible Raider Level title bands and level-up text live in `src/content/raider_levels.json`. The first UI surface is `RaiderCard.vue`, which shows the derived level, title, progress to next level, and current stipend benefit while keeping Rat Rating visible as its own row.
+
+Save migration upgrades older saves to version 5 by backfilling missing `levelXp`. Legacy profiles receive a small deterministic XP estimate from extracts, deaths, and deploys, not from raw Rat Rating.
 
 ### 5. Phase timings and failure states
 - Tick cadence remains 30 seconds.

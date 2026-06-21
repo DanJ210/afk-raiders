@@ -4,10 +4,12 @@ import { useNow } from '@vueuse/core'
 import { useGameStore } from '../stores/gameStore'
 import { zoneConditionByDangerLevel, zoneDescription, zoneName } from '../utils/zones'
 import { TICK_INTERVAL_MS } from '../engine/catchUp'
+import { useRaiderLevelViewModel } from '../composables/useRaiderLevelViewModel'
 import RaiderStatusHeaderStats from './RaiderStatusHeaderStats.vue'
 
 const store = useGameStore()
 const raider = computed(() => store.raider)
+const levelView = useRaiderLevelViewModel(raider)
 const activeShieldRecharge = computed(() => store.raid.activeShieldRecharge)
 const currentZoneName = computed(() => zoneName(store.raid.zone))
 const currentZoneDescription = computed(() => zoneDescription(store.raid.zone))
@@ -96,6 +98,29 @@ function formatDuration(ms: number): string {
       <div v-if="showRaidTimer" class="flex items-center gap-2 min-w-0">
         <span class="font-mono text-xs text-muted min-w-raider-label">Zone Nuke In</span>
         <span class="font-mono text-raider-value text-danger font-bold">{{ raidTimerText }}</span>
+      </div>
+
+      <div class="flex flex-col gap-1 min-w-0">
+        <div class="flex items-center gap-2 min-w-0 max-[600px]:items-start max-[600px]:flex-wrap">
+          <span class="font-mono text-xs text-muted min-w-raider-label max-[600px]:min-w-0">Raider Level</span>
+          <span
+            class="font-mono text-raider-value text-text min-w-0 wrap-anywhere"
+            :title="levelView.progress.value.title.description"
+          >
+            Lvl {{ levelView.progress.value.level }} · {{ levelView.progress.value.title.name }}
+          </span>
+        </div>
+        <div class="flex items-center gap-2 min-w-0 max-[600px]:flex-wrap">
+          <span class="min-w-raider-label max-[600px]:hidden" aria-hidden="true"></span>
+          <div class="progress-track min-w-0" aria-hidden="true">
+            <div class="progress-fill bg-accent" :style="{ width: `${levelView.progress.value.progressPercent}%` }"></div>
+          </div>
+          <span class="shrink-0 font-mono text-raider-tiny text-muted">{{ levelView.xpLabel.value }}</span>
+        </div>
+        <div class="flex items-center gap-2 min-w-0">
+          <span class="min-w-raider-label max-[600px]:hidden" aria-hidden="true"></span>
+          <span class="font-mono text-raider-tiny text-muted min-w-0 wrap-anywhere">{{ levelView.benefitLabel.value }}</span>
+        </div>
       </div>
 
       <div class="flex items-center gap-2 min-w-0">

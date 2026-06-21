@@ -14,9 +14,12 @@ import { createInitialLifetimeStats } from '../engine/stats.js'
 import { sellStashOverflow } from '../engine/homeStash.js'
 import { createStarterShieldState } from '../engine/shields.js'
 import { normalizeSkills } from '../engine/skills.js'
+import { normalizeRaiderLevelXp } from '../engine/raiderLevel.js'
 
 const STORAGE_KEY = 'afk-raiders-save'
 const MIN_SUPPORTED_SAVE_VERSION = 3
+
+type LegacyRaiderStats = Omit<GameState['raider'], 'levelXp'> & { levelXp?: unknown }
 
 export interface SaveData {
   state: GameState
@@ -45,6 +48,13 @@ function seedLegacyLifetimeStats(state: GameState): RaiderLifetimeStats {
   }
 }
 
+function seedLegacyRaiderLevelXp(raider: Pick<GameState['raider'], 'extractCount' | 'deathCount' | 'deploysCount'>): number {
+  const extracts = Math.max(0, raider.extractCount ?? 0)
+  const deaths = Math.max(0, raider.deathCount ?? 0)
+  const deploys = Math.max(0, raider.deploysCount ?? 0)
+  return normalizeRaiderLevelXp(extracts * 60 + deaths * 15 + deploys * 4)
+}
+
 export interface GamePersistenceReturn {
   loadSave: () => SaveData | null
   persistSave: (state: GameState, seed: number, lastTickAt: number) => void
@@ -65,12 +75,16 @@ export function useGamePersistence(): GamePersistenceReturn {
       // Migration: older saves lack coins, and stashes saved while the limit
       // was not enforced may exceed it — sell the overflow rather than delete it.
       const { pendingReadyUp: _pendingReadyUp, ...loadedState } = data.state as GameState & { pendingReadyUp?: boolean }
+      const loadedRaider = loadedState.raider as LegacyRaiderStats
       const sale = sellStashOverflow(loadedState.homeStash)
       data.state = {
         ...loadedState,
         raider: {
           ...loadedState.raider,
           mood: clampMood(loadedState.raider.mood),
+          levelXp: loadedRaider.levelXp === undefined
+            ? seedLegacyRaiderLevelXp(loadedRaider)
+            : normalizeRaiderLevelXp(loadedRaider.levelXp),
           skills: normalizeSkills(loadedState.raider.skills),
         },
         signalAmplifiers: loadedState.signalAmplifiers ?? 0,

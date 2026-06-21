@@ -153,6 +153,33 @@ describe('greedCheck', () => {
     expect(wounded.extract).toBeGreaterThan(baseline.extract)
   })
 
+  it('danger level dampens the low-HP no-bandage extraction bonus', () => {
+    const lowDanger = countOutcomes(makeRaid({ greedLevel: 20, dangerLevel: 'Low' }), 500, {
+      calmed: false,
+      pressured: false,
+      currentHp: 35,
+      maxHp: 100,
+      hasHealingItems: false,
+    })
+    const mediumDanger = countOutcomes(makeRaid({ greedLevel: 20, dangerLevel: 'Medium' }), 500, {
+      calmed: false,
+      pressured: false,
+      currentHp: 35,
+      maxHp: 100,
+      hasHealingItems: false,
+    })
+    const highDanger = countOutcomes(makeRaid({ greedLevel: 20, dangerLevel: 'High' }), 500, {
+      calmed: false,
+      pressured: false,
+      currentHp: 35,
+      maxHp: 100,
+      hasHealingItems: false,
+    })
+
+    expect(mediumDanger.extract).toBeLessThan(lowDanger.extract)
+    expect(highDanger.extract).toBeLessThan(mediumDanger.extract)
+  })
+
   it('low HP with bandages does not get the no-bandage extraction bonus', () => {
     const woundedNoBandages = countOutcomes(makeRaid({ greedLevel: 20 }), 500, {
       calmed: false,

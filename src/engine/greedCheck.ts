@@ -18,14 +18,16 @@
  *   Calm     decreases extract chance (raider is calm, resilient, pushes longer)
  *   Pressure increases extract chance (raider gets nervous, wants out sooner)
  *   CALL_EXTRACT forces the extraction branch regardless of RNG
+ *   Low HP without field meds adds a survival-instinct extraction bonus, dampened by danger level
  *
  * Greed is event-driven: this function never increases greed by itself.
  *
  * Roll order: death check first, then extract check, else push deeper.
  */
 
-import type { RaidState } from './types.js'
+import type { DangerLevel, RaidState } from './types.js'
 import type { RNG } from './rng.js'
+import { getDangerLevelProfile } from './dangerLevelProfiles.js'
 
 export type GreedOutcome = 'PUSH_DEEPER' | 'EXTRACT' | 'DOWNED'
 
@@ -42,14 +44,25 @@ const GREED_DEATH_THRESHOLD = 90
 const GREED_DEATH_RATE = 0.0003         // per greed point above threshold
 const CALM_EXTRACT_PENALTY = 0.01  // calm raider stays in longer — extraction less likely
 const PRESSURE_EXTRACT_BONUS = 0.015      // nervous raider wants out sooner — extraction more likely
+const LOW_HP_EXTRACTION_DANGER_MULTIPLIER: Record<DangerLevel, number> = {
+  Low: 1,
+  Medium: 0.25,
+  High: 0.1,
+}
 
-function lowHpExtractionBonus(currentHp: number | undefined, maxHp: number | undefined, hasHealingItems: boolean): number {
+function lowHpExtractionBonus(
+  currentHp: number | undefined,
+  maxHp: number | undefined,
+  hasHealingItems: boolean,
+  dangerLevel: DangerLevel | null,
+): number {
   if (currentHp === undefined || maxHp === undefined || maxHp <= 0 || hasHealingItems) return 0
 
   const hpRatio = currentHp / maxHp
-  if (hpRatio <= 0.25) return 0.08
-  if (hpRatio <= 0.50) return 0.05
-  if (hpRatio <= 0.75) return 0.025
+  const dangerMultiplier = dangerLevel ? LOW_HP_EXTRACTION_DANGER_MULTIPLIER[dangerLevel] : 1
+  if (hpRatio <= 0.25) return 0.08 * dangerMultiplier
+  if (hpRatio <= 0.50) return 0.05 * dangerMultiplier
+  if (hpRatio <= 0.75) return 0.025 * dangerMultiplier
   return 0
 }
 
@@ -77,15 +90,19 @@ export function runGreedCheck(
   let extractChance = BASE_EXTRACT_CHANCE - greedLevel * GREED_EXTRACT_PENALTY
   if (opts.calmed) extractChance -= CALM_EXTRACT_PENALTY
   if (opts.pressured) extractChance += PRESSURE_EXTRACT_BONUS
-  extractChance += lowHpExtractionBonus(opts.currentHp, opts.maxHp, opts.hasHealingItems ?? false)
+  extractChance += lowHpExtractionBonus(opts.currentHp, opts.maxHp, opts.hasHealingItems ?? false, raid.dangerLevel)
   extractChance += opts.extractionChanceBonus ?? 0
   extractChance = Math.min(MAX_EXTRACT_CHANCE, Math.max(MIN_EXTRACT_CHANCE, extractChance))
 
-  // Calculate death probability (only kicks in above greed threshold)
-  const deathChance = Math.max(
+  const profile = getDangerLevelProfile(raid.dangerLevel)
+
+  // Calculate death probability. Danger-level pressure is always tiny per tick,
+  // while greed-specific failure only kicks in above the greed threshold.
+  const greedDeathChance = Math.max(
     0,
     (greedLevel - GREED_DEATH_THRESHOLD) * GREED_DEATH_RATE,
   ) * Math.max(0, opts.deathChanceMultiplier ?? 1)
+  const deathChance = Math.max(0, profile.ambientRaidDeathChance) + greedDeathChance
 
   const roll = rng.next()
 

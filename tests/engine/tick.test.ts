@@ -8,6 +8,7 @@ import { createRNG } from '../../src/engine/rng'
 import type { RNG } from '../../src/engine/rng'
 import { maybeAwardLootBonusConsumables, processTick } from '../../src/engine/tick'
 import { createInitialState } from '../../src/engine/initialState'
+import { getRaiderLevelFromXp, xpRequiredForLevel } from '../../src/engine/raiderLevel'
 
 const FIXED_SEED = 42
 
@@ -241,6 +242,75 @@ describe('deterministic snapshot', () => {
     expect(result.state.raider.skills.hoarding.xp).toBeGreaterThan(0)
     expect(result.state.raider.skills.hiding_in_lockers.xp).toBeGreaterThan(0)
     expect(result.events.some(event => event.id === 'skill_cardio_level_1')).toBe(true)
+  })
+
+  it('awards Raider Level XP and level-up comms on extraction', () => {
+    const rng = createRNG(FIXED_SEED)
+    const initial = createInitialState(0)
+    const state = {
+      ...initial,
+      raider: {
+        ...initial.raider,
+        levelXp: xpRequiredForLevel(2) - 1,
+      },
+      raid: {
+        ...initial.raid,
+        zone: 'damp_battlegrounds',
+        dangerLevel: 'Medium' as const,
+        phase: 'EXTRACTING' as const,
+        phaseTicksRemaining: 1,
+        backpack: [
+          {
+            itemId: 'water_bottle',
+            name: 'Water Bottle',
+            value: 5,
+            rarity: 1,
+            quantity: 2,
+          },
+        ],
+        backpackValue: 10,
+      },
+    }
+
+    const result = processTick(state, rng, 0)
+
+    expect(result.state.raider.levelXp).toBeGreaterThanOrEqual(xpRequiredForLevel(2))
+    expect(getRaiderLevelFromXp(result.state.raider.levelXp)).toBe(2)
+    expect(result.events.some(event => event.id === 'raider_level_2')).toBe(true)
+  })
+
+  it('pays the Raider Level extraction stipend from unlocked title bands', () => {
+    const rng = createRNG(FIXED_SEED)
+    const initial = createInitialState(0)
+    const state = {
+      ...initial,
+      raider: {
+        ...initial.raider,
+        levelXp: xpRequiredForLevel(10),
+      },
+      raid: {
+        ...initial.raid,
+        zone: 'damp_battlegrounds',
+        dangerLevel: 'Low' as const,
+        phase: 'EXTRACTING' as const,
+        phaseTicksRemaining: 1,
+        backpack: [
+          {
+            itemId: 'water_bottle',
+            name: 'Water Bottle',
+            value: 5,
+            rarity: 1,
+            quantity: 1,
+          },
+        ],
+        backpackValue: 5,
+      },
+    }
+
+    const result = processTick(state, rng, 0)
+
+    expect(result.state.coins).toBe(1)
+    expect(result.events.some(event => event.id === 'raider_level_extraction_stipend')).toBe(true)
   })
 
   it('downs the raider when HP reaches 0, losing the backpack', () => {
