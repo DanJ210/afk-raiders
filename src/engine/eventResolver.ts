@@ -97,22 +97,40 @@ function healingMoodGain(item: HealingItemStack): number {
 }
 
 export function describeShieldDamage(damage: ShieldDamageResult): string {
-  const resilienceText = damage.resilienceHpSaved && damage.resilienceHpSaved > 0
-    ? ` Resilience saved ${damage.resilienceHpSaved} HP.`
+  const incomingText = damage.incomingDamage > 0 && (
+    damage.preShieldDamageReduced > 0
+    || damage.shieldDamageReduced > 0
+    || (damage.nonlethalFloorDamagePrevented ?? 0) > 0
+  )
+    ? `Incoming ${damage.incomingDamage} damage. `
     : ''
-  const skillText = damage.skillDamageReduced && damage.skillDamageReduced > 0
-    ? ` Hiding in Lockers ducked ${damage.skillDamageReduced} incoming damage.`
+  const nonlethalFloorText = damage.nonlethalFloorDamagePrevented && damage.nonlethalFloorDamagePrevented > 0
+    ? ` Nonlethal floor prevented ${damage.nonlethalFloorDamagePrevented} damage.`
+    : ''
+  const preShieldParts: string[] = []
+  if (damage.skillDamageReduced && damage.skillDamageReduced > 0) {
+    preShieldParts.push(`Hiding in Lockers ducked ${damage.skillDamageReduced} incoming damage`)
+  }
+  if (damage.resilienceDamageReduced && damage.resilienceDamageReduced > 0) {
+    preShieldParts.push(`Resilience mitigated ${damage.resilienceDamageReduced} damage`)
+  }
+  const preShieldText = preShieldParts.length > 0
+    ? `${preShieldParts.join('; ')} before shields. `
     : ''
 
   if (!damage.mitigated || damage.shieldChargeLost <= 0) {
-    return `Took ${damage.hpDamage} damage.${resilienceText}${skillText}`
+    return `${incomingText}${preShieldText}Took ${damage.hpDamage} damage.${nonlethalFloorText}`
   }
+
+  const shieldMitigationText = damage.shieldDamageReduced > 0
+    ? ` and mitigated ${damage.shieldDamageReduced} damage`
+    : ''
 
   if (damage.hpDamage <= 0) {
-    return `Shield lost ${damage.shieldChargeLost} charge. No HP damage landed.${resilienceText}${skillText}`
+    return `${incomingText}${preShieldText}Shield lost ${damage.shieldChargeLost} charge${shieldMitigationText}. No HP damage landed.${nonlethalFloorText}`
   }
 
-  return `Shield lost ${damage.shieldChargeLost} charge; ${damage.hpDamage} HP damage landed.${resilienceText}${skillText}`
+  return `${incomingText}${preShieldText}Shield lost ${damage.shieldChargeLost} charge${shieldMitigationText}; ${damage.hpDamage} HP damage landed.${nonlethalFloorText}`
 }
 
 /** Filter events valid for the current game context */
@@ -507,9 +525,22 @@ function canRobotEncounterBeLethal(state: GameState, robot: RobotEntry): boolean
 function applyRobotDamage(
   state: GameState,
   robot: RobotEntry,
-  rawDamage: number,
+  incomingDamage: number,
   skillDamageReduced: number = 0,
 ): { raider: GameState['raider']; raid: GameState['raid']; damage: number; shieldDamage: ShieldDamageResult } {
+  const deliveredDamage = Math.max(0, Math.ceil(incomingDamage))
+  const skillReduction = Math.max(0, Math.min(deliveredDamage, Math.floor(skillDamageReduced)))
+  const damageAfterSkills = Math.max(0, deliveredDamage - skillReduction)
+  const moodResilienceReductionPercent = getMoodResilienceReductionPercent(state.raider.mood)
+  const levelResilienceReductionPercent = getRaiderLevelBenefitProfile(state.raider.levelXp).resilienceReductionPercent
+  const resilienceReductionPercent = moodResilienceReductionPercent + levelResilienceReductionPercent
+  const damageAfterResilience = resilienceReductionPercent > 0 && damageAfterSkills > 0
+    ? Math.max(1, Math.floor(damageAfterSkills * (1 - (resilienceReductionPercent / 100))))
+    : damageAfterSkills
+  const resilienceDamageReduced = Math.max(0, damageAfterSkills - damageAfterResilience)
+  const preShieldDamage = damageAfterResilience
+  const preShieldDamageReduced = Math.max(0, deliveredDamage - preShieldDamage)
+
   if (state.raider.hp <= 0) {
     return {
       raider: state.raider,
@@ -518,55 +549,58 @@ function applyRobotDamage(
       shieldDamage: {
         raider: state.raider,
         raid: state.raid,
+        incomingDamage: deliveredDamage,
+        preShieldDamage,
+        preShieldDamageReduced,
         hpDamage: 0,
         shieldChargeLost: 0,
         shieldDurabilityLost: 0,
+        shieldDamageReduced: 0,
         mitigated: false,
-        skillDamageReduced: skillDamageReduced > 0 ? skillDamageReduced : undefined,
+        resilienceDamageReduced: resilienceDamageReduced > 0 ? resilienceDamageReduced : undefined,
+        skillDamageReduced: skillReduction > 0 ? skillReduction : undefined,
       },
     }
   }
 
-  const shielded = applyShieldedDamage(state.raider, state.raid, rawDamage)
+  const shielded = applyShieldedDamage(state.raider, state.raid, preShieldDamage)
+  const shieldDamage = {
+    ...shielded,
+    incomingDamage: deliveredDamage,
+    preShieldDamage,
+    preShieldDamageReduced,
+    resilienceDamageReduced: resilienceDamageReduced > 0 ? resilienceDamageReduced : undefined,
+    skillDamageReduced: skillReduction > 0 ? skillReduction : undefined,
+  }
+
   if (state.raider.maxHp <= 0) {
     return {
       raider: shielded.raider,
       raid: shielded.raid,
       damage: state.raider.hp - shielded.raider.hp,
-      shieldDamage: shielded,
+      shieldDamage,
     }
   }
 
   const hpAfterShield = shielded.raider.hp
   let hp = hpAfterShield
-  let resilienceHpSaved = 0
   if (!canRobotEncounterBeLethal(state, robot)) {
     const nonlethalFloor = state.raider.hp / state.raider.maxHp > ROBOT_LETHAL_HP_RATIO
       ? Math.ceil(state.raider.maxHp * ROBOT_NONLETHAL_MIN_HP_RATIO)
       : 1
     hp = Math.max(nonlethalFloor, hp)
   }
-
-  const moodResilienceReductionPercent = getMoodResilienceReductionPercent(state.raider.mood)
-  const levelResilienceReductionPercent = getRaiderLevelBenefitProfile(state.raider.levelXp).resilienceReductionPercent
-  const resilienceMultiplier = 1 - ((moodResilienceReductionPercent + levelResilienceReductionPercent) / 100)
-  if (resilienceMultiplier < 1 && hp < state.raider.hp) {
-    const mitigatedDamage = Math.max(1, Math.floor((state.raider.hp - hp) * resilienceMultiplier))
-    const nextHp = Math.max(state.raider.hp - mitigatedDamage, hp)
-    resilienceHpSaved = Math.max(0, nextHp - hp)
-    hp = nextHp
-  }
+  const nonlethalFloorDamagePrevented = Math.max(0, hp - hpAfterShield)
 
   return {
     raider: { ...shielded.raider, hp },
     raid: shielded.raid,
     damage: state.raider.hp - hp,
     shieldDamage: {
-      ...shielded,
+      ...shieldDamage,
       raider: { ...shielded.raider, hp },
       hpDamage: state.raider.hp - hp,
-      resilienceHpSaved: resilienceHpSaved > 0 ? resilienceHpSaved : undefined,
-      skillDamageReduced: skillDamageReduced > 0 ? skillDamageReduced : undefined,
+      nonlethalFloorDamagePrevented: nonlethalFloorDamagePrevented > 0 ? nonlethalFloorDamagePrevented : undefined,
     },
   }
 }
@@ -613,7 +647,7 @@ export function resolveRobotEncounter(
   const rawDamageBeforeSkills = Math.ceil(robot.menace * ROBOT_DAMAGE_PER_MENACE * damageMultiplier)
   const rawDamage = Math.ceil(rawDamageBeforeSkills * skillModifiers.robotFailureDamageMultiplier)
   const skillDamageReduced = Math.max(0, rawDamageBeforeSkills - rawDamage)
-  const damageResult = applyRobotDamage(state, robot, rawDamage, skillDamageReduced)
+  const damageResult = applyRobotDamage(state, robot, rawDamageBeforeSkills, skillDamageReduced)
   return {
     state: {
       ...state,

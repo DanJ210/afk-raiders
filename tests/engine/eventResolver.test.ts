@@ -420,11 +420,11 @@ describe('applyEffects — backpack item behavior', () => {
     expect(neutralResult).not.toBeNull()
     expect(upbeatResult).not.toBeNull()
     expect(neutralResult!.event.text).toContain('Shield lost 16 charge')
-    expect(upbeatResult!.event.text).toContain('Shield lost 16 charge')
-    expect(upbeatResult!.event.text).toContain('Resilience saved 1 HP')
+    expect(neutralResult!.event.text).toContain('Shield lost 16 charge and mitigated 6 damage; 10 HP damage landed')
+    expect(upbeatResult!.event.text).toContain('Incoming 16 damage. Resilience mitigated 2 damage before shields. Shield lost 14 charge and mitigated 5 damage; 9 HP damage landed')
     expect(upbeatResult!.state.raider.hp).toBeGreaterThan(neutralResult!.state.raider.hp)
-    expect(upbeatResult!.state.raid.shield?.charge).toBe(neutralResult!.state.raid.shield?.charge)
-    expect(upbeatResult!.state.raid.shield?.durability).toBe(neutralResult!.state.raid.shield?.durability)
+    expect(upbeatResult!.state.raid.shield?.charge).toBeGreaterThan(neutralResult!.state.raid.shield!.charge)
+    expect(upbeatResult!.state.raid.shield?.durability).toBeGreaterThan(neutralResult!.state.raid.shield!.durability)
   })
 
   it('shows the mood resilience callout even when no shield is active', () => {
@@ -437,8 +437,9 @@ describe('applyEffects — backpack item behavior', () => {
     const result = resolveRobotEncounter(state, 'roomba_prime', createRNG(1), 0)
 
     expect(result).not.toBeNull()
+    expect(result!.event.text).toContain('Incoming 16 damage')
+    expect(result!.event.text).toContain('Resilience mitigated 2 damage before shields')
     expect(result!.event.text).toContain('Took 14 damage')
-    expect(result!.event.text).toContain('Resilience saved 2 HP')
     expect(result!.state.raider.hp).toBe(86)
   })
 
@@ -461,7 +462,7 @@ describe('applyEffects — backpack item behavior', () => {
     expect(lowLevelResult).not.toBeNull()
     expect(maxLevelResult).not.toBeNull()
     expect(maxLevelResult!.state.raider.hp).toBeGreaterThan(lowLevelResult!.state.raider.hp)
-    expect(maxLevelResult!.event.text).toContain('Resilience saved')
+    expect(maxLevelResult!.event.text).toContain('Resilience mitigated')
   })
 
   it('scales failed robot damage by danger-level profile', () => {
@@ -522,6 +523,22 @@ describe('applyEffects — backpack item behavior', () => {
     expect(result!.event.text).toContain('Shield lost 40 charge')
     expect(result!.event.text).toContain('29 HP damage landed')
     expect(result!.state.raider.hp).toBe(71)
+  })
+
+  it('calls out damage prevented by the nonlethal robot floor', () => {
+    const initial = createInitialState(0)
+    const state = {
+      ...initial,
+      raid: { ...initial.raid, shield: null },
+    }
+    const result = resolveRobotEncounter(state, 'tattletale', createRNG(7), 0, { damageMultiplier: 14 })
+
+    expect(result).not.toBeNull()
+    expect(result!.event.id).toBe('robot_tattletale_escaped')
+    expect(result!.event.text).toContain('Incoming 84 damage')
+    expect(result!.event.text).toContain('Took 75 damage')
+    expect(result!.event.text).toContain('Nonlethal floor prevented 9 damage')
+    expect(result!.state.raider.hp).toBe(25)
   })
 
   it('only lets nasty and deadly robots down already-wounded raiders', () => {

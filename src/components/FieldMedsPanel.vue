@@ -26,7 +26,7 @@ function apply(itemId: string) {
 <template>
   <div v-if="hasItems" class="flex flex-col gap-1.5 mb-2.5">
     <span class="subpanel-label">Field Meds</span>
-    <ul class="flex flex-col gap-[5px] list-none p-0 m-0">
+    <ul class="flex flex-col gap-comms-entry-y list-none p-0 m-0">
       <li v-for="item in items" :key="item.itemId" class="item-row">
         <span :class="rarityBarClass(item.rarity)" :title="rarityLabel(item.rarity)" aria-hidden="true" />
         <span>{{ item.name }}</span>

@@ -54,6 +54,8 @@
   --spacing-comms-entry-y: 0.3125rem;
   --spacing-comms-timestamp: 3.75rem;
   --spacing-raider-label: 4.5rem;
+  --spacing-shield-label-compact: 2.625rem;
+  --spacing-shield-label: 3.625rem;
 
   /* Component typography */
   --text-raider-tiny: 0.7rem;
@@ -62,6 +64,7 @@
 
   /* Component motion */
   --duration-greed-fill: 400ms;
+  --duration-shield-recharge: 250ms;
 }
 
 /* -----------------------------------------------------------------------

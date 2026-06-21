@@ -35,11 +35,16 @@ export function hasActiveShield(shield: ShieldState | null): shield is ShieldSta
 export interface ShieldDamageResult {
   raider: RaiderStats
   raid: RaidState
+  incomingDamage: number
+  preShieldDamage: number
+  preShieldDamageReduced: number
   hpDamage: number
   shieldChargeLost: number
   shieldDurabilityLost: number
+  shieldDamageReduced: number
   mitigated: boolean
-  resilienceHpSaved?: number
+  nonlethalFloorDamagePrevented?: number
+  resilienceDamageReduced?: number
   skillDamageReduced?: number
 }
 
@@ -65,9 +70,13 @@ export function applyShieldedDamage(
     return {
       raider,
       raid,
+      incomingDamage: 0,
+      preShieldDamage: 0,
+      preShieldDamageReduced: 0,
       hpDamage: 0,
       shieldChargeLost: 0,
       shieldDurabilityLost: 0,
+      shieldDamageReduced: 0,
       mitigated: false,
     }
   }
@@ -77,9 +86,13 @@ export function applyShieldedDamage(
     return {
       raider: { ...raider, hp },
       raid,
+      incomingDamage: damage,
+      preShieldDamage: damage,
+      preShieldDamageReduced: 0,
       hpDamage: raider.hp - hp,
       shieldChargeLost: 0,
       shieldDurabilityLost: 0,
+      shieldDamageReduced: 0,
       mitigated: false,
     }
   }
@@ -103,9 +116,13 @@ export function applyShieldedDamage(
         durability: Math.max(0, Number((shield.durability - durabilityLost).toFixed(2))),
       },
     },
+    incomingDamage: damage,
+    preShieldDamage: damage,
+    preShieldDamageReduced: 0,
     hpDamage: raider.hp - hp,
     shieldChargeLost: chargeLost,
     shieldDurabilityLost: durabilityLost,
+    shieldDamageReduced: Math.max(0, damage - (raider.hp - hp)),
     mitigated: true,
   }
 }
