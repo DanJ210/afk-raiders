@@ -97,8 +97,15 @@ function healingMoodGain(item: HealingItemStack): number {
 }
 
 export function describeShieldDamage(damage: ShieldDamageResult): string {
-  const incomingText = damage.incomingDamage > 0 && (damage.preShieldDamageReduced > 0 || damage.shieldDamageReduced > 0)
+  const incomingText = damage.incomingDamage > 0 && (
+    damage.preShieldDamageReduced > 0
+    || damage.shieldDamageReduced > 0
+    || (damage.nonlethalFloorDamagePrevented ?? 0) > 0
+  )
     ? `Incoming ${damage.incomingDamage} damage. `
+    : ''
+  const nonlethalFloorText = damage.nonlethalFloorDamagePrevented && damage.nonlethalFloorDamagePrevented > 0
+    ? ` Nonlethal floor prevented ${damage.nonlethalFloorDamagePrevented} damage.`
     : ''
   const preShieldParts: string[] = []
   if (damage.skillDamageReduced && damage.skillDamageReduced > 0) {
@@ -112,7 +119,7 @@ export function describeShieldDamage(damage: ShieldDamageResult): string {
     : ''
 
   if (!damage.mitigated || damage.shieldChargeLost <= 0) {
-    return `${incomingText}${preShieldText}Took ${damage.hpDamage} damage.`
+    return `${incomingText}${preShieldText}Took ${damage.hpDamage} damage.${nonlethalFloorText}`
   }
 
   const shieldMitigationText = damage.shieldDamageReduced > 0
@@ -120,10 +127,10 @@ export function describeShieldDamage(damage: ShieldDamageResult): string {
     : ''
 
   if (damage.hpDamage <= 0) {
-    return `${incomingText}${preShieldText}Shield lost ${damage.shieldChargeLost} charge${shieldMitigationText}. No HP damage landed.`
+    return `${incomingText}${preShieldText}Shield lost ${damage.shieldChargeLost} charge${shieldMitigationText}. No HP damage landed.${nonlethalFloorText}`
   }
 
-  return `${incomingText}${preShieldText}Shield lost ${damage.shieldChargeLost} charge${shieldMitigationText}; ${damage.hpDamage} HP damage landed.`
+  return `${incomingText}${preShieldText}Shield lost ${damage.shieldChargeLost} charge${shieldMitigationText}; ${damage.hpDamage} HP damage landed.${nonlethalFloorText}`
 }
 
 /** Filter events valid for the current game context */
@@ -583,6 +590,7 @@ function applyRobotDamage(
       : 1
     hp = Math.max(nonlethalFloor, hp)
   }
+  const nonlethalFloorDamagePrevented = Math.max(0, hp - hpAfterShield)
 
   return {
     raider: { ...shielded.raider, hp },
@@ -592,6 +600,7 @@ function applyRobotDamage(
       ...shieldDamage,
       raider: { ...shielded.raider, hp },
       hpDamage: state.raider.hp - hp,
+      nonlethalFloorDamagePrevented: nonlethalFloorDamagePrevented > 0 ? nonlethalFloorDamagePrevented : undefined,
     },
   }
 }

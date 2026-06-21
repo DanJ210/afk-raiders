@@ -43,6 +43,7 @@ export interface ShieldDamageResult {
   shieldDurabilityLost: number
   shieldDamageReduced: number
   mitigated: boolean
+  nonlethalFloorDamagePrevented?: number
   resilienceDamageReduced?: number
   skillDamageReduced?: number
 }

@@ -525,6 +525,22 @@ describe('applyEffects — backpack item behavior', () => {
     expect(result!.state.raider.hp).toBe(71)
   })
 
+  it('calls out damage prevented by the nonlethal robot floor', () => {
+    const initial = createInitialState(0)
+    const state = {
+      ...initial,
+      raid: { ...initial.raid, shield: null },
+    }
+    const result = resolveRobotEncounter(state, 'tattletale', createRNG(7), 0, { damageMultiplier: 14 })
+
+    expect(result).not.toBeNull()
+    expect(result!.event.id).toBe('robot_tattletale_escaped')
+    expect(result!.event.text).toContain('Incoming 84 damage')
+    expect(result!.event.text).toContain('Took 75 damage')
+    expect(result!.event.text).toContain('Nonlethal floor prevented 9 damage')
+    expect(result!.state.raider.hp).toBe(25)
+  })
+
   it('only lets nasty and deadly robots down already-wounded raiders', () => {
     const initial = createInitialState(0)
     const wounded = {
