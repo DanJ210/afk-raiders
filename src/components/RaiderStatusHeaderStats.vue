@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import type { ActiveShieldRecharge, GameState, ShieldState } from '../engine/types'
+import { useRaiderLevelViewModel } from '../composables/useRaiderLevelViewModel'
 import ShieldBar from './ShieldBar.vue'
 import MoodResilienceBadge from './MoodResilienceBadge.vue'
 
@@ -25,6 +26,7 @@ const emit = defineEmits<{
 
 const editingName = ref(false)
 const nameInput = ref('')
+const levelView = useRaiderLevelViewModel(computed(() => props.raider))
 
 function startEdit() {
   if (!props.allowRename) return
@@ -86,10 +88,33 @@ const phaseBadgeClass = computed(() => {
 
 <template>
   <div class="flex flex-col gap-2 shrink-0 pr-0.5">
+    <div class="flex flex-col gap-1 min-w-0">
+      <div class="flex items-center gap-2 min-w-0 max-[600px]:items-start max-[600px]:flex-wrap">
+        <span class="font-mono text-xs text-muted min-w-raider-label max-[600px]:min-w-0">Raider Level</span>
+        <span
+          class="font-mono text-raider-value text-text min-w-0 wrap-anywhere"
+          :title="levelView.progress.value.title.description"
+        >
+          Lvl {{ levelView.progress.value.level }} · {{ levelView.progress.value.title.name }}
+        </span>
+      </div>
+      <div class="flex items-center gap-2 min-w-0 max-[600px]:flex-wrap">
+        <span class="min-w-raider-label max-[600px]:hidden" aria-hidden="true"></span>
+        <div class="progress-track min-w-0" aria-hidden="true">
+          <div class="progress-fill bg-accent" :style="{ width: `${levelView.progress.value.progressPercent}%` }"></div>
+        </div>
+        <span class="shrink-0 font-mono text-raider-tiny text-muted">{{ levelView.xpLabel.value }}</span>
+      </div>
+      <div class="flex items-center gap-2 min-w-0">
+        <span class="min-w-raider-label max-[600px]:hidden" aria-hidden="true"></span>
+        <span class="font-mono text-raider-tiny text-muted min-w-0 wrap-anywhere">{{ levelView.benefitLabel.value }}</span>
+      </div>
+    </div>
+
     <div class="flex justify-between items-center mb-1 max-[600px]:flex-wrap max-[600px]:gap-y-1.5">
       <span
         v-if="props.allowRename && !editingName"
-        class="group font-mono text-base font-bold text-text cursor-pointer flex items-center gap-1 max-[600px]:min-w-0 max-[600px]:[overflow-wrap:anywhere]"
+        class="group font-mono text-base font-bold text-text cursor-pointer flex items-center gap-1 max-[600px]:min-w-0 max-[600px]:wrap-anywhere"
         role="button"
         tabindex="0"
         title="Click to rename"
@@ -112,7 +137,7 @@ const phaseBadgeClass = computed(() => {
       </span>
       <span
         v-else
-        class="font-mono text-base font-bold text-text max-[600px]:min-w-0 max-[600px]:[overflow-wrap:anywhere]"
+        class="font-mono text-base font-bold text-text max-[600px]:min-w-0 max-[600px]:wrap-anywhere"
       >
         {{ raider.name }}
       </span>
@@ -136,14 +161,14 @@ const phaseBadgeClass = computed(() => {
       >
         <div class="h-full rounded transition-[width] duration-(--duration-greed-fill) ease-in-out" :class="hpFillColor" :style="{ width: hpPercent + '%' }" />
       </div>
-      <span class="font-mono text-raider-value text-text min-w-0 [overflow-wrap:anywhere]">{{ raider.hp }}/{{ raider.maxHp }}</span>
+      <span class="font-mono text-raider-value text-text min-w-0 wrap-anywhere">{{ raider.hp }}/{{ raider.maxHp }}</span>
     </div>
 
     <div class="flex items-center gap-2 min-w-0 max-[600px]:items-start max-[600px]:flex-wrap">
       <span class="font-mono text-xs text-muted min-w-raider-label max-[600px]:min-w-0">Mood</span>
-      <span class="font-mono text-raider-value text-text min-w-0 [overflow-wrap:anywhere] inline-flex items-center flex-wrap">
+      <span class="font-mono text-raider-value text-text min-w-0 wrap-anywhere inline-flex items-center flex-wrap">
         {{ moodLabel(raider.mood) }}
-        <MoodResilienceBadge :mood="raider.mood" />
+        <MoodResilienceBadge :mood="raider.mood" :level-resilience-percent="levelView.benefits.value.resilienceReductionPercent" />
       </span>
     </div>
   </div>

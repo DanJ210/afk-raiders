@@ -2,6 +2,7 @@ import raiderLevelData from '../content/raider_levels.json'
 import type { RaiderLevelContent, RaiderLevelTitleBand } from './types.js'
 
 export const MAX_RAIDER_LEVEL = 75
+export const RAIDER_LEVEL_RESILIENCE_PERCENT_PER_TITLE_BAND = 0.2
 
 const content = raiderLevelData as RaiderLevelContent
 const titleBands = [...content.titleBands].sort((a, b) => a.minLevel - b.minLevel)
@@ -63,6 +64,7 @@ export interface RaiderLevelBenefitProfile {
   level: number
   titleBandIndex: number
   extractionCoinBonus: number
+  resilienceReductionPercent: number
 }
 
 function clampLevel(level: number): number {
@@ -145,6 +147,7 @@ export function getRaiderLevelBenefitProfile(rawXp: unknown): RaiderLevelBenefit
     level,
     titleBandIndex,
     extractionCoinBonus: titleBandIndex,
+    resilienceReductionPercent: titleBandIndex * RAIDER_LEVEL_RESILIENCE_PERCENT_PER_TITLE_BAND,
   }
 }
 

@@ -39,7 +39,7 @@ export interface ShieldDamageResult {
   shieldChargeLost: number
   shieldDurabilityLost: number
   mitigated: boolean
-  moodResilienceHpSaved?: number
+  resilienceHpSaved?: number
   skillDamageReduced?: number
 }
 

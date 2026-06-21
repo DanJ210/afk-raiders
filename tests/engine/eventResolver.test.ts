@@ -12,6 +12,7 @@ import { describe, it, expect } from 'vitest'
 import { createRNG } from '../../src/engine/rng'
 import { applyEffects, consumeHealingItem, consumeShieldRecharger, resolveEvent, resolveHealingItemFind, resolveRobotEncounter, resolveShieldRechargerFind } from '../../src/engine/eventResolver'
 import { createInitialState } from '../../src/engine/initialState'
+import { xpRequiredForLevel } from '../../src/engine/raiderLevel'
 import type { EventTemplate, HealingItemStack } from '../../src/engine/types'
 import zoneConditionsData from '../../src/content/zones/zone_conditions.json'
 
@@ -439,6 +440,28 @@ describe('applyEffects — backpack item behavior', () => {
     expect(result!.event.text).toContain('Took 14 damage')
     expect(result!.event.text).toContain('Resilience saved 2 HP')
     expect(result!.state.raider.hp).toBe(86)
+  })
+
+  it('adds Raider Level title-band resilience to mood resilience', () => {
+    const base = createInitialState(0)
+    const lowLevel = {
+      ...base,
+      raider: { ...base.raider, mood: 5, levelXp: 0 },
+      raid: { ...base.raid, dangerLevel: 'High' as const, shield: null },
+    }
+    const maxLevel = {
+      ...base,
+      raider: { ...base.raider, mood: 5, levelXp: xpRequiredForLevel(75) },
+      raid: { ...base.raid, dangerLevel: 'High' as const, shield: null },
+    }
+
+    const lowLevelResult = resolveRobotEncounter(lowLevel, 'tank_overcompensation', createRNG(1), 0)
+    const maxLevelResult = resolveRobotEncounter(maxLevel, 'tank_overcompensation', createRNG(1), 0)
+
+    expect(lowLevelResult).not.toBeNull()
+    expect(maxLevelResult).not.toBeNull()
+    expect(maxLevelResult!.state.raider.hp).toBeGreaterThan(lowLevelResult!.state.raider.hp)
+    expect(maxLevelResult!.event.text).toContain('Resilience saved')
   })
 
   it('scales failed robot damage by danger-level profile', () => {

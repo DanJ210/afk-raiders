@@ -89,4 +89,10 @@ describe('Raider Level helpers', () => {
     expect(getRaiderLevelBenefitProfile(xpRequiredForLevel(10)).extractionCoinBonus).toBe(1)
     expect(getRaiderLevelBenefitProfile(xpRequiredForLevel(75)).extractionCoinBonus).toBe(8)
   })
+
+  it('derives tiny title-band resilience benefits', () => {
+    expect(getRaiderLevelBenefitProfile(0).resilienceReductionPercent).toBe(0)
+    expect(getRaiderLevelBenefitProfile(xpRequiredForLevel(10)).resilienceReductionPercent).toBe(0.2)
+    expect(getRaiderLevelBenefitProfile(xpRequiredForLevel(75)).resilienceReductionPercent).toBe(1.6)
+  })
 })

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { useDocumentVisibility } from '@vueuse/core'
+import { useDocumentVisibility, useNow } from '@vueuse/core'
 import { useGameStore } from '../stores/gameStore'
 import { TICK_INTERVAL_MS } from '../engine/catchUp'
 import { usePinnedTopLog } from '../composables/usePinnedTopLog'
@@ -11,6 +11,16 @@ const entries = computed(() => [...store.log].reverse())
 const logEntryCount = computed(() => store.log.length)
 const raidShield = computed(() => store.raid.shield)
 const raidShieldRecharge = computed(() => store.raid.activeShieldRecharge)
+const showMobileRaiderStatus = computed(() => store.phase === 'RAIDING' || store.phase === 'EXTRACTING')
+const now = useNow({ interval: 1000 })
+const phaseTimerMs = computed(() => {
+  if (store.raid.phaseTicksRemaining <= 0) return 0
+  const phaseRemainingMs = store.raid.phaseTicksRemaining * TICK_INTERVAL_MS
+  const elapsedSinceLastTick = Math.max(0, now.value.getTime() - store.lastTickAt)
+  return Math.max(0, phaseRemainingMs - elapsedSinceLastTick)
+})
+const phaseTimerText = computed(() => formatDuration(phaseTimerMs.value))
+const showPhaseTimer = computed(() => showMobileRaiderStatus.value && phaseTimerMs.value > 0)
 
 // Re-key the tick bar on every new tick AND whenever the tab becomes visible,
 // so the animation restarts from the correct elapsed offset instead of 0.
@@ -24,6 +34,13 @@ const tickAnimationDelay = computed(() => {
 })
 
 const pinnedTopLog = usePinnedTopLog(logEntryCount)
+
+function formatDuration(ms: number): string {
+  const totalSeconds = Math.max(0, Math.floor(ms / 1000))
+  const minutes = Math.floor(totalSeconds / 60)
+  const seconds = totalSeconds % 60
+  return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
+}
 
 function formatTime(ts: number): string {
   const d = new Date(ts)
@@ -51,16 +68,16 @@ function phaseBadge(phase: string): string {
       <span>📻</span>
       <span>COMMS FEED</span>
     </header>
-    <!-- Mobile-only health bars: hidden on desktop, shown on small screens -->
+    <!-- Mobile-only raider status: hidden on desktop, shown during active field phases on small screens -->
     <div
-      v-if="store.phase === 'RAIDING'"
+      v-if="showMobileRaiderStatus"
       class="mt-2 px-3.5 py-2 border-b border-border bg-surface-raised hidden max-[600px]:block"
     >
       <RaiderStatusHeaderStats
         :raider="store.raider"
         :phase="store.phase"
-        :show-phase-timer="false"
-        phase-timer-text=""
+        :show-phase-timer="showPhaseTimer"
+        :phase-timer-text="phaseTimerText"
         :raid-shield="raidShield"
         :active-shield-recharge="raidShieldRecharge"
         :name-max-length="0"
@@ -82,7 +99,7 @@ function phaseBadge(phase: string): string {
       aria-relevant="additions"
       @scroll="pinnedTopLog.onScroll"
     >
-      <p v-if="store.log.length === 0" class="px-4 py-4 text-muted italic text-[0.85rem]">
+      <p v-if="store.log.length === 0" class="px-4 py-4 text-muted italic text-raider-value">
         Waiting for transmission…
       </p>
       <div

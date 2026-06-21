@@ -32,9 +32,10 @@ import scrapComponentsData from '../content/loot-tables/scrap_components.json'
 import valuablesData from '../content/loot-tables/valuables.json'
 import weaponsPartsData from '../content/loot-tables/weapons_parts.json'
 import { getDangerLevelProfile, rarityWeight, type DangerLevelProfile } from './dangerLevelProfiles.js'
-import { clampMood, getMoodRarityWeightMultiplier, getMoodResilienceMultiplier } from './mood.js'
+import { clampMood, getMoodRarityWeightMultiplier, getMoodResilienceReductionPercent } from './mood.js'
 import { applyShieldedDamage, startShieldRecharge, type ShieldDamageResult } from './shields.js'
 import { getSkillModifierProfile } from './skills.js'
+import { getRaiderLevelBenefitProfile } from './raiderLevel.js'
 
 // One events file per phase: HUB, DEPLOYING, RAIDING, EXTRACTING, DOWNED
 const events = [
@@ -96,8 +97,8 @@ function healingMoodGain(item: HealingItemStack): number {
 }
 
 export function describeShieldDamage(damage: ShieldDamageResult): string {
-  const resilienceText = damage.moodResilienceHpSaved && damage.moodResilienceHpSaved > 0
-    ? ` Resilience saved ${damage.moodResilienceHpSaved} HP.`
+  const resilienceText = damage.resilienceHpSaved && damage.resilienceHpSaved > 0
+    ? ` Resilience saved ${damage.resilienceHpSaved} HP.`
     : ''
   const skillText = damage.skillDamageReduced && damage.skillDamageReduced > 0
     ? ` Hiding in Lockers ducked ${damage.skillDamageReduced} incoming damage.`
@@ -538,7 +539,7 @@ function applyRobotDamage(
 
   const hpAfterShield = shielded.raider.hp
   let hp = hpAfterShield
-  let moodResilienceHpSaved = 0
+  let resilienceHpSaved = 0
   if (!canRobotEncounterBeLethal(state, robot)) {
     const nonlethalFloor = state.raider.hp / state.raider.maxHp > ROBOT_LETHAL_HP_RATIO
       ? Math.ceil(state.raider.maxHp * ROBOT_NONLETHAL_MIN_HP_RATIO)
@@ -546,11 +547,13 @@ function applyRobotDamage(
     hp = Math.max(nonlethalFloor, hp)
   }
 
-  const resilienceMultiplier = getMoodResilienceMultiplier(state.raider.mood)
+  const moodResilienceReductionPercent = getMoodResilienceReductionPercent(state.raider.mood)
+  const levelResilienceReductionPercent = getRaiderLevelBenefitProfile(state.raider.levelXp).resilienceReductionPercent
+  const resilienceMultiplier = 1 - ((moodResilienceReductionPercent + levelResilienceReductionPercent) / 100)
   if (resilienceMultiplier < 1 && hp < state.raider.hp) {
     const mitigatedDamage = Math.max(1, Math.floor((state.raider.hp - hp) * resilienceMultiplier))
     const nextHp = Math.max(state.raider.hp - mitigatedDamage, hp)
-    moodResilienceHpSaved = Math.max(0, nextHp - hp)
+    resilienceHpSaved = Math.max(0, nextHp - hp)
     hp = nextHp
   }
 
@@ -562,7 +565,7 @@ function applyRobotDamage(
       ...shielded,
       raider: { ...shielded.raider, hp },
       hpDamage: state.raider.hp - hp,
-      moodResilienceHpSaved: moodResilienceHpSaved > 0 ? moodResilienceHpSaved : undefined,
+      resilienceHpSaved: resilienceHpSaved > 0 ? resilienceHpSaved : undefined,
       skillDamageReduced: skillDamageReduced > 0 ? skillDamageReduced : undefined,
     },
   }

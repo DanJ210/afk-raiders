@@ -16,6 +16,7 @@ describe('useRaiderLevelViewModel', () => {
     expect(viewModel.progress.value.xpIntoLevel).toBe(10)
     expect(viewModel.xpLabel.value).toBe(`10/${viewModel.progress.value.xpForNextLevel}`)
     expect(viewModel.benefitLabel.value).toBe('Stipend locked')
+    expect(viewModel.benefits.value.resilienceReductionPercent).toBe(0)
   })
 
   it('formats unlocked title-band stipend benefits', () => {
@@ -27,5 +28,6 @@ describe('useRaiderLevelViewModel', () => {
 
     expect(viewModel.progress.value.level).toBe(10)
     expect(viewModel.benefitLabel.value).toBe('Stipend +1/extract')
+    expect(viewModel.benefits.value.resilienceReductionPercent).toBe(0.2)
   })
 })
