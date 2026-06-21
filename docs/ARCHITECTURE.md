@@ -123,8 +123,8 @@ The stash has an enforced item cap (`HOME_STASH_ITEM_LIMIT`). Overflow items are
 ### Shield layer
 `RaidState.shield` stores the current shield snapshot for the active raid. Shield damage rules live in `src/engine/shields.ts` so all incoming damage uses one deterministic calculation path. Negative HP event effects and failed robot encounters both route through the same helper.
 
-Positive raider mood adds a small derived resilience bonus in `eventResolver.ts` for failed robot encounters only. It does not change robot raw damage; it slightly reduces the final HP loss after shield mitigation when mood is above zero.
-The resulting shield-damage log line includes a short note when that bonus applies so the effect stays visible in the comms UI.
+Positive raider mood adds a small derived resilience bonus in `eventResolver.ts` for failed robot encounters only. It does not change robot raw damage; it slightly reduces the damage handed to shields and HP when mood is above zero.
+The resulting shield-damage log line reports incoming damage, pre-shield mitigation, shield mitigation, and final HP loss so the effect stays visible in the comms UI.
 
 Shield rechargers are intentionally different from bandages:
 - Bandages live in `RaidState.healingItems` and never extract.
@@ -177,7 +177,7 @@ Raider Level benefits are intentionally light-power and title-band based:
 - Levels 64-70: +7 coin extraction stipend.
 - Levels 71-75: +8 coin extraction stipend.
 
-Each title band after the first also adds a tiny failed-robot resilience trim in the same path as positive mood: +0.2 percentage points per title band, up to +1.6% at Levels 71-75. The UI displays this separately from mood resilience so the source stays legible. The stipend is paid only on successful extraction and is narrated with `raider_level_extraction_stipend`. Levels deliberately do not add HP, raw damage, shield strength, or major extraction safety; skills and danger-level profiles remain the mechanical tuning levers. Future content can use Raider Level for title-gated comms variants, hub gags, achievements, or prestige requirements.
+Each title band after the first also adds a tiny failed-robot resilience trim in the same pre-shield path as positive mood: +0.2 percentage points per title band, up to +1.6% at Levels 71-75. The UI displays this separately from mood resilience so the source stays legible. The stipend is paid only on successful extraction and is narrated with `raider_level_extraction_stipend`. Levels deliberately do not add HP, raw damage, shield strength, or major extraction safety; skills and danger-level profiles remain the mechanical tuning levers. Future content can use Raider Level for title-gated comms variants, hub gags, achievements, or prestige requirements.
 
 ### 4d. Balance guardrails
 Raid balance is guarded as an engine contract, not just a table of current constants. `tests/engine/raidBalance.test.ts` runs seeded starter-raider simulations across Low, Medium, and High danger and asserts the shape we want:
@@ -191,7 +191,7 @@ When changing robot weights, danger profiles, greed/extraction math, healing, sh
 
 Robot balance has its own focused guardrail in `tests/engine/robotBalance.test.ts`. It forces failed combat rolls against the real `robots.json` entries and verifies the tier math directly: max failed damage rises by deadliness tier, nasty/deadly robots can kill wounded starter raiders, weak/moderate/dangerous robots remain nonlethal, Raider Level resilience stays tiny and below the danger jump, and existing mitigation sources help without making High-danger robot damage softer than Medium baseline.
 
-Do not add broad passive Raider Level damage resistance for the MVP. That would make the level spine behave like a hidden combat stat and would flatten the danger curve. The only level-based mitigation should remain the tiny visible title-band resilience trim on failed robot encounters. Keep resistance simple: positive mood provides the larger soft resilience trim, Hiding in Lockers is the tiny skill-specific robot mitigation, and shields/consumables/Handler actions are the meaningful survival levers.
+Do not add broad passive Raider Level damage resistance for the MVP. That would make the level spine behave like a hidden combat stat and would flatten the danger curve. The only level-based mitigation should remain the tiny visible title-band resilience trim on failed robot encounters. Keep resistance simple: positive mood provides the larger soft pre-shield resilience trim, Hiding in Lockers is the tiny pre-shield skill-specific robot mitigation, and shields/consumables/Handler actions are the meaningful survival levers.
 
 Visible Raider Level title bands and level-up text live in `src/content/raider_levels.json`. The first UI surface is `RaiderCard.vue`, which shows the derived level, title, progress to next level, and current stipend benefit while keeping Rat Rating visible as its own row.
 

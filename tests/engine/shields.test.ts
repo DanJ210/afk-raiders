@@ -7,9 +7,42 @@
 
 import { describe, it, expect } from 'vitest'
 import { createInitialState } from '../../src/engine/initialState'
-import { advanceShieldRecharge, startShieldRecharge } from '../../src/engine/shields'
+import { advanceShieldRecharge, applyShieldedDamage, startShieldRecharge } from '../../src/engine/shields'
 
 describe('shield recharge helpers', () => {
+  it('reports the shield damage breakdown for an active shield', () => {
+    const initial = createInitialState(0)
+
+    const result = applyShieldedDamage(initial.raider, initial.raid, 20)
+
+    expect(result).toMatchObject({
+      incomingDamage: 20,
+      preShieldDamage: 20,
+      preShieldDamageReduced: 0,
+      shieldDamageReduced: 8,
+      hpDamage: 12,
+      shieldChargeLost: 20,
+      mitigated: true,
+    })
+  })
+
+  it('reports zero shield mitigation when no shield is active', () => {
+    const initial = createInitialState(0)
+    const raid = { ...initial.raid, shield: null }
+
+    const result = applyShieldedDamage(initial.raider, raid, 20)
+
+    expect(result).toMatchObject({
+      incomingDamage: 20,
+      preShieldDamage: 20,
+      preShieldDamageReduced: 0,
+      shieldDamageReduced: 0,
+      hpDamage: 20,
+      shieldChargeLost: 0,
+      mitigated: false,
+    })
+  })
+
   it('applies a timed shield recharge over five ticks', () => {
     const initial = createInitialState(0)
     const raidState = {
