@@ -54,7 +54,7 @@ function handleSell() {
         <button type="button" class="border-0 bg-transparent text-muted text-[1rem] cursor-pointer" autofocus @click="handleClose">✕</button>
       </div>
 
-      <p class="mt-3.5 mb-0 text-text leading-[1.5]">
+      <p class="mt-3.5 mb-0 text-text leading-normal">
         {{ item.flavor || 'No description available.' }}
       </p>
 

@@ -18,7 +18,7 @@ function handleItemClick(itemId: string) {
 
 <template>
   <div class="flex flex-col flex-1 min-h-0">
-    <div v-if="items.length === 0" class="text-[0.8rem] text-muted italic text-center py-5">
+    <div v-if="items.length === 0" class="text-raider-meta text-muted italic text-center py-5">
       <p>No loot yet. Send the raider to bring treasures home.</p>
     </div>
 
@@ -27,7 +27,7 @@ function handleItemClick(itemId: string) {
         v-for="item in items"
         :key="item.itemId"
         type="button"
-        class="stash-item-row bg-surface-raised border border-border-subtle rounded text-[0.8rem] w-full text-left text-inherit cursor-pointer hover:border-accent focus-visible:border-accent focus-visible:outline-none"
+        class="stash-item-row bg-surface-raised border border-border-subtle rounded text-raider-meta w-full text-left text-inherit cursor-pointer hover:border-accent focus-visible:border-accent focus-visible:outline-none"
         @click="handleItemClick(item.itemId)"
       >
         <span class="stash-item-row__icon text-[1.1rem] text-center inline-flex items-center justify-center">
@@ -45,7 +45,7 @@ function handleItemClick(itemId: string) {
         <div class="flex flex-col gap-1 flex-1 min-w-0">
           <div class="flex items-baseline gap-2 min-w-0">
             <span class="text-text font-mono flex-1 min-w-0 wrap-anywhere">{{ item.name }}</span>
-            <span class="text-muted text-[0.7rem] font-mono">×{{ item.quantity }}</span>
+            <span class="text-muted text-raider-tiny font-mono">×{{ item.quantity }}</span>
           </div>
           <p v-if="item.flavor" class="m-0 text-muted text-[0.72rem] font-mono italic leading-[1.4] wrap-anywhere">{{ item.flavor }}</p>
         </div>

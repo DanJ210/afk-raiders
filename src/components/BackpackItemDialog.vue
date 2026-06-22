@@ -49,11 +49,11 @@ function isPocketedItem(itemId: string): boolean {
         <button type="button" class="border-0 bg-transparent text-muted text-[1rem] cursor-pointer" autofocus @click="$emit('close')">✕</button>
       </div>
 
-      <p class="mt-3.5 mb-0 text-text leading-[1.5]">
+      <p class="mt-3.5 mb-0 text-text leading-normal">
         {{ item.flavor || 'No description available.' }}
       </p>
 
-      <p v-if="isShieldRecharger(item)" class="mt-3.5 mb-0 text-accent leading-[1.5]">
+      <p v-if="isShieldRecharger(item)" class="mt-3.5 mb-0 text-accent leading-normal">
         Restores {{ item.shieldChargeAmount }} shield charge when applied from the backpack.
       </p>
 
