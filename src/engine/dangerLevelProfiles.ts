@@ -8,7 +8,7 @@ export interface DangerLevelProfile {
   lootRarityWeights: Record<number, number>
   robotEncounterWeightMultiplier: number
   robotFailureDamageMultiplier: number
-  /** Small per-tick autonomous downed chance during RAIDING, before greed-specific failure. */
+  /** Small per-tick autonomous downed chance during RAIDING. */
   ambientRaidDeathChance: number
   extractionRiskEventWeightMultiplier: number
   extractionSafeEventWeightMultiplier: number

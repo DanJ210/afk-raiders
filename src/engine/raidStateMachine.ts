@@ -13,19 +13,25 @@ import zonesData from '../content/zones/zones.json'
 import type { ContentEntry } from './types.js'
 import zoneConditionsData from '../content/zones/zone_conditions.json'
 import { restoreShieldAtHub } from './shields.js'
+import { decayGreedForHubReturn, majorConditionChanceFromGreed } from './greed.js'
 
 const zones = zonesData as ZoneEntry[]
 
-// Flatten all conditions (minor + major) for random selection
 type Condition = ContentEntry & {
   name: string
   description: string
   dangerLevel: string
 }
-const allConditions = [
-  ...zoneConditionsData.minor_conditions,
-  ...zoneConditionsData.major_conditions,
-] as Condition[]
+const minorConditions = zoneConditionsData.minor_conditions as Condition[]
+const majorConditions = zoneConditionsData.major_conditions as Condition[]
+
+function pickCondition(raid: RaidState, rng?: RNG): Condition {
+  if (!rng) return minorConditions[0]
+
+  const useMajorCondition = rng.next() < majorConditionChanceFromGreed(raid.greedLevel)
+  const pool = useMajorCondition ? majorConditions : minorConditions
+  return rng.weightedPick(pool)
+}
 
 function normalizeDangerLevel(input: string): DangerLevel {
   const trimmed = input.trim()
@@ -35,7 +41,7 @@ function normalizeDangerLevel(input: string): DangerLevel {
 
 function enterDeploying(raid: RaidState, rng?: RNG): RaidState {
   const zone = rng ? rng.weightedPick(zones).id : zones[0].id
-  const condition = rng ? rng.weightedPick(allConditions) : allConditions[0]
+  const condition = pickCondition(raid, rng)
   const dangerLevel = normalizeDangerLevel(condition.dangerLevel)
   const zoneCondition = {
     id: condition.id,
@@ -80,7 +86,20 @@ export function tickPhase(
     }
     // Reset raid state when forced back to HUB (mirror of the natural-expiry path)
     if (forced === 'HUB') {
-      forcedRaid = { ...forcedRaid, activeShieldRecharge: null, shield: restoreShieldAtHub(forcedRaid.shield), backpack: [], hiddenPocket: null, healingItems: [], backpackValue: 0, greedLevel: 0, forceExtract: false, zone: null, dangerLevel: null, zoneCondition: null }
+      forcedRaid = {
+        ...forcedRaid,
+        activeShieldRecharge: null,
+        shield: restoreShieldAtHub(forcedRaid.shield),
+        backpack: [],
+        hiddenPocket: null,
+        healingItems: [],
+        backpackValue: 0,
+        greedLevel: decayGreedForHubReturn(raid.greedLevel),
+        forceExtract: false,
+        zone: null,
+        dangerLevel: null,
+        zoneCondition: null,
+      }
     }
     // Healing items are lost on death — clear immediately so they aren't visible during DOWNED phase
     if (forced === 'DOWNED') {
@@ -118,7 +137,20 @@ export function tickPhase(
 
   // Reset raid state when returning to HUB
   if (next === 'HUB') {
-    updatedRaid = { ...updatedRaid, activeShieldRecharge: null, shield: restoreShieldAtHub(updatedRaid.shield), backpack: [], hiddenPocket: null, healingItems: [], backpackValue: 0, greedLevel: 0, forceExtract: false, zone: null, dangerLevel: null, zoneCondition: null }
+    updatedRaid = {
+      ...updatedRaid,
+      activeShieldRecharge: null,
+      shield: restoreShieldAtHub(updatedRaid.shield),
+      backpack: [],
+      hiddenPocket: null,
+      healingItems: [],
+      backpackValue: 0,
+      greedLevel: decayGreedForHubReturn(raid.greedLevel),
+      forceExtract: false,
+      zone: null,
+      dangerLevel: null,
+      zoneCondition: null,
+    }
   }
 
   // Healing items are lost on death — clear on natural DOWNED transitions too.

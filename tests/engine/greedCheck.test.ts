@@ -1,7 +1,7 @@
 /**
  * Greed Check unit tests.
- * - Higher greed reduces extraction probability
- * - Pressure reduces push-deeper probability
+ * - Greed does not directly change extraction or downed probability
+ * - Handler Calm/Pressure change greed before this check but not the roll odds
  * - CALL_EXTRACT forces extraction attempt
  * - forceExtract in raid state forces EXTRACT outcome
  */
@@ -86,28 +86,28 @@ describe('greedCheck', () => {
     }
   })
 
-  it('higher greed level increases push-deeper frequency (fewer extracts)', () => {
+  it('greed level does not directly change extraction frequency', () => {
     const lowGreed = countOutcomes(makeRaid({ greedLevel: 10 }))
-    const highGreed = countOutcomes(makeRaid({ greedLevel: 60 }))
-    // Higher greed should mean fewer extracts (extract chance penalised)
-    expect(highGreed.extract).toBeLessThan(lowGreed.extract)
+    const highGreed = countOutcomes(makeRaid({ greedLevel: 90 }))
+
+    expect(highGreed).toEqual(lowGreed)
   })
 
-  it('calming decreases extract rate vs baseline', () => {
+  it('calming does not directly change extraction rate', () => {
     const baseline = countOutcomes(makeRaid({ greedLevel: 30 }))
     const calmed = countOutcomes(makeRaid({ greedLevel: 30 }), 500, { calmed: true, pressured: false })
-    expect(calmed.extract).toBeLessThan(baseline.extract)
+    expect(calmed).toEqual(baseline)
   })
 
-  it('pressuring increases extract rate vs baseline', () => {
+  it('pressuring does not directly change extraction rate', () => {
     const baseline = countOutcomes(makeRaid({ greedLevel: 0 }))
     const pressured = countOutcomes(makeRaid({ greedLevel: 0 }), 500, { calmed: false, pressured: true })
-    expect(pressured.extract).toBeGreaterThan(baseline.extract)
+    expect(pressured).toEqual(baseline)
   })
 
-  it('very high greed produces some deaths', () => {
+  it('very high greed does not create downed outcomes in Low danger by itself', () => {
     const { downed } = countOutcomes(makeRaid({ greedLevel: 100 }), 3000)
-    expect(downed).toBeGreaterThan(0)
+    expect(downed).toBe(0)
   })
 
   it('low greed produces no deaths', () => {
@@ -130,14 +130,13 @@ describe('greedCheck', () => {
     throw new Error('No PUSH_DEEPER outcome found in 100 rolls')
   })
 
-  it('keeps extract and downed rates relatively small even at max greed', () => {
+  it('keeps extract rate relatively small even at max greed', () => {
     const n = 5000
     const outcomes = countOutcomes(makeRaid({ greedLevel: 100 }), n, { calmed: false, pressured: false })
     const extractRate = outcomes.extract / n
-    const downedRate = outcomes.downed / n
 
     expect(extractRate).toBeLessThan(0.02)
-    expect(downedRate).toBeLessThan(0.01)
+    expect(outcomes.downed).toBe(0)
   })
 
   it('low HP without bandages increases extraction rate', () => {

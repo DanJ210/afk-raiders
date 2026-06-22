@@ -175,7 +175,7 @@ describe('raid balance', () => {
     expect(skillModifiers.extractionChanceBonus).toBeLessThanOrEqual(0.01)
     expect(skillModifiers.lootValueMultiplier).toBeLessThanOrEqual(1.05)
     expect(skillModifiers.lootBonusConsumableChanceBonus).toBeLessThanOrEqual(0.03)
-    expect(skillModifiers.greedDeathChanceMultiplier).toBeGreaterThanOrEqual(0.75)
+    expect(skillModifiers.ambientRaidDeathChanceMultiplier).toBeGreaterThanOrEqual(0.75)
     expect(skillModifiers.robotFailureDamageMultiplier).toBeGreaterThanOrEqual(0.75)
     expect(
       DANGER_LEVEL_PROFILES.High.robotFailureDamageMultiplier * skillModifiers.robotFailureDamageMultiplier,

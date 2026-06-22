@@ -1,7 +1,24 @@
 import { describe, expect, it } from 'vitest'
 import { createInitialState } from '../../src/engine/initialState'
 import { tickPhase, PHASE_DURATIONS } from '../../src/engine/raidStateMachine'
+import { decayGreedForHubReturn } from '../../src/engine/greed'
 import { createRNG } from '../../src/engine/rng'
+import zoneConditionsData from '../../src/content/zones/zone_conditions.json'
+
+const majorConditionIds = new Set(zoneConditionsData.major_conditions.map(condition => condition.id))
+
+function countMajorDeployments(greedLevel: number, sampleSize = 800): number {
+  let majorCount = 0
+  for (let seed = 1; seed <= sampleSize; seed += 1) {
+    const initial = createInitialState(0)
+    const raid = { ...initial.raid, greedLevel }
+    const result = tickPhase(raid, 'DEPLOYING', createRNG(seed))
+    if (result.raid.zoneCondition && majorConditionIds.has(result.raid.zoneCondition.id)) {
+      majorCount += 1
+    }
+  }
+  return majorCount
+}
 
 describe('raidStateMachine', () => {
   it('uses a 30 minute raiding timer at 30 second tick cadence', () => {
@@ -40,6 +57,14 @@ describe('raidStateMachine', () => {
     expect(result.raid.dangerLevel).not.toBeNull()
     expect(result.raid.zoneCondition).not.toBeNull()
     expect(result.raid.zoneCondition?.id).toBeTruthy()
+  })
+
+  it('high greed momentum makes major zone conditions more likely', () => {
+    const lowGreedMajorCount = countMajorDeployments(0)
+    const highGreedMajorCount = countMajorDeployments(100)
+
+    expect(highGreedMajorCount).toBeGreaterThan(lowGreedMajorCount)
+    expect(highGreedMajorCount - lowGreedMajorCount).toBeGreaterThan(300)
   })
 
   it('preserves selected zone condition when DEPLOYING naturally transitions into RAIDING', () => {
@@ -108,6 +133,7 @@ describe('raidStateMachine', () => {
       },
       zone: 'damp_battlegrounds',
       dangerLevel: 'Medium',
+      greedLevel: 80,
       zoneCondition: {
         id: 'heavy_fog',
         name: 'Heavy Fog',
@@ -129,6 +155,7 @@ describe('raidStateMachine', () => {
     expect(result.raid.zone).toBeNull()
     expect(result.raid.dangerLevel).toBeNull()
     expect(result.raid.zoneCondition).toBeNull()
+    expect(result.raid.greedLevel).toBe(decayGreedForHubReturn(80))
   })
 
   it('clears zone condition when forced back to HUB', () => {
@@ -156,5 +183,6 @@ describe('raidStateMachine', () => {
     expect(result.raid.zone).toBeNull()
     expect(result.raid.dangerLevel).toBeNull()
     expect(result.raid.zoneCondition).toBeNull()
+    expect(result.raid.greedLevel).toBe(decayGreedForHubReturn(35))
   })
 })

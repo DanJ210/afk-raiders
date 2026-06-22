@@ -204,7 +204,7 @@ export interface RaidState {
   /** Current-raid-only healing consumables. Lost on death/extraction; never stored at home. */
   healingItems: HealingItemStack[]
   backpackValue: number
-  greedLevel: number   // 0–100; higher = more likely to push deeper and die
+  greedLevel: number   // 0–100; higher = stronger loot appetite and major-condition momentum
   phase: Phase
   phaseTicksRemaining: number
   /** Set by CALL_EXTRACT action to force next greed check toward extraction */

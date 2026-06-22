@@ -79,6 +79,6 @@ describe('skill progression helpers', () => {
     expect(modifiers.lootValueMultiplier).toBeGreaterThan(1)
     expect(modifiers.lootBonusConsumableChanceBonus).toBeGreaterThan(0)
     expect(modifiers.robotFailureDamageMultiplier).toBeLessThan(1)
-    expect(modifiers.greedDeathChanceMultiplier).toBeLessThan(1)
+    expect(modifiers.ambientRaidDeathChanceMultiplier).toBeLessThan(1)
   })
 })

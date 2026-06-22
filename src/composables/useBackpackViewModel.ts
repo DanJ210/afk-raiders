@@ -122,11 +122,11 @@ export function useBackpackViewModel(
 
   // Helper: convert greed number to human-readable label
   function greedLabel(level: number): string {
-    if (level < 20) return '😌 Chill'
-    if (level < 40) return '🤑 Interested'
+    if (level < 20) return '😌 Browsing'
+    if (level < 40) return '🤑 Loot Curious'
     if (level < 60) return '😤 Pushing It'
-    if (level < 80) return '🚨 Reckless'
-    return '☠️ DEATH WISH'
+    if (level < 80) return '🚨 Major Bait'
+    return '☠️ Loot Spiral'
   }
 
   // Helper: check if item is a shield recharger with type guard
