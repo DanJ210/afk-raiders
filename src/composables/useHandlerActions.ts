@@ -17,6 +17,8 @@ import { consumeHealingItem, consumeShieldRecharger } from '../engine/eventResol
 import { appendLogEntries } from '../engine/log.js'
 import { recordHealingItemUse } from '../engine/stats.js'
 import { createInitialState } from '../engine/initialState.js'
+import { applyRaiderXpGain, rollRaiderXp, type RaiderLevelUp } from '../engine/raiderLevel.js'
+import { applySkillPractice, rollSkillPractice, type SkillLevelUp } from '../engine/skills.js'
 import type { BackpackItem } from '../engine/types.js'
 
 const RAIDER_NAME_MAX_LENGTH = 25
@@ -50,6 +52,26 @@ function toHiddenPocketItem(item: BackpackItem) {
   }
 }
 
+function skillLevelUpEvent(levelUp: SkillLevelUp, tick: number, now: number, phase: GameState['raid']['phase']) {
+  return {
+    id: `skill_${levelUp.skillId}_level_${levelUp.level}`,
+    tick,
+    timestamp: now,
+    text: levelUp.text,
+    phase,
+  }
+}
+
+function raiderLevelUpEvent(levelUp: RaiderLevelUp, tick: number, now: number, phase: GameState['raid']['phase']) {
+  return {
+    id: `raider_level_${levelUp.level}`,
+    tick,
+    timestamp: now,
+    text: levelUp.text,
+    phase,
+  }
+}
+
 /**
  * Expose signal-gated Handler actions: calm, pressure, readyUp, callExtract, etc.
  * State mutations are applied directly to stateRef; side effects call the persistence callback.
@@ -63,6 +85,51 @@ export function useHandlerActions(
   onResetSave: (newState: GameState, seed: number, lastTickAt: number) => void,
   onAwaySummaryDismiss: () => void,
 ): HandlerActionsReturn {
+  function awardSignalUseSkill(now: number, signalSpent: number) {
+    const minXp = Math.max(1, signalSpent)
+    const maxXp = minXp + 1
+    const gains = rollSkillPractice([
+      { skillId: 'signal_handling', reason: 'signal_used', minXp, maxXp },
+    ], rngRef.current)
+    const skillResult = applySkillPractice(stateRef.value.raider.skills, gains)
+    let nextLog = stateRef.value.log
+
+    if (skillResult.levelUps.length > 0) {
+      nextLog = appendLogEntries(
+        nextLog,
+        skillResult.levelUps.map(levelUp => skillLevelUpEvent(levelUp, stateRef.value.tick, now, stateRef.value.raid.phase)),
+      )
+    }
+
+    let levelXp = stateRef.value.raider.levelXp
+    const raiderLevelGains = skillResult.levelUps.length > 0
+      ? rollRaiderXp(
+          skillResult.levelUps.map(levelUp => ({ reason: 'skill_level_up', minXp: 5 + levelUp.level, maxXp: 7 + levelUp.level * 2 })),
+          rngRef.current,
+        )
+      : []
+    if (raiderLevelGains.length > 0) {
+      const xpResult = applyRaiderXpGain(levelXp, raiderLevelGains)
+      levelXp = xpResult.levelXp
+      if (xpResult.levelUps.length > 0) {
+        nextLog = appendLogEntries(
+          nextLog,
+          xpResult.levelUps.map(levelUp => raiderLevelUpEvent(levelUp, stateRef.value.tick, now, stateRef.value.raid.phase)),
+        )
+      }
+    }
+
+    stateRef.value = {
+      ...stateRef.value,
+      raider: {
+        ...stateRef.value.raider,
+        skills: skillResult.skills,
+        levelXp,
+      },
+      log: nextLog,
+    }
+  }
+
   function syncSignalProgress(now: number) {
     const advancement = advanceSignal(stateRef.value.signal, now)
     if (advancement.signal !== stateRef.value.signal || advancement.amplifiersGained > 0) {
@@ -78,26 +145,30 @@ export function useHandlerActions(
   function calm() {
     if (stateRef.value.raid.phase !== 'RAIDING') return
     if (hasPendingHandlerAction()) return
-    const updated = spendSignal(syncSignalProgress(Date.now()), 'CALM')
+    const actionNow = Date.now()
+    const updated = spendSignal(syncSignalProgress(actionNow), 'CALM')
     if (!updated) return
     stateRef.value = {
       ...stateRef.value,
       signal: updated,
       pendingCalm: true,
     }
+    awardSignalUseSkill(actionNow, 1)
     persistCallback(stateRef.value, rngRef.current.getSeed(), lastTickAtRef.value)
   }
 
   function pressure() {
     if (stateRef.value.raid.phase !== 'RAIDING') return
     if (hasPendingHandlerAction()) return
-    const updated = spendSignal(syncSignalProgress(Date.now()), 'PRESSURE')
+    const actionNow = Date.now()
+    const updated = spendSignal(syncSignalProgress(actionNow), 'PRESSURE')
     if (!updated) return
     stateRef.value = {
       ...stateRef.value,
       signal: updated,
       pendingPressure: true,
     }
+    awardSignalUseSkill(actionNow, 1)
     persistCallback(stateRef.value, rngRef.current.getSeed(), lastTickAtRef.value)
   }
 
@@ -125,19 +196,22 @@ export function useHandlerActions(
         },
       ],
     }
+    awardSignalUseSkill(actionNow, 2)
     persistCallback(stateRef.value, rngRef.current.getSeed(), lastTickAtRef.value)
   }
 
   function callExtract() {
     if (stateRef.value.raid.phase !== 'RAIDING') return
     if (hasPendingHandlerAction()) return
-    const updated = spendSignal(syncSignalProgress(Date.now()), 'CALL_EXTRACT')
+    const actionNow = Date.now()
+    const updated = spendSignal(syncSignalProgress(actionNow), 'CALL_EXTRACT')
     if (!updated) return
     stateRef.value = {
       ...stateRef.value,
       signal: updated,
       raid: { ...stateRef.value.raid, forceExtract: true },
     }
+    awardSignalUseSkill(actionNow, 3)
     persistCallback(stateRef.value, rngRef.current.getSeed(), lastTickAtRef.value)
   }
 

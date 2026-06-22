@@ -13,7 +13,7 @@ import zonesData from '../content/zones/zones.json'
 import type { ContentEntry } from './types.js'
 import zoneConditionsData from '../content/zones/zone_conditions.json'
 import { restoreShieldAtHub } from './shields.js'
-import { decayGreedForHubReturn, majorConditionChanceFromGreed } from './greed.js'
+import { decayGreedForHubReturn, majorConditionChanceFromGreed, resetGreedAfterDowned } from './greed.js'
 
 const zones = zonesData as ZoneEntry[]
 
@@ -103,7 +103,7 @@ export function tickPhase(
     }
     // Healing items are lost on death — clear immediately so they aren't visible during DOWNED phase
     if (forced === 'DOWNED') {
-      forcedRaid = { ...forcedRaid, activeShieldRecharge: null, healingItems: [] }
+      forcedRaid = { ...forcedRaid, activeShieldRecharge: null, healingItems: [], greedLevel: resetGreedAfterDowned() }
     }
     if (forced === 'EXTRACTING') {
       forcedRaid = { ...forcedRaid, activeShieldRecharge: null }
@@ -155,7 +155,7 @@ export function tickPhase(
 
   // Healing items are lost on death — clear on natural DOWNED transitions too.
   if (next === 'DOWNED') {
-    updatedRaid = { ...updatedRaid, activeShieldRecharge: null, healingItems: [] }
+    updatedRaid = { ...updatedRaid, activeShieldRecharge: null, healingItems: [], greedLevel: resetGreedAfterDowned() }
   }
 
   if (next === 'EXTRACTING') {

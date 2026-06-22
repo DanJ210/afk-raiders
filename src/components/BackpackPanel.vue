@@ -79,7 +79,7 @@ const greedColorClass = computed(() => {
 
       <div class="flex items-center gap-2 mb-2.5">
         <span class="subpanel-label">Greed Level</span>
-        <div class="flex-1 h-2 bg-surface-raised rounded overflow-hidden" :title="`Greed: ${raid.greedLevel}/100. Higher greed nudges rare loot and future major zone conditions.`">
+        <div class="flex-1 h-2 bg-surface-raised rounded overflow-hidden" :title="`Greed: ${raid.greedLevel}/100. Higher greed nudges rare loot, dangerous events, and future major zone conditions.`">
           <div
             class="h-full rounded transition-[width] duration-(--duration-greed-fill) ease-in-out"
             :class="greedColorClass.bar"

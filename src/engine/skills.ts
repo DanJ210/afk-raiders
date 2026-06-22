@@ -1,9 +1,34 @@
 import skillsData from '../content/skills.json'
+import progressionConfigData from '../content/progression_config.json'
 import type { RaiderSkillProgress, RaiderSkillsState, SkillDefinition, SkillTrackId } from './types.js'
 import type { RNG } from './rng.js'
 
-export const SKILL_TRACK_IDS: SkillTrackId[] = ['cardio', 'hoarding', 'hiding_in_lockers']
-export const skillDefinitions = skillsData as SkillDefinition[]
+export const SKILL_TRACK_IDS: SkillTrackId[] = ['cardio', 'hoarding', 'hiding_in_lockers', 'signal_handling']
+
+type SkillXpThresholdProfileId = 'standard' | 'prototype'
+
+interface ProgressionConfig {
+  skillXpThresholdProfile: SkillXpThresholdProfileId
+  skillXpThresholdProfiles: Record<SkillXpThresholdProfileId, number[]>
+}
+
+const progressionConfig = progressionConfigData as ProgressionConfig
+
+function activeSkillXpThresholds(definition: SkillDefinition): number[] {
+  const thresholds = progressionConfig.skillXpThresholdProfiles[progressionConfig.skillXpThresholdProfile]
+  if (!thresholds) {
+    throw new Error(`Unknown skill XP threshold profile: ${progressionConfig.skillXpThresholdProfile}`)
+  }
+  if (thresholds.length !== definition.maxLevel) {
+    throw new Error(`Skill XP threshold profile "${progressionConfig.skillXpThresholdProfile}" must define ${definition.maxLevel} thresholds`)
+  }
+  return thresholds
+}
+
+export const skillDefinitions = (skillsData as SkillDefinition[]).map(definition => ({
+  ...definition,
+  xpThresholds: [...activeSkillXpThresholds(definition)],
+}))
 
 const definitionById = new Map<SkillTrackId, SkillDefinition>()
 for (const definition of skillDefinitions) {
@@ -21,6 +46,7 @@ export type SkillPracticeReason =
   | 'robot_survived'
   | 'failed_extraction'
   | 'hidden_pocket_saved'
+  | 'signal_used'
 
 export interface SkillPracticeTrigger {
   skillId: SkillTrackId

@@ -1,0 +1,7 @@
+{
+  "skillXpThresholdProfile": "standard",
+  "skillXpThresholdProfiles": {
+    "standard": [40, 120, 260, 450, 700],
+    "prototype": [8, 24, 52, 90, 140]
+  }
+}

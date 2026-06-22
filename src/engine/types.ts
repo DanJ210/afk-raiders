@@ -84,7 +84,7 @@ export interface ShieldRechargerItem extends ContentEntry {
   rarity: number
 }
 
-export type SkillTrackId = 'cardio' | 'hoarding' | 'hiding_in_lockers'
+export type SkillTrackId = 'cardio' | 'hoarding' | 'hiding_in_lockers' | 'signal_handling'
 
 export interface SkillDefinition {
   id: SkillTrackId

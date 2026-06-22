@@ -91,6 +91,7 @@ describe('raidStateMachine', () => {
       ...initial.raid,
       phase: 'RAIDING',
       phaseTicksRemaining: 1,
+      greedLevel: 48,
       healingItems: [
         {
           itemId: 'bandage_blue',
@@ -107,6 +108,21 @@ describe('raidStateMachine', () => {
     expect(result.transition?.to).toBe('DOWNED')
     expect(result.raid.phase).toBe('DOWNED')
     expect(result.raid.healingItems).toEqual([])
+    expect(result.raid.greedLevel).toBe(0)
+  })
+
+  it('resets greed when forced into DOWNED', () => {
+    const initial = createInitialState(0)
+    const result = tickPhase({
+      ...initial.raid,
+      phase: 'EXTRACTING',
+      greedLevel: 64,
+    }, 'DOWNED')
+
+    expect(result.transition?.from).toBe('EXTRACTING')
+    expect(result.transition?.to).toBe('DOWNED')
+    expect(result.raid.phase).toBe('DOWNED')
+    expect(result.raid.greedLevel).toBe(0)
   })
 
   it('fully repairs and refills the current shield when returning to HUB', () => {

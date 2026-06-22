@@ -19,6 +19,7 @@ import scrapComponentsData from '../../src/content/loot-tables/scrap_components.
 import valuablesData from '../../src/content/loot-tables/valuables.json'
 import weaponsPartsData from '../../src/content/loot-tables/weapons_parts.json'
 import skillsData from '../../src/content/skills.json'
+import progressionConfigData from '../../src/content/progression_config.json'
 import raiderLevelsData from '../../src/content/raider_levels.json'
 import { MAX_RAIDER_LEVEL } from '../../src/engine/raiderLevel'
 import type { RaiderLevelContent, SkillDefinition, SkillTrackId } from '../../src/engine/types'
@@ -62,8 +63,12 @@ const DEADLINESS_RANK = {
 const BUILT_IN_SLOTS = new Set(['mundane_item', 'water_item', 'healing_item', 'count'])
 const VALID_PHASES = new Set<Phase>(['HUB', 'DEPLOYING', 'RAIDING', 'EXTRACTING', 'DOWNED'])
 const VALID_DANGER_LEVELS = new Set<DangerLevel>(['Low', 'Medium', 'High'])
-const VALID_SKILL_IDS = new Set<SkillTrackId>(['cardio', 'hoarding', 'hiding_in_lockers'])
+const VALID_SKILL_IDS = new Set<SkillTrackId>(['cardio', 'hoarding', 'hiding_in_lockers', 'signal_handling'])
 const skills = skillsData as SkillDefinition[]
+const progressionConfig = progressionConfigData as {
+  skillXpThresholdProfile: string
+  skillXpThresholdProfiles: Record<string, number[]>
+}
 const raiderLevels = raiderLevelsData as RaiderLevelContent
 
 // Robot flavor slots: {robot_flavor_<robotId>}
@@ -506,6 +511,37 @@ describe('content validation', () => {
         for (const text of [...skill.effectTextByLevel, ...skill.levelUpTextByLevel]) {
           expect(text.trim(), `skill "${skill.id}" has empty text`).not.toBe('')
         }
+      }
+    })
+  })
+
+  describe('progression_config.json', () => {
+    it('defines valid skill XP threshold profiles', () => {
+      const profileEntries = Object.entries(progressionConfig.skillXpThresholdProfiles)
+      expect(profileEntries.length).toBeGreaterThan(0)
+      expect(
+        progressionConfig.skillXpThresholdProfiles[progressionConfig.skillXpThresholdProfile],
+        'active skill XP threshold profile must exist',
+      ).toBeDefined()
+
+      for (const [profileId, thresholds] of profileEntries) {
+        expect(thresholds, `profile "${profileId}" threshold count`).toHaveLength(skills[0]?.maxLevel ?? 0)
+
+        let previousThreshold = 0
+        for (const threshold of thresholds) {
+          expect(Number.isInteger(threshold), `profile "${profileId}" threshold must be an integer`).toBe(true)
+          expect(threshold, `profile "${profileId}" thresholds must ascend`).toBeGreaterThan(previousThreshold)
+          previousThreshold = threshold
+        }
+      }
+    })
+
+    it('keeps the standard skill XP profile aligned with skill definitions', () => {
+      const standardThresholds = progressionConfig.skillXpThresholdProfiles.standard
+      expect(standardThresholds, 'standard skill XP threshold profile must exist').toBeDefined()
+
+      for (const skill of skills) {
+        expect(skill.xpThresholds, `skill "${skill.id}" standard thresholds`).toEqual(standardThresholds)
       }
     })
   })

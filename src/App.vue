@@ -121,7 +121,7 @@ const phaseTimeText = computed(() => {
         :condition-description="currentConditionDescription"
       />
 
-      <section v-if="activeMobileTab === 'comms'" class="app__mobile-fill min-h-0 flex-1 flex flex-col gap-2.5 overflow-y-auto">
+      <section v-if="activeMobileTab === 'comms'" class="app__mobile-fill app__mobile-comms min-h-0 flex-1 flex flex-col gap-2.5 overflow-y-auto">
         <CommsLog />
       </section>
 
@@ -188,6 +188,10 @@ const phaseTimeText = computed(() => {
 }
 
 /* Mobile: force full-bleed panels to fill available height */
+.app__mobile-comms {
+  flex: 1 1 0;
+}
+
 .app__mobile-fill > * {
   flex: 1;
   min-height: 0;
@@ -198,5 +202,9 @@ const phaseTimeText = computed(() => {
 .app__mobile-fill :deep(.backpack-panel) {
   height: 100%;
   max-height: none;
+}
+
+.app__mobile-comms :deep(.comms-log) {
+  min-height: var(--spacing-comms-mobile-expanded-min);
 }
 </style>

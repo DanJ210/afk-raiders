@@ -8,7 +8,7 @@
  *
  * Formula explanation:
  *
- *   baseExtractChance = 1.5%  (Raider's survival instinct, barely)
+ *   baseExtractChance = 2.3%  (Raider's survival instinct, barely)
  *   extractChance     = clamp(baseExtractChance, 0.5%, 8%) plus survival modifiers
  *
  *   deathChance comes from danger-level ambient RAIDING pressure and skill modifiers.
@@ -18,7 +18,7 @@
  *   CALL_EXTRACT forces the extraction branch regardless of RNG
  *   Low HP without field meds adds a survival-instinct extraction bonus, dampened by danger level
  *
- * Greed is event-driven: this function never increases greed by itself.
+ * Greed rises slowly whenever the Raider keeps pushing deeper.
  *
  * Roll order: death check first, then extract check, else push deeper.
  */
@@ -26,6 +26,8 @@
 import type { DangerLevel, RaidState } from './types.js'
 import type { RNG } from './rng.js'
 import { getDangerLevelProfile } from './dangerLevelProfiles.js'
+import { PHASE_DURATIONS } from './raidStateMachine.js'
+import { growGreedAfterPushDeeper } from './greed.js'
 
 export type GreedOutcome = 'PUSH_DEEPER' | 'EXTRACT' | 'DOWNED'
 
@@ -34,9 +36,10 @@ export interface GreedCheckResult {
   newGreedLevel: number
 }
 
-const BASE_EXTRACT_CHANCE = 0.015
+const BASE_EXTRACT_CHANCE = 0.023
 const MIN_EXTRACT_CHANCE = 0.005
 const MAX_EXTRACT_CHANCE = 0.08
+export const DEFAULT_MIN_NATURAL_EXTRACTION_RAIDING_TICKS = Math.floor(PHASE_DURATIONS.RAIDING / 2)
 const LOW_HP_EXTRACTION_DANGER_MULTIPLIER: Record<DangerLevel, number> = {
   Low: 1,
   Medium: 0.25,
@@ -59,6 +62,15 @@ function lowHpExtractionBonus(
   return 0
 }
 
+function elapsedRaidingTicks(raid: RaidState): number {
+  return Math.max(0, PHASE_DURATIONS.RAIDING - raid.phaseTicksRemaining)
+}
+
+function canNaturallyExtract(raid: RaidState, minimumRaidingTicksBeforeExtraction: number): boolean {
+  const minimumTicks = Math.max(0, Math.floor(minimumRaidingTicksBeforeExtraction))
+  return elapsedRaidingTicks(raid) >= minimumTicks
+}
+
 /** Run the Greed Check for one tick. Returns outcome + updated greed level. */
 export function runGreedCheck(
   raid: RaidState,
@@ -69,6 +81,7 @@ export function runGreedCheck(
     hasHealingItems?: boolean
     extractionChanceBonus?: number
     deathChanceMultiplier?: number
+    minimumRaidingTicksBeforeExtraction?: number
   },
 ): GreedCheckResult {
   const { greedLevel, forceExtract } = raid
@@ -78,10 +91,13 @@ export function runGreedCheck(
     return { outcome: 'EXTRACT', newGreedLevel: greedLevel }
   }
 
-  let extractChance = BASE_EXTRACT_CHANCE
-  extractChance += lowHpExtractionBonus(opts.currentHp, opts.maxHp, opts.hasHealingItems ?? false, raid.dangerLevel)
-  extractChance += opts.extractionChanceBonus ?? 0
-  extractChance = Math.min(MAX_EXTRACT_CHANCE, Math.max(MIN_EXTRACT_CHANCE, extractChance))
+  let extractChance = 0
+  if (canNaturallyExtract(raid, opts.minimumRaidingTicksBeforeExtraction ?? DEFAULT_MIN_NATURAL_EXTRACTION_RAIDING_TICKS)) {
+    extractChance = BASE_EXTRACT_CHANCE
+    extractChance += lowHpExtractionBonus(opts.currentHp, opts.maxHp, opts.hasHealingItems ?? false, raid.dangerLevel)
+    extractChance += opts.extractionChanceBonus ?? 0
+    extractChance = Math.min(MAX_EXTRACT_CHANCE, Math.max(MIN_EXTRACT_CHANCE, extractChance))
+  }
 
   const profile = getDangerLevelProfile(raid.dangerLevel)
 
@@ -99,5 +115,5 @@ export function runGreedCheck(
     return { outcome: 'EXTRACT', newGreedLevel: greedLevel }
   }
 
-  return { outcome: 'PUSH_DEEPER', newGreedLevel: greedLevel }
+  return { outcome: 'PUSH_DEEPER', newGreedLevel: growGreedAfterPushDeeper(greedLevel) }
 }

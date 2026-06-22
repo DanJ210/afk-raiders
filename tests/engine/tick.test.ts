@@ -9,6 +9,7 @@ import type { RNG } from '../../src/engine/rng'
 import { maybeAwardLootBonusConsumables, processTick } from '../../src/engine/tick'
 import { createInitialState } from '../../src/engine/initialState'
 import { getRaiderLevelFromXp, xpRequiredForLevel } from '../../src/engine/raiderLevel'
+import { skillDefinitionById } from '../../src/engine/skills'
 
 const FIXED_SEED = 42
 
@@ -204,6 +205,7 @@ describe('deterministic snapshot', () => {
   it('awards autonomous skill practice and level-up comms on extraction', () => {
     const rng = createRNG(FIXED_SEED)
     const initial = createInitialState(0)
+    const cardioLevelOneXp = skillDefinitionById('cardio').xpThresholds[0]
     const state = {
       ...initial,
       raider: {
@@ -213,7 +215,7 @@ describe('deterministic snapshot', () => {
           ...initial.raider.skills,
           cardio: {
             ...initial.raider.skills.cardio,
-            xp: 7,
+            xp: cardioLevelOneXp - 1,
           },
         },
       },
@@ -277,6 +279,28 @@ describe('deterministic snapshot', () => {
     expect(result.state.raider.levelXp).toBeGreaterThanOrEqual(xpRequiredForLevel(2))
     expect(getRaiderLevelFromXp(result.state.raider.levelXp)).toBe(2)
     expect(result.events.some(event => event.id === 'raider_level_2')).toBe(true)
+  })
+
+  it('awards base Raider Level XP for a successful extraction even without loot', () => {
+    const rng = createRNG(FIXED_SEED)
+    const initial = createInitialState(0)
+    const state = {
+      ...initial,
+      raid: {
+        ...initial.raid,
+        zone: 'damp_battlegrounds',
+        dangerLevel: 'Low' as const,
+        phase: 'EXTRACTING' as const,
+        phaseTicksRemaining: 1,
+        backpack: [],
+        backpackValue: 0,
+      },
+    }
+
+    const result = processTick(state, rng, 0)
+
+    expect(result.state.raider.levelXp).toBeGreaterThan(0)
+    expect(result.state.raider.levelXp).toBeLessThanOrEqual(25)
   })
 
   it('pays the Raider Level extraction stipend from unlocked title bands', () => {
