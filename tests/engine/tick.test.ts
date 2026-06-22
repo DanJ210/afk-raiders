@@ -451,6 +451,7 @@ describe('deterministic snapshot', () => {
     const initial = createInitialState(0)
     const state = {
       ...initial,
+      raider: { ...initial.raider, hp: 73 },
       raid: {
         ...initial.raid,
         phase: 'RAIDING' as const,
@@ -461,7 +462,27 @@ describe('deterministic snapshot', () => {
 
     const result = processTick(state, rng, 0)
     expect(result.state.raid.phase).toBe('DOWNED')
+    expect(result.state.raider.hp).toBe(0)
     expect(result.events.some(e => e.id === 'phase_RAIDING_to_DOWNED')).toBe(true)
+  })
+
+  it('keeps HP at 0 while the raider remains DOWNED', () => {
+    const rng = createRNG(FIXED_SEED)
+    const initial = createInitialState(0)
+    const state = {
+      ...initial,
+      raider: { ...initial.raider, hp: 42 },
+      raid: {
+        ...initial.raid,
+        phase: 'DOWNED' as const,
+        phaseTicksRemaining: 2,
+      },
+    }
+
+    const result = processTick(state, rng, 0)
+
+    expect(result.state.raid.phase).toBe('DOWNED')
+    expect(result.state.raider.hp).toBe(0)
   })
 
   it('stacks extracted quantities into existing stash entries', () => {
