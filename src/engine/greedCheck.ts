@@ -14,8 +14,7 @@
  *   deathChance comes from danger-level ambient RAIDING pressure and skill modifiers.
  *   Greed no longer directly changes extraction odds or downed chance.
  *
- *   Calm     lowers greed before the roll; it does not alter extraction chance directly.
- *   Pressure raises greed before the roll; it does not alter extraction chance directly.
+ *   Calm/Pressure are applied to raid.greedLevel before this function is called.
  *   CALL_EXTRACT forces the extraction branch regardless of RNG
  *   Low HP without field meds adds a survival-instinct extraction bonus, dampened by danger level
  *
@@ -65,8 +64,6 @@ export function runGreedCheck(
   raid: RaidState,
   rng: RNG,
   opts: {
-    calmed: boolean
-    pressured: boolean
     currentHp?: number
     maxHp?: number
     hasHealingItems?: boolean

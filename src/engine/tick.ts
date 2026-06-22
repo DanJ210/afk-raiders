@@ -369,8 +369,6 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
       raidForGreedCheck,
       rng,
       {
-        calmed: currentState.pendingCalm,
-        pressured: currentState.pendingPressure,
         currentHp: currentState.raider.hp,
         maxHp: currentState.raider.maxHp,
         hasHealingItems: currentState.raid.healingItems.length > 0,
