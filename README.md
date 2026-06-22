@@ -64,6 +64,8 @@ npm run preview  # Preview the production build locally
 npm test         # Run Vitest unit tests
 ```
 
+PWA install prompts are browser-controlled and usually will not appear during `npm run dev`. To test installability, run `npm run build` followed by `npm run preview`, then open the preview URL in Chrome or Edge. The custom install banner appears only after the browser fires `beforeinstallprompt`; iOS/Safari uses the manual "Add to Home Screen" flow instead.
+
 ### Prototype progression profile
 
 Skill XP pacing is configured in [`src/content/progression_config.json`](src/content/progression_config.json):
