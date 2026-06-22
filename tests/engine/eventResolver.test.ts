@@ -244,6 +244,38 @@ describe('applyEffects — backpack item behavior', () => {
     expect(highMoodAverage - lowMoodAverage).toBeGreaterThan(0.05)
   })
 
+  it('slightly biases loot rarity quality by greed', () => {
+    const template: EventTemplate = {
+      id: 'test_greed_rarity_bias',
+      weight: 1,
+      text: 'Greed-adjusted loot roll.',
+      effects: { backpackValue: 90 },
+    }
+
+    const averageRarityForGreed = (greedLevel: number): number => {
+      let totalRarity = 0
+      const sampleSize = 800
+
+      for (let seed = 1; seed <= sampleSize; seed += 1) {
+        const initial = createInitialState(0)
+        const state = {
+          ...initial,
+          raid: { ...initial.raid, dangerLevel: null, greedLevel },
+        }
+        const result = applyEffects(state, template, createRNG(seed))
+        totalRarity += result.state.raid.backpack[0].rarity
+      }
+
+      return totalRarity / sampleSize
+    }
+
+    const lowGreedAverage = averageRarityForGreed(0)
+    const highGreedAverage = averageRarityForGreed(100)
+
+    expect(highGreedAverage).toBeGreaterThan(lowGreedAverage)
+    expect(highGreedAverage - lowGreedAverage).toBeGreaterThan(0.03)
+  })
+
   it('routes negative HP effects through shield mitigation', () => {
     const initial = createInitialState(0)
     const result = applyEffects(initial, FIXED_DAMAGE_TEMPLATE, createRNG(1))

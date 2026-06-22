@@ -11,7 +11,7 @@ const entries = computed(() => [...store.log].reverse())
 const logEntryCount = computed(() => store.log.length)
 const raidShield = computed(() => store.raid.shield)
 const raidShieldRecharge = computed(() => store.raid.activeShieldRecharge)
-const showMobileRaiderStatus = computed(() => store.phase === 'RAIDING' || store.phase === 'EXTRACTING')
+const showMobileRaiderStatus = computed(() => Boolean(store.phase))
 const now = useNow({ interval: 1000 })
 const phaseTimerMs = computed(() => {
   if (store.raid.phaseTicksRemaining <= 0) return 0
@@ -68,7 +68,7 @@ function phaseBadge(phase: string): string {
       <span>📻</span>
       <span>COMMS FEED</span>
     </header>
-    <!-- Mobile-only raider status: hidden on desktop, shown during active field phases on small screens -->
+    <!-- Mobile-only raider status: hidden on desktop, shown during all phases on small screens -->
     <div
       v-if="showMobileRaiderStatus"
       class="mt-2 px-3.5 py-2 border-b border-border bg-surface-raised hidden max-[600px]:block"

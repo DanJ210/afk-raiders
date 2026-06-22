@@ -49,14 +49,14 @@ export interface SkillPracticeResult {
 
 export interface SkillModifierProfile {
   extractionChanceBonus: number
-  greedDeathChanceMultiplier: number
+  ambientRaidDeathChanceMultiplier: number
   lootValueMultiplier: number
   lootBonusConsumableChanceBonus: number
   robotFailureDamageMultiplier: number
 }
 
 const CARDIO_EXTRACT_CHANCE_PER_LEVEL = 0.0015
-const CARDIO_GREED_DEATH_REDUCTION_PER_LEVEL = 0.03
+const CARDIO_AMBIENT_RAID_DEATH_REDUCTION_PER_LEVEL = 0.03
 const HOARDING_LOOT_VALUE_PER_LEVEL = 0.01
 const HOARDING_BONUS_CONSUMABLE_CHANCE_PER_LEVEL = 0.005
 const HIDING_ROBOT_DAMAGE_REDUCTION_PER_LEVEL = 0.025
@@ -202,7 +202,7 @@ export function getSkillModifierProfile(skills: RaiderSkillsState | undefined): 
 
   return {
     extractionChanceBonus: cardioLevel * CARDIO_EXTRACT_CHANCE_PER_LEVEL,
-    greedDeathChanceMultiplier: Math.max(0.75, 1 - cardioLevel * CARDIO_GREED_DEATH_REDUCTION_PER_LEVEL),
+    ambientRaidDeathChanceMultiplier: Math.max(0.75, 1 - cardioLevel * CARDIO_AMBIENT_RAID_DEATH_REDUCTION_PER_LEVEL),
     lootValueMultiplier: 1 + hoardingLevel * HOARDING_LOOT_VALUE_PER_LEVEL,
     lootBonusConsumableChanceBonus: hoardingLevel * HOARDING_BONUS_CONSUMABLE_CHANCE_PER_LEVEL,
     robotFailureDamageMultiplier: Math.max(0.75, 1 - hidingLevel * HIDING_ROBOT_DAMAGE_REDUCTION_PER_LEVEL),

@@ -36,6 +36,7 @@ import { clampMood, getMoodRarityWeightMultiplier, getMoodResilienceReductionPer
 import { applyShieldedDamage, startShieldRecharge, type ShieldDamageResult } from './shields.js'
 import { getSkillModifierProfile } from './skills.js'
 import { getRaiderLevelBenefitProfile } from './raiderLevel.js'
+import { clampGreedLevel, getGreedRarityWeightMultiplier } from './greed.js'
 
 // One events file per phase: HUB, DEPLOYING, RAIDING, EXTRACTING, DOWNED
 const events = [
@@ -262,27 +263,27 @@ function fillSlots(text: string, rng: RNG): string {
   })
 }
 
-function weightedLootPick(items: LootItem[], rng: RNG, profile: DangerLevelProfile, mood: number): LootItem {
+function weightedLootPick(items: LootItem[], rng: RNG, profile: DangerLevelProfile, mood: number, greedLevel: number): LootItem {
   return rng.weightedPick(items.map(item => ({
     ...item,
-    weight: item.weight * rarityWeight(profile, item.rarity) * getMoodRarityWeightMultiplier(item.rarity, mood),
+    weight: item.weight * rarityWeight(profile, item.rarity) * getMoodRarityWeightMultiplier(item.rarity, mood) * getGreedRarityWeightMultiplier(item.rarity, greedLevel),
   })))
 }
 
-function pickLootItemForValue(targetValue: number, rng: RNG, profile: DangerLevelProfile, mood: number): LootItem {
+function pickLootItemForValue(targetValue: number, rng: RNG, profile: DangerLevelProfile, mood: number, greedLevel: number): LootItem {
   const exactMatches = loot.filter(item => item.value === targetValue)
   if (exactMatches.length > 0) {
-    return weightedLootPick(exactMatches, rng, profile, mood)
+    return weightedLootPick(exactMatches, rng, profile, mood, greedLevel)
   }
 
   const lowerMatches = loot.filter(item => item.value <= targetValue)
   if (lowerMatches.length > 0) {
     const highestValue = Math.max(...lowerMatches.map(item => item.value))
     const bestMatches = lowerMatches.filter(item => item.value === highestValue)
-    return weightedLootPick(bestMatches, rng, profile, mood)
+    return weightedLootPick(bestMatches, rng, profile, mood, greedLevel)
   }
 
-  return weightedLootPick(loot, rng, profile, mood)
+  return weightedLootPick(loot, rng, profile, mood, greedLevel)
 }
 
 function addBackpackItem(
@@ -712,7 +713,7 @@ export function applyEffects(
       const profile = getDangerLevelProfile(raid.dangerLevel)
       const skillModifiers = getSkillModifierProfile(raider.skills)
       const profiledDelta = Math.max(1, Math.round(delta * profile.lootValueMultiplier * skillModifiers.lootValueMultiplier))
-      const item = pickLootItemForValue(profiledDelta, rng, profile, raider.mood)
+      const item = pickLootItemForValue(profiledDelta, rng, profile, raider.mood, raid.greedLevel)
       raid = addBackpackItem(raid, item)
       raid = {
         ...raid,
@@ -761,7 +762,7 @@ export function applyEffects(
   }
 
   if (effects.greedLevel !== undefined) {
-    const greedLevel = Math.min(100, Math.max(0, raid.greedLevel + effects.greedLevel))
+    const greedLevel = clampGreedLevel(raid.greedLevel + effects.greedLevel)
     const greedDelta = greedLevel - raid.greedLevel
     raid = { ...raid, greedLevel }
     if (greedDelta !== 0) {

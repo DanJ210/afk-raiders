@@ -40,7 +40,7 @@ Key docs — read these before making changes:
 ## Key Game Features
 
 ### Danger Level & Zone Conditions
-- Each deployment picks both a zone and a seeded zone condition from `src/content/zones/zone_conditions.json`.
+- Each deployment picks both a zone and a seeded zone condition from `src/content/zones/zone_conditions.json`. Conditions are split into minor and major pools; carried-over greed nudges the seeded pool roll toward major conditions before weighted condition selection.
 - Zone conditions set `RaidState.dangerLevel` (`Low` / `Medium` / `High`).
 - Danger-level profiles in `src/engine/dangerLevelProfiles.ts` tune reward/risk globally:
 	- Loot value and rarity bias
@@ -52,6 +52,7 @@ Key docs — read these before making changes:
 ### Loot Tables and Mood Bias
 - Loot is sourced from `src/content/loot-tables/*.json` plus robot loot tables.
 - Mood provides a mild rarity bias (positive mood slightly favors higher rarity, negative mood slightly favors lower rarity).
+- Greed provides a second mild rarity bias toward higher-rarity loot. Keep this weaker than danger-level profile effects.
 - Keep mood effects subtle; danger-level profiles are the primary risk/reward lever.
 - Event-driven mood changes are appended to the comms event text as the actual signed post-clamp delta (for example `Mood +2.` or `Mood -1.`).
 
@@ -66,13 +67,13 @@ AFK Raiders includes a parody safe pocket named **Secret Hidden Pocket**:
 - On successful extraction, do not duplicate this item; normal backpack extraction already transfers all loot.
 
 ### Raid Pacing
-Raid aggression is autonomous; there is no extraction preference slider. `runGreedCheck()` uses fixed seeded probabilities so the Raider generally spends more time raiding before choosing to extract. Low HP without any current-raid bandages increases extract probability so the raider tries to survive and cash out, but that no-bandage extraction bonus is dampened by danger level so Medium/High conditions still punish unattended raids. If they do have bandages, this no-bandage extraction bonus is not applied. Scolding also reduces current greed before the next greed check, giving the Handler a direct way to cool risky behavior. Separately, the RAIDING phase has a hard timer cap; timing out in RAIDING transitions to DOWNED.
+Raid aggression is autonomous; there is no extraction preference slider. `runGreedCheck()` uses fixed seeded probabilities so the Raider generally spends more time raiding before choosing to extract. Greed no longer directly lowers extraction chance or adds death pressure; it represents loot appetite, rarity bias, event gates, and decayed major-condition momentum for the next deployment. Low HP without any current-raid bandages increases extract probability so the raider tries to survive and cash out, but that no-bandage extraction bonus is dampened by danger level so Medium/High conditions still punish unattended raids. If they do have bandages, this no-bandage extraction bonus is not applied. Calm reduces current greed and Pressure raises current greed before the next greed check. Separately, the RAIDING phase has a hard timer cap; timing out in RAIDING transitions to DOWNED.
 
 Event-driven greed changes are appended to the comms event text as the actual signed post-clamp delta (for example `Greed +5.` or `Greed -3.`). If an effect is fully swallowed by the 0–100 clamp, do not add a noise line.
 
 During RAIDING, only one Handler action can be pending at a time (`pendingCalm`, `pendingPressure`, or `forceExtract`). When any pending action is set, raid action buttons should remain disabled until the next simulation tick consumes the pending action and logs feedback.
 
-`Signal` is capped at 5 and currently supports these action costs in `src/engine/signal.ts`: `READY_UP` = 2, `ENCOURAGE` = 1, `SCOLD` = 1, `CALL_EXTRACT` = 3.
+`Signal` is capped at 5 and currently supports these action costs in `src/engine/signal.ts`: `READY_UP` = 2, `CALM` = 1, `PRESSURE` = 1, `CALL_EXTRACT` = 3.
 
 ### Extraction Event Outcomes
 - During `EXTRACTING`, events from `src/content/extraction_events.json` can force phase changes via `effects.forcePhase`:

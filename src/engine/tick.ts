@@ -369,13 +369,11 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
       raidForGreedCheck,
       rng,
       {
-        calmed: currentState.pendingCalm,
-        pressured: currentState.pendingPressure,
         currentHp: currentState.raider.hp,
         maxHp: currentState.raider.maxHp,
         hasHealingItems: currentState.raid.healingItems.length > 0,
         extractionChanceBonus: getSkillModifierProfile(currentState.raider.skills).extractionChanceBonus,
-        deathChanceMultiplier: getSkillModifierProfile(currentState.raider.skills).greedDeathChanceMultiplier,
+        deathChanceMultiplier: getSkillModifierProfile(currentState.raider.skills).ambientRaidDeathChanceMultiplier,
       },
     )
 

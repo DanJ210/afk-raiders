@@ -10,6 +10,7 @@
  */
 
 import type { SignalState } from './types.js'
+import { clampGreedLevel } from './greed.js'
 
 export const SIGNAL_CAP = 5
 export const SIGNAL_REGEN_MS = 10 * 60 * 1000  // 10 minutes in ms
@@ -76,11 +77,11 @@ export function spendSignal(signal: SignalState, action: SignalAction): SignalSt
 
 /** Apply the calm action's greed reduction with floor at 0. */
 export function applyCalmGreedReduction(greedLevel: number): number {
-  return Math.max(0, greedLevel - CALM_GREED_REDUCTION)
+  return clampGreedLevel(greedLevel - CALM_GREED_REDUCTION)
 }
 
 export function applyPressureGreedIncrease(greedLevel: number): number {
-  return Math.min(100, greedLevel + PRESSURE_GREED_INCREASE)
+  return clampGreedLevel(greedLevel + PRESSURE_GREED_INCREASE)
 }
 
 /** Refill signal back to cap after spending a Signal Amplifier. */
