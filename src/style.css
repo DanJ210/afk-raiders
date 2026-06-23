@@ -54,6 +54,7 @@
   --spacing-comms-tick-bar: 0.1875rem;
   --spacing-comms-entry-y: 0.3125rem;
   --spacing-comms-timestamp: 3.75rem;
+  --spacing-home-stash-max: 25rem;
   --spacing-raider-label: 4.5rem;
   --spacing-shield-label-compact: 2.625rem;
   --spacing-shield-label: 3.625rem;
@@ -62,6 +63,9 @@
   --text-raider-tiny: 0.7rem;
   --text-raider-value: 0.85rem;
   --text-raider-meta: 0.8rem;
+
+  /* Component stacking */
+  --z-away-summary: 100;
 
   /* Component motion */
   --duration-greed-fill: 400ms;
