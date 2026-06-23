@@ -105,7 +105,7 @@ export function useHandlerActions(
     const raiderLevelGains = skillResult.levelUps.length > 0
       ? rollRaiderXp(
           skillResult.levelUps.map(levelUp => ({ reason: 'skill_level_up', minXp: 5 + levelUp.level, maxXp: 7 + levelUp.level * 2 })),
-          rngRef.current,
+          rngRef.current.clone(),
         )
       : []
     if (raiderLevelGains.length > 0) {
@@ -185,16 +185,16 @@ export function useHandlerActions(
       ...stateRef.value,
       signal: updated,
       raid: deployingRaid,
-      log: [
-        ...stateRef.value.log,
-        {
+      log: appendLogEntries(
+        stateRef.value.log,
+        [{
           id: `phase_${transition.from}_to_${transition.to}`,
           tick: stateRef.value.tick,
           timestamp: actionNow,
           text: transition.eventText,
           phase: transition.to,
-        },
-      ],
+        }],
+      ),
     }
     awardSignalUseSkill(actionNow, 2)
     persistCallback(stateRef.value, rngRef.current.getSeed(), lastTickAtRef.value)

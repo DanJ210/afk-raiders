@@ -525,7 +525,9 @@ describe('content validation', () => {
       ).toBeDefined()
 
       for (const [profileId, thresholds] of profileEntries) {
-        expect(thresholds, `profile "${profileId}" threshold count`).toHaveLength(skills[0]?.maxLevel ?? 0)
+        for (const skill of skills) {
+          expect(thresholds, `profile "${profileId}" threshold count for skill "${skill.id}"`).toHaveLength(skill.maxLevel)
+        }
 
         let previousThreshold = 0
         for (const threshold of thresholds) {
