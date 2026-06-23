@@ -83,7 +83,7 @@ During RAIDING, only one Handler action can be pending at a time (`pendingCalm`,
 	- `DOWNED`: downed at the LZ (backpack lost, hidden pocket still applied)
 
 ### Raid Duration
-Max raid time is 60 ticks = 30 minutes at the 30 s tick cadence. Phase durations are defined in `src/engine/raidStateMachine.ts` as `PHASE_DURATIONS`: HUB ≤ 10 min (20 ticks), DEPLOYING 2 min (4 ticks, one-person tunnel pods), RAIDING ≤ 30 min (60 ticks), EXTRACTING ~2 min (4 ticks), DOWNED 1 min (2 ticks). When the raid timer expires while still in RAIDING, the natural transition is DOWNED (zone nuke failure), not EXTRACTING. If HP reaches 0 in any non-HUB phase the raider goes DOWNED, loses the backpack, and respawns in the HUB. Each phase has its own events file in `src/content/` (hub_events, deployment_events, raiding_events, extraction_events, downed_events).
+Max raid time is 60 ticks = 30 minutes at the 30 s tick cadence. Phase durations are defined in `src/engine/raidStateMachine.ts` as `PHASE_DURATIONS`: HUB ≤ 10 min (20 ticks), DEPLOYING 2 min (4 ticks, one-person tunnel pods), RAIDING ≤ 30 min (60 ticks), EXTRACTING ~2 min (4 ticks), DOWNED 1 min (2 ticks). When the raid timer expires while still in RAIDING, the natural transition is DOWNED (zone nuke failure), not EXTRACTING, unless `CALL_EXTRACT` was already queued for that final tick. If HP reaches 0 in any non-HUB phase the raider goes DOWNED, loses the backpack, and respawns in the HUB. Each phase has its own events file in `src/content/` (hub_events, deployment_events, raiding_events, extraction_events, downed_events).
 
 `Ready Up!` is a HUB-only Handler action that spends signal and forces an immediate transition to `DEPLOYING`.
 

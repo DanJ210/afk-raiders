@@ -418,6 +418,7 @@ describe('deterministic snapshot', () => {
           name: 'Water Bottle',
           value: 5,
           rarity: 1,
+          quantity: 1,
         },
         backpackValue: 20,
       },
@@ -464,6 +465,30 @@ describe('deterministic snapshot', () => {
     expect(result.state.raid.phase).toBe('DOWNED')
     expect(result.state.raider.hp).toBe(0)
     expect(result.events.some(e => e.id === 'phase_RAIDING_to_DOWNED')).toBe(true)
+  })
+
+  it('honors Call Extract when the raid timer expires on the next tick', () => {
+    const rng = createRNG(FIXED_SEED)
+    const initial = createInitialState(0)
+    const state = {
+      ...initial,
+      raider: { ...initial.raider, hp: initial.raider.maxHp },
+      raid: {
+        ...initial.raid,
+        phase: 'RAIDING' as const,
+        phaseTicksRemaining: 1,
+        forceExtract: true,
+        greedLevel: 0,
+      },
+    }
+
+    const result = processTick(state, rng, 0)
+    const phaseTransitionIds = result.events
+      .map(event => event.id)
+      .filter(id => id.startsWith('phase_'))
+
+    expect(phaseTransitionIds).toContain('phase_RAIDING_to_EXTRACTING')
+    expect(phaseTransitionIds).not.toContain('phase_RAIDING_to_DOWNED')
   })
 
   it('keeps HP at 0 while the raider remains DOWNED', () => {

@@ -154,7 +154,7 @@ Shield rechargers are intentionally different from bandages:
 - This is a contract, not a style preference: every processed damage instance must produce a comms damage line, even if the same tick later transitions the raider to DOWNED.
 
 ### 3. Signal as the only real input
-Signal regenerates (~1 per 10 min, capped at 5). Ready Up (2 Signal) starts DEPLOYING from HUB. Calm (1 Signal, internal action ID `CALM`) reduces current greed before the next greed check, cooling rare-loot appetite, risky-event pressure, and future major-condition momentum. Pressure (1 Signal, internal action ID `PRESSURE`) increases current greed before the next check, raising rare-loot appetite, risky-event pressure, and future major-condition momentum. CALL EXTRACT (3 Signal) forces an extraction attempt. Greed itself does not lower extraction chance. Natural extraction is disabled until the raider has spent the configured minimum RAIDING ticks in-zone (`DEFAULT_MIN_NATURAL_EXTRACTION_RAIDING_TICKS`, currently 30 ticks / 15 minutes); CALL EXTRACT bypasses this guard. When the Raider is low on HP and has no current-raid bandages, the Greed Check adds a survival-instinct extraction bonus after that guard, dampened by danger level so Medium and High conditions still punish unattended raids. During RAIDING only one action may be queued at a time, so action buttons lock until the next tick applies and clears the pending action. On successful HUB returns, raid pressure state cools down (greed decays, force-extract clears); DOWNED resets greed to 0.
+Signal regenerates (~1 per 10 min, capped at 5). Ready Up (2 Signal) starts DEPLOYING from HUB. Calm (1 Signal, internal action ID `CALM`) reduces current greed before the next greed check, cooling rare-loot appetite, risky-event pressure, and future major-condition momentum. Pressure (1 Signal, internal action ID `PRESSURE`) increases current greed before the next check, raising rare-loot appetite, risky-event pressure, and future major-condition momentum. CALL EXTRACT (3 Signal) forces an extraction attempt. Greed itself does not lower extraction chance. Natural extraction is disabled until the raider has spent the configured minimum RAIDING ticks in-zone (`DEFAULT_MIN_NATURAL_EXTRACTION_RAIDING_TICKS`, currently 30 ticks / 15 minutes); CALL EXTRACT bypasses this guard, including the final RAIDING tick before timer expiry. When the Raider is low on HP and has no current-raid bandages, the Greed Check adds a survival-instinct extraction bonus after that guard, dampened by danger level so Medium and High conditions still punish unattended raids. During RAIDING only one action may be queued at a time, so action buttons lock until the next tick applies and clears the pending action. On successful HUB returns, raid pressure state cools down (greed decays, force-extract clears); DOWNED resets greed to 0.
 
 ### 4. Lifetime stat collection
 `GameState.stats` tracks long-lived outcomes: extraction/death totals and context (zone + zone/time), robot defeats, and healing item usage.
@@ -225,7 +225,7 @@ Save migration upgrades older saves to version 5 by backfilling missing `levelXp
 - `EXTRACTING`: 4 ticks (~2 minutes)
 - `DOWNED`: 2 ticks
 
-When RAIDING time expires without extraction, the next natural transition is DOWNED (zone nuke failure), not EXTRACTING.
+When RAIDING time expires without extraction, the next natural transition is DOWNED (zone nuke failure), not EXTRACTING. If CALL EXTRACT is already queued on that final tick, the transition is EXTRACTING instead.
 
 ### 6. State updates are immutable-style
 `processTick(state, rng)` returns `{ state: GameState, events: LogEvent[] }` without mutating its input. This keeps Pinia reactivity simple, enables snapshot tests, and makes catch-up a pure fold over ticks.
@@ -238,7 +238,7 @@ When RAIDING time expires without extraction, the next natural transition is DOW
 - `EXTRACTING`: 4 ticks (~2 minutes)
 - `DOWNED`: 2 ticks
 
-If RAIDING time expires without extracting, natural transition goes to DOWNED (zone nuke failure), not EXTRACTING.
+If RAIDING time expires without extracting, natural transition goes to DOWNED (zone nuke failure), not EXTRACTING. If CALL EXTRACT is already queued on that final tick, the transition is EXTRACTING instead.
 
 ## Testing strategy
 - **Engine unit tests (Vitest):** given a fixed seed and starting state, assert the exact event sequence (snapshot tests).
