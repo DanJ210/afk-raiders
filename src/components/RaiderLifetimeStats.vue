@@ -1,13 +1,16 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import type { RaiderLifetimeStats } from '../engine/types'
+import type { RaiderLifetimeStats, RaiderStats } from '../engine/types'
 import { useLifetimeStatsRows } from '../composables/useLifetimeStatsRows'
+import { useRaiderBonusRows } from '../composables/useRaiderBonusRows'
 
 const props = defineProps<{
   stats: RaiderLifetimeStats
+  raider: RaiderStats
 }>()
 
 const viewModel = useLifetimeStatsRows(computed(() => props.stats))
+const bonusViewModel = useRaiderBonusRows(computed(() => props.raider))
 </script>
 
 <template>
@@ -18,6 +21,23 @@ const viewModel = useLifetimeStatsRows(computed(() => props.stats))
       <div class="min-w-0">
         <h4 class="m-0 mb-1 font-mono text-[0.72rem] tracking-[0.04em] text-accent">Outcomes</h4>
         <p class="m-0 font-mono text-[0.72rem] text-muted wrap-anywhere">Extracts: {{ stats.extracts.total }} | Deaths: {{ stats.deaths.total }}</p>
+      </div>
+
+      <div class="min-w-0">
+        <h4 class="m-0 mb-1 font-mono text-[0.72rem] tracking-[0.04em] text-accent">Bonuses</h4>
+        <ul class="list-none m-0 p-0 flex flex-col gap-1">
+          <li
+            v-for="bonus in bonusViewModel.rows.value"
+            :key="bonus.id"
+            class="min-w-0 rounded bg-surface-raised border border-border-subtle p-1.5"
+          >
+            <div class="flex items-baseline justify-between gap-2 min-w-0 max-[600px]:flex-wrap">
+              <span class="font-mono text-raider-tiny text-text font-bold wrap-anywhere">{{ bonus.source }}</span>
+              <span class="font-mono text-[0.68rem] text-accent shrink-0">{{ bonus.value }}</span>
+            </div>
+            <p class="m-0 mt-0.5 font-mono text-[0.66rem] text-muted leading-snug wrap-anywhere">{{ bonus.mechanic }}</p>
+          </li>
+        </ul>
       </div>
 
       <div v-if="viewModel.extractZoneRows.value.length > 0 || viewModel.deathZoneRows.value.length > 0" class="min-w-0">
