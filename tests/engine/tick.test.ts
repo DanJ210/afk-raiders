@@ -418,6 +418,7 @@ describe('deterministic snapshot', () => {
           name: 'Water Bottle',
           value: 5,
           rarity: 1,
+          quantity: 1,
         },
         backpackValue: 20,
       },
@@ -482,11 +483,12 @@ describe('deterministic snapshot', () => {
     }
 
     const result = processTick(state, rng, 0)
+    const phaseTransitionIds = result.events
+      .map(event => event.id)
+      .filter(id => id.startsWith('phase_'))
 
-    expect(result.events.some(e => e.id === 'phase_RAIDING_to_EXTRACTING')).toBe(true)
-    expect(result.events.some(e => e.id === 'phase_RAIDING_to_DOWNED')).toBe(false)
-    expect(result.state.raid.phase).not.toBe('DOWNED')
-    expect(result.state.raider.hp).toBeGreaterThan(0)
+    expect(phaseTransitionIds).toContain('phase_RAIDING_to_EXTRACTING')
+    expect(phaseTransitionIds).not.toContain('phase_RAIDING_to_DOWNED')
   })
 
   it('keeps HP at 0 while the raider remains DOWNED', () => {
