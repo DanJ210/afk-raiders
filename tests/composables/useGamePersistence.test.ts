@@ -38,21 +38,21 @@ describe('useGamePersistence', () => {
         },
         stats: {
           extracts: {
-            total: 2,
-            byZone: { damp_battlegrounds: 2 },
+            total: 0,
+            byZone: { damp_battlegrounds: 3 },
             byZoneAndDanger: { damp_battlegrounds__Medium: 2 },
             removedExtractBreakdown: { old: 99 },
           },
           deaths: {
-            total: 1,
+            total: 'lost to old schema',
             byZone: { damp_battlegrounds: 1 },
-            byZoneAndDanger: { damp_battlegrounds__High: 1 },
+            byZoneAndDanger: { damp_battlegrounds__High: 5 },
             removedDeathBreakdown: { old: 88 },
           },
           robotDefeats: { anxietick: 3 },
           healingItemsUsed: {
-            total: 4,
-            byItem: { bandage_blue: 4 },
+            total: 'lost to old schema',
+            byItem: { bandage_blue: 4, bandage_purple: 2 },
             removedHealingBreakdown: { old: 77 },
           },
           shieldRechargersUsed: {
@@ -74,19 +74,19 @@ describe('useGamePersistence', () => {
     expect(loaded?.state.version).toBe(SAVE_VERSION)
     expect(loaded?.state.stats).toEqual({
       extracts: {
-        total: 2,
-        byZone: { damp_battlegrounds: 2 },
+        total: 3,
+        byZone: { damp_battlegrounds: 3 },
         byZoneAndDanger: { damp_battlegrounds__Medium: 2 },
       },
       deaths: {
-        total: 1,
+        total: 5,
         byZone: { damp_battlegrounds: 1 },
-        byZoneAndDanger: { damp_battlegrounds__High: 1 },
+        byZoneAndDanger: { damp_battlegrounds__High: 5 },
       },
       robotDefeats: { anxietick: 3 },
       healingItemsUsed: {
-        total: 4,
-        byItem: { bandage_blue: 4 },
+        total: 6,
+        byItem: { bandage_blue: 4, bandage_purple: 2 },
       },
     })
   })

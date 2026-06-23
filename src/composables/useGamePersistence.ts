@@ -79,11 +79,39 @@ function sanitizeOutcomeStats(value: unknown, fallbackTotal: number): OutcomeCon
   }
 
   const hasTotal = Object.prototype.hasOwnProperty.call(value, 'total')
+  const byZone = sanitizeCounterMap(value.byZone)
+  const byZoneAndDanger = sanitizeCounterMap(value.byZoneAndDanger)
+  const minimumTotal = Math.max(
+    0,
+    ...Object.values(byZone),
+    ...Object.values(byZoneAndDanger),
+  )
+  const baseTotal = hasTotal ? sanitizeCount(value.total) : fallbackTotal
 
   return {
-    total: hasTotal ? sanitizeCount(value.total) : fallbackTotal,
-    byZone: sanitizeCounterMap(value.byZone),
-    byZoneAndDanger: sanitizeCounterMap(value.byZoneAndDanger),
+    total: Math.max(baseTotal, minimumTotal),
+    byZone,
+    byZoneAndDanger,
+  }
+}
+
+function sanitizeHealingItemsUsed(value: unknown): RaiderLifetimeStats['healingItemsUsed'] {
+  if (!isRecord(value)) {
+    return {
+      total: 0,
+      byItem: {},
+    }
+  }
+
+  const byItem = sanitizeCounterMap(value.byItem)
+  const byItemTotal = Object.values(byItem).reduce((sum, count) => sum + count, 0)
+  const savedTotal = typeof value.total === 'number' && Number.isFinite(value.total)
+    ? sanitizeCount(value.total)
+    : byItemTotal
+
+  return {
+    total: Math.max(savedTotal, byItemTotal),
+    byItem,
   }
 }
 
@@ -91,18 +119,11 @@ function normalizeLifetimeStats(state: GameState): RaiderLifetimeStats {
   const fallback = seedLegacyLifetimeStats(state)
   if (!isRecord(state.stats)) return fallback
 
-  const healingItemsUsed = isRecord(state.stats.healingItemsUsed)
-    ? state.stats.healingItemsUsed
-    : null
-
   return {
     extracts: sanitizeOutcomeStats(state.stats.extracts, fallback.extracts.total),
     deaths: sanitizeOutcomeStats(state.stats.deaths, fallback.deaths.total),
     robotDefeats: sanitizeCounterMap(state.stats.robotDefeats),
-    healingItemsUsed: {
-      total: healingItemsUsed ? sanitizeCount(healingItemsUsed.total) : 0,
-      byItem: sanitizeCounterMap(healingItemsUsed?.byItem),
-    },
+    healingItemsUsed: sanitizeHealingItemsUsed(state.stats.healingItemsUsed),
   }
 }
 
