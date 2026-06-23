@@ -77,7 +77,7 @@
             "id": "circuit_board_arc",
             "weight": 12,
             "rarity": 3,
-            "name": "ARC Circuit Board",
+            "name": "A.R.C. Circuit Board",
             "value": 45,
             "stackSize": 4,
             "flavor": "Stamped with a warning label: 'Do Not Think About It.'"
@@ -230,7 +230,7 @@
             "id": "battery_arc_prime",
             "weight": 3,
             "rarity": 5,
-            "name": "ARC Prime Battery",
+            "name": "A.R.C. Prime Battery",
             "value": 900,
             "stackSize": 1,
             "flavor": "Overpowered. Overconfident. Overkill."

@@ -188,7 +188,7 @@ function phaseTransitionText(from: Phase, to: Phase): string {
   if (from === 'RAIDING' && to === 'EXTRACTING')
     return 'Extract beacon deployed. Shuttle ETA about 90 seconds. Please be at the LZ.'
   if (from === 'RAIDING' && to === 'DOWNED')
-    return "Raider is down. Emotional support pocket contents secured."
+    return "Raider is down. Secret Hidden Pocket contents secured."
   if (from === 'EXTRACTING' && to === 'HUB')
     return 'Successful extraction. Welcome back to Desperanza. Please shower.'
   if (from === 'EXTRACTING' && to === 'RAIDING')

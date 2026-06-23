@@ -5,7 +5,7 @@
             "id": "arc_data_shard",
             "weight": 15,
             "rarity": 3,
-            "name": "ARC Data Shard",
+            "name": "A.R.C. Data Shard",
             "value": 60,
             "stackSize": 5,
             "flavor": "Encrypted. Probably important. Definitely unreadable."
@@ -14,7 +14,7 @@
             "id": "arc_data_shard_corrupted",
             "weight": 20,
             "rarity": 2,
-            "name": "ARC Data Shard (Corrupted)",
+            "name": "A.R.C. Data Shard (Corrupted)",
             "value": 25,
             "stackSize": 5,
             "flavor": "Contains 98% static and 2% screaming."
@@ -23,7 +23,7 @@
             "id": "arc_data_shard_legendary",
             "weight": 3,
             "rarity": 5,
-            "name": "ARC Data Shard (Prime Archive)",
+            "name": "A.R.C. Data Shard (Prime Archive)",
             "value": 900,
             "stackSize": 1,
             "flavor": "You feel smarter just holding it. Briefly."
@@ -71,7 +71,7 @@
             "name": "Prototype Chip (Unknown)",
             "value": 200,
             "stackSize": 1,
-            "flavor": "ARC engineers labeled it 'Do Not Touch.' You touched it."
+            "flavor": "A.R.C. engineers labeled it 'Do Not Touch.' You touched it."
         },
         {
             "id": "prototype_chip_faulty",
@@ -95,7 +95,7 @@
             "id": "arc_encrypted_drive",
             "weight": 12,
             "rarity": 3,
-            "name": "ARC Encrypted Drive",
+            "name": "A.R.C. Encrypted Drive",
             "value": 70,
             "stackSize": 3,
             "flavor": "Requires a password. The password field is 64 characters long."
@@ -104,7 +104,7 @@
             "id": "arc_encrypted_drive_broken",
             "weight": 20,
             "rarity": 2,
-            "name": "ARC Encrypted Drive (Broken)",
+            "name": "A.R.C. Encrypted Drive (Broken)",
             "value": 18,
             "stackSize": 4,
             "flavor": "Contains exactly one intact file: 'notes.txt'. It's empty."
@@ -113,10 +113,10 @@
             "id": "arc_encrypted_drive_master",
             "weight": 3,
             "rarity": 5,
-            "name": "ARC Master Encryption Drive",
+            "name": "A.R.C. Master Encryption Drive",
             "value": 1500,
             "stackSize": 1,
-            "flavor": "You shouldn't have this. ARC would like it back."
+            "flavor": "You shouldn't have this. A.R.C. would like it back."
         },
         {
             "id": "nanite_canister_low",
@@ -149,7 +149,7 @@
             "id": "arc_relay_node",
             "weight": 15,
             "rarity": 3,
-            "name": "ARC Relay Node",
+            "name": "A.R.C. Relay Node",
             "value": 60,
             "stackSize": 3,
             "flavor": "Boosts signal strength and paranoia."
@@ -158,7 +158,7 @@
             "id": "arc_relay_node_broken",
             "weight": 20,
             "rarity": 2,
-            "name": "ARC Relay Node (Broken)",
+            "name": "A.R.C. Relay Node (Broken)",
             "value": 15,
             "stackSize": 4,
             "flavor": "Still tries to connect to something. Anything."
@@ -167,7 +167,7 @@
             "id": "arc_relay_node_prime",
             "weight": 3,
             "rarity": 5,
-            "name": "ARC Relay Node (Prime)",
+            "name": "A.R.C. Relay Node (Prime)",
             "value": 900,
             "stackSize": 1,
             "flavor": "Connects to networks that shouldn't exist."
@@ -203,7 +203,7 @@
             "id": "arc_power_cell",
             "weight": 15,
             "rarity": 3,
-            "name": "ARC Power Cell",
+            "name": "A.R.C. Power Cell",
             "value": 70,
             "stackSize": 4,
             "flavor": "Holds enough power to run a small outpost. Or explode."
@@ -212,7 +212,7 @@
             "id": "arc_power_cell_spent",
             "weight": 25,
             "rarity": 1,
-            "name": "ARC Power Cell (Spent)",
+            "name": "A.R.C. Power Cell (Spent)",
             "value": 10,
             "stackSize": 6,
             "flavor": "Completely drained. Same."
@@ -221,7 +221,7 @@
             "id": "arc_power_cell_prime",
             "weight": 3,
             "rarity": 5,
-            "name": "ARC Power Cell (Prime)",
+            "name": "A.R.C. Power Cell (Prime)",
             "value": 1500,
             "stackSize": 1,
             "flavor": "You feel a faint heartbeat. Probably fine."
@@ -239,7 +239,7 @@
             "id": "experimental_fuse_arc",
             "weight": 10,
             "rarity": 3,
-            "name": "ARC Experimental Fuse",
+            "name": "A.R.C. Experimental Fuse",
             "value": 60,
             "stackSize": 3,
             "flavor": "The label reads: 'Not for field use.'"
@@ -257,7 +257,7 @@
             "id": "arc_memory_core",
             "weight": 12,
             "rarity": 3,
-            "name": "ARC Memory Core",
+            "name": "A.R.C. Memory Core",
             "value": 80,
             "stackSize": 2,
             "flavor": "Contains memories. Not yours."
@@ -266,7 +266,7 @@
             "id": "arc_memory_core_fragmented",
             "weight": 20,
             "rarity": 2,
-            "name": "ARC Memory Core (Fragmented)",
+            "name": "A.R.C. Memory Core (Fragmented)",
             "value": 20,
             "stackSize": 4,
             "flavor": "Shows random images when shaken."
@@ -284,7 +284,7 @@
             "id": "arc_logic_module",
             "weight": 15,
             "rarity": 3,
-            "name": "ARC Logic Module",
+            "name": "A.R.C. Logic Module",
             "value": 70,
             "stackSize": 3,
             "flavor": "Processes logic faster than you process emotions."
@@ -293,7 +293,7 @@
             "id": "arc_logic_module_faulty",
             "weight": 20,
             "rarity": 2,
-            "name": "ARC Logic Module (Faulty)",
+            "name": "A.R.C. Logic Module (Faulty)",
             "value": 18,
             "stackSize": 4,
             "flavor": "Makes decisions at random. Bold."
@@ -302,7 +302,7 @@
             "id": "arc_logic_module_prime",
             "weight": 3,
             "rarity": 5,
-            "name": "ARC Logic Module (Prime)",
+            "name": "A.R.C. Logic Module (Prime)",
             "value": 1500,
             "stackSize": 1,
             "flavor": "Thinks faster than you can blink."
@@ -311,7 +311,7 @@
             "id": "arc_flux_regulator",
             "weight": 12,
             "rarity": 3,
-            "name": "ARC Flux Regulator",
+            "name": "A.R.C. Flux Regulator",
             "value": 80,
             "stackSize": 2,
             "flavor": "Regulates flux. Whatever that means."
@@ -320,7 +320,7 @@
             "id": "arc_flux_regulator_broken",
             "weight": 20,
             "rarity": 2,
-            "name": "ARC Flux Regulator (Broken)",
+            "name": "A.R.C. Flux Regulator (Broken)",
             "value": 20,
             "stackSize": 4,
             "flavor": "Regulates nothing. Looks cool."

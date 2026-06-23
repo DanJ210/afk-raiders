@@ -88,7 +88,7 @@
       "id": "weak_signal",
       "weight": 75,
       "name": "Weak Signal",
-      "description": "Your comms cut out at the worst possible times. Standard ARC experience.",
+      "description": "Your comms cut out at the worst possible times. Standard A.R.C. experience.",
       "dangerLevel": "Low"
     },
     {
@@ -111,7 +111,7 @@
       "id": "acid_rain",
       "weight": 25,
       "name": "Acid Rain",
-      "description": "Burns slightly. Smells worse. ARC claims it's 'within acceptable limits.'",
+      "description": "Burns slightly. Smells worse. A.R.C. claims it's 'within acceptable limits.'",
       "dangerLevel": "High"
     },
     {
@@ -146,7 +146,7 @@
       "id": "toxic_fog",
       "weight": 20,
       "name": "Toxic Fog",
-      "description": "Thick, green, and definitely not safe to breathe. ARC calls it 'atmospheric seasoning.'",
+      "description": "Thick, green, and definitely not safe to breathe. A.R.C. calls it 'atmospheric seasoning.'",
       "dangerLevel": "High"
     },
     {
@@ -166,7 +166,7 @@
     {
       "id": "arc_signal_overload",
       "weight": 20,
-      "name": "ARC Signal Overload",
+      "name": "A.R.C. Signal Overload",
       "description": "Comms explode with static, warnings, and corporate disclaimers.",
       "dangerLevel": "Medium"
     },

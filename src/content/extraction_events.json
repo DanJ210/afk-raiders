@@ -585,7 +585,7 @@
   {
     "id": "extract_stella_red_lz_overrun",
     "weight": 8,
-    "text": "Stella Red turned the LZ into a robot meet-and-greet. Attendance was mandatory and poorly catered.",
+    "text": "Staycation Red turned the LZ into a robot meet-and-greet. Attendance was mandatory and poorly catered.",
     "requires": { "phase": "EXTRACTING", "dangerLevel": "High", "minGreed": 20 },
     "effects": { "damage": 15, "mood": -4, "robotEncounter": "roomba_prime", "robotDamageMultiplier": 1.5 }
   }

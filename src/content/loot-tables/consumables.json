@@ -50,7 +50,7 @@
             "id": "arc_energy_drink_redacted",
             "weight": 15,
             "rarity": 3,
-            "name": "ARC Energy Drink (REDACTED)",
+            "name": "A.R.C. Energy Drink (REDACTED)",
             "value": 35,
             "stackSize": 4,
             "flavor": "Label says: 'Do not consume before, during, or after combat.'"
@@ -59,7 +59,7 @@
             "id": "arc_energy_drink_blue",
             "weight": 20,
             "rarity": 2,
-            "name": "ARC Energy Drink (Blue Lightning)",
+            "name": "A.R.C. Energy Drink (Blue Lightning)",
             "value": 22,
             "stackSize": 6,
             "flavor": "Tastes like electricity and poor decisions."
@@ -68,7 +68,7 @@
             "id": "arc_energy_drink_green",
             "weight": 18,
             "rarity": 2,
-            "name": "ARC Energy Drink (Green Mystery)",
+            "name": "A.R.C. Energy Drink (Green Mystery)",
             "value": 20,
             "stackSize": 6,
             "flavor": "The flavor is listed as 'Yes.'"
@@ -77,7 +77,7 @@
             "id": "arc_energy_drink_ultra",
             "weight": 8,
             "rarity": 4,
-            "name": "ARC Energy Drink (Ultra Overdrive)",
+            "name": "A.R.C. Energy Drink (Ultra Overdrive)",
             "value": 90,
             "stackSize": 3,
             "flavor": "You can feel your teeth vibrating."
@@ -86,7 +86,7 @@
             "id": "arc_energy_drink_black_label",
             "weight": 3,
             "rarity": 5,
-            "name": "ARC Energy Drink (Black Label)",
+            "name": "A.R.C. Energy Drink (Black Label)",
             "value": 500,
             "stackSize": 1,
             "flavor": "The can is warm. The drink is cold. Physics is confused."
@@ -311,7 +311,7 @@
             "id": "tea_bag_arc_special",
             "weight": 10,
             "rarity": 3,
-            "name": "ARC Special Tea Bag",
+            "name": "A.R.C. Special Tea Bag",
             "value": 40,
             "stackSize": 8,
             "flavor": "The tag reads: 'Steep for 3 minutes. Fear for 5.'"

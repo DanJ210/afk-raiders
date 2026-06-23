@@ -18,7 +18,7 @@ You are **not** the raider. You are their Handler back in the underground hub, w
 3. **Raid events:** Loot finds, robot encounters, weather, meeting other AI raiders (alliance → inevitable betrayal). The selected condition sets a `dangerLevel` (Low/Medium/High), which then drives the danger-level profile for both upside (loot value/rarity) and risk (ambient downed pressure, robot pressure, extraction danger).
    - Raider **mood** now provides a tiny secondary bias to loot quality: positive mood slightly improves higher-rarity odds, while negative mood slightly favors lower-rarity outcomes. Greed adds a second small loot-appetite bias toward higher-rarity finds.
 4. **The Greed Check™ (signature mechanic):** Every tick in RAIDING, the Raider rolls to extract *or* keep looting. Natural extraction is locked out for roughly the first half of RAIDING (30 ticks / 15 minutes by default) so the raider cannot immediately bail after deployment; CALL EXTRACT bypasses this. **Greed rises slowly when the Raider keeps pushing deeper**, can jump from specific raiding/extraction events, and is modified by Handler actions (Calm lowers it, Pressure raises it). Higher greed does not directly lower extraction chance; instead it nudges rare loot odds, makes risky robot/extraction events more likely, and decays into major-condition momentum after successful returns. Getting DOWNED resets greed to 0. Pure dramatic tension, zero input required — the Handler can only nudge via Signal actions.
-5. **Extract or die:** Extraction takes ~90 seconds, then a final beat to hit the big RETURN HOME button. During that window **extraction events** can fire — the shuttle may arrive early (instant success), the beacon may get jammed (back into the zone, backpack kept), or the raider may go down at the LZ (lose the bag). If the raider stays in RAIDING until the timer expires, they go DOWNED (zone nuke failure), unless CALL EXTRACT was already queued for that final tick and transitions them to EXTRACTING instead. Death = lose the bag (keep the Emotional Support Pocket item), respawn in hub with a sheepish log entry.
+5. **Extract or die:** Extraction takes ~90 seconds, then a final beat to hit the big RETURN HOME button. During that window **extraction events** can fire — the shuttle may arrive early (instant success), the beacon may get jammed (back into the zone, backpack kept), or the raider may go down at the LZ (lose the bag). If the raider stays in RAIDING until the timer expires, they go DOWNED (zone nuke failure), unless CALL EXTRACT was already queued for that final tick and transitions them to EXTRACTING instead. Death = lose the bag (keep the Secret Hidden Pocket item), respawn in hub with a sheepish log entry.
 
 ### The Home Stash
 Loot that makes it home goes into the **Stash** — a persistent collection that survives raids, deaths, and sessions:
@@ -91,18 +91,20 @@ Everything funny flows through an autoscrolling text feed:
 > 📻 *14:31 — Met another raider. We emoted at each other for 5 minutes then both ran away.*
 
 ## 5. Parody Content Table (legally distinct names)
+The canonical expanded parody reference lives in [docs/lore/PARODY_MAPPING.md](lore/PARODY_MAPPING.md). This table is the short design-doc summary.
+
 | Trope / inspiration | AFK Raiders version |
 |---|---|
 | Underground hub city | **Desperanza** |
 | Small spider bots | **Anxieticks** (they're nervous too) |
 | Alert drones | **Tattletales** |
-| Rocket robot | **The Overcompensator** |
+| Rocket or explosive robot | **Tank of Overcompensation** / **Bomber Who Misreads the Room** |
 | Heavy armored robot | **Roomba Prime** |
 | Giant boss machine | **The Drama Queen** (monologues before attacking) |
 | Flooded dam map | **Damp Battlegrounds** |
 | Ruined city map | **Buried City (Now 30% More Buried)** |
-| Stella Camping Festival | **The Staycation Celebration** (raiders hide in lockers and tents instead of extracting) |
-| Safe pocket | **Emotional Support Pocket** |
+| Camp-heavy event or hot zone | **The Staycation Celebration** (raiders hide in lockers and tents instead of extracting) |
+| Safe pocket | **Secret Hidden Pocket** |
 | Skill trees | **Cardio**, **Hoarding**, **Hiding in Lockers**, **Signal Handling** |
 | A.R.C. acronym | **Aggressively Roaming Chassis** |
 
@@ -142,5 +144,5 @@ Everything funny flows through an autoscrolling text feed:
 | **4 — Native** | Capacitor builds, push notifications, app store release |
 
 ## 9. Legal Positioning
-Parody enjoys some protection, but we do **not** use the "ARC Raiders" trademark, logos, names, lore text, or assets — especially important for app-store distribution. Branding is original; positioning is "affectionate parody of extraction shooters" generally. All names in the parody table above are original to this project.
+Parody enjoys some protection, but we do **not** use the "ARC Raiders" trademark, logos, names, lore text, or assets — especially important for app-store distribution. Branding is original; positioning is "affectionate parody of extraction shooters" generally. All names in the parody table above are original to this project. See [docs/lore/content-guidelines/LEGAL_GUARDRAILS.md](lore/content-guidelines/LEGAL_GUARDRAILS.md) before adding new lore or content.
 

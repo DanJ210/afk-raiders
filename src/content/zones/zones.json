@@ -15,13 +15,13 @@
     "id": "the_breach",
     "weight": 35,
     "name": "The Breach",
-    "description": "A massive tear in the landscape caused by something ARC refuses to comment on. The silence is louder than the robots."
+    "description": "A massive tear in the landscape caused by something A.R.C. refuses to comment on. The silence is louder than the robots."
   },
   {
     "id": "arc_ruins",
     "weight": 40,
-    "name": "ARC Ruins",
-    "description": "Crumbling ARC facilities filled with malfunctioning tech, broken dreams, and questionable safety protocols."
+    "name": "Chassis Graveyard",
+    "description": "Crumbling A.R.C. facilities filled with malfunctioning tech, broken dreams, and questionable safety protocols."
   },
   {
     "id": "the_sunken_highrise",
@@ -38,7 +38,7 @@
   {
     "id": "stella",
     "weight": 100,
-    "name": "Stella Camping Festival",
-    "description": "You'll get camped. You get eighth-partied. Felicia will crash out. It's just Stella."
+    "name": "The Staycation Celebration",
+    "description": "You'll get camped, eighth-partied, and politely informed that everyone is just holding a tactical picnic."
   }
 ]

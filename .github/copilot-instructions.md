@@ -6,6 +6,8 @@ AFK Raiders is a "zero-player" idle comedy game (inspired by Godville) that paro
 Key docs — read these before making changes:
 - `docs/GAME_DESIGN.md` — game concept, mechanics, comedy content, roadmap
 - `docs/ARCHITECTURE.md` — folder structure, engine design, persistence, testing
+- `docs/lore/README.md` — versioned parody lore wiki and source-to-AFK workflow
+- `docs/lore/content-guidelines/LEGAL_GUARDRAILS.md` — rules for legally distinct content
 - `docs/CI_CD_AZURE.md` — CI/PR validation and Azure Static Web Apps deployment flow
 - `docs/SERVER_STORAGE_AND_ACCOUNTS.md` — planned account-backed save sync architecture and backend boundaries
 
@@ -30,6 +32,7 @@ Key docs — read these before making changes:
 - Comedy tone: deadpan, absurd, affectionate parody of extraction-shooter player behavior (loot greed, hoarding, hiding in lockers, "one more crate" syndrome).
 - The comms log IS the product. When in doubt, make the log entry funnier.
 - **Legally distinct parody:** never use the "ARC Raiders" trademark, character names, lore text, or assets. Use this project's parody equivalents (see the parody table in `docs/GAME_DESIGN.md`). In our lore, A.R.C. = "Aggressively Roaming Chassis."
+- For source-lore intake, do not commit copied wiki prose or exact source names. Add AFK-original equivalents to `docs/lore/` first, then convert approved concepts into `src/content/*.json`.
 
 ## Conventions
 - TypeScript strict mode; no `any` unless unavoidable and commented.

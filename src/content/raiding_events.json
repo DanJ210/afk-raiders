@@ -828,14 +828,14 @@
     {
       "id": "stella_red_redline_cache",
       "weight": 8,
-      "text": "Stella Red painted the loot crate like a prize on a dare show. Opened it. Heard distant machinery applaud.",
+      "text": "Staycation Red painted the loot crate like a prize on a dare show. Opened it. Heard distant machinery applaud.",
       "requires": { "phase": "RAIDING", "dangerLevel": "High", "minGreed": 15 },
       "effects": { "backpackValue": 14, "greedLevel": 6, "mood": 2 }
     },
     {
       "id": "stella_red_hunter_ping",
       "weight": 7,
-      "text": "The sky went Stella Red and something pinged my position like I was a limited-time objective.",
+      "text": "The sky went Staycation Red and something pinged my position like I was a limited-time objective.",
       "requires": { "phase": "RAIDING", "dangerLevel": "High", "minGreed": 20 },
       "effects": { "mood": -4, "ratRating": 2, "robotEncounter": "sniper_poor_decisions", "robotDamageMultiplier": 1.5 }
     }
