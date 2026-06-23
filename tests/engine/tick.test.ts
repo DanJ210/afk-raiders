@@ -420,7 +420,7 @@ describe('deterministic snapshot', () => {
           rarity: 1,
           quantity: 1,
         },
-        backpackValue: 20,
+        backpackValue: 20
       },
     }
 

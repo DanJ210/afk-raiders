@@ -98,7 +98,7 @@ const phaseTimeText = computed(() => {
         <SkillsPanel />
         <HomeStash />
         <section class="panel-card shrink-0" aria-label="Lifetime Stats">
-          <RaiderLifetimeStats :stats="lifetimeStats" />
+          <RaiderLifetimeStats :stats="lifetimeStats" :raider="store.raider" />
         </section>
       </aside>
 
@@ -137,7 +137,7 @@ const phaseTimeText = computed(() => {
 
       <section v-if="activeMobileTab === 'stats'" class="min-h-0 flex-1 flex flex-col gap-2.5 overflow-y-auto pb-3">
         <section class="panel-card shrink-0 max-[600px]:p-2.5" aria-label="Lifetime Stats">
-          <RaiderLifetimeStats :stats="lifetimeStats" />
+          <RaiderLifetimeStats :stats="lifetimeStats" :raider="store.raider" />
         </section>
       </section>
 
