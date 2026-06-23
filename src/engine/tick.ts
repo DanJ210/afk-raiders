@@ -30,6 +30,18 @@ import { applyRaiderXpGain, getRaiderLevelBenefitProfile, rollRaiderXp, type Rai
 const LOOT_BONUS_HEALING_ITEM_CHANCE = 0.2 // 20% chance to find a healing item on any loot event, independent of normal loot rolls
 const LOOT_BONUS_SHIELD_RECHARGER_CHANCE = 0.15 // 15% chance to find a shield recharger on any loot event, independent of normal loot rolls
 const NEUTRAL_MOOD_THRESHOLD = 0 // Mood above this is positive, below is negative; separate from the "mood" number which can go up to +5 or down to -5
+
+function enforceDownedHp(state: GameState): GameState {
+  if (state.raid.phase !== 'DOWNED' || state.raider.hp === 0) return state
+  return {
+    ...state,
+    raider: {
+      ...state.raider,
+      hp: 0,
+    },
+  }
+}
+
 /**
  * Apply successful-extraction bookkeeping: transfer loot home, heal up, count
  * the win. If the stash overflows the item limit, the lowest-value items are
@@ -263,6 +275,7 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
     signal: signalAdvance.signal,
     signalAmplifiers: state.signalAmplifiers + signalAdvance.amplifiersGained,
   }
+  currentState = enforceDownedHp(currentState)
 
   if (transition) {
     const transitionText =
@@ -401,7 +414,7 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
       }
     } else if (greedResult.outcome === 'DOWNED') {
       const { raid: r2, transition: t2 } = tickPhase(currentState.raid, 'DOWNED')
-      currentState = { ...currentState, raid: r2 }
+      currentState = enforceDownedHp({ ...currentState, raid: r2 })
       if (t2) {
         emitted.push({
           id: 'phase_RAIDING_to_DOWNED',
@@ -507,7 +520,7 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
           currentState.raid,
           forcedPhase,
         )
-        currentState = { ...currentState, raid: forcedRaid }
+        currentState = enforceDownedHp({ ...currentState, raid: forcedRaid })
         if (forcedTransition) {
           emitted.push({
             id: `phase_${forcedTransition.from}_to_${forcedTransition.to}`,
@@ -568,7 +581,7 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
       currentState.raid,
       'DOWNED',
     )
-    currentState = { ...currentState, raid: downedRaid }
+    currentState = enforceDownedHp({ ...currentState, raid: downedRaid })
     if (downedTransition) {
       emitted.push({
         id: `phase_${fromPhase}_to_DOWNED`,
@@ -579,6 +592,8 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
       })
     }
   }
+
+  currentState = enforceDownedHp(currentState)
 
   // ------------------------------------------------------------------
   // 4. Consume pending Handler actions (emit a feedback line)

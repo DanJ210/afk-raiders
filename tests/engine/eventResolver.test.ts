@@ -10,7 +10,7 @@
 
 import { describe, it, expect } from 'vitest'
 import { createRNG } from '../../src/engine/rng'
-import { applyEffects, consumeHealingItem, consumeShieldRecharger, resolveEvent, resolveHealingItemFind, resolveRobotEncounter, resolveShieldRechargerFind } from '../../src/engine/eventResolver'
+import { applyEffects, consumeHealingItem, consumeShieldRecharger, events as allEvents, resolveEvent, resolveHealingItemFind, resolveRobotEncounter, resolveShieldRechargerFind } from '../../src/engine/eventResolver'
 import { createInitialState } from '../../src/engine/initialState'
 import { xpRequiredForLevel } from '../../src/engine/raiderLevel'
 import type { EventTemplate, HealingItemStack } from '../../src/engine/types'
@@ -59,6 +59,8 @@ const GREED_EFFECT_TEMPLATE: EventTemplate = {
   text: 'You saw loot bait and made a bad choice.',
   effects: { greedLevel: 5 },
 }
+
+const robotEventIds = new Set(allEvents.filter(event => event.effects?.robotEncounter).map(event => event.id))
 
 function makeBandage(overrides: Partial<HealingItemStack> = {}): HealingItemStack {
   return {
@@ -274,6 +276,35 @@ describe('applyEffects — backpack item behavior', () => {
 
     expect(highGreedAverage).toBeGreaterThan(lowGreedAverage)
     expect(highGreedAverage - lowGreedAverage).toBeGreaterThan(0.03)
+  })
+
+  it('biases raiding event selection toward robot danger as greed rises', () => {
+    const countRobotEventsForGreed = (greedLevel: number): number => {
+      let robotEvents = 0
+      const sampleSize = 1000
+
+      for (let seed = 1; seed <= sampleSize; seed += 1) {
+        const initial = createInitialState(0)
+        const state = {
+          ...initial,
+          raid: {
+            ...initial.raid,
+            phase: 'RAIDING' as const,
+            dangerLevel: 'Medium' as const,
+            greedLevel,
+          },
+        }
+        const event = resolveEvent(state, createRNG(seed), 0)
+        if (event && robotEventIds.has(event.id)) robotEvents += 1
+      }
+
+      return robotEvents
+    }
+
+    const lowGreedRobotEvents = countRobotEventsForGreed(0)
+    const highGreedRobotEvents = countRobotEventsForGreed(100)
+
+    expect(highGreedRobotEvents).toBeGreaterThan(lowGreedRobotEvents)
   })
 
   it('routes negative HP effects through shield mitigation', () => {

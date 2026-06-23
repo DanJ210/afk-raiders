@@ -19,6 +19,8 @@ The app is configured as a fully installable Progressive Web App targeting web, 
 - **iOS installation:** Users install via "Share → Add to Home Screen" on Safari. Requires `apple-touch-icon` meta tag, `apple-mobile-web-app-capable`, and `apple-mobile-web-app-status-bar-style` for status bar theming.
 - **Android installation:** Native install prompt appears automatically after short engagement. Falls back to "Add to Home Screen" from the browser menu.
 
+Important testing note: PWA installation is effectively a production/preview behavior, not a normal `npm run dev` behavior. `vite-plugin-pwa` injects the service-worker registration into the built app (`npm run build`, then `npm run preview`), while the dev server generally will not satisfy the same installability path. Even in a production preview, the custom banner appears only after Chromium fires `beforeinstallprompt`; Safari/iOS does not fire that event and relies on the browser's manual "Add to Home Screen" flow. If the app is already installed, site data says the prompt was dismissed, the page is not served from `localhost` or HTTPS, or the browser has not yet considered the app installable, the banner will stay hidden.
+
 Configuration in [vite.config.ts](../vite.config.ts):
 - Manifest is auto-generated with app name, theme colors, icons (192×192 and 512×512 px in `any` and `maskable` variants), app shortcuts (e.g., "Ready Up" to deploy), and screenshot support for installation UI.
 - Service worker uses `registerType: 'autoUpdate'` with Workbox `generateSW`. All built assets (`**/*.{js,css,html,ico,png,svg,woff2}`) are fully precached (cache-first). SPA navigation requests are served from the cached `index.html` via `navigateFallback`, so the app works entirely offline. No network fallback is needed because AFK Raiders currently has no backend calls. **Future:** once server/network calls are introduced (e.g. leaderboards, cloud saves), add Workbox [runtime caching strategies](https://developer.chrome.com/docs/workbox/caching-strategies-overview/) in `vite.config.ts` — typically `NetworkFirst` or `StaleWhileRevalidate` for API routes and `CacheFirst` for static assets fetched from CDNs.
@@ -63,6 +65,7 @@ afk-raiders/
 │   │   ├── healing_items.json   # Current-raid-only bandages
 │   │   ├── shield_rechargers.json # Manual-use backpack shield consumables
 │   │   ├── skills.json          # Cardio/Hoarding/Hiding definitions and level-up text
+│   │   ├── progression_config.json # Build-time progression/balance profile switches
 │   │   ├── raider_levels.json   # Raider Level title bands and level-up comms text
 │   │   ├── robots.json          # Anxieticks, Tattletales, Roomba Prime…
 │   │   ├── zones.json           # Damp Battlegrounds, etc.
@@ -103,11 +106,27 @@ Events are picked by context (zone, greed level, mood, HP) and fill `{slot}` pla
 ```
 Writing jokes never touches engine code — and this is the future community-content pipeline.
 
+Static balance configuration that must affect deterministic engine behavior also lives under `src/content/`. Use this for build-time tuning switches such as the skill XP threshold profile in `src/content/progression_config.json`. Runtime player preferences belong in `src/stores/settingsStore.ts` and can persist through localStorage; they should not alter deterministic simulation rules unless the setting is explicitly saved as part of game state.
+
+`src/content/progression_config.json` currently owns skill XP pacing profiles:
+
+```json
+{
+  "skillXpThresholdProfile": "standard",
+  "skillXpThresholdProfiles": {
+    "standard": [40, 120, 260, 450, 700],
+    "prototype": [8, 24, 52, 90, 140]
+  }
+}
+```
+
+Use `standard` for normal development, PRs, and production builds. Temporarily switch `skillXpThresholdProfile` to `prototype` only for local prototype/balance testing when quick level-ups are useful, then switch it back before merging or deploying. Content tests validate that the active profile exists and that every profile has valid ascending thresholds.
+
 Events may also set `"effects": { "forcePhase": "..." }` to force a phase change. This powers `extraction_events.json`: during the EXTRACTING window (~90s extraction + a final tick to call the return shuttle, 4 ticks total) events can make extraction fail (`forcePhase: "RAIDING"` — backpack kept), succeed early (`forcePhase: "HUB"` — loot transferred to the home stash), or end in tragedy (`forcePhase: "DOWNED"` — bag lost).
 
-Events may also gate themselves by `requires.dangerLevel` (`Low`, `Medium`, or `High`). The danger level is determined by a seeded combination of zone selection and zone condition selection (from `src/content/zones/zone_conditions.json`). Zone conditions are split into minor and major pools; carried-over greed from the previous raid nudges the seeded pool roll toward major conditions, then the selected condition sets danger level. The engine applies the matching danger-level profile in `src/engine/dangerLevelProfiles.ts`: Low has lower loot value and rarity bias, Medium raises loot upside and ambient/robot/extraction pressure, and High has the highest loot ceiling with the harshest ambient pressure, robot pressure, and LZ risk. These profiles are the economy guardrail for risk/reward tuning.
+Events may also gate themselves by `requires.dangerLevel` (`Low`, `Medium`, or `High`). The danger level is determined by a seeded combination of zone selection and zone condition selection (from `src/content/zones/zone_conditions.json`). Zone conditions are split into minor and major pools; carried-over greed from successful previous raids nudges the seeded pool roll toward major conditions, then the selected condition sets danger level. DOWNED outcomes reset greed to 0 before the next deployment. The engine applies the matching danger-level profile in `src/engine/dangerLevelProfiles.ts`: Low has lower loot value and rarity bias, Medium raises loot upside and ambient/robot/extraction pressure, and High has the highest loot ceiling with the harshest ambient pressure, robot pressure, and LZ risk. These profiles are the economy guardrail for risk/reward tuning.
 
-Loot rarity selection also applies small mood and greed biases in `eventResolver.ts`: positive mood nudges weights toward higher rarity and negative mood nudges toward lower rarity, while higher greed nudges loot-appetite rolls toward higher rarity. These effects are intentionally mild and always secondary to danger-level profile tuning.
+Loot rarity selection also applies small mood and greed biases in `eventResolver.ts`: positive mood nudges weights toward higher rarity and negative mood nudges toward lower rarity, while higher greed nudges loot-appetite rolls toward higher rarity. Greed also mildly increases robot encounter and risky extraction event weights, making danger more likely without directly changing extraction odds. These effects are intentionally mild and always secondary to danger-level profile tuning.
 
 When an event awards backpack loot (`effects.backpackValue` producing a positive loot add), `processTick()` performs two additional independent consumable bonus rolls: one for a healing item and one for a shield recharger. This allows a single loot event to grant normal loot plus either or both consumable types.
 
@@ -135,7 +154,7 @@ Shield rechargers are intentionally different from bandages:
 - This is a contract, not a style preference: every processed damage instance must produce a comms damage line, even if the same tick later transitions the raider to DOWNED.
 
 ### 3. Signal as the only real input
-Signal regenerates (~1 per 10 min, capped at 5). Ready Up (2 Signal) starts DEPLOYING from HUB. Calm (1 Signal, internal action ID `CALM`) reduces current greed before the next greed check, cooling rare-loot appetite and future major-condition momentum. Pressure (1 Signal, internal action ID `PRESSURE`) increases current greed before the next check, raising rare-loot appetite and future major-condition momentum. CALL EXTRACT (3 Signal) forces an extraction attempt. Greed itself does not lower extraction chance or add death pressure. When the Raider is low on HP and has no current-raid bandages, the Greed Check adds a survival-instinct extraction bonus, but that bonus is dampened by danger level so Medium and High conditions still punish unattended raids. During RAIDING only one action may be queued at a time, so action buttons lock until the next tick applies and clears the pending action. On every HUB return, raid pressure state cools down (greed decays, force-extract clears).
+Signal regenerates (~1 per 10 min, capped at 5). Ready Up (2 Signal) starts DEPLOYING from HUB. Calm (1 Signal, internal action ID `CALM`) reduces current greed before the next greed check, cooling rare-loot appetite, risky-event pressure, and future major-condition momentum. Pressure (1 Signal, internal action ID `PRESSURE`) increases current greed before the next check, raising rare-loot appetite, risky-event pressure, and future major-condition momentum. CALL EXTRACT (3 Signal) forces an extraction attempt. Greed itself does not lower extraction chance. Natural extraction is disabled until the raider has spent the configured minimum RAIDING ticks in-zone (`DEFAULT_MIN_NATURAL_EXTRACTION_RAIDING_TICKS`, currently 30 ticks / 15 minutes); CALL EXTRACT bypasses this guard. When the Raider is low on HP and has no current-raid bandages, the Greed Check adds a survival-instinct extraction bonus after that guard, dampened by danger level so Medium and High conditions still punish unattended raids. During RAIDING only one action may be queued at a time, so action buttons lock until the next tick applies and clears the pending action. On successful HUB returns, raid pressure state cools down (greed decays, force-extract clears); DOWNED resets greed to 0.
 
 ### 4. Lifetime stat collection
 `GameState.stats` tracks long-lived outcomes: extraction/death totals and context (zone + zone/time), robot defeats, and healing item usage.
@@ -143,28 +162,29 @@ Signal regenerates (~1 per 10 min, capped at 5). Ready Up (2 Signal) starts DEPL
 Save migration in `gameStore.ts` backfills missing legacy stats from pre-existing `raider.extractCount` and `raider.deathCount` so historical totals remain consistent.
 
 ### 4b. Autonomous Raider skills
-`GameState.raider.skills` stores persistent parody skill progress for Cardio, Hoarding, and Hiding in Lockers. Skills are raider-level state, not raid-level state, so they survive deaths, extractions, and sessions.
+`GameState.raider.skills` stores persistent parody skill progress for Cardio, Hoarding, Hiding in Lockers, and Signal Handling. Skills are raider-level state, not raid-level state, so they survive deaths, extractions, and sessions.
 
-Skill definitions and visible level-up text live in `src/content/skills.json`. The pure engine helper in `src/engine/skills.ts` owns initial state, save normalization, seeded practice rolls, level thresholds, and small modifier derivation. `processTick()` records explicit practice triggers from existing simulation outcomes, then applies XP before appending the tick log so level-up comms land in the same tick that earned them.
+Skill definitions and visible level-up text live in `src/content/skills.json`. Skill XP pacing is selected by the active profile in `src/content/progression_config.json`: `standard` is the normal long idle-game curve, while `prototype` keeps the original smaller thresholds for faster internal testing. The pure engine helper in `src/engine/skills.ts` owns initial state, save normalization, seeded practice rolls, applying the configured level thresholds, and small modifier derivation. `processTick()` records explicit practice triggers from existing simulation outcomes, then applies XP before appending the tick log so level-up comms land in the same tick that earned them.
 
-The Handler never spends skill points. Skill power should stay subtle and inspectable:
+The Handler never spends skill points. Skill thresholds are deliberately long like Raider Level pacing, because unattended/offline play can generate lots of practice over time. Skill power should stay subtle and inspectable:
 - Cardio nudges extraction chance and ambient raid safety.
 - Hoarding nudges loot value and bonus consumable find chance.
 - Hiding in Lockers trims failed robot encounter damage before shield-aware damage is applied, with damage narration showing the reduction when it matters.
+- Signal Handling gains XP only when Signal is successfully spent on Handler actions. It is visible progression for Handler buttoncraft and does not add a direct survival modifier for MVP.
 
 Save migration must preserve compatible local saves. Version 3 saves are upgraded to the current save version by backfilling initialized skill state rather than being discarded.
 
 ### 4c. Raider Level
 `GameState.raider.levelXp` stores cumulative Raider Level XP. The current level is derived by `src/engine/raiderLevel.ts`, starts at 1, and caps at 75. The save never stores a separate level number, which prevents XP/level drift during migration or catch-up. The XP curve is intentionally long: Level 2 requires multiple meaningful outcomes rather than one lucky extraction, and the Level 75 cap requires hundreds of thousands of cumulative XP so automatic/offline play does not burn through progression quickly.
 
-Raider Level is the long-term career spine, separate from both Rat Rating and the three skill tracks:
+Raider Level is the long-term career spine, separate from both Rat Rating and the four skill tracks:
 - Rat Rating remains an unbounded cowardly/looty shame-pride score.
 - Skills are specific bad habits that level 1-5 and provide tiny modifiers.
 - Raider Level summarizes broad accumulated field experience and title-band status.
 
-`processTick()` queues Raider XP from meaningful autonomous outcomes: successful extraction, extracted loot value/quantity, robot defeat or survival, High-danger survival, close-call extraction, hidden-pocket saves, stash overflow, death recovery, failed extraction, and skill level-ups. XP rolls use the seeded RNG, and level-up comms are emitted before the final log append. If multiple levels are crossed in one tick or offline catch-up step, the engine emits a single compact level-up line for the highest crossed level to avoid log spam.
+`processTick()` queues Raider XP from meaningful autonomous outcomes: every successful extraction gets a small base XP award, extracted loot value/quantity can add more, and robot defeat or survival, High-danger survival, close-call extraction, hidden-pocket saves, stash overflow, death recovery, failed extraction, and skill level-ups provide additional contextual gains. XP rolls use the seeded RNG, and level-up comms are emitted before the final log append. If multiple levels are crossed in one tick or offline catch-up step, the engine emits a single compact level-up line for the highest crossed level to avoid log spam.
 
-Routine XP awards stay small by design. Normal loot finds are a trickle, death recovery is a consolation prize, and the biggest repeatable gains come from successful extractions with meaningful loot. Danger, close calls, robots, hidden-pocket saves, and skill level-ups add flavor-weighted bonuses without turning Raider Level into a fast grind.
+Routine XP awards stay small by design. Normal loot finds are a trickle, death recovery is a consolation prize, and successful extraction gives a little progress even with an empty bag. The biggest repeatable gains still come from successful extractions with meaningful loot. Danger, close calls, robots, hidden-pocket saves, and skill level-ups add flavor-weighted bonuses without turning Raider Level into a fast grind.
 
 Raider Level benefits are intentionally light-power and title-band based:
 - Levels 1-9: title/progress only, no stipend.

@@ -36,7 +36,7 @@ import { clampMood, getMoodRarityWeightMultiplier, getMoodResilienceReductionPer
 import { applyShieldedDamage, startShieldRecharge, type ShieldDamageResult } from './shields.js'
 import { getSkillModifierProfile } from './skills.js'
 import { getRaiderLevelBenefitProfile } from './raiderLevel.js'
-import { clampGreedLevel, getGreedRarityWeightMultiplier } from './greed.js'
+import { clampGreedLevel, getGreedDangerEventWeightMultiplier, getGreedRarityWeightMultiplier } from './greed.js'
 
 // One events file per phase: HUB, DEPLOYING, RAIDING, EXTRACTING, DOWNED
 const events = [
@@ -200,12 +200,12 @@ function adjustedEventWeight(template: EventTemplate, state: GameState): number 
   let weight = template.weight
 
   if (template.effects?.robotEncounter) {
-    weight *= profile.robotEncounterWeightMultiplier
+    weight *= profile.robotEncounterWeightMultiplier * getGreedDangerEventWeightMultiplier(state.raid.greedLevel)
   }
 
   if (state.raid.phase === 'EXTRACTING') {
     if (isRiskyExtractionEvent(template)) {
-      weight *= profile.extractionRiskEventWeightMultiplier
+      weight *= profile.extractionRiskEventWeightMultiplier * getGreedDangerEventWeightMultiplier(state.raid.greedLevel)
     } else if (isSafeExtractionEvent(template)) {
       weight *= profile.extractionSafeEventWeightMultiplier
     }

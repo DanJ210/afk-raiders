@@ -1,20 +1,35 @@
 import { describe, expect, it } from 'vitest'
+import progressionConfigData from '../../src/content/progression_config.json'
 import { applySkillPractice, createInitialSkills, getSkillModifierProfile, normalizeSkills, rollSkillPractice, skillDefinitionById } from '../../src/engine/skills'
 import { createRNG } from '../../src/engine/rng'
 
+const progressionConfig = progressionConfigData as {
+  skillXpThresholdProfile: string
+  skillXpThresholdProfiles: Record<string, number[]>
+}
+
 describe('skill progression helpers', () => {
+  it('uses the active configured skill XP threshold profile', () => {
+    const activeThresholds = progressionConfig.skillXpThresholdProfiles[progressionConfig.skillXpThresholdProfile]
+
+    expect(skillDefinitionById('cardio').xpThresholds).toEqual(activeThresholds)
+    expect(skillDefinitionById('signal_handling').xpThresholds).toEqual(activeThresholds)
+  })
+
   it('creates all parody skill tracks at level 0', () => {
     const skills = createInitialSkills()
 
     expect(skills.cardio).toMatchObject({ id: 'cardio', level: 0, xp: 0, discovered: false })
     expect(skills.hoarding).toMatchObject({ id: 'hoarding', level: 0, xp: 0, discovered: false })
     expect(skills.hiding_in_lockers).toMatchObject({ id: 'hiding_in_lockers', level: 0, xp: 0, discovered: false })
+    expect(skills.signal_handling).toMatchObject({ id: 'signal_handling', level: 0, xp: 0, discovered: false })
   })
 
   it('levels a skill when practice reaches the next threshold', () => {
     const initial = createInitialSkills()
+    const definition = skillDefinitionById('cardio')
     const result = applySkillPractice(initial, [
-      { skillId: 'cardio', reason: 'extraction_success', xp: 8 },
+      { skillId: 'cardio', reason: 'extraction_success', xp: definition.xpThresholds[0] },
     ])
 
     expect(result.skills.cardio.level).toBe(1)
@@ -62,6 +77,7 @@ describe('skill progression helpers', () => {
     expect(skills.cardio.xp).toBe(skillDefinitionById('cardio').xpThresholds[1])
     expect(skills.hoarding.level).toBe(0)
     expect(skills.hiding_in_lockers.level).toBe(0)
+    expect(skills.signal_handling.level).toBe(0)
   })
 
   it('derives subtle mechanical modifiers from skill levels', () => {

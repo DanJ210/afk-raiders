@@ -166,7 +166,7 @@
       "weight": 1,
       "rarity": 5,
       "name": "Hans Gruber (alive)",
-      "value": 1000,
+      "value": 5000,
       "flavor": "The legendary Hans Gruber. Tabitha lost him. Yet again..."
     },
     {
@@ -174,7 +174,7 @@
       "weight": 1,
       "rarity": 5,
       "name": "Another New Guy",
-      "value": 1000,
+      "value": 5000,
       "flavor": "Yet another new name in her book..."
     }
   ]

@@ -4,12 +4,12 @@
     "name": "Cardio",
     "description": "The Raider's suspicious ability to run away while still explaining why this was tactical.",
     "maxLevel": 5,
-    "xpThresholds": [8, 24, 52, 90, 140],
+    "xpThresholds": [40, 120, 260, 450, 700],
     "effectTextByLevel": [
       "No measurable benefit. Knees remain theoretical.",
       "Extraction instinct gets a tiny nudge.",
       "Extraction instinct improves, mostly through panic.",
-      "Greed-related disaster odds soften slightly.",
+      "Ambient raid disaster odds soften slightly.",
       "Low-HP sprint choices look almost intentional.",
       "Peak emergency jogging. Still not athletic, but louder."
     ],
@@ -26,7 +26,7 @@
     "name": "Hoarding",
     "description": "Advanced backpack theology: every bottle cap has a destiny and the destiny is resale value.",
     "maxLevel": 5,
-    "xpThresholds": [8, 24, 52, 90, 140],
+    "xpThresholds": [40, 120, 260, 450, 700],
     "effectTextByLevel": [
       "No measurable benefit. The backpack is merely a container.",
       "Loot value gets a tiny suspicious bump.",
@@ -48,7 +48,7 @@
     "name": "Hiding in Lockers",
     "description": "A discipline built on staying very still and hoping robots respect furniture.",
     "maxLevel": 5,
-    "xpThresholds": [8, 24, 52, 90, 140],
+    "xpThresholds": [40, 120, 260, 450, 700],
     "effectTextByLevel": [
       "No measurable benefit. Lockers remain emotionally supportive only.",
       "Failed robot encounters hurt a little less.",
@@ -63,6 +63,28 @@
       "Hiding in Lockers reached Level {level}. Breathing quietly has entered the build.",
       "Hiding in Lockers reached Level {level}. Raider can occupy one square meter with heroic commitment.",
       "Hiding in Lockers reached Level {level}. Raider has achieved furniture-adjacent enlightenment."
+    ]
+  },
+  {
+    "id": "signal_handling",
+    "name": "Signal Handling",
+    "description": "The Handler's ability to spend precious radio juice with almost believable confidence.",
+    "maxLevel": 5,
+    "xpThresholds": [40, 120, 260, 450, 700],
+    "effectTextByLevel": [
+      "No measurable benefit. The button remains expensive.",
+      "Signal use looks slightly less like pocket dialing.",
+      "Handler interference gains a tiny sense of procedure.",
+      "Radio meddling now resembles a workflow, from a distance.",
+      "Signal discipline improves. The Raider still questions all of it.",
+      "Peak Handler buttoncraft. Every ping sounds almost official."
+    ],
+    "levelUpTextByLevel": [
+      "Skill acquired: Signal Handling. Handler pressed a button and called it doctrine.",
+      "Signal Handling reached Level {level}. The radio now fears your confidence.",
+      "Signal Handling reached Level {level}. Handler has learned to spend Signal with theatrical restraint.",
+      "Signal Handling reached Level {level}. Desperanza filed your radio usage under probably intentional.",
+      "Signal Handling reached Level {level}. Handler buttoncraft has become worryingly professional."
     ]
   }
 ]

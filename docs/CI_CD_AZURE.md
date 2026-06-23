@@ -62,6 +62,16 @@ Create a branch protection rule for `main`:
    - `Validate for Production` (CD pre-deploy validation)
 4. Restrict who can push to `main` (or disable direct pushes entirely)
 
+## Production configuration checks
+
+Deterministic gameplay/balance switches live in `src/content/`, not in runtime user settings. Before merging or deploying, confirm `src/content/progression_config.json` uses the production skill XP profile:
+
+```json
+"skillXpThresholdProfile": "standard"
+```
+
+The `prototype` profile is only for local/internal balance testing with faster skill level-ups and should not be left active in PRs targeting `main`.
+
 ## Rollback process
 
 Use one of these approaches:

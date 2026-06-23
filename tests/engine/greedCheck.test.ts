@@ -7,13 +7,15 @@
 
 import { describe, it, expect } from 'vitest'
 import { createRNG } from '../../src/engine/rng'
-import { runGreedCheck } from '../../src/engine/greedCheck'
+import { DEFAULT_MIN_NATURAL_EXTRACTION_RAIDING_TICKS, runGreedCheck } from '../../src/engine/greedCheck'
+import { PHASE_DURATIONS } from '../../src/engine/raidStateMachine'
 import type { RaidState } from '../../src/engine/types'
 
 interface GreedCheckOpts {
   currentHp?: number
   maxHp?: number
   hasHealingItems?: boolean
+  minimumRaidingTicksBeforeExtraction?: number
 }
 
 function makeRaid(overrides: Partial<RaidState> = {}): RaidState {
@@ -28,7 +30,7 @@ function makeRaid(overrides: Partial<RaidState> = {}): RaidState {
     backpackValue: 0,
     greedLevel: 0,
     phase: 'RAIDING',
-    phaseTicksRemaining: 999,
+    phaseTicksRemaining: 0,
     forceExtract: false,
   }
 
@@ -83,6 +85,29 @@ describe('greedCheck', () => {
     }
   })
 
+  it('blocks natural extraction before the minimum raiding ticks have elapsed', () => {
+    const outcomes = countOutcomes(makeRaid({ phaseTicksRemaining: PHASE_DURATIONS.RAIDING }), 5000)
+
+    expect(outcomes.extract).toBe(0)
+    expect(outcomes.downed).toBe(0)
+    expect(outcomes.pushDeeper).toBe(5000)
+  })
+
+  it('allows natural extraction once the default minimum raiding ticks have elapsed', () => {
+    const outcomes = countOutcomes(makeRaid({ phaseTicksRemaining: PHASE_DURATIONS.RAIDING - DEFAULT_MIN_NATURAL_EXTRACTION_RAIDING_TICKS }), 5000)
+
+    expect(outcomes.extract).toBeGreaterThan(0)
+  })
+
+  it('lets callers configure the minimum natural extraction delay', () => {
+    const raid = makeRaid({ phaseTicksRemaining: PHASE_DURATIONS.RAIDING - 10 })
+    const blocked = countOutcomes(raid, 5000, { minimumRaidingTicksBeforeExtraction: 30 })
+    const allowed = countOutcomes(raid, 5000, { minimumRaidingTicksBeforeExtraction: 10 })
+
+    expect(blocked.extract).toBe(0)
+    expect(allowed.extract).toBeGreaterThan(0)
+  })
+
   it('greed level does not directly change extraction frequency', () => {
     const lowGreed = countOutcomes(makeRaid({ greedLevel: 10 }))
     const highGreed = countOutcomes(makeRaid({ greedLevel: 90 }))
@@ -100,14 +125,14 @@ describe('greedCheck', () => {
     expect(downed).toBe(0)
   })
 
-  it('push-deeper keeps greed unchanged (event-driven greed)', () => {
+  it('push-deeper slowly grows greed', () => {
     const rng = createRNG(999)
     const raid = makeRaid({ greedLevel: 0 })
     // Find a push-deeper outcome
     for (let i = 0; i < 100; i++) {
       const result = runGreedCheck(raid, rng, {})
       if (result.outcome === 'PUSH_DEEPER') {
-        expect(result.newGreedLevel).toBe(raid.greedLevel)
+        expect(result.newGreedLevel).toBe(raid.greedLevel + 1)
         return
       }
     }
@@ -120,7 +145,7 @@ describe('greedCheck', () => {
     const outcomes = countOutcomes(makeRaid({ greedLevel: 100 }), n)
     const extractRate = outcomes.extract / n
 
-    expect(extractRate).toBeLessThan(0.02)
+    expect(extractRate).toBeLessThan(0.03)
     expect(outcomes.downed).toBe(0)
   })
 

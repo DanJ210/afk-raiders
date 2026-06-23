@@ -8,17 +8,27 @@
 
 ---
 
-## 🎮 How it works
+## 🎮 How It Works
 
 You are **not** the Raider. You are their Handler back in the underground hub of **Desperanza**, watching a comms feed and occasionally nudging them with your limited **Signal** resource:
 
 | Action | Cost | Effect |
 |---|---|---|
-| 📣 Encourage | 1 📶 | Nudges Raider toward boldness (more greed, more loot, more risk) |
-| 🔇 Scold | 1 📶 | Nudges Raider toward caution (more likely to extract safely) |
-| 🚨 CALL EXTRACT | 3 📶 | Forces an extraction attempt next tick |
+| Ready Up! | 2 Signal | HUB-only action that immediately starts deployment |
+| Calm | 1 Signal | Lowers current greed before the next check |
+| Pressure | 1 Signal | Raises current greed before the next check |
+| CALL EXTRACT | 3 Signal | Forces an extraction attempt |
 
-Signal regenerates ~1 per 10 minutes, capped at 5. The Raider plays themselves.
+Signal regenerates ~1 per 10 minutes, capped at 5. During RAIDING, only one Handler action can be pending at a time; buttons stay locked until the next tick consumes it. The Raider still plays themselves.
+
+The current MVP loop includes:
+
+- **Greed Check™:** the Raider decides whether to extract or push deeper; greed affects loot appetite, risky events, and future zone-condition pressure, but DOWNED resets greed to 0.
+- **Danger Levels:** each deployment gets a seeded zone condition with Low, Medium, or High danger that drives reward/risk tuning.
+- **Home Stash:** successful extraction transfers backpack loot into a persistent stash, with overflow auto-sold into coins.
+- **Secret Hidden Pocket:** one manually selected backpack item can survive backpack-loss failures.
+- **Shields, field meds, and rechargers:** shield-aware damage, current-raid bandages, and manual-use shield rechargers give the Handler real survival levers.
+- **Raider Level and skills:** long-running progression tracks successful extracts, meaningful outcomes, and four parody skill tracks: Cardio, Hoarding, Hiding in Lockers, and Signal Handling.
 
 ---
 
@@ -28,6 +38,7 @@ Signal regenerates ~1 per 10 minutes, capped at 5. The Raider plays themselves.
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — tech stack, folder structure, engine design, determinism rules, testing strategy
 - [`docs/SERVER_STORAGE_AND_ACCOUNTS.md`](docs/SERVER_STORAGE_AND_ACCOUNTS.md) — planned account-backed save sync architecture (.NET 8+, PostgreSQL, offline-first model)
 - [`docs/CI_CD_AZURE.md`](docs/CI_CD_AZURE.md) — CI pull request validation, Azure Static Web Apps deployment flow, branch protections, rollback
+- [`docs/SHIELDS_PLAN.md`](docs/SHIELDS_PLAN.md) — shield-layer design notes and follow-up planning
 
 ---
 
@@ -50,8 +61,19 @@ Open [http://localhost:5173](http://localhost:5173) — a tick fires every 30 se
 ```bash
 npm run build    # Production build (TypeScript check + Vite bundle)
 npm run preview  # Preview the production build locally
-npm test         # Run engine unit tests (Vitest, runs in Node — no DOM needed)
+npm test         # Run Vitest unit tests
 ```
+
+PWA install prompts are browser-controlled and usually will not appear during `npm run dev`. To test installability, run `npm run build` followed by `npm run preview`, then open the preview URL in Chrome or Edge. The custom install banner appears only after the browser fires `beforeinstallprompt`; iOS/Safari uses the manual "Add to Home Screen" flow instead.
+
+### Prototype progression profile
+
+Skill XP pacing is configured in [`src/content/progression_config.json`](src/content/progression_config.json):
+
+- `standard` is the normal long idle-game curve and should be active for PRs, production builds, and deploys.
+- `prototype` keeps smaller thresholds for local/internal testing when fast skill level-ups are useful.
+
+Switch only the `skillXpThresholdProfile` value when testing pacing locally, then switch it back to `standard` before merge or deploy.
 
 ---
 
@@ -59,37 +81,47 @@ npm test         # Run engine unit tests (Vitest, runs in Node — no DOM needed
 
 ```
 src/
-├── engine/          # Pure TypeScript — no Vue/browser imports
-│   ├── rng.ts       # Seeded mulberry32 PRNG
-│   ├── types.ts     # Core types (GameState, LogEvent, …)
-│   ├── tick.ts      # processTick(state, rng) → { state, events }
-│   ├── raidStateMachine.ts  # HUB → DEPLOYING → RAIDING → EXTRACTING/DOWNED → HUB
-│   ├── greedCheck.ts        # The Greed Check™
-│   ├── eventResolver.ts     # Weighted event templates + {slot} filling
-│   ├── catchUp.ts           # Offline catch-up (8 h cap)
-│   ├── signal.ts            # Signal meter logic
-│   └── initialState.ts      # Fresh GameState factory
-├── content/         # All game text as data (never hardcoded in TS)
-│   ├── hub_events.json        # Desperanza rest & prep events
-│   ├── deployment_events.json # Tunnel-pod ride events
-│   ├── raiding_events.json    # Looting / robot / greed events
-│   ├── extraction_events.json # LZ drama events
-│   ├── downed_events.json     # Death quip events
-│   ├── loot.json    # 12 loot items (several water bottle variants)
-│   ├── healing_items.json # Current-raid bandages
-│   ├── robots.json  # Anxieticks, Tattletales, Roomba Prime
-│   ├── zones.json   # Damp Battlegrounds
-│   └── flavor.json  # Slot-fill tables: gossip, death quips, hoarder justifications…
+├── engine/                 # Pure TypeScript — no Vue/browser imports
+│   ├── tick.ts             # processTick(state, rng) → { state, events }
+│   ├── raidStateMachine.ts # HUB → DEPLOYING → RAIDING → EXTRACTING/DOWNED
+│   ├── greedCheck.ts       # Greed Check™ extraction/push-deeper decisions
+│   ├── eventResolver.ts    # Weighted event templates + {slot} filling
+│   ├── dangerLevelProfiles.ts # Low/Medium/High reward/risk tuning
+│   ├── shields.ts          # Shield-aware damage and recharge rules
+│   ├── skills.ts           # Parody skills and tiny modifiers
+│   ├── raiderLevel.ts      # Raider Level 1-75 progression
+│   ├── homeStash.ts        # Stash transfer and overflow auto-sell
+│   ├── signal.ts           # Signal regen + spend rules
+│   ├── catchUp.ts          # Offline catch-up
+│   ├── rng.ts              # Seeded PRNG
+│   └── types.ts            # Core engine types
+├── content/                # Game content and deterministic balance config
+│   ├── *_events.json       # HUB/deploy/raid/extract/downed event tables
+│   ├── loot-tables/        # Weighted loot groups
+│   ├── zones/              # Zones and seeded zone conditions
+│   ├── skills.json         # Skill definitions and level-up text
+│   ├── progression_config.json # Standard/prototype progression profiles
+│   ├── raider_levels.json  # Raider Level titles and level-up text
+│   ├── robots.json         # Robot bestiary and loot tables
+│   ├── healing_items.json  # Current-raid field meds
+│   ├── shield_rechargers.json # Manual-use backpack shield consumables
+│   └── flavor.json         # Slot-fill tables
 ├── stores/
-│   ├── gameStore.ts     # Engine state + tick driver + Handler actions
+│   ├── gameStore.ts     # Engine state + tick driver
 │   └── settingsStore.ts
+├── composables/         # View models and interaction helpers
 └── components/
-    ├── CommsLog.vue       # Autoscrolling comms feed — the star of the show
-    ├── RaiderCard.vue     # Name, HP, mood, Rat Rating, phase badge
-    ├── BackpackPanel.vue  # Backpack value + greed level indicator
+    ├── CommsLog.vue       # Autoscrolling comms feed
+    ├── RaiderCard.vue     # Raider stats, level, mood, shield/resilience UI
+    ├── BackpackPanel.vue  # Backpack, hidden pocket, field meds, rechargers
+    ├── HomeStash.vue      # Persistent extracted loot
+    ├── SkillsPanel.vue    # Parody skill progress
     ├── HandlerActions.vue # Signal meter + action buttons
-    └── AwaySummary.vue    # Dismissible "While you were away…" banner
-tests/engine/        # Vitest unit tests (engine purity enforced)
+    └── AwaySummary.vue    # "While you were away…" banner
+tests/
+├── engine/                # Deterministic engine/content/balance tests
+├── composables/           # View-model and Handler action tests
+└── utils/
 ```
 
 ---
@@ -98,8 +130,9 @@ tests/engine/        # Vitest unit tests (engine purity enforced)
 
 1. **Engine purity** — `src/engine/` is pure TypeScript with zero Vue/DOM/browser imports. Tests run in Node.
 2. **Determinism** — all randomness flows through the seeded `RNG` in `rng.ts`. Same seed + state always produces the same story.
-3. **Content as data** — all game text lives in `src/content/*.json`. Writing jokes never touches TypeScript.
+3. **Content as data** — game text lives in `src/content/*.json`; deterministic balance config also lives there when the engine must consume it.
 4. **Immutable ticks** — `processTick(state, rng)` returns new state; never mutates input.
+5. **Shield damage pipeline** — gameplay damage that should respect shields goes through the shared shield helper, not ad hoc HP subtraction.
 
 ---
 
