@@ -8,7 +8,7 @@
  * - Silent fallback if localStorage is unavailable
  */
 
-import type { GameState, RaiderLifetimeStats } from '../engine/types.js'
+import type { GameState, OutcomeContextStats, RaiderLifetimeStats } from '../engine/types.js'
 import { SAVE_VERSION } from '../engine/initialState.js'
 import { createInitialLifetimeStats } from '../engine/stats.js'
 import { sellStashOverflow } from '../engine/homeStash.js'
@@ -20,6 +20,7 @@ const STORAGE_KEY = 'afk-raiders-save'
 const MIN_SUPPORTED_SAVE_VERSION = 3
 
 type LegacyRaiderStats = Omit<GameState['raider'], 'levelXp'> & { levelXp?: unknown }
+type LegacyRecord = Record<string, unknown>
 
 export interface SaveData {
   state: GameState
@@ -44,6 +45,63 @@ function seedLegacyLifetimeStats(state: GameState): RaiderLifetimeStats {
     deaths: {
       ...seeded.deaths,
       total: Math.max(0, state.raider.deathCount ?? 0),
+    },
+  }
+}
+
+function isRecord(value: unknown): value is LegacyRecord {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
+function sanitizeCount(value: unknown): number {
+  return typeof value === 'number' && Number.isFinite(value)
+    ? Math.max(0, Math.floor(value))
+    : 0
+}
+
+function sanitizeCounterMap(value: unknown): Record<string, number> {
+  if (!isRecord(value)) return {}
+
+  return Object.fromEntries(
+    Object.entries(value)
+      .map(([key, count]) => [key, sanitizeCount(count)] as const)
+      .filter(([, count]) => count > 0),
+  )
+}
+
+function sanitizeOutcomeStats(value: unknown, fallbackTotal: number): OutcomeContextStats {
+  if (!isRecord(value)) {
+    return {
+      total: fallbackTotal,
+      byZone: {},
+      byZoneAndDanger: {},
+    }
+  }
+
+  const hasTotal = Object.prototype.hasOwnProperty.call(value, 'total')
+
+  return {
+    total: hasTotal ? sanitizeCount(value.total) : fallbackTotal,
+    byZone: sanitizeCounterMap(value.byZone),
+    byZoneAndDanger: sanitizeCounterMap(value.byZoneAndDanger),
+  }
+}
+
+function normalizeLifetimeStats(state: GameState): RaiderLifetimeStats {
+  const fallback = seedLegacyLifetimeStats(state)
+  if (!isRecord(state.stats)) return fallback
+
+  const healingItemsUsed = isRecord(state.stats.healingItemsUsed)
+    ? state.stats.healingItemsUsed
+    : null
+
+  return {
+    extracts: sanitizeOutcomeStats(state.stats.extracts, fallback.extracts.total),
+    deaths: sanitizeOutcomeStats(state.stats.deaths, fallback.deaths.total),
+    robotDefeats: sanitizeCounterMap(state.stats.robotDefeats),
+    healingItemsUsed: {
+      total: healingItemsUsed ? sanitizeCount(healingItemsUsed.total) : 0,
+      byItem: sanitizeCounterMap(healingItemsUsed?.byItem),
     },
   }
 }
@@ -92,7 +150,7 @@ export function useGamePersistence(): GamePersistenceReturn {
         pendingPressure: (loadedState as any).pendingPressure ?? (loadedState as any).pendingScold ?? false,
         homeStash: sale.homeStash,
         coins: (loadedState.coins ?? 0) + sale.coinsGained,
-        stats: loadedState.stats ?? seedLegacyLifetimeStats(loadedState),
+        stats: normalizeLifetimeStats(loadedState),
         raid: {
           ...loadedState.raid,
           shield: loadedState.raid.shield ?? createStarterShieldState(),

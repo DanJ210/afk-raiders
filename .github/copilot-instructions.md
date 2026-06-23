@@ -95,6 +95,8 @@ Max raid time is 60 ticks = 30 minutes at the 30 s tick cadence. Phase durations
 
 On save migration for older profiles that predate `state.stats`, initialize missing lifetime totals from existing `raider.extractCount` and `raider.deathCount` so legacy player history stays consistent. Leave `byZone`/`byZoneAndDanger` maps empty during this backfill.
 
+Version 6 migration normalizes saved lifetime stats into this current shape and drops stale removed stat fields rather than preserving unknown keys from older saves.
+
 ### Robot Encounters
 Robot encounter events in `src/content/raiding_events.json` use `effects.robotEncounter` to reference a robot ID from `src/content/robots.json`. Robots have a `deadliness` label (`weak`, `moderate`, `dangerous`, `nasty`, `deadly`) that must match their menace, abundance, and encounter tuning. Valid deadliness tiers in ascending order:
 
