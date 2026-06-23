@@ -466,6 +466,29 @@ describe('deterministic snapshot', () => {
     expect(result.events.some(e => e.id === 'phase_RAIDING_to_DOWNED')).toBe(true)
   })
 
+  it('honors Call Extract when the raid timer expires on the next tick', () => {
+    const rng = createRNG(FIXED_SEED)
+    const initial = createInitialState(0)
+    const state = {
+      ...initial,
+      raider: { ...initial.raider, hp: initial.raider.maxHp },
+      raid: {
+        ...initial.raid,
+        phase: 'RAIDING' as const,
+        phaseTicksRemaining: 1,
+        forceExtract: true,
+        greedLevel: 0,
+      },
+    }
+
+    const result = processTick(state, rng, 0)
+
+    expect(result.events.some(e => e.id === 'phase_RAIDING_to_EXTRACTING')).toBe(true)
+    expect(result.events.some(e => e.id === 'phase_RAIDING_to_DOWNED')).toBe(false)
+    expect(result.state.raid.phase).not.toBe('DOWNED')
+    expect(result.state.raider.hp).toBeGreaterThan(0)
+  })
+
   it('keeps HP at 0 while the raider remains DOWNED', () => {
     const rng = createRNG(FIXED_SEED)
     const initial = createInitialState(0)

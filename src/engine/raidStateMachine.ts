@@ -122,7 +122,7 @@ export function tickPhase(
   }
 
   // Natural expiry → determine next phase
-  const next = nextPhase(raid.phase)
+  const next = nextPhase(raid)
   const transition: PhaseTransition = {
     from: raid.phase,
     to: next,
@@ -170,11 +170,11 @@ export function tickPhase(
   return { raid: updatedRaid, transition }
 }
 
-function nextPhase(current: Phase): Phase {
-  switch (current) {
+function nextPhase(raid: RaidState): Phase {
+  switch (raid.phase) {
     case 'HUB':        return 'DEPLOYING'
     case 'DEPLOYING':  return 'RAIDING'
-    case 'RAIDING':    return 'DOWNED' // raid timer expired before extraction; the nuke hits
+    case 'RAIDING':    return raid.forceExtract ? 'EXTRACTING' : 'DOWNED' // raid timer expired before extraction; the nuke hits unless Call Extract was already queued
     case 'EXTRACTING': return 'HUB'
     case 'DOWNED':     return 'HUB'
   }
