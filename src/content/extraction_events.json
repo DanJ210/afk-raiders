@@ -725,7 +725,7 @@
   {
     "id": "extract_pawn_desk_valuation_intrusive",
     "weight": 9,
-    "text": "Halfway to extraction, I started estimating pawn value instead of sprinting form. This is how capitalism gets knees injured.",
+    "text": "Halfway to extraction, I started estimating pawn value instead of sprinting. This is how capitalism gets knees injured.",
     "requires": { "phase": "EXTRACTING", "minGreed": 20 },
     "effects": { "greedLevel": 3, "mood": -1, "ratRating": 1 }
   }
