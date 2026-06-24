@@ -545,5 +545,180 @@
     "effects": {
       "mood": -1
     }
+  },
+  {
+    "id": "deploy_hatch_countdown",
+    "weight": 12,
+    "text": "Launch hatch counted down from five, skipped three, and apologized at one.",
+    "requires": {
+      "phase": "DEPLOYING"
+    },
+    "effects": {
+      "mood": -1
+    }
+  },
+  {
+    "id": "deploy_destination_upish",
+    "weight": 13,
+    "text": "Deployment manifest listed destination as TOPSIDE, PROBABLY. Specific enough.",
+    "requires": {
+      "phase": "DEPLOYING"
+    },
+    "effects": {
+      "mood": 1
+    }
+  },
+  {
+    "id": "deploy_pod_weight_argument",
+    "weight": 11,
+    "text": "Pod scale rejected the backpack as freight. Accepted it as emotional baggage.",
+    "requires": {
+      "phase": "DEPLOYING"
+    },
+    "effects": {
+      "mood": 1
+    }
+  },
+  {
+    "id": "deploy_tunnel_reroute",
+    "weight": 10,
+    "text": "Tunnel routing display changed from NORTH to CONFIDENCE. The pod did not slow down.",
+    "requires": {
+      "phase": "DEPLOYING"
+    },
+    "effects": {}
+  },
+  {
+    "id": "deploy_ventilation_last_rites",
+    "weight": 9,
+    "text": "Ventilation system made a noise like it was trying to give last rites. Very breathable. Very ominous.",
+    "requires": {
+      "phase": "DEPLOYING"
+    },
+    "effects": {
+      "mood": -1
+    }
+  },
+  {
+    "id": "deploy_pod_snack_crackle",
+    "weight": 10,
+    "text": "Opened a snack in the pod. Wrapper noise filled the cabin like a tactical error.",
+    "requires": {
+      "phase": "DEPLOYING"
+    },
+    "effects": {
+      "mood": -1
+    }
+  },
+  {
+    "id": "deploy_route_preview_buffering",
+    "weight": 11,
+    "text": "Route preview buffered at 99%. The pod launched anyway, trusting vibes and outdated maps.",
+    "requires": {
+      "phase": "DEPLOYING"
+    },
+    "effects": {}
+  },
+  {
+    "id": "deploy_backpack_seatbelt",
+    "weight": 12,
+    "text": "Buckled the backpack into the spare safety strap. There was no spare strap. Improvised with confidence.",
+    "requires": {
+      "phase": "DEPLOYING"
+    },
+    "effects": {
+      "mood": 1
+    }
+  },
+  {
+    "id": "deploy_handler_signal_check",
+    "weight": 10,
+    "text": "Handler signal check came through as one clean beep and three judgmental clicks. Ready enough.",
+    "requires": {
+      "phase": "DEPLOYING"
+    },
+    "effects": {
+      "mood": 1
+    }
+  },
+  {
+    "id": "deploy_hatch_authority_final_notice",
+    "weight": 10,
+    "text": "Hatch Authority issued a final notice: 'You are leaving because you requested leaving.' Hard to argue.",
+    "requires": {
+      "phase": "DEPLOYING"
+    },
+    "effects": {
+      "mood": 1
+    }
+  },
+  {
+    "id": "deploy_tube_routes_confident_error",
+    "weight": 11,
+    "text": "Tube Routes displayed ERROR with total confidence. The pod took that as navigation.",
+    "requires": {
+      "phase": "DEPLOYING"
+    },
+    "effects": {
+      "mood": -1
+    }
+  },
+  {
+    "id": "deploy_field_depot_counter_promise",
+    "weight": 9,
+    "text": "Field Depot Counter promised supplies topside. The printer added 'probably' in smaller font.",
+    "requires": {
+      "phase": "DEPLOYING"
+    },
+    "effects": {
+      "greedLevel": 1,
+      "mood": 1
+    }
+  },
+  {
+    "id": "deploy_handler_cert_office_badge",
+    "weight": 8,
+    "text": "Handler Certification Office badge flashed on comms. It looked laminated and therefore trustworthy.",
+    "requires": {
+      "phase": "DEPLOYING"
+    },
+    "effects": {
+      "mood": 1
+    }
+  },
+  {
+    "id": "deploy_first_sortof_plan_checklist",
+    "weight": 9,
+    "text": "Pod display loaded the First Sort-Of Plan checklist. Step one: leave bravely. Step two: improvise evidence of planning.",
+    "requires": {
+      "phase": "DEPLOYING"
+    },
+    "effects": {
+      "mood": 1,
+      "ratRating": 1
+    }
+  },
+  {
+    "id": "deploy_evacuation_slot_reassigned",
+    "weight": 9,
+    "text": "Pod scheduler reassigned an ancient evacuation slot to me. Nice to inherit a legacy of leaving poorly.",
+    "requires": {
+      "phase": "DEPLOYING"
+    },
+    "effects": {
+      "mood": 1
+    }
+  },
+  {
+    "id": "deploy_gear_weirdo_recharger_demo",
+    "weight": 8,
+    "text": "Gear weirdo demonstrated a shield recharger by smacking it twice and saying, 'See? Confidence.' Packed it mentally, not physically.",
+    "requires": {
+      "phase": "DEPLOYING"
+    },
+    "effects": {
+      "mood": 1,
+      "ratRating": 1
+    }
   }
 ]

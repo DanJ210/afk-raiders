@@ -7,8 +7,12 @@ Do not commit copied source-wiki prose, screenshots, logos, codex text, or exact
 ## Index
 
 - [Parody Mapping](PARODY_MAPPING.md): canonical trope-to-AFK equivalent table.
+- [World History](entities/world-history.md): unreliable AFK eras and old-world context hooks.
+- [Desperanza](entities/desperanza.md): underground hub infrastructure and social texture.
+- [Factions And Brands](entities/factions-and-brands.md): survivor groups and defunct old-world brands.
 - [Robots](entities/robots.md): A.R.C. chassis roster, deadliness tiers, and content hooks.
 - [Zones](entities/zones.md): original zone identities, condition hooks, and danger-level tone.
+- [Field Phenomena](entities/field-phenomena.md): surface landmarks, oddities, and condition hooks.
 - [Skills](entities/skills.md): autonomous Raider and Handler skill identities.
 - [Legal Guardrails](content-guidelines/LEGAL_GUARDRAILS.md): required checks before adding content.
 - [Tone Voice](content-guidelines/TONE_VOICE.md): deadpan comedy and writing patterns.

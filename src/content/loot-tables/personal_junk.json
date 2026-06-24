@@ -351,6 +351,33 @@
             "value": 2000,
             "stackSize": 1,
             "flavor": "You read one sentence and immediately regret it."
+        },
+        {
+            "id": "comfortco_blanket_receipt",
+            "weight": 18,
+            "rarity": 2,
+            "name": "ComfortCo Blanket Receipt",
+            "value": 18,
+            "stackSize": 5,
+            "flavor": "Promises comfort in every crisis. Refund window expired during the crisis."
+        },
+        {
+            "id": "oopsall_logistics_label",
+            "weight": 16,
+            "rarity": 2,
+            "name": "OopsAll Logistics Misdelivery Label",
+            "value": 24,
+            "stackSize": 5,
+            "flavor": "Destination: elsewhere. Confidence: absolute."
+        },
+        {
+            "id": "exit_strategy_route_card",
+            "weight": 12,
+            "rarity": 3,
+            "name": "Exit Strategy Unlimited Route Card",
+            "value": 55,
+            "stackSize": 2,
+            "flavor": "Premium departure planning. Printed with no visible exits."
         }
     ]
 }

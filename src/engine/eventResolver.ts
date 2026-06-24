@@ -135,7 +135,7 @@ export function describeShieldDamage(damage: ShieldDamageResult): string {
 }
 
 /** Filter events valid for the current game context */
-function eligibleEvents(state: GameState): EventTemplate[] {
+export function eligibleEvents(state: GameState): EventTemplate[] {
   const { raid } = state
   return events.filter(ev => {
     const r = ev.requires
@@ -148,6 +148,11 @@ function eligibleEvents(state: GameState): EventTemplate[] {
       if (!raid.dangerLevel) return false
       const levels = Array.isArray(r.dangerLevel) ? r.dangerLevel : [r.dangerLevel]
       if (!levels.includes(raid.dangerLevel)) return false
+    }
+    if (r.zoneCondition) {
+      if (!raid.zoneCondition) return false
+      const conditionIds = Array.isArray(r.zoneCondition) ? r.zoneCondition : [r.zoneCondition]
+      if (!conditionIds.includes(raid.zoneCondition.id)) return false
     }
     if (r.minGreed !== undefined && raid.greedLevel < r.minGreed) return false
     if (r.maxGreed !== undefined && raid.greedLevel > r.maxGreed) return false

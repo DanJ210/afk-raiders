@@ -333,6 +333,24 @@
             "value": 1800,
             "stackSize": 1,
             "flavor": "You feel the universe settle slightly."
+        },
+        {
+            "id": "bravado_battery_humming_cell",
+            "weight": 14,
+            "rarity": 3,
+            "name": "Bravado Battery Humming Cell",
+            "value": 85,
+            "stackSize": 3,
+            "flavor": "Guaranteed bold. Not guaranteed stable."
+        },
+        {
+            "id": "hushtone_receiver_cracked",
+            "weight": 16,
+            "rarity": 2,
+            "name": "HushTone Receiver (Cracked)",
+            "value": 28,
+            "stackSize": 3,
+            "flavor": "Designed for quiet devices. Currently screaming static."
         }
     ]
 }

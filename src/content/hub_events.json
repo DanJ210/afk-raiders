@@ -89,7 +89,7 @@
   {
     "id": "hub_cafe_line",
     "weight": 15,
-    "text": "Waited in line at Speranza Café. The line did not move. Time lost meaning.",
+    "text": "Waited in line at Desperanza Café. The line did not move. Time lost meaning.",
     "requires": {
       "phase": "HUB"
     },
@@ -497,5 +497,303 @@
       "phase": "HUB"
     },
     "effects": {}
+  },
+  {
+    "id": "hub_civic_stamp",
+    "weight": 11,
+    "text": "Desperanza civic desk stamped my deployment form with the force of a tiny verdict.",
+    "requires": {
+      "phase": "HUB"
+    },
+    "effects": {
+      "mood": 1
+    }
+  },
+  {
+    "id": "hub_hydroponic_greens",
+    "weight": 10,
+    "text": "Passed the hydroponic greens. They looked healthier than me. I respected them and resented them.",
+    "requires": {
+      "phase": "HUB"
+    },
+    "effects": {
+      "mood": -1
+    }
+  },
+  {
+    "id": "hub_water_dispenser_applause",
+    "weight": 9,
+    "text": "Water dispenser produced one heroic drop. The line applauded quietly. Morale became complicated.",
+    "requires": {
+      "phase": "HUB"
+    },
+    "effects": {
+      "mood": 1
+    }
+  },
+  {
+    "id": "hub_security_backpack_scan",
+    "weight": 10,
+    "text": "Security scanner asked if I had dangerous items. I held up the backpack. It waved me through.",
+    "requires": {
+      "phase": "HUB"
+    },
+    "effects": {
+      "mood": 1,
+      "ratRating": 1
+    }
+  },
+  {
+    "id": "hub_pawn_clerk_squints",
+    "weight": 9,
+    "text": "Pawn clerk appraised a cracked mug from across the room and whispered, 'potential.' I felt seen.",
+    "requires": {
+      "phase": "HUB"
+    },
+    "effects": {
+      "greedLevel": 1,
+      "mood": 1
+    }
+  },
+  {
+    "id": "hub_lost_and_found_audit",
+    "weight": 10,
+    "text": "Lost-and-found clerk inventoried six left gloves and one heroic spoon. None were mine. Wanted them anyway.",
+    "requires": {
+      "phase": "HUB"
+    },
+    "effects": {
+      "greedLevel": 1
+    }
+  },
+  {
+    "id": "hub_mission_board_sticky_note",
+    "weight": 11,
+    "text": "Mission board had a sticky note reading DO NOT CHASE HUMMING CRATES. Took a picture for ignoring later.",
+    "requires": {
+      "phase": "HUB"
+    },
+    "effects": {
+      "mood": 1,
+      "greedLevel": 1
+    }
+  },
+  {
+    "id": "hub_cafe_receipt_oracle",
+    "weight": 9,
+    "text": "Cafe receipt printed a fortune: 'Today you will carry too much.' Finally, accurate service.",
+    "requires": {
+      "phase": "HUB"
+    },
+    "effects": {
+      "mood": 1
+    }
+  },
+  {
+    "id": "hub_shield_bench_pep_talk",
+    "weight": 8,
+    "text": "Gave the shield a tiny pep talk at the maintenance bench. It did not answer, which felt professional.",
+    "requires": {
+      "phase": "HUB"
+    },
+    "effects": {
+      "mood": 1
+    }
+  },
+  {
+    "id": "hub_coupon_barons_math",
+    "weight": 10,
+    "text": "Coupon Barons argued over a 3% discount like it was a peace treaty. I learned nothing and respected everyone less.",
+    "requires": {
+      "phase": "HUB"
+    },
+    "effects": {
+      "mood": -1
+    }
+  },
+  {
+    "id": "hub_gear_weirdo_battery_pitch",
+    "weight": 9,
+    "text": "Gear weirdo tried to sell me a Bravado Battery. It hummed before the pitch did.",
+    "requires": {
+      "phase": "HUB"
+    },
+    "effects": {
+      "greedLevel": 1,
+      "mood": 1
+    }
+  },
+  {
+    "id": "hub_permit_choir_ready_up",
+    "weight": 8,
+    "text": "Permit Choir recited the Ready Up liability waiver in harmony. Several clauses had choreography.",
+    "requires": {
+      "phase": "HUB"
+    },
+    "effects": {
+      "mood": 1
+    }
+  },
+  {
+    "id": "hub_hatch_authority_stamp",
+    "weight": 10,
+    "text": "Hatch Authority stamped my deployment form APPROVED, THEN QUESTIONED. Very Desperanza. Very official.",
+    "requires": {
+      "phase": "HUB"
+    },
+    "effects": {
+      "mood": 1
+    }
+  },
+  {
+    "id": "hub_water_ration_cup_math",
+    "weight": 9,
+    "text": "Water Ration Desk measured my cup, my thirst, and my attitude. Only the cup passed inspection.",
+    "requires": {
+      "phase": "HUB"
+    },
+    "effects": {
+      "mood": -1
+    }
+  },
+  {
+    "id": "hub_security_stamp_maze_backpack",
+    "weight": 9,
+    "text": "Security Stamp Maze inspected the backpack. It beeped at three spoons and waved through everything dangerous.",
+    "requires": {
+      "phase": "HUB"
+    },
+    "effects": {
+      "mood": 1,
+      "ratRating": 1
+    }
+  },
+  {
+    "id": "hub_pawn_desk_cracked_mug_index",
+    "weight": 10,
+    "text": "Pawn Desk updated the cracked mug index. Market confidence is irrationally high.",
+    "requires": {
+      "phase": "HUB"
+    },
+    "effects": {
+      "greedLevel": 1,
+      "mood": 1
+    }
+  },
+  {
+    "id": "hub_beforeish_packaging_theory",
+    "weight": 9,
+    "text": "A Desperanza historian proved The Before-ish was peaceful using a snack wrapper and unreasonable confidence.",
+    "requires": {
+      "phase": "HUB"
+    },
+    "effects": {
+      "mood": 1
+    }
+  },
+  {
+    "id": "hub_bad_years_binder_argument",
+    "weight": 9,
+    "text": "Two raiders argued about The Bad Years over a binder labeled DEFINITIVE, VERSION 6. Nobody won. History survived.",
+    "requires": {
+      "phase": "HUB"
+    },
+    "effects": {
+      "mood": -1
+    }
+  },
+  {
+    "id": "hub_great_downstairs_tunnel_pride",
+    "weight": 10,
+    "text": "Civic plaque called The Great Downstairs humanity's finest tunnel-based decision. The ceiling dripped in agreement.",
+    "requires": {
+      "phase": "HUB"
+    },
+    "effects": {
+      "mood": 1
+    }
+  },
+  {
+    "id": "hub_departure_claim_window_closed",
+    "weight": 9,
+    "text": "Departure Claims window displayed NEXT LAUNCH: YESTERDAY. The clerk said this was technically encouraging.",
+    "requires": {
+      "phase": "HUB"
+    },
+    "effects": {
+      "mood": -1
+    }
+  },
+  {
+    "id": "hub_snack_shrine_custodian_rumor",
+    "weight": 9,
+    "text": "Snack Shrine Custodian warned me not to take the triangle crackers. Would not explain which crackers were triangles.",
+    "requires": {
+      "phase": "HUB"
+    },
+    "effects": {
+      "greedLevel": 1,
+      "mood": 1
+    }
+  },
+  {
+    "id": "hub_nearly_fresh_sample_table",
+    "weight": 9,
+    "text": "Desperanza Cafe offered a Nearly Fresh sample. The wrapper said BEST BY: DISCUSSION. I ate around the question mark.",
+    "requires": {
+      "phase": "HUB"
+    },
+    "effects": {
+      "mood": 1,
+      "ratRating": 1
+    }
+  },
+  {
+    "id": "hub_comfortco_cot_warranty",
+    "weight": 9,
+    "text": "Rested on a ComfortCo cot. The warranty promised emotional support and delivered a spring directly into my spine.",
+    "requires": {
+      "phase": "HUB"
+    },
+    "effects": {
+      "mood": -1,
+      "ratRating": 1
+    }
+  },
+  {
+    "id": "hub_pawn_desk_overflow_prophecy",
+    "weight": 9,
+    "text": "Pawn Desk clerk predicted my stash overflow by weighing one cracked mug and sighing professionally.",
+    "requires": {
+      "phase": "HUB"
+    },
+    "effects": {
+      "greedLevel": 1,
+      "mood": 1
+    }
+  },
+  {
+    "id": "hub_gear_weirdo_shield_pitch",
+    "weight": 9,
+    "text": "Gear weirdo tried to sell me a shield upgrade described as 'mostly theoretical, emotionally proven.' I listened too long.",
+    "requires": {
+      "phase": "HUB"
+    },
+    "effects": {
+      "greedLevel": 1,
+      "mood": -1
+    }
+  },
+  {
+    "id": "hub_handler_cert_office_signal_form",
+    "weight": 9,
+    "text": "Handler Certification Office handed me a Signal Conduct form. Question one asked if yelling counts as strategy.",
+    "requires": {
+      "phase": "HUB"
+    },
+    "effects": {
+      "mood": 1,
+      "ratRating": 1
+    }
   }
 ]

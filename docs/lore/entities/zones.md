@@ -27,3 +27,9 @@ Zone conditions live in `src/content/zones/zone_conditions.json`. They are split
 - High danger should feel like the raider has made a lifestyle error.
 - Conditions can reference Desperanza, Handler comms, A.R.C. machinery, bad signage, and field rumors.
 - Do not use source map names in player-facing content. Translate the function into an AFK place first.
+
+## Runtime Seeds
+
+| Zone theme | First event hooks |
+|---|---|
+| The Staycation Celebration tents and campers | `raid_staycation_tent_decoy_crate`, `raid_staycation_locker_philosophy`, `extract_staycation_lz_tent_camper` |

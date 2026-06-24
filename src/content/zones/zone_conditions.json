@@ -97,6 +97,27 @@
       "name": "Ambient Hum",
       "description": "A low-frequency hum fills the air. No one knows why. No one wants to.",
       "dangerLevel": "Medium"
+    },
+    {
+      "id": "apology_weather",
+      "weight": 70,
+      "name": "Apology Weather",
+      "description": "A polite drizzle keeps apologizing through the static while making every surface mildly traitorous.",
+      "dangerLevel": "Medium"
+    },
+    {
+      "id": "polite_glyphs",
+      "weight": 65,
+      "name": "Polite Glyphs",
+      "description": "Fresh markings politely suggest not touching anything. The crates appear unconvinced.",
+      "dangerLevel": "Low"
+    },
+    {
+      "id": "signal_shadow",
+      "weight": 60,
+      "name": "Signal Shadow",
+      "description": "Handler advice arrives late, clipped, and somehow more confident than useful.",
+      "dangerLevel": "Medium"
     }
   ],
   "major_conditions": [
@@ -182,6 +203,27 @@
       "weight": 5,
       "name": "Dimensional Rift",
       "description": "Reality flickers. You see things that shouldn't exist. They see you too.",
+      "dangerLevel": "High"
+    },
+    {
+      "id": "tremor_bad_priorities",
+      "weight": 22,
+      "name": "Tremor of Bad Priorities",
+      "description": "The ground keeps rearranging cover and loot into worse moral choices.",
+      "dangerLevel": "Medium"
+    },
+    {
+      "id": "humming_crate_migration",
+      "weight": 18,
+      "name": "Humming Crate Migration",
+      "description": "Crates appear where crates should not be. Everyone agrees this is probably fine.",
+      "dangerLevel": "High"
+    },
+    {
+      "id": "overtime_red",
+      "weight": 16,
+      "name": "Overtime Red",
+      "description": "The zone looks like it stayed past closing and wants revenge. Even the exit signs seem hostile.",
       "dangerLevel": "High"
     }
   ]

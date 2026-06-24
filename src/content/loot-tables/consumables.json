@@ -378,6 +378,24 @@
             "value": 700,
             "stackSize": 1,
             "flavor": "The broth whispers ancient secrets."
+        },
+        {
+            "id": "nearly_fresh_bar_legal_gray",
+            "weight": 16,
+            "rarity": 2,
+            "name": "Nearly Fresh Bar (Legal Gray)",
+            "value": 22,
+            "stackSize": 6,
+            "flavor": "Freshness pending review by someone brave."
+        },
+        {
+            "id": "snack_shrine_trial_mix",
+            "weight": 10,
+            "rarity": 3,
+            "name": "Snack Shrine Trial Mix",
+            "value": 42,
+            "stackSize": 4,
+            "flavor": "Left as an offering. Taken as a strategy."
         }
     ]
 }

@@ -14,6 +14,7 @@ export interface EventTemplate extends ContentEntry {
   requires?: {
     phase?: Phase | Phase[]
     dangerLevel?: DangerLevel | DangerLevel[]
+    zoneCondition?: string | string[]
     minGreed?: number
     maxGreed?: number
     minHp?: number
