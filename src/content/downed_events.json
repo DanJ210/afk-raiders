@@ -5,5 +5,61 @@
     "text": "{death_quip}",
     "requires": { "phase": "DOWNED" },
     "effects": { "ratRating": 3 }
+  },
+  {
+    "id": "downed_recovery_form",
+    "weight": 18,
+    "text": "Recovery form asked for cause of death. Wrote 'overconfidence with accessories.'",
+    "requires": { "phase": "DOWNED" },
+    "effects": { "ratRating": 2, "mood": -1 }
+  },
+  {
+    "id": "downed_pocket_note",
+    "weight": 14,
+    "text": "Recovery crew found the Secret Hidden Pocket item and a note reading, 'told you this mattered.'",
+    "requires": { "phase": "DOWNED" },
+    "effects": { "ratRating": 1, "mood": 1 }
+  },
+  {
+    "id": "downed_medbay_stamp",
+    "weight": 16,
+    "text": "Medbay stamped me RETURNED MOSTLY. I respect the honesty.",
+    "requires": { "phase": "DOWNED" },
+    "effects": { "ratRating": 1 }
+  },
+  {
+    "id": "downed_cold_shower",
+    "weight": 12,
+    "text": "Respawn shower ran cold. Desperanza believes in immersive consequences.",
+    "requires": { "phase": "DOWNED" },
+    "effects": { "mood": -1 }
+  },
+  {
+    "id": "downed_backpack_eulogy",
+    "weight": 13,
+    "text": "Held a brief eulogy for the backpack. Attendance: me, regret, and one recovered button.",
+    "requires": { "phase": "DOWNED" },
+    "effects": { "ratRating": 2, "mood": -1 }
+  },
+  {
+    "id": "downed_medbay_loyalty_card",
+    "weight": 11,
+    "text": "Medbay punched my loyalty card. One more disaster and the ice pack is free.",
+    "requires": { "phase": "DOWNED" },
+    "effects": { "ratRating": 1, "mood": 1 }
+  },
+  {
+    "id": "downed_recovery_team_note",
+    "weight": 12,
+    "text": "Recovery team note said 'found face down near obvious warning sign.' Rude, but complete.",
+    "requires": { "phase": "DOWNED" },
+    "effects": { "ratRating": 2, "mood": -1 }
+  },
+  {
+    "id": "downed_pocket_confidence",
+    "weight": 10,
+    "text": "Checked the Secret Hidden Pocket first. Priorities remain legally concerning but emotionally correct.",
+    "requires": { "phase": "DOWNED" },
+    "effects": { "mood": 1 }
   }
 ]

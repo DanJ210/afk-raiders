@@ -10,7 +10,7 @@
 
 import { describe, it, expect } from 'vitest'
 import { createRNG } from '../../src/engine/rng'
-import { applyEffects, consumeHealingItem, consumeShieldRecharger, events as allEvents, resolveEvent, resolveHealingItemFind, resolveRobotEncounter, resolveShieldRechargerFind } from '../../src/engine/eventResolver'
+import { applyEffects, consumeHealingItem, consumeShieldRecharger, eligibleEvents, events as allEvents, resolveEvent, resolveHealingItemFind, resolveRobotEncounter, resolveShieldRechargerFind } from '../../src/engine/eventResolver'
 import { createInitialState } from '../../src/engine/initialState'
 import { xpRequiredForLevel } from '../../src/engine/raiderLevel'
 import type { EventTemplate, HealingItemStack } from '../../src/engine/types'
@@ -305,6 +305,28 @@ describe('applyEffects — backpack item behavior', () => {
     const highGreedRobotEvents = countRobotEventsForGreed(100)
 
     expect(highGreedRobotEvents).toBeGreaterThan(lowGreedRobotEvents)
+  })
+
+  it('filters events by zone condition when required', () => {
+    const initial = createInitialState(0)
+    const state = {
+      ...initial,
+      raid: {
+        ...initial.raid,
+        phase: 'RAIDING' as const,
+        dangerLevel: 'Medium' as const,
+        zoneCondition: {
+          id: 'apology_weather',
+          name: 'Apology Weather',
+          description: 'Test condition.',
+        },
+      },
+    }
+
+    const ids = new Set(eligibleEvents(state).map(event => event.id))
+
+    expect(ids.has('raid_apology_weather_forecast')).toBe(true)
+    expect(ids.has('raid_polite_glyphs_customer_service')).toBe(false)
   })
 
   it('routes negative HP effects through shield mitigation', () => {

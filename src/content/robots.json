@@ -424,6 +424,59 @@
     ]
   },
   {
+    "id": "apology_turret",
+    "weight": 15,
+    "name": "Apology Turret",
+    "deadliness": "dangerous",
+    "menace": 6,
+    "flavorLines": [
+      "says sorry before opening fire with excellent manners",
+      "tracks movement while reciting a customer-service apology",
+      "deploys from cover with sincere regret and live ammunition",
+      "asks you to hold still so the apology can be processed"
+    ],
+    "successText": [
+      "You defeat the Apology Turret. Its final sorry sounded almost procedural."
+    ],
+    "lootTable": [
+      {
+        "id": "apology_servo",
+        "weight": 85,
+        "name": "Apology Servo",
+        "value": 38,
+        "flavor": "Turns smoothly toward whoever deserves an insincere regret."
+      },
+      {
+        "id": "sorry_speaker",
+        "weight": 20,
+        "name": "Sorry Speaker",
+        "value": 28,
+        "flavor": "Plays sincere apologies at dangerous volume."
+      },
+      {
+        "id": "courtesy_targeting_lens",
+        "weight": 8,
+        "name": "Courtesy Targeting Lens",
+        "value": 55,
+        "flavor": "Highlights targets politely before making things worse."
+      },
+      {
+        "id": "regret_fire_control",
+        "weight": 3,
+        "name": "Regret Fire-Control Unit",
+        "value": 90,
+        "flavor": "Every shot is pre-approved by the apology department."
+      },
+      {
+        "id": "robot_alloy",
+        "weight": 1,
+        "name": "Robot Alloy",
+        "value": 20,
+        "flavor": "Standard metal."
+      }
+    ]
+  },
+  {
     "id": "crusher_of_dreams",
     "weight": 12,
     "name": "Crusher of Dreams",
@@ -625,6 +678,59 @@
         "name": "Collection Manifest",
         "value": 55,
         "flavor": "A ledger of every minor grievance it has gathered. Volume 7."
+      },
+      {
+        "id": "robot_alloy",
+        "weight": 1,
+        "name": "Robot Alloy",
+        "value": 20,
+        "flavor": "Standard metal."
+      }
+    ]
+  },
+  {
+    "id": "receipt_printer_doom",
+    "weight": 19,
+    "name": "Receipt Printer of Doom",
+    "deadliness": "moderate",
+    "menace": 5,
+    "flavorLines": [
+      "prints citations for looting at an emotionally unsustainable pace",
+      "spits thermal paper like a tiny bureaucratic avalanche",
+      "beeps until every nearby object feels incorrectly filed",
+      "demands signatures in triplicate while advancing"
+    ],
+    "successText": [
+      "You defeat the Receipt Printer of Doom. It prints one final receipt: PROCESS COMPLETE."
+    ],
+    "lootTable": [
+      {
+        "id": "doom_receipt_roll",
+        "weight": 85,
+        "name": "Doom Receipt Roll",
+        "value": 22,
+        "flavor": "Still warm. Still accusing."
+      },
+      {
+        "id": "thermal_panic_head",
+        "weight": 20,
+        "name": "Thermal Panic Head",
+        "value": 18,
+        "flavor": "Prints fastest when frightened. Same."
+      },
+      {
+        "id": "citation_spool",
+        "weight": 8,
+        "name": "Citation Spool",
+        "value": 35,
+        "flavor": "Preloaded with violations you have not committed yet."
+      },
+      {
+        "id": "warranty_denial_chip",
+        "weight": 3,
+        "name": "Warranty Denial Chip",
+        "value": 75,
+        "flavor": "Rejects all claims, including emotional ones."
       },
       {
         "id": "robot_alloy",

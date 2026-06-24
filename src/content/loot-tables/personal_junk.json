@@ -230,7 +230,7 @@
             "id": "keychain_arc_logo",
             "weight": 12,
             "rarity": 3,
-            "name": "ARC Logo Keychain",
+            "name": "A.R.C. Logo Keychain",
             "value": 45,
             "stackSize": 3,
             "flavor": "Corporate pride never dies. Even when everything else does."
@@ -311,7 +311,7 @@
             "id": "broken_phone_arc",
             "weight": 12,
             "rarity": 3,
-            "name": "ARC Employee Phone",
+            "name": "A.R.C. Employee Phone",
             "value": 60,
             "stackSize": 1,
             "flavor": "Locked behind a password: 'password123'."
@@ -338,7 +338,7 @@
             "id": "old_journal_arc",
             "weight": 10,
             "rarity": 3,
-            "name": "ARC Research Journal",
+            "name": "A.R.C. Research Journal",
             "value": 70,
             "stackSize": 1,
             "flavor": "Filled with diagrams and ominous doodles."
@@ -351,6 +351,33 @@
             "value": 2000,
             "stackSize": 1,
             "flavor": "You read one sentence and immediately regret it."
+        },
+        {
+            "id": "comfortco_blanket_receipt",
+            "weight": 18,
+            "rarity": 2,
+            "name": "ComfortCo Blanket Receipt",
+            "value": 18,
+            "stackSize": 5,
+            "flavor": "Promises comfort in every crisis. Refund window expired during the crisis."
+        },
+        {
+            "id": "oopsall_logistics_label",
+            "weight": 16,
+            "rarity": 2,
+            "name": "OopsAll Logistics Misdelivery Label",
+            "value": 24,
+            "stackSize": 5,
+            "flavor": "Destination: elsewhere. Confidence: absolute."
+        },
+        {
+            "id": "exit_strategy_route_card",
+            "weight": 12,
+            "rarity": 3,
+            "name": "Exit Strategy Unlimited Route Card",
+            "value": 55,
+            "stackSize": 2,
+            "flavor": "Premium departure planning. Printed with no visible exits."
         }
     ]
 }

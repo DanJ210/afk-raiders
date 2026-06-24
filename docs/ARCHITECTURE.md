@@ -104,7 +104,9 @@ Events are picked by context (zone, greed level, mood, HP) and fill `{slot}` pla
   "effects": { "backpackValue": "+1d6", "mood": "+1" }
 }
 ```
-Writing jokes never touches engine code — and this is the future community-content pipeline.
+Writing jokes never touches engine code — and this is the future community-content pipeline. Phase-transition comms are also content-managed in `src/content/phase_transitions.json`, keyed by transition pairs such as `HUB_to_DEPLOYING`.
+
+The versioned lore wiki in [docs/lore](lore/) defines parody canon, legal guardrails, tone, and backlog ideas. It is planning/reference material, not runtime data. Source-wiki material should be reduced to general tropes and then rewritten as AFK-original canon there before any game-facing text is added to `src/content/`.
 
 Static balance configuration that must affect deterministic engine behavior also lives under `src/content/`. Use this for build-time tuning switches such as the skill XP threshold profile in `src/content/progression_config.json`. Runtime player preferences belong in `src/stores/settingsStore.ts` and can persist through localStorage; they should not alter deterministic simulation rules unless the setting is explicitly saved as part of game state.
 

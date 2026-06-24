@@ -5,7 +5,7 @@
             "id": "arc_commemorative_coin",
             "weight": 20,
             "rarity": 2,
-            "name": "ARC Commemorative Coin",
+            "name": "A.R.C. Commemorative Coin",
             "value": 25,
             "stackSize": 20,
             "flavor": "Celebrates an event that absolutely did not go well."
@@ -14,7 +14,7 @@
             "id": "arc_commemorative_coin_gold",
             "weight": 8,
             "rarity": 4,
-            "name": "ARC Gold Commemorative Coin",
+            "name": "A.R.C. Gold Commemorative Coin",
             "value": 120,
             "stackSize": 10,
             "flavor": "Shiny, heavy, and historically inaccurate."
@@ -23,7 +23,7 @@
             "id": "arc_commemorative_coin_platinum",
             "weight": 3,
             "rarity": 5,
-            "name": "ARC Platinum Coin",
+            "name": "A.R.C. Platinum Coin",
             "value": 900,
             "stackSize": 5,
             "flavor": "Worth more than your entire loadout."
@@ -86,7 +86,7 @@
             "id": "collector_plate_arc",
             "weight": 12,
             "rarity": 3,
-            "name": "Collector Plate (ARC Memorial Edition)",
+            "name": "Collector Plate (A.R.C. Memorial Edition)",
             "value": 60,
             "stackSize": 1,
             "flavor": "Commemorates an event that is definitely also abandoned now."
@@ -113,7 +113,7 @@
             "id": "arc_vintage_coin",
             "weight": 10,
             "rarity": 3,
-            "name": "ARC Vintage Coin",
+            "name": "A.R.C. Vintage Coin",
             "value": 80,
             "stackSize": 20,
             "flavor": "Worth a lot to collectors. Worth nothing to everyone else."
@@ -122,7 +122,7 @@
             "id": "arc_vintage_coin_fake",
             "weight": 18,
             "rarity": 2,
-            "name": "Fake ARC Vintage Coin",
+            "name": "Fake A.R.C. Vintage Coin",
             "value": 15,
             "stackSize": 20,
             "flavor": "Looks real from a distance. A great distance."
@@ -131,7 +131,7 @@
             "id": "arc_vintage_coin_platinum",
             "weight": 3,
             "rarity": 5,
-            "name": "ARC Platinum Collector Coin",
+            "name": "A.R.C. Platinum Collector Coin",
             "value": 1200,
             "stackSize": 10,
             "flavor": "Stamped with a misprint that makes it priceless."
@@ -224,7 +224,7 @@
             "name": "Rusted Ancient Coin",
             "value": 18,
             "stackSize": 20,
-            "flavor": "Older than ARC. Barely."
+            "flavor": "Older than A.R.C. Barely."
         },
         {
             "id": "ancient_coin_clean",
@@ -311,7 +311,7 @@
             "id": "precious_artifact_arc",
             "weight": 8,
             "rarity": 4,
-            "name": "ARC Artifact (Recovered)",
+            "name": "A.R.C. Artifact (Recovered)",
             "value": 150,
             "stackSize": 1,
             "flavor": "Stamped with a serial number and a warning."
@@ -320,7 +320,7 @@
             "id": "precious_artifact_legendary",
             "weight": 3,
             "rarity": 5,
-            "name": "Legendary ARC Artifact",
+            "name": "Legendary A.R.C. Artifact",
             "value": 1800,
             "stackSize": 1,
             "flavor": "You feel a strange warmth. Probably fine."

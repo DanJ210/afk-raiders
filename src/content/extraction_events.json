@@ -585,8 +585,148 @@
   {
     "id": "extract_stella_red_lz_overrun",
     "weight": 8,
-    "text": "Stella Red turned the LZ into a robot meet-and-greet. Attendance was mandatory and poorly catered.",
+    "text": "Staycation Red turned the LZ into a robot meet-and-greet. Attendance was mandatory and poorly catered.",
     "requires": { "phase": "EXTRACTING", "dangerLevel": "High", "minGreed": 20 },
     "effects": { "damage": 15, "mood": -4, "robotEncounter": "roomba_prime", "robotDamageMultiplier": 1.5 }
+  },
+  {
+    "id": "extract_manifest_emotionally_several",
+    "weight": 12,
+    "text": "Shuttle manifest asked for item count. I wrote 'emotionally several' and boarded.",
+    "requires": { "phase": "EXTRACTING" },
+    "effects": { "mood": 2 }
+  },
+  {
+    "id": "extract_return_hatch_backpack",
+    "weight": 10,
+    "text": "Return hatch stuck halfway open. Backpack negotiated poorly. I negotiated louder.",
+    "requires": { "phase": "EXTRACTING" },
+    "effects": { "mood": -1 }
+  },
+  {
+    "id": "extract_cache_detour_bad_idea",
+    "weight": 9,
+    "text": "Shortcut passed a humming cache labeled MAYBE. Took the long short way.",
+    "requires": { "phase": "EXTRACTING", "minGreed": 20 },
+    "effects": { "greedLevel": 4, "mood": -1 }
+  },
+  {
+    "id": "extract_security_gate_regrets",
+    "weight": 9,
+    "text": "LZ security gate scanned me, the backpack, and my regrets. All failed inspection. Boarded anyway.",
+    "requires": { "phase": "EXTRACTING" },
+    "effects": { "mood": -2, "ratRating": 1 }
+  },
+  {
+    "id": "extract_supply_crate_temptation",
+    "weight": 10,
+    "text": "A supply crate parachuted into the LZ during extraction. Made eye contact with temptation and kept running.",
+    "requires": { "phase": "EXTRACTING", "minGreed": 20 },
+    "effects": { "greedLevel": -2, "mood": 2 }
+  },
+  {
+    "id": "extract_pilot_counts_backpack_first",
+    "weight": 11,
+    "text": "Pilot counted the backpack before counting me. Fair. It has better resale value.",
+    "requires": { "phase": "EXTRACTING" },
+    "effects": { "mood": -1, "ratRating": 1 }
+  },
+  {
+    "id": "extract_lz_rope_tangle",
+    "weight": 10,
+    "text": "Extraction rope tangled around the backpack. For three seconds, physics and hoarding negotiated custody.",
+    "requires": { "phase": "EXTRACTING" },
+    "effects": { "mood": -2 }
+  },
+  {
+    "id": "extract_final_inventory_lie",
+    "weight": 12,
+    "text": "Asked if I grabbed anything dangerous. Looked at the humming brick in my bag and said no with confidence.",
+    "requires": { "phase": "EXTRACTING", "minGreed": 15 },
+    "effects": { "greedLevel": 2, "mood": 1 }
+  },
+  {
+    "id": "extract_shuttle_seatbelt_refuses",
+    "weight": 9,
+    "text": "Shuttle seatbelt refused to close over the loot. I respected its boundaries and sat sideways.",
+    "requires": { "phase": "EXTRACTING" },
+    "effects": { "mood": -1 }
+  },
+  {
+    "id": "extract_signal_shadow_late_advice",
+    "weight": 10,
+    "text": "Signal Shadow delivered Handler advice twelve seconds late. It was excellent advice for a problem I had already caused.",
+    "requires": { "phase": "EXTRACTING", "zoneCondition": "signal_shadow" },
+    "effects": { "mood": -2, "ratRating": 1 }
+  },
+  {
+    "id": "extract_apology_weather_lz_slip",
+    "weight": 9,
+    "text": "Apology Weather made the LZ slick and seemed genuinely sorry about the landing.",
+    "requires": { "phase": "EXTRACTING", "zoneCondition": "apology_weather" },
+    "effects": { "damage": 4, "mood": -1 }
+  },
+  {
+    "id": "extract_humming_crate_last_wave",
+    "weight": 8,
+    "text": "A humming crate migrated beside the shuttle and looked worth ruining my life over.",
+    "requires": { "phase": "EXTRACTING", "zoneCondition": "humming_crate_migration", "minGreed": 25 },
+    "effects": { "greedLevel": 4, "mood": -1 }
+  },
+  {
+    "id": "extract_overtime_red_closing_time",
+    "weight": 7,
+    "text": "Overtime Red hit closing time. A Sniper of Poor Decisions began enforcing the schedule.",
+    "requires": { "phase": "EXTRACTING", "zoneCondition": "overtime_red", "minGreed": 20 },
+    "effects": { "damage": 10, "mood": -3, "robotEncounter": "sniper_poor_decisions", "robotDamageMultiplier": 1.5 }
+  },
+  {
+    "id": "extract_failed_transit_reroute",
+    "weight": 9,
+    "text": "Extract route passed an old transit hub. The sign rerouted me through PLATFORM EVENTUALLY.",
+    "requires": { "phase": "EXTRACTING" },
+    "effects": { "mood": -1, "ratRating": 1 }
+  },
+  {
+    "id": "extract_soggy_tower_backpack_physics",
+    "weight": 8,
+    "text": "Descending the soggy tower with a full backpack turned every stair into a negotiation.",
+    "requires": { "phase": "EXTRACTING", "minGreed": 20 },
+    "effects": { "damage": 5, "mood": -2 }
+  },
+  {
+    "id": "extract_current_problem_manifest",
+    "weight": 10,
+    "text": "Shuttle manifest summarized The Current Problem as 'one person, twelve objects, no lessons learned.' Accurate.",
+    "requires": { "phase": "EXTRACTING", "minGreed": 15 },
+    "effects": { "greedLevel": 2, "mood": 1 }
+  },
+  {
+    "id": "extract_launch_gate_denial",
+    "weight": 8,
+    "text": "Old launch gate refused to open because boarding ended years ago. I respected the policy and climbed around it.",
+    "requires": { "phase": "EXTRACTING" },
+    "effects": { "mood": -1, "ratRating": 1 }
+  },
+  {
+    "id": "extract_questionable_cache_second_thoughts",
+    "weight": 8,
+    "text": "Questionable field cache beeped behind me like it had bonus loot and legal concerns. Kept moving. Barely.",
+    "requires": { "phase": "EXTRACTING", "minGreed": 20 },
+    "effects": { "greedLevel": -2, "mood": 1 }
+  },
+  {
+    "id": "extract_staycation_lz_tent_camper",
+    "weight": 8,
+    "text": "LZ tent zipper moved by itself. Either wind has thumbs or someone has been tactically picnicking for hours.",
+    "requires": { "phase": "EXTRACTING", "minGreed": 15 },
+    "effects": { "damage": 6, "mood": -2, "ratRating": 2 }
+  },
+  {
+    "id": "extract_pawn_desk_valuation_intrusive",
+    "weight": 9,
+    "text": "Halfway to extraction, I started estimating pawn value instead of sprinting. This is how capitalism gets knees injured.",
+    "requires": { "phase": "EXTRACTING", "minGreed": 20 },
+    "effects": { "greedLevel": 3, "mood": -1, "ratRating": 1 }
   }
 ]

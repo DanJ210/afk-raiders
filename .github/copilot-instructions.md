@@ -6,6 +6,8 @@ AFK Raiders is a "zero-player" idle comedy game (inspired by Godville) that paro
 Key docs — read these before making changes:
 - `docs/GAME_DESIGN.md` — game concept, mechanics, comedy content, roadmap
 - `docs/ARCHITECTURE.md` — folder structure, engine design, persistence, testing
+- `docs/lore/README.md` — versioned parody lore wiki and source-to-AFK workflow
+- `docs/lore/content-guidelines/LEGAL_GUARDRAILS.md` — rules for legally distinct content
 - `docs/CI_CD_AZURE.md` — CI/PR validation and Azure Static Web Apps deployment flow
 - `docs/SERVER_STORAGE_AND_ACCOUNTS.md` — planned account-backed save sync architecture and backend boundaries
 
@@ -20,7 +22,7 @@ Key docs — read these before making changes:
 ## Hard architectural rules
 1. **Engine purity:** Everything in `src/engine/` is pure TypeScript. No Vue, Pinia, DOM, or browser API imports. The engine must run in Node (for tests) and the browser identically.
 2. **Determinism:** All randomness flows through the seeded RNG in `src/engine/rng.ts`. Never use `Math.random()` inside the engine. Same seed + same state must always produce the same story.
-3. **Content as data:** All game text — events, loot, robots, zones, flavor lines — lives in `src/content/*.json` as weighted template tables with `{slot}` placeholders. Never hardcode joke text or event content in TypeScript.
+3. **Content as data:** All game text — events, phase-transition comms, loot, robots, zones, flavor lines — lives in `src/content/*.json`. Event files use weighted template tables with `{slot}` placeholders. Never hardcode joke text or event content in TypeScript.
 4. **Tick-based simulation:** Game time advances in discrete ticks via `processTick(state, rng)`. Offline catch-up replays elapsed ticks (capped at ~8 hours) on app load.
 5. **Tests required for engine changes:** Engine PRs must include Vitest unit tests. Prefer deterministic snapshot tests: fixed seed → expected event sequence.
 6. **UI renders state; it never simulates.** Vue components read Pinia stores and dispatch Handler actions. Game logic never lives in components.
@@ -30,6 +32,7 @@ Key docs — read these before making changes:
 - Comedy tone: deadpan, absurd, affectionate parody of extraction-shooter player behavior (loot greed, hoarding, hiding in lockers, "one more crate" syndrome).
 - The comms log IS the product. When in doubt, make the log entry funnier.
 - **Legally distinct parody:** never use the "ARC Raiders" trademark, character names, lore text, or assets. Use this project's parody equivalents (see the parody table in `docs/GAME_DESIGN.md`). In our lore, A.R.C. = "Aggressively Roaming Chassis."
+- For source-lore intake, do not commit copied wiki prose or exact source names. Add AFK-original equivalents to `docs/lore/` first, then convert approved concepts into `src/content/*.json`.
 
 ## Conventions
 - TypeScript strict mode; no `any` unless unavoidable and commented.
@@ -83,7 +86,7 @@ During RAIDING, only one Handler action can be pending at a time (`pendingCalm`,
 	- `DOWNED`: downed at the LZ (backpack lost, hidden pocket still applied)
 
 ### Raid Duration
-Max raid time is 60 ticks = 30 minutes at the 30 s tick cadence. Phase durations are defined in `src/engine/raidStateMachine.ts` as `PHASE_DURATIONS`: HUB ≤ 10 min (20 ticks), DEPLOYING 2 min (4 ticks, one-person tunnel pods), RAIDING ≤ 30 min (60 ticks), EXTRACTING ~2 min (4 ticks), DOWNED 1 min (2 ticks). When the raid timer expires while still in RAIDING, the natural transition is DOWNED (zone nuke failure), not EXTRACTING, unless `CALL_EXTRACT` was already queued for that final tick. If HP reaches 0 in any non-HUB phase the raider goes DOWNED, loses the backpack, and respawns in the HUB. Each phase has its own events file in `src/content/` (hub_events, deployment_events, raiding_events, extraction_events, downed_events).
+Max raid time is 60 ticks = 30 minutes at the 30 s tick cadence. Phase durations are defined in `src/engine/raidStateMachine.ts` as `PHASE_DURATIONS`: HUB ≤ 10 min (20 ticks), DEPLOYING 2 min (4 ticks, one-person tunnel pods), RAIDING ≤ 30 min (60 ticks), EXTRACTING ~2 min (4 ticks), DOWNED 1 min (2 ticks). When the raid timer expires while still in RAIDING, the natural transition is DOWNED (zone nuke failure), not EXTRACTING, unless `CALL_EXTRACT` was already queued for that final tick. If HP reaches 0 in any non-HUB phase the raider goes DOWNED, loses the backpack, and respawns in the HUB. Each phase has its own events file in `src/content/` (hub_events, deployment_events, raiding_events, extraction_events, downed_events). Phase-transition comms text lives in `src/content/phase_transitions.json`.
 
 `Ready Up!` is a HUB-only Handler action that spends signal and forces an immediate transition to `DEPLOYING`.
 

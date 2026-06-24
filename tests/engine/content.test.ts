@@ -1,3 +1,5 @@
+/// <reference types="vite/client" />
+
 /**
  * Content validation tests:
  * - Every {slot} referenced by an event template resolves to an existing flavor table,
@@ -21,6 +23,7 @@ import weaponsPartsData from '../../src/content/loot-tables/weapons_parts.json'
 import skillsData from '../../src/content/skills.json'
 import progressionConfigData from '../../src/content/progression_config.json'
 import raiderLevelsData from '../../src/content/raider_levels.json'
+import zoneConditionsData from '../../src/content/zones/zone_conditions.json'
 import { MAX_RAIDER_LEVEL } from '../../src/engine/raiderLevel'
 import type { RaiderLevelContent, SkillDefinition, SkillTrackId } from '../../src/engine/types'
 
@@ -64,6 +67,28 @@ const BUILT_IN_SLOTS = new Set(['mundane_item', 'water_item', 'healing_item', 'c
 const VALID_PHASES = new Set<Phase>(['HUB', 'DEPLOYING', 'RAIDING', 'EXTRACTING', 'DOWNED'])
 const VALID_DANGER_LEVELS = new Set<DangerLevel>(['Low', 'Medium', 'High'])
 const VALID_SKILL_IDS = new Set<SkillTrackId>(['cardio', 'hoarding', 'hiding_in_lockers', 'signal_handling'])
+const VALID_ZONE_CONDITION_IDS = new Set([
+  ...zoneConditionsData.minor_conditions,
+  ...zoneConditionsData.major_conditions,
+].map(condition => condition.id))
+const contentJsonModules = import.meta.glob('../../src/content/**/*.json', { eager: true }) as Record<string, { default: unknown }>
+const NON_PLAYER_FACING_CONTENT_KEYS = new Set([
+  'category',
+  'dangerLevel',
+  'forcePhase',
+  'id',
+  'phase',
+  'robotEncounter',
+  'skillXpThresholdProfile',
+  'zoneCondition',
+])
+const FORBIDDEN_PLAYER_FACING_TERMS = [
+  { pattern: /\bARC Raiders\b/i, message: 'source trademark must not appear in player-facing content' },
+  { pattern: /\bARC\b/, message: 'use A.R.C. for the AFK acronym in player-facing content' },
+  { pattern: /\bStella(?:\s+(?:Red|Camping|Montis))?\b/i, message: 'use Staycation/AFK-original names instead of source-specific Stella terms' },
+  { pattern: /\bSperanza\b/i, message: 'use Desperanza instead of the source hub name' },
+  { pattern: /Emotional Support Pocket/i, message: 'use Secret Hidden Pocket as the canonical pocket name' },
+]
 const skills = skillsData as SkillDefinition[]
 const progressionConfig = progressionConfigData as {
   skillXpThresholdProfile: string
@@ -102,7 +127,46 @@ function getTotalEncounterWeight(robotId: string): number {
   return getRobotEncounterEvents(robotId).reduce((sum, event) => sum + event.weight, 0)
 }
 
+function collectPlayerFacingStrings(value: unknown, path: string[] = []): Array<{ path: string[], text: string }> {
+  if (typeof value === 'string') {
+    return [{ path, text: value }]
+  }
+
+  if (Array.isArray(value)) {
+    return value.flatMap((entry, index) => collectPlayerFacingStrings(entry, [...path, String(index)]))
+  }
+
+  if (value && typeof value === 'object') {
+    return Object.entries(value).flatMap(([key, entry]) => {
+      if (NON_PLAYER_FACING_CONTENT_KEYS.has(key)) return []
+      return collectPlayerFacingStrings(entry, [...path, key])
+    })
+  }
+
+  return []
+}
+
 describe('content validation', () => {
+  describe('parody guardrails', () => {
+    it('keeps source-specific terms out of player-facing content strings', () => {
+      const violations: string[] = []
+
+      for (const [modulePath, module] of Object.entries(contentJsonModules)) {
+        const relativePath = modulePath.replace('../../src/content/', '')
+        const content = module.default
+
+        for (const { path, text } of collectPlayerFacingStrings(content)) {
+          for (const forbiddenTerm of FORBIDDEN_PLAYER_FACING_TERMS) {
+            if (!forbiddenTerm.pattern.test(text)) continue
+            violations.push(`${relativePath}:${path.join('.')}: ${forbiddenTerm.message}: "${text}"`)
+          }
+        }
+      }
+
+      expect(violations).toEqual([])
+    })
+  })
+
   describe('phase event files', () => {
     it('all event weights are > 0', () => {
       for (const ev of events) {
@@ -116,7 +180,7 @@ describe('content validation', () => {
       expect(unique.size).toBe(ids.length)
     })
 
-    it('all phase and danger-level requirements are valid', () => {
+    it('all phase, danger-level, and zone-condition requirements are valid', () => {
       for (const event of events) {
         const phases = event.requires?.phase === undefined
           ? []
@@ -124,12 +188,18 @@ describe('content validation', () => {
         const dangerLevels = event.requires?.dangerLevel === undefined
           ? []
           : Array.isArray(event.requires.dangerLevel) ? event.requires.dangerLevel : [event.requires.dangerLevel]
+        const zoneConditions = event.requires?.zoneCondition === undefined
+          ? []
+          : Array.isArray(event.requires.zoneCondition) ? event.requires.zoneCondition : [event.requires.zoneCondition]
 
         for (const phase of phases) {
           expect(VALID_PHASES.has(phase), `event "${event.id}" has invalid phase "${phase}"`).toBe(true)
         }
         for (const dangerLevel of dangerLevels) {
           expect(VALID_DANGER_LEVELS.has(dangerLevel), `event "${event.id}" has invalid dangerLevel "${dangerLevel}"`).toBe(true)
+        }
+        for (const zoneCondition of zoneConditions) {
+          expect(VALID_ZONE_CONDITION_IDS.has(zoneCondition), `event "${event.id}" has invalid zoneCondition "${zoneCondition}"`).toBe(true)
         }
       }
     })
@@ -371,8 +441,10 @@ describe('content validation', () => {
         passive_aggressor: 'moderate',
         seeker_validation: 'moderate',
         harvester_annoyance: 'moderate',
+        receipt_printer_doom: 'moderate',
         walker_texas_malfunction: 'dangerous',
         enforcer_inconvenience: 'dangerous',
+        apology_turret: 'dangerous',
         bomber_misread: 'nasty',
         roomba_prime: 'deadly',
         crusher_of_dreams: 'deadly',

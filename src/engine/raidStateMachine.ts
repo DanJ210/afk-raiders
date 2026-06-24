@@ -10,6 +10,7 @@
 import type { DangerLevel, Phase, RaidState, ZoneEntry } from './types.js'
 import type { RNG } from './rng.js'
 import zonesData from '../content/zones/zones.json'
+import phaseTransitionsData from '../content/phase_transitions.json'
 import type { ContentEntry } from './types.js'
 import zoneConditionsData from '../content/zones/zone_conditions.json'
 import { restoreShieldAtHub } from './shields.js'
@@ -24,6 +25,10 @@ type Condition = ContentEntry & {
 }
 const minorConditions = zoneConditionsData.minor_conditions as Condition[]
 const majorConditions = zoneConditionsData.major_conditions as Condition[]
+const phaseTransitionContent = phaseTransitionsData as {
+  transitions: Record<string, string>
+  fallback: string
+}
 
 function pickCondition(raid: RaidState, rng?: RNG): Condition {
   if (!rng) return minorConditions[0]
@@ -181,21 +186,6 @@ function nextPhase(raid: RaidState): Phase {
 }
 
 function phaseTransitionText(from: Phase, to: Phase): string {
-  if (from === 'HUB' && to === 'DEPLOYING')
-    return 'Gear packed. Pod hatch sealed. One person capacity, zero personal space.'
-  if (from === 'DEPLOYING' && to === 'RAIDING')
-    return 'Pod doors hissed open. Zone is hot. Try not to die immediately.'
-  if (from === 'RAIDING' && to === 'EXTRACTING')
-    return 'Extract beacon deployed. Shuttle ETA about 90 seconds. Please be at the LZ.'
-  if (from === 'RAIDING' && to === 'DOWNED')
-    return "Raider is down. Emotional support pocket contents secured."
-  if (from === 'EXTRACTING' && to === 'HUB')
-    return 'Successful extraction. Welcome back to Desperanza. Please shower.'
-  if (from === 'EXTRACTING' && to === 'RAIDING')
-    return 'Shuttle waved off. Extraction unsuccessful. Back into the zone. The water bottles understand.'
-  if (from === 'EXTRACTING' && to === 'DOWNED')
-    return 'Downed at the LZ. So close. The shuttle pilot filed it under "tragic but funny."'
-  if (from === 'DOWNED' && to === 'HUB')
-    return 'Respawn in Desperanza. Gear lost. Dignity: pending recovery.'
-  return `Phase transition: ${from} → ${to}`
+  const text = phaseTransitionContent.transitions[`${from}_to_${to}`] ?? phaseTransitionContent.fallback
+  return text.replaceAll('{from}', from).replaceAll('{to}', to)
 }
