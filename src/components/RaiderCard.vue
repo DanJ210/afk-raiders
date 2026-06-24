@@ -1,14 +1,19 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useNow } from '@vueuse/core'
 import { useGameStore } from '../stores/gameStore'
 import { zoneConditionByDangerLevel, zoneDescription, zoneName } from '../utils/zones'
 import { TICK_INTERVAL_MS } from '../engine/catchUp'
 import RaiderStatusHeaderStats from './RaiderStatusHeaderStats.vue'
 
+type TooltipKey = 'zone' | 'condition'
+
 const store = useGameStore()
 const raider = computed(() => store.raider)
 const activeShieldRecharge = computed(() => store.raid.activeShieldRecharge)
+const openTooltip = ref<TooltipKey | null>(null)
+const zoneTooltipButton = ref<HTMLElement | null>(null)
+const conditionTooltipButton = ref<HTMLElement | null>(null)
 const currentZoneName = computed(() => zoneName(store.raid.zone))
 const currentZoneDescription = computed(() => zoneDescription(store.raid.zone))
 const showCurrentZone = computed(() => store.phase === 'RAIDING' && currentZoneName.value !== null)
@@ -37,6 +42,30 @@ function formatDuration(ms: number): string {
   return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
 }
 
+function toggleTooltip(tooltip: TooltipKey) {
+  openTooltip.value = openTooltip.value === tooltip ? null : tooltip
+}
+
+function closeTooltip() {
+  openTooltip.value = null
+}
+
+function handleDocumentPointerDown(event: PointerEvent) {
+  const target = event.target
+  if (!(target instanceof Node)) return
+  if (zoneTooltipButton.value?.contains(target)) return
+  if (conditionTooltipButton.value?.contains(target)) return
+  closeTooltip()
+}
+
+onMounted(() => {
+  document.addEventListener('pointerdown', handleDocumentPointerDown)
+})
+
+onBeforeUnmount(() => {
+  document.removeEventListener('pointerdown', handleDocumentPointerDown)
+})
+
 </script>
 
 <template>
@@ -59,9 +88,14 @@ function formatDuration(ms: number): string {
         <span class="font-mono text-xs text-muted min-w-raider-label max-[600px]:min-w-0">Zone</span>
         <button
           v-if="currentZoneName"
+          ref="zoneTooltipButton"
           type="button"
-          class="relative font-mono text-raider-value text-text min-w-0 wrap-anywhere border-none bg-transparent p-0 underline decoration-dotted underline-offset-2 cursor-help text-left group"
+          class="tooltip-trigger relative font-mono text-raider-value text-text min-w-0 wrap-anywhere border-none bg-transparent p-0 underline decoration-dotted underline-offset-2 cursor-help text-left"
+          :class="{ 'tooltip-open': openTooltip === 'zone' }"
           :aria-label="currentZoneDescription ? `Zone ${currentZoneName}. ${currentZoneDescription}` : `Zone ${currentZoneName}`"
+          :aria-expanded="openTooltip === 'zone'"
+          @click="toggleTooltip('zone')"
+          @keydown.escape.stop="closeTooltip"
         >
           {{ currentZoneName }}
           <span
@@ -78,9 +112,14 @@ function formatDuration(ms: number): string {
         <span class="font-mono text-xs text-muted min-w-raider-label max-[600px]:min-w-0">Condition</span>
         <button
           v-if="currentCondition"
+          ref="conditionTooltipButton"
           type="button"
-          class="relative font-mono text-raider-value text-text min-w-0 wrap-anywhere border-none bg-transparent p-0 underline decoration-dotted underline-offset-2 cursor-help text-left group"
+          class="tooltip-trigger relative font-mono text-raider-value text-text min-w-0 wrap-anywhere border-none bg-transparent p-0 underline decoration-dotted underline-offset-2 cursor-help text-left"
+          :class="{ 'tooltip-open': openTooltip === 'condition' }"
           :aria-label="currentCondition.description ? `Condition ${currentCondition.name}. ${currentCondition.description}` : `Condition ${currentCondition.name}`"
+          :aria-expanded="openTooltip === 'condition'"
+          @click="toggleTooltip('condition')"
+          @keydown.escape.stop="closeTooltip"
         >
           {{ currentCondition.name }}
           <span
@@ -132,9 +171,14 @@ function formatDuration(ms: number): string {
   box-shadow: 0 6px 14px color-mix(in srgb, var(--color-bg) 70%, transparent);
 }
 
-.group:hover .tooltip,
-.group:focus-visible .tooltip,
-.group:active .tooltip {
+.tooltip-trigger.tooltip-open .tooltip,
+.tooltip-trigger:focus-visible .tooltip {
   display: block;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .tooltip-trigger:hover .tooltip {
+    display: block;
+  }
 }
 </style>
