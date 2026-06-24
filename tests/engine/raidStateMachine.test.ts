@@ -57,6 +57,7 @@ describe('raidStateMachine', () => {
     expect(result.raid.dangerLevel).not.toBeNull()
     expect(result.raid.zoneCondition).not.toBeNull()
     expect(result.raid.zoneCondition?.id).toBeTruthy()
+    expect(result.transition?.eventText).toBe('Gear packed. Pod hatch sealed. One person capacity, zero personal space.')
   })
 
   it('high greed momentum makes major zone conditions more likely', () => {
