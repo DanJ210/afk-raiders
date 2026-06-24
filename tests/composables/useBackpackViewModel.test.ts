@@ -46,4 +46,59 @@ describe('useBackpackViewModel', () => {
 
     expect(viewModel.hiddenPocket.value?.quantity).toBe(4)
   })
+
+  it('totals carried loot value without field meds or shield rechargers', () => {
+    const initial = createInitialState(0)
+    const raidRef = ref({
+      ...initial.raid,
+      backpack: [
+        {
+          itemId: 'water_bottle_tactical',
+          name: 'Tactical Water Bottle',
+          value: 40,
+          rarity: 3,
+          quantity: 2,
+        },
+        {
+          itemId: 'pocketed_keychain',
+          name: 'Pocketed Keychain',
+          value: 15,
+          rarity: 2,
+          quantity: 1,
+        },
+        {
+          itemId: 'panic_capacitor',
+          name: 'Panic Capacitor',
+          value: 70,
+          rarity: 3,
+          quantity: 1,
+          kind: 'shield_recharger' as const,
+          shieldChargeAmount: 40,
+        },
+      ],
+      hiddenPocket: {
+        itemId: 'pocketed_keychain',
+        name: 'Pocketed Keychain',
+        value: 15,
+        rarity: 2,
+        quantity: 1,
+      },
+      healingItems: [
+        {
+          itemId: 'bandage_blue',
+          name: 'Blue Bandage',
+          healAmount: 25,
+          moodGain: 3,
+          rarity: 3,
+          quantity: 2,
+        },
+      ],
+      backpackValue: 999,
+    })
+    const raiderRef = computed(() => initial.raider)
+
+    const viewModel = useBackpackViewModel(raidRef, raiderRef)
+
+    expect(viewModel.backpackLootValue.value).toBe(95)
+  })
 })

@@ -74,7 +74,7 @@ const greedColorClass = computed(() => {
 
       <div class="flex justify-between items-center mb-2.5">
         <span class="subpanel-label">Total Value</span>
-        <span class="font-mono font-bold text-[1.2rem] text-text">{{ raid.backpackValue }}</span>
+        <span class="font-mono font-bold text-[1.2rem] text-text">{{ viewModel.backpackLootValue.value }}</span>
       </div>
 
       <div class="flex items-center gap-2 mb-2.5">
