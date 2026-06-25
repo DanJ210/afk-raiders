@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useGameStore } from '../stores/gameStore'
 import { useBackpackViewModel } from '../composables/useBackpackViewModel'
 import FieldMedsPanel from './FieldMedsPanel.vue'
@@ -14,6 +14,8 @@ const raider = computed(() => store.raider)
 
 // Use the composable for all view-model logic
 const viewModel = useBackpackViewModel(raid, raider)
+const shieldRechargersCollapsed = ref(false)
+const fieldMedsCollapsed = ref(false)
 
 // Handlers for component events
 function handleItemClick(itemId: string) {
@@ -44,6 +46,14 @@ function handleApplyShieldRecharger(itemId: string) {
   store.applyShieldRecharger(itemId)
 }
 
+function toggleShieldRechargers() {
+  shieldRechargersCollapsed.value = !shieldRechargersCollapsed.value
+}
+
+function toggleFieldMeds() {
+  fieldMedsCollapsed.value = !fieldMedsCollapsed.value
+}
+
 // Greed bar fill color + text color
 const greedColorClass = computed(() => {
   const c = viewModel.greedClass.value
@@ -59,12 +69,16 @@ const greedColorClass = computed(() => {
       <ShieldRechargersPanel
         :items="viewModel.shieldRechargerItems.value"
         :can-apply="viewModel.canApplyAnyShieldRecharger.value"
+        :collapsed="shieldRechargersCollapsed"
+        @toggle="toggleShieldRechargers"
         @apply="handleApplyShieldRecharger"
       />
 
       <FieldMedsPanel
         :items="viewModel.healingItems.value"
         :can-apply="viewModel.canApplyHealing.value"
+        :collapsed="fieldMedsCollapsed"
+        @toggle="toggleFieldMeds"
         @apply="store.applyHealingItem"
       />
     </div>
