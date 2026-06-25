@@ -91,7 +91,7 @@ describe('catchUp', () => {
     const result = catchUp(state, createRNG(3), 0, TICK_INTERVAL_MS)
 
     expect(result.events[0].id).toBe('phase_HUB_to_DEPLOYING')
-    expect(result.events.map(event => event.id)).toContain('deploy_tunnel_dark')
+    expect(result.events.some(event => event.phase === 'DEPLOYING')).toBe(true)
   })
 
   it('timestamps replayed events at elapsed tick times', () => {
@@ -117,31 +117,31 @@ describe('catchUp', () => {
     expect(result1.summary.ticksReplayed).toBe(result2.summary.ticksReplayed)
   })
 
-  it('reports only new downings as away deaths', () => {
+  it('reports only newly failed raids as away deaths', () => {
     const initial = createInitialState(0)
     const state = {
       ...initial,
       raider: { ...initial.raider, hp: 0 },
       raid: {
         ...initial.raid,
-        phase: 'DEPLOYING' as const,
-        phaseTicksRemaining: 2,
+        phase: 'RAIDING' as const,
+        phaseTicksRemaining: 30,
       },
     }
 
-    const result = catchUp(state, createRNG(42), 0, TICK_INTERVAL_MS)
+    const result = catchUp(state, createRNG(42), 0, 3 * TICK_INTERVAL_MS)
 
     expect(result.summary.deaths).toBe(1)
     expect(result.summary.lines.some(line => line.includes('1 death'))).toBe(true)
   })
 
-  it('does not count a pre-existing DOWNED respawn as a new away death', () => {
+  it('does not count a pre-existing KNOCKED_OUT recovery as a new away death', () => {
     const initial = createInitialState(0)
     const state = {
       ...initial,
       raid: {
         ...initial.raid,
-        phase: 'DOWNED' as const,
+        phase: 'KNOCKED_OUT' as const,
         phaseTicksRemaining: 1,
       },
     }
@@ -160,8 +160,9 @@ describe('catchUp', () => {
       ...initial,
       raid: {
         ...initial.raid,
-        phase: 'EXTRACTING' as const,
-        phaseTicksRemaining: 1,
+        phase: 'RAIDING' as const,
+        phaseTicksRemaining: 30,
+        extracting: { ticksRemaining: 1 },
         backpack: [
           {
             itemId: 'water_bottle',

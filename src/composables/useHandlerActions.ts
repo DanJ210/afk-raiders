@@ -146,6 +146,7 @@ export function useHandlerActions(
 
   function calm() {
     if (stateRef.value.raid.phase !== 'RAIDING') return
+    if (stateRef.value.raid.extracting || stateRef.value.raid.downed) return
     if (hasPendingHandlerAction()) return
     const actionNow = Date.now()
     const updated = spendSignal(syncSignalProgress(actionNow), 'CALM')
@@ -161,6 +162,7 @@ export function useHandlerActions(
 
   function pressure() {
     if (stateRef.value.raid.phase !== 'RAIDING') return
+    if (stateRef.value.raid.extracting || stateRef.value.raid.downed) return
     if (hasPendingHandlerAction()) return
     const actionNow = Date.now()
     const updated = spendSignal(syncSignalProgress(actionNow), 'PRESSURE')
@@ -207,6 +209,7 @@ export function useHandlerActions(
 
   function callExtract() {
     if (stateRef.value.raid.phase !== 'RAIDING') return
+    if (stateRef.value.raid.extracting || stateRef.value.raid.downed) return
     if (hasPendingHandlerAction()) return
     const actionNow = Date.now()
     const updated = spendSignal(syncSignalProgress(actionNow), 'CALL_EXTRACT')
@@ -267,7 +270,7 @@ export function useHandlerActions(
   }
 
   function setHiddenPocketItem(itemId: string) {
-    if (stateRef.value.raid.phase === 'HUB' || stateRef.value.raid.phase === 'DOWNED') return
+    if (stateRef.value.raid.phase === 'HUB' || stateRef.value.raid.phase === 'KNOCKED_OUT' || stateRef.value.raid.downed) return
     const sourceItem = stateRef.value.raid.backpack.find(item => item.itemId === itemId)
     if (!sourceItem || sourceItem.quantity <= 0) return
 

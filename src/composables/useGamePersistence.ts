@@ -10,6 +10,7 @@
 
 import type { GameState, OutcomeContextStats, RaiderLifetimeStats } from '../engine/types.js'
 import { SAVE_VERSION } from '../engine/initialState.js'
+import { EXTRACTING_TICKS, PHASE_DURATIONS } from '../engine/raidStateMachine.js'
 import { createInitialLifetimeStats } from '../engine/stats.js'
 import { sellStashOverflow } from '../engine/homeStash.js'
 import { createStarterShieldState } from '../engine/shields.js'
@@ -21,6 +22,7 @@ const MIN_SUPPORTED_SAVE_VERSION = 3
 
 type LegacyRaiderStats = Omit<GameState['raider'], 'levelXp'> & { levelXp?: unknown }
 type LegacyRecord = Record<string, unknown>
+type LegacyPhase = GameState['raid']['phase'] | 'EXTRACTING' | 'DOWNED'
 
 export interface SaveData {
   state: GameState
@@ -57,6 +59,62 @@ function sanitizeCount(value: unknown): number {
   return typeof value === 'number' && Number.isFinite(value)
     ? Math.max(0, Math.floor(value))
     : 0
+}
+
+function sanitizeTicksRemaining(value: unknown, fallback: number): number {
+  return typeof value === 'number' && Number.isFinite(value)
+    ? Math.max(0, Math.floor(value))
+    : fallback
+}
+
+function normalizeLegacyPhase(value: unknown): LegacyPhase {
+  if (value === 'HUB' || value === 'DEPLOYING' || value === 'RAIDING' || value === 'KNOCKED_OUT' || value === 'EXTRACTING' || value === 'DOWNED') {
+    return value
+  }
+  return 'HUB'
+}
+
+function normalizeRaidState(raid: GameState['raid']): GameState['raid'] {
+  const phase = normalizeLegacyPhase(raid.phase)
+  const baseRaid: GameState['raid'] = {
+    ...raid,
+    shield: raid.shield ?? createStarterShieldState(),
+    activeShieldRecharge: raid.activeShieldRecharge ?? null,
+    hiddenPocket: raid.hiddenPocket ?? null,
+    healingItems: raid.healingItems ?? [],
+    dangerLevel: raid.dangerLevel ?? null,
+    zoneCondition: raid.zoneCondition ?? null,
+    downed: raid.downed ?? null,
+    extracting: raid.extracting ?? null,
+  }
+
+  if (phase === 'EXTRACTING') {
+    return {
+      ...baseRaid,
+      phase: 'RAIDING',
+      phaseTicksRemaining: PHASE_DURATIONS.RAIDING,
+      extracting: { ticksRemaining: Math.max(1, sanitizeTicksRemaining(raid.phaseTicksRemaining, EXTRACTING_TICKS)) },
+      downed: null,
+    }
+  }
+
+  if (phase === 'DOWNED') {
+    return {
+      ...baseRaid,
+      phase: 'KNOCKED_OUT',
+      phaseTicksRemaining: Math.max(1, sanitizeTicksRemaining(raid.phaseTicksRemaining, PHASE_DURATIONS.KNOCKED_OUT)),
+      activeShieldRecharge: null,
+      healingItems: [],
+      downed: null,
+      extracting: null,
+    }
+  }
+
+  return {
+    ...baseRaid,
+    phase,
+    phaseTicksRemaining: sanitizeTicksRemaining(raid.phaseTicksRemaining, PHASE_DURATIONS[phase]),
+  }
 }
 
 function sanitizeCounterMap(value: unknown): Record<string, number> {
@@ -172,15 +230,7 @@ export function useGamePersistence(): GamePersistenceReturn {
         homeStash: sale.homeStash,
         coins: (loadedState.coins ?? 0) + sale.coinsGained,
         stats: normalizeLifetimeStats(loadedState),
-        raid: {
-          ...loadedState.raid,
-          shield: loadedState.raid.shield ?? createStarterShieldState(),
-          activeShieldRecharge: loadedState.raid.activeShieldRecharge ?? null,
-          hiddenPocket: loadedState.raid.hiddenPocket ?? null,
-          healingItems: loadedState.raid.healingItems ?? [],
-          dangerLevel: loadedState.raid.dangerLevel ?? null,
-          zoneCondition: loadedState.raid.zoneCondition ?? null,
-        },
+        raid: normalizeRaidState(loadedState.raid),
       }
       data.version = SAVE_VERSION
       data.state.version = SAVE_VERSION

@@ -4,7 +4,7 @@
  * - Duplicate items stack quantities (×N) instead of duplicating entries
  * - Death clears the in-raid backpack but leaves the stash untouched
  * - Forced HUB transitions reset the in-raid backpack
- * - Extraction events content is loaded and can force phase outcomes
+ * - Extraction events content is loaded and can drive condition outcomes
  */
 
 import { describe, it, expect } from 'vitest'
@@ -44,9 +44,21 @@ function makeState(phase: Phase, backpack: BackpackItem[], homeStash: BackpackIt
   }
 }
 
+function makeExtractingState(backpack: BackpackItem[], homeStash: BackpackItem[] = []): GameState {
+  const state = makeState('RAIDING', backpack, homeStash)
+  return {
+    ...state,
+    raid: {
+      ...state.raid,
+      phaseTicksRemaining: 30,
+      extracting: { ticksRemaining: 1 },
+    },
+  }
+}
+
 describe('home stash', () => {
   it('transfers the backpack to homeStash on successful extraction', () => {
-    const state = makeState('EXTRACTING', [makeItem({ quantity: 2 })])
+    const state = makeExtractingState([makeItem({ quantity: 2 })])
     const { state: next } = processTick(state, createRNG(FIXED_SEED), 0)
 
     expect(next.raid.phase).toBe('HUB')
@@ -60,10 +72,12 @@ describe('home stash', () => {
 
   it('stacks duplicate items in the stash with summed quantities', () => {
     const state = makeState(
-      'EXTRACTING',
+      'RAIDING',
       [makeItem({ quantity: 2 }), makeItem({ itemId: 'shiny_thing', name: 'Shiny Thing', value: 10, rarity: 3 })],
       [makeItem({ quantity: 1 })],
     )
+    state.raid.extracting = { ticksRemaining: 1 }
+    state.raid.phaseTicksRemaining = 30
     const { state: next } = processTick(state, createRNG(FIXED_SEED), 0)
 
     expect(next.homeStash).toHaveLength(2)
@@ -75,7 +89,7 @@ describe('home stash', () => {
 
   it('clears the backpack on death but never empties the stash', () => {
     const stash = [makeItem({ quantity: 5 })]
-    const state = makeState('DOWNED', [makeItem({ itemId: 'doomed_loot', name: 'Doomed Loot' })], stash)
+    const state = makeState('KNOCKED_OUT', [makeItem({ itemId: 'doomed_loot', name: 'Doomed Loot' })], stash)
     const { state: next } = processTick(state, createRNG(FIXED_SEED), 0)
 
     expect(next.raid.phase).toBe('HUB')
@@ -90,10 +104,12 @@ describe('home stash', () => {
       makeItem({ itemId: 'pricey', name: 'Pricey Thing', value: 10, quantity: HOME_STASH_ITEM_LIMIT - 2 }),
     ]
     const state = makeState(
-      'EXTRACTING',
+      'RAIDING',
       [makeItem({ value: 1, quantity: 5 })], // 3 of these must be sold
       nearFullStash,
     )
+    state.raid.extracting = { ticksRemaining: 1 }
+    state.raid.phaseTicksRemaining = 30
     const { state: next, events: emitted } = processTick(state, createRNG(FIXED_SEED), 0)
 
     expect(next.raid.phase).toBe('HUB')
@@ -114,10 +130,12 @@ describe('home stash', () => {
       makeItem({ value: 1, quantity: HOME_STASH_ITEM_LIMIT }),
     ]
     const state = makeState(
-      'EXTRACTING',
+      'RAIDING',
       [makeItem({ itemId: 'hans', name: 'Hans Gruber (alive)', value: 1000, rarity: 5, quantity: 2 })],
       fullOfCheap,
     )
+    state.raid.extracting = { ticksRemaining: 1 }
+    state.raid.phaseTicksRemaining = 30
     const { state: next } = processTick(state, createRNG(FIXED_SEED), 0)
 
     const total = next.homeStash.reduce((s, i) => s + i.quantity, 0)
@@ -172,7 +190,7 @@ describe('home stash', () => {
 
 describe('forced phase transitions', () => {
   it('resets the in-raid backpack when forced back to HUB', () => {
-    const state = makeState('EXTRACTING', [makeItem()])
+    const state = makeExtractingState([makeItem()])
     const { raid } = tickPhase({ ...state.raid, phaseTicksRemaining: 4 }, 'HUB')
 
     expect(raid.phase).toBe('HUB')
@@ -181,11 +199,11 @@ describe('forced phase transitions', () => {
     expect(raid.greedLevel).toBe(0)
   })
 
-  it('keeps the backpack when forced from EXTRACTING back to RAIDING', () => {
-    const state = makeState('EXTRACTING', [makeItem()])
-    const { raid } = tickPhase({ ...state.raid, phaseTicksRemaining: 4 }, 'RAIDING')
+  it('keeps the backpack when forced into KNOCKED_OUT recovery', () => {
+    const state = makeState('RAIDING', [makeItem()])
+    const { raid } = tickPhase({ ...state.raid, phaseTicksRemaining: 4 }, 'KNOCKED_OUT')
 
-    expect(raid.phase).toBe('RAIDING')
+    expect(raid.phase).toBe('KNOCKED_OUT')
     expect(raid.backpack).toHaveLength(1)
   })
 })
@@ -196,12 +214,11 @@ describe('extraction events content', () => {
     expect(extractionEvents.length).toBeGreaterThanOrEqual(5)
   })
 
-  it('includes both unsuccessful and extra-successful forced outcomes', () => {
-    const forced = events
-      .filter(e => e.requires?.phase === 'EXTRACTING' && e.effects?.forcePhase)
-      .map(e => e.effects!.forcePhase)
-    expect(forced).toContain('HUB')      // early successful extraction
-    expect(forced).toContain('RAIDING')  // failed extraction
-    expect(forced).toContain('DOWNED')   // died at the LZ
+  it('includes success, failure, and downed extraction condition outcomes', () => {
+    const extractionEvents = events.filter(e => e.requires?.phase === 'RAIDING' && e.requires?.extracting === true)
+
+    expect(extractionEvents.some(e => e.effects?.completeExtraction)).toBe(true)
+    expect(extractionEvents.some(e => e.effects?.failExtraction)).toBe(true)
+    expect(extractionEvents.some(e => e.effects?.startDowned)).toBe(true)
   })
 })

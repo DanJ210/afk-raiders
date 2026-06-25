@@ -32,6 +32,13 @@ const phaseTimerMs = computed(() => {
 const raidTimerMs = computed(() => (store.phase === 'RAIDING' ? phaseTimerMs.value : 0))
 const phaseTimerText = computed(() => formatDuration(phaseTimerMs.value))
 const raidTimerText = computed(() => formatDuration(raidTimerMs.value))
+const downedTimerMs = computed(() => {
+  if (!store.raid.downed) return 0
+  const downedRemainingMs = store.raid.downed.ticksRemaining * TICK_INTERVAL_MS
+  const elapsedSinceLastTick = Math.max(0, now.value.getTime() - store.lastTickAt)
+  return Math.max(0, downedRemainingMs - elapsedSinceLastTick)
+})
+const downedTimerText = computed(() => formatDuration(downedTimerMs.value))
 const showPhaseTimer = computed(() => phaseTimerMs.value > 0)
 const raidShield = computed(() => store.raid.shield)
 
@@ -82,6 +89,9 @@ onBeforeUnmount(() => {
       class="shrink-0"
       :raider="raider"
       :phase="store.phase"
+      :is-extracting="store.raid.extracting !== null"
+      :is-downed="store.raid.downed !== null"
+      :downed-timer-text="downedTimerText"
       :show-phase-timer="showPhaseTimer"
       :phase-timer-text="phaseTimerText"
       :raid-shield="raidShield"

@@ -90,4 +90,69 @@ describe('useGamePersistence', () => {
       },
     })
   })
+
+  it('migrates legacy EXTRACTING phase saves into a RAIDING extraction condition', () => {
+    const initial = createInitialState(1000)
+    const legacySave = {
+      state: {
+        ...initial,
+        version: 6,
+        raid: {
+          ...initial.raid,
+          phase: 'EXTRACTING',
+          phaseTicksRemaining: 3,
+        },
+      },
+      seed: 123,
+      lastTickAt: 1000,
+      version: 6,
+    }
+    stubLocalStorage([[STORAGE_KEY, JSON.stringify(legacySave)]])
+
+    const loaded = useGamePersistence().loadSave()
+
+    expect(loaded?.state.raid.phase).toBe('RAIDING')
+    expect(loaded?.state.raid.phaseTicksRemaining).toBe(60)
+    expect(loaded?.state.raid.extracting).toEqual({ ticksRemaining: 3 })
+    expect(loaded?.state.raid.downed).toBeNull()
+  })
+
+  it('migrates legacy DOWNED phase saves into KNOCKED_OUT recovery', () => {
+    const initial = createInitialState(1000)
+    const legacySave = {
+      state: {
+        ...initial,
+        version: 6,
+        raid: {
+          ...initial.raid,
+          phase: 'DOWNED',
+          phaseTicksRemaining: 1,
+          extracting: { ticksRemaining: 2 },
+          downed: { ticksRemaining: 1 },
+          healingItems: [
+            {
+              itemId: 'bandage_blue',
+              name: 'Blue Bandage',
+              healAmount: 25,
+              moodGain: 3,
+              rarity: 3,
+              quantity: 1,
+            },
+          ],
+        },
+      },
+      seed: 123,
+      lastTickAt: 1000,
+      version: 6,
+    }
+    stubLocalStorage([[STORAGE_KEY, JSON.stringify(legacySave)]])
+
+    const loaded = useGamePersistence().loadSave()
+
+    expect(loaded?.state.raid.phase).toBe('KNOCKED_OUT')
+    expect(loaded?.state.raid.phaseTicksRemaining).toBe(1)
+    expect(loaded?.state.raid.extracting).toBeNull()
+    expect(loaded?.state.raid.downed).toBeNull()
+    expect(loaded?.state.raid.healingItems).toEqual([])
+  })
 })

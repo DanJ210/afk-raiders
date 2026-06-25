@@ -3,92 +3,163 @@
     "id": "extract_lz_sprint",
     "weight": 30,
     "text": "Sprinting to the LZ. Cardio skill: unallocated. Regret: allocated.",
-    "requires": { "phase": "EXTRACTING" },
-    "effects": { "mood": -1 }
+    "requires": {
+      "phase": "RAIDING",
+      "extracting": true
+    },
+    "effects": {
+      "mood": -1
+    }
   },
   {
     "id": "extract_backpack_jingle",
     "weight": 25,
     "text": "Running to extract. The backpack jingles like a vending machine falling down stairs. Every robot heard it.",
-    "requires": { "phase": "EXTRACTING" },
-    "effects": { "damage": 3 }
+    "requires": {
+      "phase": "RAIDING",
+      "extracting": true
+    },
+    "effects": {
+      "damage": 3
+    }
   },
   {
     "id": "extract_one_more_crate",
     "weight": 15,
     "text": "Saw one more crate near the LZ. Reached for it. The shuttle pilot honked. Honked back. Boarding anyway.",
-    "requires": { "phase": "EXTRACTING" },
-    "effects": { "greedLevel": 5, "mood": 1 }
+    "requires": {
+      "phase": "RAIDING",
+      "extracting": true
+    },
+    "effects": {
+      "greedLevel": 5,
+      "mood": 1
+    }
   },
   {
     "id": "extract_smoke_cover",
     "weight": 20,
     "text": "Popped smoke at the LZ for dramatic effect. Now can't see the shuttle. Or anything.",
-    "requires": { "phase": "EXTRACTING" },
-    "effects": { "mood": -1 }
+    "requires": {
+      "phase": "RAIDING",
+      "extracting": true
+    },
+    "effects": {
+      "mood": -1
+    }
   },
   {
     "id": "extract_robot_pursuit",
     "weight": 20,
     "text": "Three Anxieticks in pursuit. They're nervous, we're nervous, the shuttle is nervous. Took shrapnel.",
-    "requires": { "phase": "EXTRACTING" },
-    "effects": { "damage": 8, "mood": -2 }
+    "requires": {
+      "phase": "RAIDING",
+      "extracting": true
+    },
+    "effects": {
+      "damage": 8,
+      "mood": -2
+    }
   },
   {
     "id": "extract_early_dustoff",
     "weight": 8,
     "text": "Shuttle arrived early. Pilot said 'get in, loser, we're hoarding.' Immediate dust-off.",
-    "requires": { "phase": "EXTRACTING" },
-    "effects": { "mood": 3, "forcePhase": "HUB" }
+    "requires": {
+      "phase": "RAIDING",
+      "extracting": true
+    },
+    "effects": {
+      "mood": 3,
+      "completeExtraction": true
+    }
   },
   {
     "id": "extract_beacon_jammed",
     "weight": 8,
     "text": "Extract beacon jammed by a Tattletale. Shuttle waved off. Extraction unsuccessful. Re-entering the zone with dignity intact-ish.",
-    "requires": { "phase": "EXTRACTING" },
-    "effects": { "mood": -3, "forcePhase": "RAIDING" }
+    "requires": {
+      "phase": "RAIDING",
+      "extracting": true
+    },
+    "effects": {
+      "mood": -3,
+      "failExtraction": true
+    }
   },
   {
     "id": "extract_lz_camper",
     "weight": 6,
     "text": "Another raider was camping the LZ. We emoted. They did not emote back.",
-    "requires": { "phase": "EXTRACTING" },
-    "effects": { "damage": 15, "mood": -2, "ratRating": 1 }
+    "requires": {
+      "phase": "RAIDING",
+      "extracting": true
+    },
+    "effects": {
+      "damage": 15,
+      "mood": -2,
+      "ratRating": 1
+    }
   },
   {
     "id": "extract_downed_at_lz",
     "weight": 4,
     "text": "Roomba Prime rolled onto the LZ at the worst possible moment. The floor is clean. The raider is not okay.",
-    "requires": { "phase": "EXTRACTING", "maxHp": 50 },
-    "effects": { "damage": 50, "mood": -3, "forcePhase": "DOWNED" }
+    "requires": {
+      "phase": "RAIDING",
+      "maxHp": 50,
+      "extracting": true
+    },
+    "effects": {
+      "damage": 50,
+      "mood": -3,
+      "startDowned": true
+    }
   },
   {
     "id": "extract_return_button",
     "weight": 18,
     "text": "Aboard the shuttle. Hovering over the big green RETURN HOME button. Savoring the moment. Pressing it.",
-    "requires": { "phase": "EXTRACTING" },
-    "effects": { "mood": 2 }
+    "requires": {
+      "phase": "RAIDING",
+      "extracting": true
+    },
+    "effects": {
+      "mood": 2
+    }
   },
   {
     "id": "extraction_success_flavor",
     "weight": 60,
     "text": "{extract_success_line}",
-    "requires": { "phase": "EXTRACTING" },
-    "effects": { "mood": 3 }
+    "requires": {
+      "phase": "RAIDING",
+      "extracting": true
+    },
+    "effects": {
+      "mood": 3
+    }
   },
   {
     "id": "extraction_tense",
     "weight": 40,
     "text": "Extraction beacon active. Counting down. Three robots in pursuit. This is fine.",
-    "requires": { "phase": "EXTRACTING" },
-    "effects": { "damage": 5, "mood": -1 }
+    "requires": {
+      "phase": "RAIDING",
+      "extracting": true
+    },
+    "effects": {
+      "damage": 5,
+      "mood": -1
+    }
   },
   {
     "id": "extract_signal_flare",
     "weight": 18,
     "text": "Fired a signal flare. Immediately regretted how visible it was.",
     "requires": {
-      "phase": "EXTRACTING"
+      "phase": "RAIDING",
+      "extracting": true
     },
     "effects": {
       "mood": -1
@@ -99,8 +170,9 @@
     "weight": 22,
     "text": "Spotted last‑second loot near the LZ. Risked everything. Worth it? Debatable.",
     "requires": {
-      "phase": "EXTRACTING",
-      "minGreed": 20
+      "phase": "RAIDING",
+      "minGreed": 20,
+      "extracting": true
     },
     "effects": {
       "greedLevel": 5,
@@ -112,7 +184,8 @@
     "weight": 12,
     "text": "An Anxietick skittered across the LZ, panicked, and tripped over itself. I related.",
     "requires": {
-      "phase": "EXTRACTING"
+      "phase": "RAIDING",
+      "extracting": true
     },
     "effects": {
       "mood": -1,
@@ -124,7 +197,8 @@
     "weight": 15,
     "text": "Teammate screamed 'GO GO GO!' even though nothing was happening yet.",
     "requires": {
-      "phase": "EXTRACTING"
+      "phase": "RAIDING",
+      "extracting": true
     },
     "effects": {
       "mood": -1
@@ -135,7 +209,8 @@
     "weight": 10,
     "text": "A Tattletale drone hovered in, played a cheerful jingle, and ruined everything.",
     "requires": {
-      "phase": "EXTRACTING"
+      "phase": "RAIDING",
+      "extracting": true
     },
     "effects": {
       "mood": -3,
@@ -147,8 +222,9 @@
     "weight": 20,
     "text": "Extraction was seconds away. Then I saw a crate. My brain made the wrong choice.",
     "requires": {
-      "phase": "EXTRACTING",
-      "minGreed": 25
+      "phase": "RAIDING",
+      "minGreed": 25,
+      "extracting": true
     },
     "effects": {
       "greedLevel": 6,
@@ -160,13 +236,14 @@
     "weight": 8,
     "text": "A Roomba Prime charged directly at me, determined to clean me off the map.",
     "requires": {
-      "phase": "EXTRACTING",
-      "minGreed": 20
+      "phase": "RAIDING",
+      "minGreed": 20,
+      "extracting": true
     },
     "effects": {
       "mood": -4,
       "robotEncounter": "roomba_prime",
-      "robotDamageMultiplier": 2.0
+      "robotDamageMultiplier": 2
     }
   },
   {
@@ -174,7 +251,8 @@
     "weight": 14,
     "text": "Nearby raider offered a mid-extraction high-five. Missed completely. Morale somehow improved.",
     "requires": {
-      "phase": "EXTRACTING"
+      "phase": "RAIDING",
+      "extracting": true
     },
     "effects": {
       "mood": 2
@@ -185,8 +263,9 @@
     "weight": 9,
     "text": "A Bomber Who Misreads the Room enthusiastically surprised us at the LZ. We were less enthusiastic.",
     "requires": {
-      "phase": "EXTRACTING",
-      "minGreed": 20
+      "phase": "RAIDING",
+      "minGreed": 20,
+      "extracting": true
     },
     "effects": {
       "mood": -3,
@@ -199,7 +278,8 @@
     "weight": 17,
     "text": "Teammate dropped loot while sprinting to the LZ. I considered grabbing it. Considered.",
     "requires": {
-      "phase": "EXTRACTING"
+      "phase": "RAIDING",
+      "extracting": true
     },
     "effects": {
       "greedLevel": 3,
@@ -211,7 +291,8 @@
     "weight": 13,
     "text": "Smoke filled the LZ. I pretended I knew where I was going.",
     "requires": {
-      "phase": "EXTRACTING"
+      "phase": "RAIDING",
+      "extracting": true
     },
     "effects": {
       "mood": -2
@@ -222,7 +303,8 @@
     "weight": 11,
     "text": "An Anxietick froze in the middle of the LZ like a terrified traffic cone.",
     "requires": {
-      "phase": "EXTRACTING"
+      "phase": "RAIDING",
+      "extracting": true
     },
     "effects": {
       "mood": -1,
@@ -234,7 +316,8 @@
     "weight": 16,
     "text": "Pulled off a last‑second heroic slide into the LZ. No one saw it.",
     "requires": {
-      "phase": "EXTRACTING"
+      "phase": "RAIDING",
+      "extracting": true
     },
     "effects": {
       "mood": 2
@@ -245,7 +328,8 @@
     "weight": 10,
     "text": "A Tattletale drone hovered at eye level and judged my extraction performance.",
     "requires": {
-      "phase": "EXTRACTING"
+      "phase": "RAIDING",
+      "extracting": true
     },
     "effects": {
       "mood": -2,
@@ -257,7 +341,8 @@
     "weight": 18,
     "text": "Fumbled loot while boarding. Pretended it was a tactical distraction.",
     "requires": {
-      "phase": "EXTRACTING"
+      "phase": "RAIDING",
+      "extracting": true
     },
     "effects": {
       "mood": -1,
@@ -269,8 +354,9 @@
     "weight": 7,
     "text": "A Roomba Prime blocked the LZ like an angry floor guardian.",
     "requires": {
-      "phase": "EXTRACTING",
-      "minGreed": 20
+      "phase": "RAIDING",
+      "minGreed": 20,
+      "extracting": true
     },
     "effects": {
       "mood": -4,
@@ -282,7 +368,8 @@
     "weight": 15,
     "text": "Someone cheered as the shuttle approached. For a moment, hope filed the proper paperwork.",
     "requires": {
-      "phase": "EXTRACTING"
+      "phase": "RAIDING",
+      "extracting": true
     },
     "effects": {
       "mood": 2
@@ -293,7 +380,8 @@
     "weight": 9,
     "text": "A Walker Texas Malfunction stomped in confidently before immediately tripping over the LZ beacon.",
     "requires": {
-      "phase": "EXTRACTING"
+      "phase": "RAIDING",
+      "extracting": true
     },
     "effects": {
       "mood": -3,
@@ -305,8 +393,9 @@
     "weight": 20,
     "text": "Faced the eternal choice: extraction or one more crate. I chose poorly.",
     "requires": {
-      "phase": "EXTRACTING",
-      "minGreed": 30
+      "phase": "RAIDING",
+      "minGreed": 30,
+      "extracting": true
     },
     "effects": {
       "greedLevel": 6,
@@ -318,7 +407,8 @@
     "weight": 12,
     "text": "Teammate pushed me toward the LZ. Unsure if helpful or personal.",
     "requires": {
-      "phase": "EXTRACTING"
+      "phase": "RAIDING",
+      "extracting": true
     },
     "effects": {
       "mood": -1
@@ -329,7 +419,8 @@
     "weight": 10,
     "text": "An Anxietick tripped over a root and accidentally revealed a hidden path.",
     "requires": {
-      "phase": "EXTRACTING"
+      "phase": "RAIDING",
+      "extracting": true
     },
     "effects": {
       "mood": 1,
@@ -341,7 +432,8 @@
     "weight": 8,
     "text": "A Tattletale drone broadcast my location with a cheerful melody.",
     "requires": {
-      "phase": "EXTRACTING"
+      "phase": "RAIDING",
+      "extracting": true
     },
     "effects": {
       "mood": -3,
@@ -353,8 +445,9 @@
     "weight": 7,
     "text": "Roomba Prime emitted a high‑pitched warning tone. I emitted panic.",
     "requires": {
-      "phase": "EXTRACTING",
-      "minGreed": 20
+      "phase": "RAIDING",
+      "minGreed": 20,
+      "extracting": true
     },
     "effects": {
       "mood": -4,
@@ -366,8 +459,9 @@
     "weight": 9,
     "text": "Saw the shadow of a Bomber Who Misreads the Room before the explosion. Less terrifying in theory, more in practice.",
     "requires": {
-      "phase": "EXTRACTING",
-      "minGreed": 20
+      "phase": "RAIDING",
+      "minGreed": 20,
+      "extracting": true
     },
     "effects": {
       "mood": -3,
@@ -379,7 +473,8 @@
     "weight": 14,
     "text": "Nearby raiders held the LZ line with heroic confusion. I contributed by not understanding the plan.",
     "requires": {
-      "phase": "EXTRACTING"
+      "phase": "RAIDING",
+      "extracting": true
     },
     "effects": {
       "mood": 2
@@ -390,7 +485,8 @@
     "weight": 16,
     "text": "Dropped my loot while sprinting. It scattered like my dignity.",
     "requires": {
-      "phase": "EXTRACTING"
+      "phase": "RAIDING",
+      "extracting": true
     },
     "effects": {
       "mood": -2,
@@ -402,7 +498,8 @@
     "weight": 11,
     "text": "An Anxietick hid behind a rock. I hid behind the same rock.",
     "requires": {
-      "phase": "EXTRACTING"
+      "phase": "RAIDING",
+      "extracting": true
     },
     "effects": {
       "mood": -1,
@@ -414,7 +511,8 @@
     "weight": 8,
     "text": "Tattletale drone uploaded my panic to the robot network.",
     "requires": {
-      "phase": "EXTRACTING"
+      "phase": "RAIDING",
+      "extracting": true
     },
     "effects": {
       "mood": -3,
@@ -426,8 +524,9 @@
     "weight": 7,
     "text": "Roomba Prime bumped into a wall, corrected itself, and charged at me with purpose.",
     "requires": {
-      "phase": "EXTRACTING",
-      "minGreed": 20
+      "phase": "RAIDING",
+      "minGreed": 20,
+      "extracting": true
     },
     "effects": {
       "mood": -4,
@@ -439,8 +538,9 @@
     "weight": 9,
     "text": "A Crusher of Dreams apologized before attacking. I accepted the apology and ran.",
     "requires": {
-      "phase": "EXTRACTING",
-      "minGreed": 20
+      "phase": "RAIDING",
+      "minGreed": 20,
+      "extracting": true
     },
     "effects": {
       "mood": -2,
@@ -452,7 +552,8 @@
     "weight": 15,
     "text": "Final push to the LZ achieved momentum, panic, and one legally questionable shortcut.",
     "requires": {
-      "phase": "EXTRACTING"
+      "phase": "RAIDING",
+      "extracting": true
     },
     "effects": {
       "mood": 2
@@ -463,8 +564,9 @@
     "weight": 20,
     "text": "Greed overpowered survival instincts. Again.",
     "requires": {
-      "phase": "EXTRACTING",
-      "minGreed": 30
+      "phase": "RAIDING",
+      "minGreed": 30,
+      "extracting": true
     },
     "effects": {
       "greedLevel": 7,
@@ -476,7 +578,8 @@
     "weight": 11,
     "text": "An Anxietick squeaked nervously. I squeaked back.",
     "requires": {
-      "phase": "EXTRACTING"
+      "phase": "RAIDING",
+      "extracting": true
     },
     "effects": {
       "mood": -1,
@@ -488,7 +591,8 @@
     "weight": 8,
     "text": "Tattletale drone played a cheerful jingle as it alerted everything nearby.",
     "requires": {
-      "phase": "EXTRACTING"
+      "phase": "RAIDING",
+      "extracting": true
     },
     "effects": {
       "mood": -3,
@@ -500,8 +604,9 @@
     "weight": 7,
     "text": "Roomba Prime spun in place before charging. Terrifying warm‑up routine.",
     "requires": {
-      "phase": "EXTRACTING",
-      "minGreed": 20
+      "phase": "RAIDING",
+      "minGreed": 20,
+      "extracting": true
     },
     "effects": {
       "mood": -4,
@@ -513,7 +618,8 @@
     "weight": 9,
     "text": "A Walker Texas Malfunction announced its attack loudly before tripping over itself. We still ran.",
     "requires": {
-      "phase": "EXTRACTING"
+      "phase": "RAIDING",
+      "extracting": true
     },
     "effects": {
       "mood": -3,
@@ -525,7 +631,8 @@
     "weight": 18,
     "text": "Extracted successfully. Against all odds. Mostly the odds created personally, recently, and with confidence.",
     "requires": {
-      "phase": "EXTRACTING"
+      "phase": "RAIDING",
+      "extracting": true
     },
     "effects": {
       "mood": 3
@@ -536,8 +643,9 @@
     "weight": 21,
     "text": "Grabbed loot at the literal last second. Worth the screaming.",
     "requires": {
-      "phase": "EXTRACTING",
-      "minGreed": 20
+      "phase": "RAIDING",
+      "minGreed": 20,
+      "extracting": true
     },
     "effects": {
       "greedLevel": 5,
@@ -549,7 +657,8 @@
     "weight": 10,
     "text": "An Anxietick followed me to the LZ. I think it just wanted company.",
     "requires": {
-      "phase": "EXTRACTING"
+      "phase": "RAIDING",
+      "extracting": true
     },
     "effects": {
       "mood": 1,
@@ -561,7 +670,8 @@
     "weight": 8,
     "text": "Tattletale drone blasted my location one last time for good measure.",
     "requires": {
-      "phase": "EXTRACTING"
+      "phase": "RAIDING",
+      "extracting": true
     },
     "effects": {
       "mood": -3,
@@ -572,161 +682,319 @@
     "id": "extract_day_clean_window",
     "weight": 12,
     "text": "Daylight gave the LZ a clean lane. Extremely suspicious. Boarded anyway.",
-    "requires": { "phase": "EXTRACTING", "dangerLevel": "Low" },
-    "effects": { "mood": 2 }
+    "requires": {
+      "phase": "RAIDING",
+      "dangerLevel": "Low",
+      "extracting": true
+    },
+    "effects": {
+      "mood": 2
+    }
   },
   {
     "id": "extract_night_beacon_echo",
     "weight": 10,
     "text": "Night air bounced the extract beacon off every surface. The robots got a helpful audio tour.",
-    "requires": { "phase": "EXTRACTING", "dangerLevel": "Medium" },
-    "effects": { "damage": 8, "mood": -2, "robotEncounter": "tattletale" }
+    "requires": {
+      "phase": "RAIDING",
+      "dangerLevel": "Medium",
+      "extracting": true
+    },
+    "effects": {
+      "damage": 8,
+      "mood": -2,
+      "robotEncounter": "tattletale"
+    }
   },
   {
     "id": "extract_overtime_red_lz_overrun",
     "weight": 8,
     "text": "Overtime Red turned the LZ into a robot meet-and-greet. Attendance was mandatory and poorly catered.",
-    "requires": { "phase": "EXTRACTING", "zoneCondition": "overtime_red", "minGreed": 20 },
-    "effects": { "damage": 15, "mood": -4, "robotEncounter": "roomba_prime", "robotDamageMultiplier": 1.5 }
+    "requires": {
+      "phase": "RAIDING",
+      "zoneCondition": "overtime_red",
+      "minGreed": 20,
+      "extracting": true
+    },
+    "effects": {
+      "damage": 15,
+      "mood": -4,
+      "robotEncounter": "roomba_prime",
+      "robotDamageMultiplier": 1.5
+    }
   },
   {
     "id": "extract_manifest_emotionally_several",
     "weight": 12,
     "text": "Shuttle manifest asked for item count. I wrote 'emotionally several' and boarded.",
-    "requires": { "phase": "EXTRACTING" },
-    "effects": { "mood": 2 }
+    "requires": {
+      "phase": "RAIDING",
+      "extracting": true
+    },
+    "effects": {
+      "mood": 2
+    }
   },
   {
     "id": "extract_return_hatch_backpack",
     "weight": 10,
     "text": "Return hatch stuck halfway open. Backpack negotiated poorly. I negotiated louder.",
-    "requires": { "phase": "EXTRACTING" },
-    "effects": { "mood": -1 }
+    "requires": {
+      "phase": "RAIDING",
+      "extracting": true
+    },
+    "effects": {
+      "mood": -1
+    }
   },
   {
     "id": "extract_cache_detour_bad_idea",
     "weight": 9,
     "text": "Shortcut passed a humming cache labeled MAYBE. Took the long short way.",
-    "requires": { "phase": "EXTRACTING", "minGreed": 20 },
-    "effects": { "greedLevel": 4, "mood": -1 }
+    "requires": {
+      "phase": "RAIDING",
+      "minGreed": 20,
+      "extracting": true
+    },
+    "effects": {
+      "greedLevel": 4,
+      "mood": -1
+    }
   },
   {
     "id": "extract_security_gate_regrets",
     "weight": 9,
     "text": "LZ security gate scanned me, the backpack, and my regrets. All failed inspection. Boarded anyway.",
-    "requires": { "phase": "EXTRACTING" },
-    "effects": { "mood": -2, "ratRating": 1 }
+    "requires": {
+      "phase": "RAIDING",
+      "extracting": true
+    },
+    "effects": {
+      "mood": -2,
+      "ratRating": 1
+    }
   },
   {
     "id": "extract_supply_crate_temptation",
     "weight": 10,
     "text": "A supply crate parachuted into the LZ during extraction. Made eye contact with temptation and kept running.",
-    "requires": { "phase": "EXTRACTING", "minGreed": 20 },
-    "effects": { "greedLevel": -2, "mood": 2 }
+    "requires": {
+      "phase": "RAIDING",
+      "minGreed": 20,
+      "extracting": true
+    },
+    "effects": {
+      "greedLevel": -2,
+      "mood": 2
+    }
   },
   {
     "id": "extract_pilot_counts_backpack_first",
     "weight": 11,
     "text": "Pilot counted the backpack before counting me. Fair. It has better resale value.",
-    "requires": { "phase": "EXTRACTING" },
-    "effects": { "mood": -1, "ratRating": 1 }
+    "requires": {
+      "phase": "RAIDING",
+      "extracting": true
+    },
+    "effects": {
+      "mood": -1,
+      "ratRating": 1
+    }
   },
   {
     "id": "extract_lz_rope_tangle",
     "weight": 10,
     "text": "Extraction rope tangled around the backpack. For three seconds, physics and hoarding negotiated custody.",
-    "requires": { "phase": "EXTRACTING" },
-    "effects": { "mood": -2 }
+    "requires": {
+      "phase": "RAIDING",
+      "extracting": true
+    },
+    "effects": {
+      "mood": -2
+    }
   },
   {
     "id": "extract_final_inventory_lie",
     "weight": 12,
     "text": "Asked if I grabbed anything dangerous. Looked at the humming brick in my bag and said no with confidence.",
-    "requires": { "phase": "EXTRACTING", "minGreed": 15 },
-    "effects": { "greedLevel": 2, "mood": 1 }
+    "requires": {
+      "phase": "RAIDING",
+      "minGreed": 15,
+      "extracting": true
+    },
+    "effects": {
+      "greedLevel": 2,
+      "mood": 1
+    }
   },
   {
     "id": "extract_shuttle_seatbelt_refuses",
     "weight": 9,
     "text": "Shuttle seatbelt refused to close over the loot. I respected its boundaries and sat sideways.",
-    "requires": { "phase": "EXTRACTING" },
-    "effects": { "mood": -1 }
+    "requires": {
+      "phase": "RAIDING",
+      "extracting": true
+    },
+    "effects": {
+      "mood": -1
+    }
   },
   {
     "id": "extract_signal_shadow_late_advice",
     "weight": 10,
     "text": "Signal Shadow delivered Handler advice twelve seconds late. It was excellent advice for a problem I had already caused.",
-    "requires": { "phase": "EXTRACTING", "zoneCondition": "signal_shadow" },
-    "effects": { "mood": -2, "ratRating": 1 }
+    "requires": {
+      "phase": "RAIDING",
+      "zoneCondition": "signal_shadow",
+      "extracting": true
+    },
+    "effects": {
+      "mood": -2,
+      "ratRating": 1
+    }
   },
   {
     "id": "extract_apology_weather_lz_slip",
     "weight": 9,
     "text": "Apology Weather made the LZ slick and seemed genuinely sorry about the landing.",
-    "requires": { "phase": "EXTRACTING", "zoneCondition": "apology_weather" },
-    "effects": { "damage": 4, "mood": -1 }
+    "requires": {
+      "phase": "RAIDING",
+      "zoneCondition": "apology_weather",
+      "extracting": true
+    },
+    "effects": {
+      "damage": 4,
+      "mood": -1
+    }
   },
   {
     "id": "extract_humming_crate_last_wave",
     "weight": 8,
     "text": "A humming crate migrated beside the shuttle and looked worth ruining my life over.",
-    "requires": { "phase": "EXTRACTING", "zoneCondition": "humming_crate_migration", "minGreed": 25 },
-    "effects": { "greedLevel": 4, "mood": -1 }
+    "requires": {
+      "phase": "RAIDING",
+      "zoneCondition": "humming_crate_migration",
+      "minGreed": 25,
+      "extracting": true
+    },
+    "effects": {
+      "greedLevel": 4,
+      "mood": -1
+    }
   },
   {
     "id": "extract_overtime_red_closing_time",
     "weight": 7,
     "text": "Overtime Red hit closing time. A Sniper of Poor Decisions began enforcing the schedule.",
-    "requires": { "phase": "EXTRACTING", "zoneCondition": "overtime_red", "minGreed": 20 },
-    "effects": { "damage": 10, "mood": -3, "robotEncounter": "sniper_poor_decisions", "robotDamageMultiplier": 1.5 }
+    "requires": {
+      "phase": "RAIDING",
+      "zoneCondition": "overtime_red",
+      "minGreed": 20,
+      "extracting": true
+    },
+    "effects": {
+      "damage": 10,
+      "mood": -3,
+      "robotEncounter": "sniper_poor_decisions",
+      "robotDamageMultiplier": 1.5
+    }
   },
   {
     "id": "extract_failed_transit_reroute",
     "weight": 9,
     "text": "Extract route passed an old transit hub. The sign rerouted me through PLATFORM EVENTUALLY.",
-    "requires": { "phase": "EXTRACTING" },
-    "effects": { "mood": -1, "ratRating": 1 }
+    "requires": {
+      "phase": "RAIDING",
+      "extracting": true
+    },
+    "effects": {
+      "mood": -1,
+      "ratRating": 1
+    }
   },
   {
     "id": "extract_soggy_tower_backpack_physics",
     "weight": 8,
     "text": "Descending the soggy tower with a full backpack turned every stair into a negotiation.",
-    "requires": { "phase": "EXTRACTING", "minGreed": 20 },
-    "effects": { "damage": 5, "mood": -2 }
+    "requires": {
+      "phase": "RAIDING",
+      "minGreed": 20,
+      "extracting": true
+    },
+    "effects": {
+      "damage": 5,
+      "mood": -2
+    }
   },
   {
     "id": "extract_current_problem_manifest",
     "weight": 10,
     "text": "Shuttle manifest summarized The Current Problem as 'one person, twelve objects, no lessons learned.' Accurate.",
-    "requires": { "phase": "EXTRACTING", "minGreed": 15 },
-    "effects": { "greedLevel": 2, "mood": 1 }
+    "requires": {
+      "phase": "RAIDING",
+      "minGreed": 15,
+      "extracting": true
+    },
+    "effects": {
+      "greedLevel": 2,
+      "mood": 1
+    }
   },
   {
     "id": "extract_launch_gate_denial",
     "weight": 8,
     "text": "Old launch gate refused to open because boarding ended years ago. I respected the policy and climbed around it.",
-    "requires": { "phase": "EXTRACTING" },
-    "effects": { "mood": -1, "ratRating": 1 }
+    "requires": {
+      "phase": "RAIDING",
+      "extracting": true
+    },
+    "effects": {
+      "mood": -1,
+      "ratRating": 1
+    }
   },
   {
     "id": "extract_questionable_cache_second_thoughts",
     "weight": 8,
     "text": "Questionable field cache beeped behind me like it had bonus loot and legal concerns. Kept moving. Barely.",
-    "requires": { "phase": "EXTRACTING", "minGreed": 20 },
-    "effects": { "greedLevel": -2, "mood": 1 }
+    "requires": {
+      "phase": "RAIDING",
+      "minGreed": 20,
+      "extracting": true
+    },
+    "effects": {
+      "greedLevel": -2,
+      "mood": 1
+    }
   },
   {
     "id": "extract_staycation_lz_tent_camper",
     "weight": 8,
     "text": "LZ tent zipper moved by itself. Either wind has thumbs or someone has been tactically picnicking for hours.",
-    "requires": { "phase": "EXTRACTING", "minGreed": 15 },
-    "effects": { "damage": 6, "mood": -2, "ratRating": 2 }
+    "requires": {
+      "phase": "RAIDING",
+      "minGreed": 15,
+      "extracting": true
+    },
+    "effects": {
+      "damage": 6,
+      "mood": -2,
+      "ratRating": 2
+    }
   },
   {
     "id": "extract_pawn_desk_valuation_intrusive",
     "weight": 9,
     "text": "Halfway to extraction, I started estimating pawn value instead of sprinting. This is how capitalism gets knees injured.",
-    "requires": { "phase": "EXTRACTING", "minGreed": 20 },
-    "effects": { "greedLevel": 3, "mood": -1, "ratRating": 1 }
+    "requires": {
+      "phase": "RAIDING",
+      "minGreed": 20,
+      "extracting": true
+    },
+    "effects": {
+      "greedLevel": 3,
+      "mood": -1,
+      "ratRating": 1
+    }
   }
 ]

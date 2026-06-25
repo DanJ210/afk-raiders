@@ -1,6 +1,6 @@
 /**
- * Raid state machine — manages phase transitions:
- *   HUB → DEPLOYING → RAIDING → (EXTRACTING | DOWNED) → HUB
+ * Raid state machine — manages lifecycle phase transitions:
+ *   HUB → DEPLOYING → RAIDING → KNOCKED_OUT → HUB
  *
  * Each phase runs for a fixed number of ticks before transitioning.
  * The state machine returns a new RaidState + a phase-transition event text
@@ -56,13 +56,19 @@ function enterDeploying(raid: RaidState, rng?: RNG): RaidState {
   return { ...raid, zone, dangerLevel, zoneCondition }
 }
 
-// Ticks each phase lasts before auto-transitioning (1 tick = 30s)
+// Ticks each lifecycle phase lasts before auto-transitioning (1 tick = 30s)
 export const PHASE_DURATIONS: Record<Phase, number> = {
   HUB: 20,         // 10 minutes max resting and prepping in Desperanza
   DEPLOYING: 4,    // 2 minutes riding a one-person pod through the tunnel system
   RAIDING: 60,     // 60 ticks = 30 minutes max looting at 30s cadence; timer expiry means the zone gets nuked
-  EXTRACTING: 4,   // ~90s extraction window + final tick = calling the return shuttle (~2 minutes total)
-  DOWNED: 2,       // death rattle flavor before respawning
+  KNOCKED_OUT: 2,  // recovery beat before failed-raid bookkeeping returns to HUB
+}
+
+export const EXTRACTING_TICKS = 4
+export const DOWNED_TICKS = 2
+
+export function knockedOutDurationTicks(_raid: RaidState): number {
+  return PHASE_DURATIONS.KNOCKED_OUT
 }
 
 export interface PhaseTransition {
@@ -101,20 +107,28 @@ export function tickPhase(
         backpackValue: 0,
         greedLevel: decayGreedForHubReturn(raid.greedLevel),
         forceExtract: false,
+        downed: null,
+        extracting: null,
         zone: null,
         dangerLevel: null,
         zoneCondition: null,
       }
     }
-    // Healing items are lost on death — clear immediately so they aren't visible during DOWNED phase
-    if (forced === 'DOWNED') {
-      forcedRaid = { ...forcedRaid, activeShieldRecharge: null, healingItems: [], greedLevel: resetGreedAfterDowned() }
-    }
-    if (forced === 'EXTRACTING') {
-      forcedRaid = { ...forcedRaid, activeShieldRecharge: null }
+    // Failed recovery phase owns the reset after an unresolved downed condition.
+    if (forced === 'KNOCKED_OUT') {
+      forcedRaid = {
+        ...forcedRaid,
+        activeShieldRecharge: null,
+        healingItems: [],
+        greedLevel: resetGreedAfterDowned(),
+        forceExtract: false,
+        downed: null,
+        extracting: null,
+        phaseTicksRemaining: knockedOutDurationTicks(forcedRaid),
+      }
     }
     if (forced === 'DEPLOYING') {
-      forcedRaid = enterDeploying(forcedRaid, rng)
+      forcedRaid = enterDeploying({ ...forcedRaid, downed: null, extracting: null }, rng)
     }
     return { raid: forcedRaid, transition }
   }
@@ -124,6 +138,11 @@ export function tickPhase(
   // Still in current phase
   if (remaining > 0) {
     return { raid: { ...raid, phaseTicksRemaining: remaining }, transition: null }
+  }
+
+  // RAIDING expiry is resolved by processTick so downed/extracting timers can race.
+  if (raid.phase === 'RAIDING') {
+    return { raid: { ...raid, phaseTicksRemaining: 0 }, transition: null }
   }
 
   // Natural expiry → determine next phase
@@ -152,24 +171,16 @@ export function tickPhase(
       backpackValue: 0,
       greedLevel: decayGreedForHubReturn(raid.greedLevel),
       forceExtract: false,
+      downed: null,
+      extracting: null,
       zone: null,
       dangerLevel: null,
       zoneCondition: null,
     }
   }
 
-  // Healing items are lost on death — clear on natural DOWNED transitions too.
-  if (next === 'DOWNED') {
-    updatedRaid = { ...updatedRaid, activeShieldRecharge: null, healingItems: [], greedLevel: resetGreedAfterDowned() }
-  }
-
-  if (next === 'EXTRACTING') {
-    updatedRaid = { ...updatedRaid, activeShieldRecharge: null }
-  }
-
-  // Pick a zone and condition when deploying
   if (next === 'DEPLOYING') {
-    updatedRaid = enterDeploying(updatedRaid, rng)
+    updatedRaid = enterDeploying({ ...updatedRaid, downed: null, extracting: null }, rng)
   }
 
   return { raid: updatedRaid, transition }
@@ -179,13 +190,19 @@ function nextPhase(raid: RaidState): Phase {
   switch (raid.phase) {
     case 'HUB':        return 'DEPLOYING'
     case 'DEPLOYING':  return 'RAIDING'
-    case 'RAIDING':    return raid.forceExtract ? 'EXTRACTING' : 'DOWNED' // raid timer expired before extraction; the nuke hits unless Call Extract was already queued
-    case 'EXTRACTING': return 'HUB'
-    case 'DOWNED':     return 'HUB'
+    case 'RAIDING':    return 'RAIDING'
+    case 'KNOCKED_OUT': return 'HUB'
   }
 }
 
+export function transitionText(key: string, replacements: Record<string, string> = {}): string {
+  const text = phaseTransitionContent.transitions[key] ?? phaseTransitionContent.fallback
+  return Object.entries(replacements).reduce(
+    (result, [token, value]) => result.replaceAll(`{${token}}`, value),
+    text,
+  )
+}
+
 function phaseTransitionText(from: Phase, to: Phase): string {
-  const text = phaseTransitionContent.transitions[`${from}_to_${to}`] ?? phaseTransitionContent.fallback
-  return text.replaceAll('{from}', from).replaceAll('{to}', to)
+  return transitionText(`${from}_to_${to}`, { from, to })
 }

@@ -1,65 +1,37 @@
 [
   {
-    "id": "downed_quip",
-    "weight": 100,
-    "text": "{death_quip}",
-    "requires": { "phase": "DOWNED" },
-    "effects": { "ratRating": 3 }
-  },
-  {
-    "id": "downed_recovery_form",
-    "weight": 18,
-    "text": "Recovery form asked for cause of failure. Wrote 'overconfidence with accessories.' Hatch Authority accepted it immediately.",
-    "requires": { "phase": "DOWNED" },
-    "effects": { "ratRating": 2, "mood": -1 }
-  },
-  {
-    "id": "downed_pocket_note",
-    "weight": 14,
-    "text": "Recovery crew found the Secret Hidden Pocket item and a note reading, 'told you this mattered.'",
-    "requires": { "phase": "DOWNED" },
-    "effects": { "ratRating": 1, "mood": 1 }
-  },
-  {
-    "id": "downed_medbay_stamp",
-    "weight": 16,
-    "text": "Medbay stamped me RETURNED MOSTLY, then sent the stamp to Security for emotional verification.",
-    "requires": { "phase": "DOWNED" },
-    "effects": { "ratRating": 1 }
-  },
-  {
-    "id": "downed_cold_shower",
-    "weight": 12,
-    "text": "Recovery shower ran cold. Water Ration Desk called this a character-building allocation.",
-    "requires": { "phase": "DOWNED" },
+    "id": "downed_waiting_for_pickup",
+    "weight": 40,
+    "text": "Raider is down but still on comms. Breathing: yes. Pride: complicated.",
+    "requires": { "phase": "RAIDING", "downed": true },
     "effects": { "mood": -1 }
   },
   {
-    "id": "downed_backpack_eulogy",
-    "weight": 13,
-    "text": "Held a brief eulogy for the backpack. Attendance: me, regret, and one recovered button.",
-    "requires": { "phase": "DOWNED" },
-    "effects": { "ratRating": 2, "mood": -1 }
+    "id": "downed_backpack_as_pillow",
+    "weight": 28,
+    "text": "Using the backpack as a pillow while waiting for consequences to finish loading.",
+    "requires": { "phase": "RAIDING", "downed": true },
+    "effects": { "ratRating": 1 }
   },
   {
-    "id": "downed_medbay_loyalty_card",
-    "weight": 11,
-    "text": "Medbay punched my loyalty card. One more disaster and the ice pack is free.",
-    "requires": { "phase": "DOWNED" },
-    "effects": { "ratRating": 1, "mood": 1 }
-  },
-  {
-    "id": "downed_recovery_team_note",
-    "weight": 12,
-    "text": "Recovery crew note said 'found face down near obvious warning sign.' Rude, but complete enough for filing.",
-    "requires": { "phase": "DOWNED" },
-    "effects": { "ratRating": 2, "mood": -1 }
-  },
-  {
-    "id": "downed_pocket_confidence",
-    "weight": 10,
-    "text": "Checked the Secret Hidden Pocket first. Priorities remain legally concerning but emotionally correct.",
-    "requires": { "phase": "DOWNED" },
+    "id": "downed_still_extracting",
+    "weight": 18,
+    "text": "Downed near the LZ. The shuttle timer is still running, which is either hope or paperwork with engines.",
+    "requires": { "phase": "RAIDING", "downed": true, "extracting": true },
     "effects": { "mood": 1 }
+  },
+  {
+    "id": "downed_signal_static",
+    "weight": 22,
+    "text": "Comms reduced to breathing, static, and one very judgmental backpack buckle.",
+    "requires": { "phase": "RAIDING", "downed": true },
+    "effects": { "mood": -1 }
+  },
+  {
+    "id": "downed_no_revive_plan",
+    "weight": 20,
+    "text": "Raider requested a revive. System replied with a shrug-shaped silence. Feature backlog acknowledged.",
+    "requires": { "phase": "RAIDING", "downed": true },
+    "effects": { "ratRating": 1 }
   }
 ]

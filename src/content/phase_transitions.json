@@ -3,11 +3,13 @@
     "HUB_to_DEPLOYING": "Gear packed. Pod hatch sealed. One person capacity, zero personal space.",
     "DEPLOYING_to_RAIDING": "Pod doors hissed open. Zone is live. The checklist has become emotional support.",
     "RAIDING_to_EXTRACTING": "Extract beacon deployed. Shuttle ETA about 90 seconds. Please be at the LZ.",
-    "RAIDING_to_DOWNED": "Raider is down. Secret Hidden Pocket contents secured.",
+    "RAIDING_to_DOWNED": "Raider is down. Still breathing, still judging the Handler silently.",
+    "RAIDING_to_HUB": "Successful extraction. Welcome back to Desperanza. Please shower.",
+    "RAIDING_to_KNOCKED_OUT": "No revive arrived. Recovery crew is inbound with a clipboard and absolutely no compliments.",
+    "KNOCKED_OUT_to_HUB": "Recovery complete in Desperanza. Gear lost. Dignity: pending paperwork.",
     "EXTRACTING_to_HUB": "Successful extraction. Welcome back to Desperanza. Please shower.",
     "EXTRACTING_to_RAIDING": "Shuttle waved off. Extraction unsuccessful. Back into the zone. The water bottles understand.",
-    "EXTRACTING_to_DOWNED": "Downed at the LZ. So close. The shuttle pilot filed it under \"tragic but funny.\"",
-    "DOWNED_to_HUB": "Recovery complete in Desperanza. Gear lost. Dignity: pending paperwork."
+    "EXTRACTING_to_DOWNED": "Downed at the LZ. So close. The shuttle pilot filed it under \"tragic but funny.\""
   },
   "fallback": "Phase transition: {from} -> {to}"
 }

@@ -26,6 +26,7 @@ const canPressure = computed(() => currentSignal.value >= SIGNAL_COSTS.PRESSURE)
 const canCallExtract = computed(() => currentSignal.value >= SIGNAL_COSTS.CALL_EXTRACT)
 const canUseSignalAmplifier = computed(() => signalAmplifiers.value > 0 && currentSignal.value < SIGNAL_CAP)
 const isActionLocked = computed(() => store.hasPendingHandlerAction)
+const isRaidConditionLocked = computed(() => store.raid.extracting !== null || store.raid.downed !== null)
 
 // Calculate time until next signal regenerates
 const nextRegenMs = computed(() => {
@@ -83,7 +84,7 @@ const regenTimerDisplay = computed(() => {
 
       <button
         class="flex items-center gap-2 px-3 py-handler-action-button-y rounded-md border border-border bg-surface-raised text-text font-mono text-raider-value cursor-pointer transition-[background,opacity] duration-150 text-left hover:not-disabled:bg-border disabled:opacity-40 disabled:cursor-not-allowed max-[600px]:px-2.5 max-[600px]:py-2 max-[600px]:text-raider-meta"
-        :disabled="!canCalm || store.phase !== 'RAIDING' || isActionLocked"
+        :disabled="!canCalm || store.phase !== 'RAIDING' || isActionLocked || isRaidConditionLocked"
         @click="() => store.calm()"
       >
         <span class="text-[1rem]">📣</span>
@@ -93,7 +94,7 @@ const regenTimerDisplay = computed(() => {
 
       <button
         class="flex items-center gap-2 px-3 py-handler-action-button-y rounded-md border border-border bg-surface-raised text-text font-mono text-raider-value cursor-pointer transition-[background,opacity] duration-150 text-left hover:not-disabled:bg-border disabled:opacity-40 disabled:cursor-not-allowed max-[600px]:px-2.5 max-[600px]:py-2 max-[600px]:text-raider-meta"
-        :disabled="!canPressure || store.phase !== 'RAIDING' || isActionLocked"
+        :disabled="!canPressure || store.phase !== 'RAIDING' || isActionLocked || isRaidConditionLocked"
         @click="() => store.pressure()"
       >
         <span class="text-[1rem]">🔇</span>
@@ -103,7 +104,7 @@ const regenTimerDisplay = computed(() => {
 
       <button
         class="flex items-center gap-2 px-3 py-handler-action-button-y rounded-md border border-danger text-danger font-mono text-raider-value cursor-pointer transition-[background,opacity] duration-150 text-left hover:not-disabled:bg-danger hover:not-disabled:text-bg disabled:opacity-40 disabled:cursor-not-allowed max-[600px]:px-2.5 max-[600px]:py-2 max-[600px]:text-raider-meta"
-        :disabled="!canCallExtract || store.phase !== 'RAIDING' || isActionLocked"
+        :disabled="!canCallExtract || store.phase !== 'RAIDING' || isActionLocked || isRaidConditionLocked"
         @click="store.callExtract()"
       >
         <span class="text-[1rem]">🚨</span>

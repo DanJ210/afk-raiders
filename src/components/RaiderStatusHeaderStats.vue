@@ -8,6 +8,9 @@ import MoodResilienceBadge from './MoodResilienceBadge.vue'
 interface Props {
   raider: GameState['raider']
   phase: GameState['raid']['phase']
+  isExtracting?: boolean
+  isDowned?: boolean
+  downedTimerText?: string
   showPhaseTimer: boolean
   phaseTimerText: string
   raidShield: ShieldState | null
@@ -18,6 +21,9 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
   allowRename: true,
+  isExtracting: false,
+  isDowned: false,
+  downedTimerText: '',
 })
 
 const emit = defineEmits<{
@@ -55,8 +61,7 @@ function phaseLabel(phase: string): string {
     HUB: 'In Hub',
     DEPLOYING: 'Deploying…',
     RAIDING: 'Raiding',
-    EXTRACTING: 'Extracting!',
-    DOWNED: 'DOWNED',
+    KNOCKED_OUT: 'Knocked Out',
   }
   return labels[phase] ?? phase
 }
@@ -80,8 +85,7 @@ const hpFillColor = computed(() => {
 })
 
 const phaseBadgeClass = computed(() => {
-  if (props.phase === 'DOWNED') return 'text-danger border-danger'
-  if (props.phase === 'EXTRACTING') return 'text-success border-success animate-pulse'
+  if (props.phase === 'KNOCKED_OUT') return 'text-danger border-danger'
   return 'text-accent border-accent'
 })
 </script>
@@ -141,12 +145,26 @@ const phaseBadgeClass = computed(() => {
       >
         {{ raider.name }}
       </span>
-      <span
-        class="font-mono text-raider-tiny px-2 py-0.5 rounded border bg-surface-raised tracking-wider max-[600px]:ml-auto"
-        :class="phaseBadgeClass"
-      >
-        {{ phaseLabel(phase) }}<span v-if="showPhaseTimer"> · {{ phaseTimerText }}</span>
-      </span>
+      <div class="flex flex-col items-end gap-1 max-[600px]:ml-auto">
+        <span
+          class="font-mono text-raider-tiny px-2 py-0.5 rounded border bg-surface-raised tracking-wider"
+          :class="phaseBadgeClass"
+        >
+          {{ phaseLabel(phase) }}<span v-if="showPhaseTimer"> · {{ phaseTimerText }}</span>
+        </span>
+        <span
+          v-if="props.isDowned"
+          class="font-mono text-raider-tiny px-2 py-0.5 rounded border bg-surface-raised tracking-wider text-danger border-danger"
+        >
+          DOWNED<span v-if="downedTimerText"> · {{ downedTimerText }}</span>
+        </span>
+        <span
+          v-if="props.isExtracting"
+          class="font-mono text-raider-tiny px-2 py-0.5 rounded border bg-surface-raised tracking-wider text-success border-success animate-pulse"
+        >
+          EXTRACTING
+        </span>
+      </div>
     </div>
 
     <ShieldBar :shield="raidShield" :recharge="activeShieldRecharge" />
