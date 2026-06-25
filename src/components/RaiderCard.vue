@@ -171,8 +171,7 @@ onBeforeUnmount(() => {
   box-shadow: 0 6px 14px color-mix(in srgb, var(--color-bg) 70%, transparent);
 }
 
-.tooltip-trigger.tooltip-open .tooltip,
-.tooltip-trigger:focus-visible .tooltip {
+.tooltip-trigger.tooltip-open .tooltip {
   display: block;
 }
 
