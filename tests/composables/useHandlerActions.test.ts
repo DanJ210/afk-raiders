@@ -148,6 +148,38 @@ describe('useHandlerActions Signal Handling skill', () => {
     expect(persistCallback).toHaveBeenCalledOnce()
   })
 
+  it('publishes Ready Up transition together with Signal Handling level-up events', () => {
+    const initial = createInitialState(0)
+    const now = Date.now()
+    const signalHandlingLevelOneXp = skillDefinitionById('signal_handling').xpThresholds[0]
+    const { actions, publishEvents } = createHarness({
+      ...initial,
+      raider: {
+        ...initial.raider,
+        skills: {
+          ...initial.raider.skills,
+          signal_handling: {
+            ...initial.raider.skills.signal_handling,
+            xp: signalHandlingLevelOneXp - 1,
+          },
+        },
+      },
+      signal: {
+        ...initial.signal,
+        current: SIGNAL_CAP,
+        lastRegenAt: now,
+      },
+    })
+
+    actions.readyUp()
+
+    expect(publishEvents).toHaveBeenCalledTimes(1)
+    expect(publishEvents.mock.calls[0][0].map(event => event.id)).toEqual([
+      'phase_HUB_to_DEPLOYING',
+      'skill_signal_handling_level_1',
+    ])
+  })
+
   it('publishes manual bandage use once without replaying it on the next tick', () => {
     const initial = createInitialState(0)
     const { actions, stateRef, rngRef, persistCallback, publishEvents } = createHarness({

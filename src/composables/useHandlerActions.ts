@@ -86,7 +86,7 @@ export function useHandlerActions(
   onAwaySummaryDismiss: () => void,
   publishEvents?: (events: LogEvent[]) => void,
 ): HandlerActionsReturn {
-  function awardSignalUseSkill(now: number, signalSpent: number) {
+  function awardSignalUseSkill(now: number, signalSpent: number): LogEvent[] {
     const minXp = Math.max(1, signalSpent)
     const maxXp = minXp + 1
     const gains = rollSkillPractice([
@@ -94,12 +94,12 @@ export function useHandlerActions(
     ], rngRef.current)
     const skillResult = applySkillPractice(stateRef.value.raider.skills, gains)
     let nextLog = stateRef.value.log
+    const awardedEvents: LogEvent[] = []
 
     if (skillResult.levelUps.length > 0) {
-      nextLog = appendLogEntries(
-        nextLog,
-        skillResult.levelUps.map(levelUp => skillLevelUpEvent(levelUp, stateRef.value.tick, now, stateRef.value.raid.phase)),
-      )
+      const skillEvents = skillResult.levelUps.map(levelUp => skillLevelUpEvent(levelUp, stateRef.value.tick, now, stateRef.value.raid.phase))
+      awardedEvents.push(...skillEvents)
+      nextLog = appendLogEntries(nextLog, skillEvents)
     }
 
     let levelXp = stateRef.value.raider.levelXp
@@ -113,10 +113,9 @@ export function useHandlerActions(
       const xpResult = applyRaiderXpGain(levelXp, raiderLevelGains)
       levelXp = xpResult.levelXp
       if (xpResult.levelUps.length > 0) {
-        nextLog = appendLogEntries(
-          nextLog,
-          xpResult.levelUps.map(levelUp => raiderLevelUpEvent(levelUp, stateRef.value.tick, now, stateRef.value.raid.phase)),
-        )
+        const raiderLevelEvents = xpResult.levelUps.map(levelUp => raiderLevelUpEvent(levelUp, stateRef.value.tick, now, stateRef.value.raid.phase))
+        awardedEvents.push(...raiderLevelEvents)
+        nextLog = appendLogEntries(nextLog, raiderLevelEvents)
       }
     }
 
@@ -129,6 +128,8 @@ export function useHandlerActions(
       },
       log: nextLog,
     }
+
+    return awardedEvents
   }
 
   function syncSignalProgress(now: number) {
@@ -199,8 +200,8 @@ export function useHandlerActions(
         [transitionEvent],
       ),
     }
-    publishEvents?.([transitionEvent])
-    awardSignalUseSkill(actionNow, 2)
+    const signalUseEvents = awardSignalUseSkill(actionNow, 2)
+    publishEvents?.([transitionEvent, ...signalUseEvents])
     persistCallback(stateRef.value, rngRef.current.getSeed(), lastTickAtRef.value)
   }
 

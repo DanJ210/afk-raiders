@@ -60,6 +60,7 @@ export function useGameTicker(
       awaySummary.value = result.summary
       const alignedTickAt = fromTickAt + (result.summary.ticksReplayed * TICK_INTERVAL_MS)
       lastTickAtRef.value = alignedTickAt
+      publishEvents?.(result.events)
       persistCallback(stateRef.value, rngRef.current.getSeed(), alignedTickAt)
     }
   }
