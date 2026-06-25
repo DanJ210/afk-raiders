@@ -28,9 +28,9 @@
     "effects": { "mood": -1 }
   },
   {
-    "id": "downed_no_revive_plan",
+    "id": "downed_revive_invoice",
     "weight": 20,
-    "text": "Raider requested a revive. System replied with a shrug-shaped silence. Feature backlog acknowledged.",
+    "text": "Raider requested a revive. Signal accounting immediately opened a fresh invoice.",
     "requires": { "phase": "RAIDING", "downed": true },
     "effects": { "ratRating": 1 }
   }

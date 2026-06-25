@@ -492,7 +492,8 @@ describe('content validation', () => {
 
   describe('healing_items.json', () => {
     it('defines the four bandage tiers with exact heal amounts', () => {
-      const amounts = Object.fromEntries(healingItems.map(item => [item.id, item.healAmount]))
+      const bandages = healingItems.filter(item => item.id.startsWith('bandage_'))
+      const amounts = Object.fromEntries(bandages.map(item => [item.id, item.healAmount]))
       expect(amounts).toEqual({
         bandage_white: 5,
         bandage_green: 10,
@@ -502,7 +503,8 @@ describe('content validation', () => {
     })
 
     it('higher-tier bandages grant higher mood gains', () => {
-      const moodGains = Object.fromEntries(healingItems.map(item => [item.id, item.moodGain]))
+      const bandages = healingItems.filter(item => item.id.startsWith('bandage_'))
+      const moodGains = Object.fromEntries(bandages.map(item => [item.id, item.moodGain]))
       expect(moodGains).toEqual({
         bandage_white: 1,
         bandage_green: 2,
@@ -515,6 +517,10 @@ describe('content validation', () => {
       for (const item of healingItems) {
         expect(item.weight, `healing item "${item.id}" has weight ${item.weight}`).toBeGreaterThan(0)
         expect(item.healAmount, `healing item "${item.id}" exceeds one-use heal cap`).toBeLessThanOrEqual(50)
+        expect(item.healAmount + (item.reviveAmount ?? 0), `healing item "${item.id}" must heal or revive`).toBeGreaterThan(0)
+        if (item.reviveAmount !== undefined) {
+          expect(item.reviveAmount, `healing item "${item.id}" reviveAmount must be positive`).toBeGreaterThan(0)
+        }
         expect(item.moodGain, `healing item "${item.id}" moodGain must be positive`).toBeGreaterThan(0)
         expect(item.rarity, `healing item "${item.id}" rarity must be >= 1`).toBeGreaterThanOrEqual(1)
         expect(item.rarity, `healing item "${item.id}" rarity must be <= 5`).toBeLessThanOrEqual(5)
@@ -524,6 +530,15 @@ describe('content validation', () => {
     it('all healing item IDs are unique', () => {
       const ids = healingItems.map(item => item.id)
       expect(new Set(ids).size).toBe(ids.length)
+    })
+
+    it('defines Panic Paddles as a revive-only field med', () => {
+      const item = healingItems.find(entry => entry.id === 'panic_paddles')
+      expect(item).toMatchObject({
+        name: 'Panic Paddles',
+        healAmount: 0,
+        reviveAmount: 25,
+      })
     })
   })
 

@@ -127,6 +127,7 @@ export const useGameStore = defineStore('game', () => {
     applySignalAmplifier: actions.applySignalAmplifier,
     readyUp: actions.readyUp,
     callExtract: actions.callExtract,
+    revive: actions.revive,
     applyHealingItem: actions.applyHealingItem,
     applyShieldRecharger: actions.applyShieldRecharger,
     setHiddenPocketItem: actions.setHiddenPocketItem,

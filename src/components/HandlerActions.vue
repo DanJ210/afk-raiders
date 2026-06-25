@@ -24,6 +24,7 @@ const canCalm = computed(() => currentSignal.value >= SIGNAL_COSTS.CALM)
 const canReadyUp = computed(() => currentSignal.value >= SIGNAL_COSTS.READY_UP)
 const canPressure = computed(() => currentSignal.value >= SIGNAL_COSTS.PRESSURE)
 const canCallExtract = computed(() => currentSignal.value >= SIGNAL_COSTS.CALL_EXTRACT)
+const canRevive = computed(() => currentSignal.value >= SIGNAL_COSTS.REVIVE)
 const canUseSignalAmplifier = computed(() => signalAmplifiers.value > 0 && currentSignal.value < SIGNAL_CAP)
 const isActionLocked = computed(() => store.hasPendingHandlerAction)
 const isRaidConditionLocked = computed(() => store.raid.extracting !== null || store.raid.downed !== null)
@@ -110,6 +111,16 @@ const regenTimerDisplay = computed(() => {
         <span class="text-[1rem]">🚨</span>
         <span class="flex-1 font-semibold">CALL EXTRACT</span>
         <span class="text-[0.75rem] max-[600px]:text-raider-tiny">{{ SIGNAL_COSTS.CALL_EXTRACT }}📶</span>
+      </button>
+
+      <button
+        class="flex items-center gap-2 px-3 py-handler-action-button-y rounded-md border border-danger text-danger font-mono text-raider-value cursor-pointer transition-[background,opacity] duration-150 text-left hover:not-disabled:bg-danger hover:not-disabled:text-bg disabled:opacity-40 disabled:cursor-not-allowed max-[600px]:px-2.5 max-[600px]:py-2 max-[600px]:text-raider-meta"
+        :disabled="!canRevive || store.phase !== 'RAIDING' || store.raid.downed === null"
+        @click="store.revive()"
+      >
+        <span class="text-[1rem]">🚑</span>
+        <span class="flex-1 font-semibold">Revive</span>
+        <span class="text-[0.75rem] max-[600px]:text-raider-tiny">{{ SIGNAL_COSTS.REVIVE }}📶</span>
       </button>
     </div>
   </section>

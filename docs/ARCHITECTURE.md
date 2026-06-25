@@ -62,7 +62,7 @@ afk-raiders/
 │   │   ├── extraction_events.json # RAIDING extraction-condition drama
 │   │   ├── knocked_out_events.json # Recovery reset quips
 │   │   ├── loot.json            # Many varieties of original comedy/parody loot items
-│   │   ├── healing_items.json   # Current-raid-only bandages
+│   │   ├── healing_items.json   # Current-raid-only field meds
 │   │   ├── shield_rechargers.json # Manual-use backpack shield consumables
 │   │   ├── skills.json          # Cardio/Hoarding/Hiding definitions and level-up text
 │   │   ├── progression_config.json # Build-time progression/balance profile switches
@@ -155,8 +155,8 @@ The stash has an enforced item cap (`HOME_STASH_ITEM_LIMIT`). Overflow items are
 Positive raider mood adds a small derived resilience bonus in `eventResolver.ts` for failed robot encounters only. It does not change robot raw damage; it slightly reduces the damage handed to shields and HP when mood is above zero.
 The resulting shield-damage log line reports incoming damage, pre-shield mitigation, shield mitigation, and final HP loss so the effect stays visible in the comms UI.
 
-Shield rechargers are intentionally different from bandages:
-- Bandages live in `RaidState.healingItems` and never extract.
+Shield rechargers are intentionally different from field meds:
+- Field meds live in `RaidState.healingItems` and never extract. Bandages heal the living; Panic Paddles revive a DOWNED Raider.
 - Shield rechargers live in `RaidState.backpack` with backpack-item metadata, are manual-use only, and extract if unused.
 - HUB currently restores the equipped shield to full charge and 100% durability; loadout/store systems are the future hook for persisted shield state.
 - `src/content/healing_items.json` and `src/content/shield_rechargers.json` are still required: they define weighted type selection for consumables awarded by both dedicated event effects and loot-bonus rolls.
@@ -164,7 +164,7 @@ Shield rechargers are intentionally different from bandages:
 - This is a contract, not a style preference: every processed damage instance must produce a comms damage line, even if the same tick later starts the DOWNED condition or transitions the raid toward KNOCKED_OUT.
 
 ### 3. Signal as the only real input
-Signal regenerates (~1 per 10 min, capped at 5). Ready Up (2 Signal) starts DEPLOYING from HUB. Calm (1 Signal, internal action ID `CALM`) reduces current greed before the next greed check, cooling rare-loot appetite, risky-event pressure, and future major-condition momentum. Pressure (1 Signal, internal action ID `PRESSURE`) increases current greed before the next check, raising rare-loot appetite, risky-event pressure, and future major-condition momentum. CALL EXTRACT (3 Signal) starts or forces the EXTRACTING condition during RAIDING. Greed itself does not lower extraction chance. Natural extraction is disabled until the raider has spent the configured minimum RAIDING ticks in-zone (`DEFAULT_MIN_NATURAL_EXTRACTION_RAIDING_TICKS`, currently 30 ticks / 15 minutes); CALL EXTRACT bypasses this guard, including the final RAIDING tick before timer expiry. When the Raider is low on HP and has no current-raid bandages, the Greed Check adds a survival-instinct extraction bonus after that guard, dampened by danger level so Medium and High conditions still punish unattended raids. During active RAIDING only one action may be queued at a time, so action buttons lock until the next tick applies and clears the pending action. While DOWNED, normal Handler raid actions are disabled until a revive path exists. On successful HUB returns, raid pressure state cools down (greed decays, extracting clears); KNOCKED_OUT recovery resets greed to 0.
+Signal regenerates (~1 per 10 min, capped at 5). Ready Up (2 Signal) starts DEPLOYING from HUB. Calm (1 Signal, internal action ID `CALM`) reduces current greed before the next greed check, cooling rare-loot appetite, risky-event pressure, and future major-condition momentum. Pressure (1 Signal, internal action ID `PRESSURE`) increases current greed before the next check, raising rare-loot appetite, risky-event pressure, and future major-condition momentum. CALL EXTRACT (3 Signal) starts or forces the EXTRACTING condition during RAIDING. Revive (5 Signal, internal action ID `REVIVE`) is available only during RAIDING while DOWNED, clears the DOWNED condition, and restores 25 HP while preserving shield state. Greed itself does not lower extraction chance. Natural extraction is disabled until the raider has spent the configured minimum RAIDING ticks in-zone (`DEFAULT_MIN_NATURAL_EXTRACTION_RAIDING_TICKS`, currently 30 ticks / 15 minutes); CALL EXTRACT bypasses this guard, including the final RAIDING tick before timer expiry. When the Raider is low on HP and has no current-raid bandages, the Greed Check adds a survival-instinct extraction bonus after that guard, dampened by danger level so Medium and High conditions still punish unattended raids. During active RAIDING only one action may be queued at a time, so action buttons lock until the next tick applies and clears the pending action. While DOWNED, normal Handler raid actions are disabled; Revive is the downed-only exception. On successful HUB returns, raid pressure state cools down (greed decays, extracting clears); KNOCKED_OUT recovery resets greed to 0.
 
 ### 4. Lifetime stat collection
 `GameState.stats` tracks long-lived outcomes: extraction/death totals and context (zone + danger level), robot defeats, and healing item usage.

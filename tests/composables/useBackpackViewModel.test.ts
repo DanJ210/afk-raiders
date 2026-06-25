@@ -101,4 +101,34 @@ describe('useBackpackViewModel', () => {
 
     expect(viewModel.backpackLootValue.value).toBe(95)
   })
+
+  it('allows revive meds only while downed', () => {
+    const initial = createInitialState(0)
+    const panicPaddles = {
+      itemId: 'panic_paddles',
+      name: 'Panic Paddles',
+      healAmount: 0,
+      reviveAmount: 25,
+      moodGain: 3,
+      rarity: 4,
+      quantity: 1,
+    }
+    const raidRef = ref({
+      ...initial.raid,
+      phase: 'RAIDING' as const,
+      downed: null,
+      healingItems: [panicPaddles],
+    })
+    const raiderRef = computed(() => ({ ...initial.raider, hp: 40 }))
+    const viewModel = useBackpackViewModel(raidRef, raiderRef)
+
+    expect(viewModel.canApplyHealingItem(panicPaddles)).toBe(false)
+
+    raidRef.value = {
+      ...raidRef.value,
+      downed: { ticksRemaining: 2 },
+    }
+
+    expect(viewModel.canApplyHealingItem(panicPaddles)).toBe(true)
+  })
 })

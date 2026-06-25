@@ -75,9 +75,9 @@ Raid aggression is autonomous; there is no extraction preference slider. `runGre
 
 Event-driven greed changes are appended to the comms event text as the actual signed post-clamp delta (for example `Greed +5.` or `Greed -3.`). If an effect is fully swallowed by the 0–100 clamp, do not add a noise line.
 
-During active RAIDING, only one Handler action can be pending at a time (`pendingCalm`, `pendingPressure`, or `forceExtract`). When any pending action is set, raid action buttons should remain disabled until the next simulation tick consumes the pending action and logs feedback. While `RaidState.downed` is active, normal raid actions should be disabled until a revive path is implemented.
+During active RAIDING, only one Handler action can be pending at a time (`pendingCalm`, `pendingPressure`, or `forceExtract`). When any pending action is set, raid action buttons should remain disabled until the next simulation tick consumes the pending action and logs feedback. While `RaidState.downed` is active, normal raid actions should be disabled; `REVIVE` is the downed-only exception.
 
-`Signal` is capped at 5 and currently supports these action costs in `src/engine/signal.ts`: `READY_UP` = 2, `CALM` = 1, `PRESSURE` = 1, `CALL_EXTRACT` = 3.
+`Signal` is capped at 5 and currently supports these action costs in `src/engine/signal.ts`: `READY_UP` = 2, `CALM` = 1, `PRESSURE` = 1, `CALL_EXTRACT` = 3, `REVIVE` = 5.
 
 ### RAIDING Conditions: DOWNED and EXTRACTING
 `RAIDING` is the field phase. `DOWNED` and `EXTRACTING` are timed conditions layered on `RaidState`, not phases:
@@ -127,7 +127,7 @@ Positive mood grants a small resilience bonus before shield mitigation on failed
 Do not add passive Raider Level damage resistance. Robot survivability should remain easy to reason about: robot deadliness/menace plus danger profile define threat; positive mood provides the soft pre-shield resilience trim; Hiding in Lockers provides a tiny explicit pre-shield skill mitigation; shields, consumables, and Handler actions are the meaningful survival levers.
 
 ### Healing Items
-Bandages live in `src/content/healing_items.json` and are current-raid-only consumables, stored on `RaidState.healingItems`, not in the backpack or home stash. RAIDING events can use `effects.healingItem` to find one bandage. The engine automatically uses the smallest useful bandage when the raider is alive, not DOWNED, and HP is at or below 75%, capped at 50 HP per use: White +5, Green +10, Blue +25, Purple +50. Each bandage also has a `moodGain`, and higher-tier bandages grant more mood when consumed. The used bandage is removed from `RaidState.healingItems`. Healing items reset when the raid returns to HUB and are lost on failed recovery.
+Field meds live in `src/content/healing_items.json` and are current-raid-only consumables, stored on `RaidState.healingItems`, not in the backpack or home stash. RAIDING events can use `effects.healingItem` to find one field med. Bandages are alive-only HP recovery items; revive meds are DOWNED-only items with `reviveAmount`. The engine automatically uses the smallest useful bandage when the raider is alive, not DOWNED, and HP is at or below 75%, capped at 50 HP per use: White +5, Green +10, Blue +25, Purple +50. Panic Paddles are a legally distinct parody revive med inspired by extraction-shooter defibrillator items: they can be found in-raid, revive a DOWNED Raider to 25 HP, and are removed from `RaidState.healingItems` when used. Each field med also has a `moodGain`, and higher-tier meds grant more mood when consumed. Healing items reset when the raid returns to HUB and are lost on failed recovery.
 
 When normal loot is added to backpack, the engine also performs independent bonus consumable rolls:
 - Healing item bonus roll

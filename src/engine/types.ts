@@ -77,6 +77,7 @@ export interface HealingItem extends ContentEntry {
   name: string
   healAmount: number
   moodGain: number
+  reviveAmount?: number
   flavor?: string
   /** 1 = Common … 5 = Legendary (higher = rarer). */
   rarity: number
@@ -169,6 +170,7 @@ export interface HealingItemStack {
   itemId: string
   name: string
   healAmount: number
+  reviveAmount?: number
   /** Optional for backward compatibility with saved current-raid meds. */
   moodGain?: number
   rarity: number

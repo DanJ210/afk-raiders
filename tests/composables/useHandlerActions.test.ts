@@ -212,4 +212,58 @@ describe('useHandlerActions Signal Handling skill', () => {
 
     expect(stateRef.value.log.filter(entry => entry.id === 'healing_bandage_blue_used')).toHaveLength(1)
   })
+
+  it('revives a downed raider during RAIDING for full Signal', () => {
+    const initial = createInitialState(0)
+    const now = Date.now()
+    const { actions, stateRef, persistCallback, publishEvents } = createHarness({
+      ...initial,
+      raider: { ...initial.raider, hp: 0 },
+      raid: {
+        ...initial.raid,
+        phase: 'RAIDING',
+        downed: { ticksRemaining: 2 },
+      },
+      signal: {
+        ...initial.signal,
+        current: SIGNAL_CAP,
+        lastRegenAt: now,
+      },
+    })
+
+    actions.revive()
+
+    expect(stateRef.value.signal.current).toBe(0)
+    expect(stateRef.value.raider.hp).toBe(25)
+    expect(stateRef.value.raid.downed).toBeNull()
+    expect(stateRef.value.log.at(-1)?.id).toBe('handler_revive_used')
+    expect(publishEvents).toHaveBeenCalledTimes(1)
+    expect(publishEvents.mock.calls[0][0].map(event => event.id)).toContain('handler_revive_used')
+    expect(persistCallback).toHaveBeenCalledOnce()
+  })
+
+  it('does not revive outside a downed RAIDING condition', () => {
+    const initial = createInitialState(0)
+    const now = Date.now()
+    const { actions, stateRef, persistCallback, publishEvents } = createHarness({
+      ...initial,
+      raid: {
+        ...initial.raid,
+        phase: 'RAIDING',
+        downed: null,
+      },
+      signal: {
+        ...initial.signal,
+        current: SIGNAL_CAP,
+        lastRegenAt: now,
+      },
+    })
+
+    actions.revive()
+
+    expect(stateRef.value.signal.current).toBe(SIGNAL_CAP)
+    expect(stateRef.value.raider.hp).toBe(initial.raider.hp)
+    expect(publishEvents).not.toHaveBeenCalled()
+    expect(persistCallback).not.toHaveBeenCalled()
+  })
 })

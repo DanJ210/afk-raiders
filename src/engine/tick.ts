@@ -518,7 +518,7 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
       {
         currentHp: currentState.raider.hp,
         maxHp: currentState.raider.maxHp,
-        hasHealingItems: currentState.raid.healingItems.length > 0,
+        hasHealingItems: currentState.raid.healingItems.some(item => item.healAmount > 0),
         extractionChanceBonus: getSkillModifierProfile(currentState.raider.skills).extractionChanceBonus,
         deathChanceMultiplier: getSkillModifierProfile(currentState.raider.skills).ambientRaidDeathChanceMultiplier,
       },

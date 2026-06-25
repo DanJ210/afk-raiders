@@ -943,4 +943,45 @@ describe('applyEffects — backpack item behavior', () => {
 
     expect(consumeHealingItem(state, 'bandage_blue', 0)).toBeNull()
   })
+
+  it('uses a revive med only while DOWNED during RAIDING', () => {
+    const initial = createInitialState(0)
+    const state = {
+      ...initial,
+      raider: { ...initial.raider, hp: 0, mood: -2 },
+      raid: {
+        ...initial.raid,
+        phase: 'RAIDING' as const,
+        downed: { ticksRemaining: 2 },
+        extracting: { ticksRemaining: 2 },
+        healingItems: [makeBandage({ itemId: 'panic_paddles', name: 'Panic Paddles', healAmount: 0, reviveAmount: 25, moodGain: 3, rarity: 4 })],
+      },
+    }
+
+    const result = consumeHealingItem(state, 'panic_paddles', 0)
+
+    expect(result).not.toBeNull()
+    expect(result!.event.text).toContain('Revived Raider with 25 HP')
+    expect(result!.state.raider.hp).toBe(25)
+    expect(result!.state.raider.mood).toBe(1)
+    expect(result!.state.raid.downed).toBeNull()
+    expect(result!.state.raid.extracting).toEqual({ ticksRemaining: 2 })
+    expect(result!.state.raid.healingItems).toEqual([])
+  })
+
+  it('does not use a revive med while the raider is still upright', () => {
+    const initial = createInitialState(0)
+    const state = {
+      ...initial,
+      raider: { ...initial.raider, hp: 40 },
+      raid: {
+        ...initial.raid,
+        phase: 'RAIDING' as const,
+        downed: null,
+        healingItems: [makeBandage({ itemId: 'panic_paddles', name: 'Panic Paddles', healAmount: 0, reviveAmount: 25, rarity: 4 })],
+      },
+    }
+
+    expect(consumeHealingItem(state, 'panic_paddles', 0)).toBeNull()
+  })
 })

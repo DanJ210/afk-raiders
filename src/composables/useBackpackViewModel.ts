@@ -78,6 +78,13 @@ export function useBackpackViewModel(
       raiderRef.value.hp < raiderRef.value.maxHp,
   )
 
+  function canApplyHealingItem(item: GameState['raid']['healingItems'][number]): boolean {
+    if ((item.reviveAmount ?? 0) > 0) {
+      return raidRef.value.phase === 'RAIDING' && raidRef.value.downed !== null
+    }
+    return canApplyHealing.value
+  }
+
   // Can manage pocket (set/clear) when raid is active
   const canManageHiddenPocket = computed(
     () => raidRef.value.phase !== 'HUB' && raidRef.value.phase !== 'KNOCKED_OUT' && raidRef.value.downed === null,
@@ -177,6 +184,7 @@ export function useBackpackViewModel(
 
     // Can-* predicates
     canApplyHealing,
+    canApplyHealingItem,
     canManageHiddenPocket,
     canApplyShieldCharge,
     canApplyAnyShieldRecharger,

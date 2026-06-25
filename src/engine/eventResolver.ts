@@ -377,6 +377,7 @@ function addHealingItem(
         itemId: item.id,
         name: item.name,
         healAmount: item.healAmount,
+        reviveAmount: item.reviveAmount,
         moodGain: item.moodGain,
         rarity: item.rarity,
         flavor: item.flavor,
@@ -448,18 +449,45 @@ export function resolveShieldRechargerFind(
   }
 }
 
-/** Uses one specific current-raid bandage if the raider is hurt and alive. */
+/** Uses one specific current-raid med if its current condition allows it. */
 export function consumeHealingItem(
   state: GameState,
   itemId: string,
   now: number,
 ): HealingItemResult | null {
-  if (state.raid.phase === 'HUB' || state.raid.phase === 'KNOCKED_OUT' || state.raid.downed) return null
-  if (state.raider.hp <= 0 || state.raider.hp >= state.raider.maxHp) return null
+  if (state.raid.phase === 'HUB' || state.raid.phase === 'KNOCKED_OUT') return null
   if (state.raid.healingItems.length === 0) return null
 
   const item = state.raid.healingItems.find(entry => entry.itemId === itemId)
   if (!item) return null
+  const reviveAmount = item.reviveAmount ?? 0
+  if (reviveAmount > 0) {
+    if (state.raid.phase !== 'RAIDING' || !state.raid.downed) return null
+    const hp = Math.min(state.raider.maxHp, reviveAmount)
+    const moodGain = healingMoodGain(item)
+    const mood = clampMood(state.raider.mood + moodGain)
+
+    return {
+      state: {
+        ...state,
+        raider: { ...state.raider, hp, mood },
+        raid: {
+          ...removeHealingItem(state.raid, item),
+          downed: null,
+        },
+      },
+      event: {
+        id: `healing_${item.itemId}_used`,
+        tick: state.tick,
+        timestamp: now,
+        text: `Used ${item.name}. Revived Raider with ${hp} HP and gained ${moodGain} mood. Medical dignity returned under protest.`,
+        phase: state.raid.phase,
+      },
+    }
+  }
+
+  if (state.raid.downed) return null
+  if (state.raider.hp <= 0 || state.raider.hp >= state.raider.maxHp) return null
   const missingHp = state.raider.maxHp - state.raider.hp
   const healed = Math.min(50, item.healAmount, missingHp)
   const moodGain = healingMoodGain(item)

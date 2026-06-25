@@ -34,5 +34,15 @@
     "healAmount": 50,
     "moodGain": 4,
     "flavor": "Premium medical tape for premium mistakes."
+  },
+  {
+    "id": "panic_paddles",
+    "weight": 6,
+    "rarity": 4,
+    "name": "Panic Paddles",
+    "healAmount": 0,
+    "reviveAmount": 25,
+    "moodGain": 3,
+    "flavor": "Two questionable paddles and one laminated apology. For when 'walk it off' has lost the debate."
   }
 ]
