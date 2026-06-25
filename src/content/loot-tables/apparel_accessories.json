@@ -275,7 +275,7 @@
             "id": "glasses_arc",
             "weight": 12,
             "rarity": 3,
-            "name": "A.R.C. Smart Glasses",
+            "name": "Chassis Smart Glasses",
             "value": 90,
             "stackSize": 1,
             "flavor": "Displays helpful data. And ads."

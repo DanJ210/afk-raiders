@@ -12,7 +12,7 @@
       "trips over its own legs trying to be threatening"
     ],
     "successText": [
-      "Well that tick needed to chill"
+      "The Anxietick stops skittering and files an emotional noise complaint."
     ],
     "lootTable": [
       {
@@ -224,7 +224,7 @@
       "hesitates mid-charge as if doubting itself"
     ],
     "successText": [
-      "You defeat the Seeker of Validation. It dies still waiting for praise."
+      "You defeat the Seeker of Validation. It powers down still waiting for praise."
     ],
     "lootTable": [
       {
@@ -277,7 +277,7 @@
       "bumps into a wall, rights itself, and focuses entirely on you"
     ],
     "successText": [
-      "You manage to outmaneuver the Roomba Prime and disable it, it had a power button."
+      "You manage to outmaneuver the Roomba Prime and disable it. It had a power button."
     ],
     "lootTable": [
       {
@@ -504,7 +504,7 @@
         "weight": 20,
         "name": "Crusher Fist Fragment",
         "value": 50,
-        "flavor": "Still clenched."
+        "flavor": "Still clenched around someone else's confidence."
       },
       {
         "id": "crusher_core",
@@ -769,7 +769,7 @@
         "weight": 20,
         "name": "Unnecessary Missile",
         "value": 90,
-        "flavor": "Explodes dramatically."
+        "flavor": "Explodes dramatically, then asks if everyone saw."
       },
       {
         "id": "tank_core",

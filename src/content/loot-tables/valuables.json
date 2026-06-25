@@ -5,7 +5,7 @@
             "id": "arc_commemorative_coin",
             "weight": 20,
             "rarity": 2,
-            "name": "A.R.C. Commemorative Coin",
+            "name": "Chassis Commemorative Coin",
             "value": 25,
             "stackSize": 20,
             "flavor": "Celebrates an event that absolutely did not go well."
@@ -14,7 +14,7 @@
             "id": "arc_commemorative_coin_gold",
             "weight": 8,
             "rarity": 4,
-            "name": "A.R.C. Gold Commemorative Coin",
+            "name": "Chassis Gold Commemorative Coin",
             "value": 120,
             "stackSize": 10,
             "flavor": "Shiny, heavy, and historically inaccurate."
@@ -23,7 +23,7 @@
             "id": "arc_commemorative_coin_platinum",
             "weight": 3,
             "rarity": 5,
-            "name": "A.R.C. Platinum Coin",
+            "name": "Chassis Platinum Coin",
             "value": 900,
             "stackSize": 5,
             "flavor": "Worth more than your entire loadout."
@@ -86,7 +86,7 @@
             "id": "collector_plate_arc",
             "weight": 12,
             "rarity": 3,
-            "name": "Collector Plate (A.R.C. Memorial Edition)",
+            "name": "Collector Plate (Chassis Memorial Edition)",
             "value": 60,
             "stackSize": 1,
             "flavor": "Commemorates an event that is definitely also abandoned now."
@@ -113,7 +113,7 @@
             "id": "arc_vintage_coin",
             "weight": 10,
             "rarity": 3,
-            "name": "A.R.C. Vintage Coin",
+            "name": "Chassis Vintage Coin",
             "value": 80,
             "stackSize": 20,
             "flavor": "Worth a lot to collectors. Worth nothing to everyone else."
@@ -122,7 +122,7 @@
             "id": "arc_vintage_coin_fake",
             "weight": 18,
             "rarity": 2,
-            "name": "Fake A.R.C. Vintage Coin",
+            "name": "Fake Chassis Vintage Coin",
             "value": 15,
             "stackSize": 20,
             "flavor": "Looks real from a distance. A great distance."
@@ -131,7 +131,7 @@
             "id": "arc_vintage_coin_platinum",
             "weight": 3,
             "rarity": 5,
-            "name": "A.R.C. Platinum Collector Coin",
+            "name": "Chassis Platinum Collector Coin",
             "value": 1200,
             "stackSize": 10,
             "flavor": "Stamped with a misprint that makes it priceless."
@@ -224,7 +224,7 @@
             "name": "Rusted Ancient Coin",
             "value": 18,
             "stackSize": 20,
-            "flavor": "Older than A.R.C. Barely."
+            "flavor": "Older than most bad ideas. Barely."
         },
         {
             "id": "ancient_coin_clean",
@@ -311,7 +311,7 @@
             "id": "precious_artifact_arc",
             "weight": 8,
             "rarity": 4,
-            "name": "A.R.C. Artifact (Recovered)",
+            "name": "Recovered Chassis Artifact",
             "value": 150,
             "stackSize": 1,
             "flavor": "Stamped with a serial number and a warning."
@@ -320,7 +320,7 @@
             "id": "precious_artifact_legendary",
             "weight": 3,
             "rarity": 5,
-            "name": "Legendary A.R.C. Artifact",
+            "name": "Legendary Chassis Artifact",
             "value": 1800,
             "stackSize": 1,
             "flavor": "You feel a strange warmth. Probably fine."

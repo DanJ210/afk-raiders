@@ -9,7 +9,7 @@
   {
     "id": "downed_recovery_form",
     "weight": 18,
-    "text": "Recovery form asked for cause of death. Wrote 'overconfidence with accessories.'",
+    "text": "Recovery form asked for cause of failure. Wrote 'overconfidence with accessories.' Hatch Authority accepted it immediately.",
     "requires": { "phase": "DOWNED" },
     "effects": { "ratRating": 2, "mood": -1 }
   },
@@ -23,14 +23,14 @@
   {
     "id": "downed_medbay_stamp",
     "weight": 16,
-    "text": "Medbay stamped me RETURNED MOSTLY. I respect the honesty.",
+    "text": "Medbay stamped me RETURNED MOSTLY, then sent the stamp to Security for emotional verification.",
     "requires": { "phase": "DOWNED" },
     "effects": { "ratRating": 1 }
   },
   {
     "id": "downed_cold_shower",
     "weight": 12,
-    "text": "Respawn shower ran cold. Desperanza believes in immersive consequences.",
+    "text": "Recovery shower ran cold. Water Ration Desk called this a character-building allocation.",
     "requires": { "phase": "DOWNED" },
     "effects": { "mood": -1 }
   },
@@ -51,7 +51,7 @@
   {
     "id": "downed_recovery_team_note",
     "weight": 12,
-    "text": "Recovery team note said 'found face down near obvious warning sign.' Rude, but complete.",
+    "text": "Recovery crew note said 'found face down near obvious warning sign.' Rude, but complete enough for filing.",
     "requires": { "phase": "DOWNED" },
     "effects": { "ratRating": 2, "mood": -1 }
   },

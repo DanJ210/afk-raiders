@@ -172,12 +172,12 @@
   {
     "id": "extract_team_high_five",
     "weight": 14,
-    "text": "Team executed a perfect mid‑extraction high‑five. Morale briefly skyrocketed.",
+    "text": "Nearby raider offered a mid-extraction high-five. Missed completely. Morale somehow improved.",
     "requires": {
       "phase": "EXTRACTING"
     },
     "effects": {
-      "mood": 3
+      "mood": 2
     }
   },
   {
@@ -280,12 +280,12 @@
   {
     "id": "extract_team_cheer",
     "weight": 15,
-    "text": "Team cheered as the dropship approached. For a moment, hope existed.",
+    "text": "Someone cheered as the shuttle approached. For a moment, hope filed the proper paperwork.",
     "requires": {
       "phase": "EXTRACTING"
     },
     "effects": {
-      "mood": 3
+      "mood": 2
     }
   },
   {
@@ -377,7 +377,7 @@
   {
     "id": "extract_team_hold_line",
     "weight": 14,
-    "text": "Team held the line at the LZ. It was messy but heroic.",
+    "text": "Nearby raiders held the LZ line with heroic confusion. I contributed by not understanding the plan.",
     "requires": {
       "phase": "EXTRACTING"
     },
@@ -450,7 +450,7 @@
   {
     "id": "extract_team_last_push",
     "weight": 15,
-    "text": "Team made a final push to the LZ. It was chaotic but effective.",
+    "text": "Final push to the LZ achieved momentum, panic, and one legally questionable shortcut.",
     "requires": {
       "phase": "EXTRACTING"
     },
@@ -523,12 +523,12 @@
   {
     "id": "extract_team_success",
     "weight": 18,
-    "text": "Team extracted successfully. Against all odds. Mostly our own odds.",
+    "text": "Extracted successfully. Against all odds. Mostly the odds created personally, recently, and with confidence.",
     "requires": {
       "phase": "EXTRACTING"
     },
     "effects": {
-      "mood": 4
+      "mood": 3
     }
   },
   {
@@ -583,10 +583,10 @@
     "effects": { "damage": 8, "mood": -2, "robotEncounter": "tattletale" }
   },
   {
-    "id": "extract_stella_red_lz_overrun",
+    "id": "extract_overtime_red_lz_overrun",
     "weight": 8,
-    "text": "Staycation Red turned the LZ into a robot meet-and-greet. Attendance was mandatory and poorly catered.",
-    "requires": { "phase": "EXTRACTING", "dangerLevel": "High", "minGreed": 20 },
+    "text": "Overtime Red turned the LZ into a robot meet-and-greet. Attendance was mandatory and poorly catered.",
+    "requires": { "phase": "EXTRACTING", "zoneCondition": "overtime_red", "minGreed": 20 },
     "effects": { "damage": 15, "mood": -4, "robotEncounter": "roomba_prime", "robotDamageMultiplier": 1.5 }
   },
   {
