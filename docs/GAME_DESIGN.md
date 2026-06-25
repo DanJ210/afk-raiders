@@ -17,8 +17,15 @@ You are **not** the raider. You are their Handler back in the underground hub, w
 2. **Deploy:** Raider autonomously picks a zone and a seeded **zone condition** (for example Light Fog, Acid Rain, Robot Surge). Greed carried over from the last raid nudges whether the next condition comes from the minor or major condition pool.
 3. **Raid events:** Loot finds, robot encounters, weather, meeting other AI raiders (alliance → inevitable betrayal). The selected condition sets a `dangerLevel` (Low/Medium/High), which then drives the danger-level profile for both upside (loot value/rarity) and risk (ambient downed pressure, robot pressure, extraction danger).
    - Raider **mood** now provides a tiny secondary bias to loot quality: positive mood slightly improves higher-rarity odds, while negative mood slightly favors lower-rarity outcomes. Greed adds a second small loot-appetite bias toward higher-rarity finds.
-4. **The Greed Check™ (signature mechanic):** Every tick in RAIDING, the Raider rolls to extract *or* keep looting. Natural extraction is locked out for roughly the first half of RAIDING (30 ticks / 15 minutes by default) so the raider cannot immediately bail after deployment; CALL EXTRACT bypasses this. **Greed rises slowly when the Raider keeps pushing deeper**, can jump from specific raiding/extraction events, and is modified by Handler actions (Calm lowers it, Pressure raises it). Higher greed does not directly lower extraction chance; instead it nudges rare loot odds, makes risky robot/extraction events more likely, and decays into major-condition momentum after successful returns. Getting DOWNED resets greed to 0. Pure dramatic tension, zero input required — the Handler can only nudge via Signal actions.
-5. **Extract or die:** Extraction takes ~90 seconds, then a final beat to hit the big RETURN HOME button. During that window **extraction events** can fire — the shuttle may arrive early (instant success), the beacon may get jammed (back into the zone, backpack kept), or the raider may go down at the LZ (lose the bag). If the raider stays in RAIDING until the timer expires, they go DOWNED (zone nuke failure), unless CALL EXTRACT was already queued for that final tick and transitions them to EXTRACTING instead. Death = lose the bag (keep the Secret Hidden Pocket item), respawn in hub with a sheepish log entry.
+4. **The Greed Check™ (signature mechanic):** Every tick in active RAIDING, the Raider rolls to start extracting *or* keep looting. Natural extraction is locked out for roughly the first half of RAIDING (30 ticks / 15 minutes by default) so the raider cannot immediately bail after deployment; CALL EXTRACT bypasses this. **Greed rises slowly when the Raider keeps pushing deeper**, can jump from specific raiding/extraction-condition events, and is modified by Handler actions (Calm lowers it, Pressure raises it). Higher greed does not directly lower extraction chance; instead it nudges rare loot odds, makes risky robot/extraction events more likely, and decays into major-condition momentum after successful returns. Failed raids that reach KNOCKED_OUT reset greed to 0. Pure dramatic tension, zero input required — the Handler can only nudge via Signal actions.
+5. **Extract or get knocked out:** Extraction is a timed condition layered on RAIDING, not a separate phase. During that window **extraction events** can fire — the shuttle may arrive early, the beacon may get jammed and clear the extracting condition, or the raider may get DOWNED at the LZ. DOWNED is also a RAIDING condition: the raider is incapacitated, normal events/actions stop, and a short revive timer starts. If extraction completes before the DOWNED timer expires, the raid succeeds and returns straight to HUB. If the DOWNED timer expires first, the raid transitions to KNOCKED_OUT, then briefly resets to HUB with a sheepish wake-up log entry.
+
+### RAIDING Conditions: DOWNED and EXTRACTING
+`RAIDING` is the field phase. `DOWNED` and `EXTRACTING` are timed conditions that can overlap during RAIDING:
+- **EXTRACTING** is the only successful way to leave a raid. When it completes, the raid transitions `RAIDING → HUB` and the backpack transfers into Home Stash.
+- **DOWNED** means the raider is still in the raid but unable to perform normal actions. Normal raiding/extraction events pause unless a comms event explicitly requires the DOWNED condition.
+- If DOWNED and EXTRACTING overlap, the timers race. Extraction completing first is a successful return; the DOWNED timer expiring first transitions `RAIDING → KNOCKED_OUT`.
+- **KNOCKED_OUT** is the short recovery/reset phase after failed revival or raid-timeout loss. `KNOCKED_OUT → HUB` performs failed-raid bookkeeping.
 
 ### The Home Stash
 Loot that makes it home goes into the **Stash** — a persistent collection that survives raids, deaths, and sessions:
@@ -32,7 +39,7 @@ Loot that makes it home goes into the **Stash** — a persistent collection that
 The Raider has one manual **Secret Hidden Pocket** slot per raid:
 - The player must manually pick an item from the current raid backpack; it is never auto-assigned.
 - The slot can be changed or cleared at any time during the active raid.
-- On failures that clear the backpack (for example DOWNED outcomes), exactly one unit of the selected item is transferred safely to Home Stash.
+- On failed raids that clear the backpack (KNOCKED_OUT recovery into HUB), exactly one unit of the selected item is transferred safely to Home Stash.
 - On successful extraction, normal extraction transfer already keeps everything, so the pocket provides no extra duplicate item.
 
 ### Shields
@@ -72,7 +79,7 @@ The only player resource. Regenerates ~1 per 10 minutes, capped at 5.
 - **Pressure (1 Signal):** Revoke snack privileges. Rattles the raider and raises immediate greed before the next check, increasing rare-loot appetite and future major-condition momentum.
 - **CALL EXTRACT (3 Signal):** Force an extraction attempt. The panic button.
 - During RAIDING, only one handler action can be pending at a time; raid action buttons stay locked until the next tick consumes it.
-- On successful returns to HUB, raid pressure cools down: greed decays instead of resetting to 0, forced-extract is cleared, and pending handler actions are consumed/cleared before the next raid. DOWNED outcomes reset greed to 0.
+- On successful returns to HUB, raid pressure cools down: greed decays instead of resetting to 0, extraction state is cleared, and pending handler actions are consumed/cleared before the next raid. KNOCKED_OUT recovery outcomes reset greed to 0.
 - Possible later: ping a loot stash, bless a piece of gear.
 
 Keeping input this thin is the point — it must remain firmly zero-player.
@@ -125,7 +132,7 @@ The canonical expanded parody reference lives in [docs/lore/PARODY_MAPPING.md](l
 
 ## 7. Data Model (MVP)
 - **Raider** — stats, mood, Raider Level XP, Rat Rating, skills
-- **Raid** — zone, condition, tick count, backpack contents/value, greed level, phase, optional manual Secret Hidden Pocket selection
+- **Raid** — zone, zone condition, tick count, backpack contents/value, greed level, lifecycle phase, RAIDING conditions (DOWNED/EXTRACTING), optional manual Secret Hidden Pocket selection
 - **Home Stash** — persistent extracted loot; stacks duplicates (×N), capped at 120 items with overflow auto-sold into coins
 - **Coins** — accumulated value from stash overflow auto-sales
 - **Lifetime Stats** — extracts/deaths totals and context breakdowns, robot defeats, healing usage

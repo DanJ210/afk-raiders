@@ -139,7 +139,7 @@ During play:
 1. Persist locally after each tick/action.
 2. Mark local as dirty when gameplay state changes.
 3. Debounce remote uploads.
-4. Upload on major transitions (extract, death, reset, rename, app background, periodic online intervals).
+4. Upload on major transitions (successful extraction, knocked-out recovery, reset, rename, app background, periodic online intervals).
 5. Clear dirty only after accepted server write.
 
 Offline progression remains required: the server is never required for normal tick processing.

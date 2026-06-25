@@ -43,7 +43,7 @@ afk-raiders/
 │   ├── engine/                  # Pure TS, no framework imports
 │   │   ├── rng.ts               # Seeded RNG (mulberry32) — determinism
 │   │   ├── tick.ts              # processTick(state, rng) → { state, events }
-│   │   ├── raidStateMachine.ts  # HUB → DEPLOYING → RAIDING → EXTRACTING/DOWNED
+│   │   ├── raidStateMachine.ts  # HUB → DEPLOYING → RAIDING → KNOCKED_OUT/HUB
 │   │   ├── greedCheck.ts        # The signature mechanic
 │   │   ├── eventResolver.ts     # Weighted event tables by context
 │   │   ├── dangerLevelProfiles.ts # Low/Medium/High risk/reward tuning
@@ -59,8 +59,8 @@ afk-raiders/
 │   │   ├── hub_events.json      # Desperanza rest & prep (≤5 min)
 │   │   ├── deployment_events.json # One-person tunnel pod ride (2 min)
 │   │   ├── raiding_events.json  # Looting, robots, greed (≤30 min + nuke risk)
-│   │   ├── extraction_events.json # LZ drama: failed/early extractions, ambushes
-│   │   ├── downed_events.json   # Death quips
+│   │   ├── extraction_events.json # RAIDING extraction-condition drama
+│   │   ├── knocked_out_events.json # Recovery reset quips
 │   │   ├── loot.json            # Many varieties of original comedy/parody loot items
 │   │   ├── healing_items.json   # Current-raid-only bandages
 │   │   ├── shield_rechargers.json # Manual-use backpack shield consumables
@@ -124,9 +124,17 @@ Static balance configuration that must affect deterministic engine behavior also
 
 Use `standard` for normal development, PRs, and production builds. Temporarily switch `skillXpThresholdProfile` to `prototype` only for local prototype/balance testing when quick level-ups are useful, then switch it back before merging or deploying. Content tests validate that the active profile exists and that every profile has valid ascending thresholds.
 
-Events may also set `"effects": { "forcePhase": "..." }` to force a phase change. This powers `extraction_events.json`: during the EXTRACTING window (~90s extraction + a final tick to call the return shuttle, 4 ticks total) events can make extraction fail (`forcePhase: "RAIDING"` — backpack kept), succeed early (`forcePhase: "HUB"` — loot transferred to the home stash), or end in tragedy (`forcePhase: "DOWNED"` — bag lost).
+Events may also use condition requirements for RAIDING overlays. Extraction is represented by `RaidState.extracting`, not an `EXTRACTING` phase; downed-but-revivable state is represented by `RaidState.downed`, not a `DOWNED` phase. Condition-specific events should declare requirements such as:
 
-Events may also gate themselves by `requires.dangerLevel` (`Low`, `Medium`, or `High`). The danger level is determined by a seeded combination of zone selection and zone condition selection (from `src/content/zones/zone_conditions.json`). Zone conditions are split into minor and major pools; carried-over greed from successful previous raids nudges the seeded pool roll toward major conditions, then the selected condition sets danger level. DOWNED outcomes reset greed to 0 before the next deployment. The engine applies the matching danger-level profile in `src/engine/dangerLevelProfiles.ts`: Low has lower loot value and rarity bias, Medium raises loot upside and ambient/robot/extraction pressure, and High has the highest loot ceiling with the harshest ambient pressure, robot pressure, and LZ risk. These profiles are the economy guardrail for risk/reward tuning.
+```json
+{
+  "requires": { "phase": "RAIDING", "extracting": true, "downed": false }
+}
+```
+
+Normal RAIDING events must not fire while `downed` or `extracting` is active unless they explicitly require the matching condition. `extraction_events.json` remains the home for extraction-condition comms and outcomes. DOWNED condition comms may live in `raiding_events.json` or a dedicated condition file as long as they require `downed: true`. Use phase transitions only for lifecycle changes (`RAIDING -> HUB`, `RAIDING -> KNOCKED_OUT`, `KNOCKED_OUT -> HUB`); use condition events/effects for starting, failing, completing, or expiring `downed` and `extracting`.
+
+Events may also gate themselves by `requires.dangerLevel` (`Low`, `Medium`, or `High`). The danger level is determined by a seeded combination of zone selection and zone condition selection (from `src/content/zones/zone_conditions.json`). Zone conditions are split into minor and major pools; carried-over greed from successful previous raids nudges the seeded pool roll toward major conditions, then the selected condition sets danger level. KNOCKED_OUT recovery outcomes reset greed to 0 before the next deployment. The engine applies the matching danger-level profile in `src/engine/dangerLevelProfiles.ts`: Low has lower loot value and rarity bias, Medium raises loot upside and ambient/robot/extraction pressure, and High has the highest loot ceiling with the harshest ambient pressure, robot pressure, and LZ risk. These profiles are the economy guardrail for risk/reward tuning.
 
 Loot rarity selection also applies small mood and greed biases in `eventResolver.ts`: positive mood nudges weights toward higher rarity and negative mood nudges toward lower rarity, while higher greed nudges loot-appetite rolls toward higher rarity. Greed also mildly increases robot encounter and risky extraction event weights, making danger more likely without directly changing extraction odds. These effects are intentionally mild and always secondary to danger-level profile tuning.
 
@@ -135,11 +143,11 @@ When an event awards backpack loot (`effects.backpackValue` producing a positive
 When a shield mitigates damage, the comms feed should include a follow-up line that shows the split between shield charge lost and HP damage landed. That keeps the log readable while still reflecting the shield math.
 
 ### Home stash transfer
-On every EXTRACTING → HUB transition (natural or event-forced), `processTick` merges the backpack into `state.homeStash` before the backpack resets. Duplicate item IDs stack quantities.
+On every successful extraction (`RAIDING -> HUB` caused by `RaidState.extracting` completion or extraction-condition success), `processTick` merges the backpack into `state.homeStash` before the backpack resets. Duplicate item IDs stack quantities.
 
 The stash has an enforced item cap (`HOME_STASH_ITEM_LIMIT`). Overflow items are auto-sold by lowest value first, and their value is converted to `state.coins` with a narrated `stash_overflow_sale` comms line. (Manual selling/trading is a future hub mechanic.)
 
-`RaidState` also includes an optional manual `hiddenPocket` selection (the parody safe pocket). The UI (`BackpackPanel.vue`) explicitly sets/changes/clears this slot from current backpack items. On backpack-loss failures (DOWNED → HUB), the engine transfers exactly one unit of the selected pocket item into home stash before normal reset bookkeeping.
+`RaidState` also includes an optional manual `hiddenPocket` selection (the parody safe pocket). The UI (`BackpackPanel.vue`) explicitly sets/changes/clears this slot from current backpack items. On backpack-loss failures (`KNOCKED_OUT -> HUB`), the engine transfers exactly one unit of the selected pocket item into home stash before normal reset bookkeeping.
 
 ### Shield layer
 `RaidState.shield` stores the current shield snapshot for the active raid. Shield damage rules live in `src/engine/shields.ts` so all incoming damage uses one deterministic calculation path. Negative HP event effects and failed robot encounters both route through the same helper.
@@ -153,10 +161,10 @@ Shield rechargers are intentionally different from bandages:
 - HUB currently restores the equipped shield to full charge and 100% durability; loadout/store systems are the future hook for persisted shield state.
 - `src/content/healing_items.json` and `src/content/shield_rechargers.json` are still required: they define weighted type selection for consumables awarded by both dedicated event effects and loot-bonus rolls.
 - Damage events should remain source-first: the event text announces the encounter, then a shield summary line can explain how much shield charge was lost and how much HP damage landed.
-- This is a contract, not a style preference: every processed damage instance must produce a comms damage line, even if the same tick later transitions the raider to DOWNED.
+- This is a contract, not a style preference: every processed damage instance must produce a comms damage line, even if the same tick later starts the DOWNED condition or transitions the raid toward KNOCKED_OUT.
 
 ### 3. Signal as the only real input
-Signal regenerates (~1 per 10 min, capped at 5). Ready Up (2 Signal) starts DEPLOYING from HUB. Calm (1 Signal, internal action ID `CALM`) reduces current greed before the next greed check, cooling rare-loot appetite, risky-event pressure, and future major-condition momentum. Pressure (1 Signal, internal action ID `PRESSURE`) increases current greed before the next check, raising rare-loot appetite, risky-event pressure, and future major-condition momentum. CALL EXTRACT (3 Signal) forces an extraction attempt. Greed itself does not lower extraction chance. Natural extraction is disabled until the raider has spent the configured minimum RAIDING ticks in-zone (`DEFAULT_MIN_NATURAL_EXTRACTION_RAIDING_TICKS`, currently 30 ticks / 15 minutes); CALL EXTRACT bypasses this guard, including the final RAIDING tick before timer expiry. When the Raider is low on HP and has no current-raid bandages, the Greed Check adds a survival-instinct extraction bonus after that guard, dampened by danger level so Medium and High conditions still punish unattended raids. During RAIDING only one action may be queued at a time, so action buttons lock until the next tick applies and clears the pending action. On successful HUB returns, raid pressure state cools down (greed decays, force-extract clears); DOWNED resets greed to 0.
+Signal regenerates (~1 per 10 min, capped at 5). Ready Up (2 Signal) starts DEPLOYING from HUB. Calm (1 Signal, internal action ID `CALM`) reduces current greed before the next greed check, cooling rare-loot appetite, risky-event pressure, and future major-condition momentum. Pressure (1 Signal, internal action ID `PRESSURE`) increases current greed before the next check, raising rare-loot appetite, risky-event pressure, and future major-condition momentum. CALL EXTRACT (3 Signal) starts or forces the EXTRACTING condition during RAIDING. Greed itself does not lower extraction chance. Natural extraction is disabled until the raider has spent the configured minimum RAIDING ticks in-zone (`DEFAULT_MIN_NATURAL_EXTRACTION_RAIDING_TICKS`, currently 30 ticks / 15 minutes); CALL EXTRACT bypasses this guard, including the final RAIDING tick before timer expiry. When the Raider is low on HP and has no current-raid bandages, the Greed Check adds a survival-instinct extraction bonus after that guard, dampened by danger level so Medium and High conditions still punish unattended raids. During active RAIDING only one action may be queued at a time, so action buttons lock until the next tick applies and clears the pending action. While DOWNED, normal Handler raid actions are disabled until a revive path exists. On successful HUB returns, raid pressure state cools down (greed decays, extracting clears); KNOCKED_OUT recovery resets greed to 0.
 
 ### 4. Lifetime stat collection
 `GameState.stats` tracks long-lived outcomes: extraction/death totals and context (zone + danger level), robot defeats, and healing item usage.
@@ -219,28 +227,22 @@ Visible Raider Level title bands and level-up text live in `src/content/raider_l
 
 Save migration upgrades older saves to version 6 by backfilling missing `levelXp`. Legacy profiles receive a small deterministic XP estimate from extracts, deaths, and deploys, not from raw Rat Rating.
 
-### 5. Phase timings and failure states
+### 5. Phase timings, conditions, and failure states
 - Tick cadence remains 30 seconds.
 - `HUB`: 20 ticks (10 minutes)
 - `DEPLOYING`: 4 ticks (2 minutes)
 - `RAIDING`: 60 ticks (30 minutes)
-- `EXTRACTING`: 4 ticks (~2 minutes)
-- `DOWNED`: 2 ticks
+- `RaidState.extracting`: 4 ticks (~2 minutes), active only during RAIDING
+- `RaidState.downed`: 2 ticks (60 second revive window), active only during RAIDING
+- `KNOCKED_OUT`: 2 ticks before waking in HUB; keep this duration behind a helper so skills can improve it later.
 
-When RAIDING time expires without extraction, the next natural transition is DOWNED (zone nuke failure), not EXTRACTING. If CALL EXTRACT is already queued on that final tick, the transition is EXTRACTING instead.
+If RAIDING time expires without extraction completing, the raid enters the loss path. If the Raider is not already DOWNED, the timeout starts the DOWNED condition; if the Raider is already DOWNED and extraction does not complete first, the raid transitions `RAIDING -> KNOCKED_OUT`. If CALL EXTRACT is already queued on the final RAIDING tick, it starts the EXTRACTING condition and can still succeed if extraction completes before the DOWNED/loss timer wins.
 
 ### 6. State updates are immutable-style
 `processTick(state, rng)` returns `{ state: GameState, events: LogEvent[] }` without mutating its input. This keeps Pinia reactivity simple, enables snapshot tests, and makes catch-up a pure fold over ticks.
 
-### 7. Phase timings and timeout behavior
-- Tick cadence remains 30 seconds.
-- `HUB`: 20 ticks (10 minutes)
-- `DEPLOYING`: 4 ticks (2 minutes)
-- `RAIDING`: 60 ticks (30 minutes)
-- `EXTRACTING`: 4 ticks (~2 minutes)
-- `DOWNED`: 2 ticks
-
-If RAIDING time expires without extracting, natural transition goes to DOWNED (zone nuke failure), not EXTRACTING. If CALL EXTRACT is already queued on that final tick, the transition is EXTRACTING instead.
+### 7. RAIDING condition timeout behavior
+When `RaidState.downed` and `RaidState.extracting` overlap, both timers continue. If extraction completes before or on the same tick as the DOWNED timer expires, extraction wins and the raid transitions `RAIDING -> HUB`. If the DOWNED timer expires first, the raid transitions `RAIDING -> KNOCKED_OUT`. KNOCKED_OUT then transitions to HUB after its short recovery timer and runs failed-raid bookkeeping.
 
 ## Testing strategy
 - **Engine unit tests (Vitest):** given a fixed seed and starting state, assert the exact event sequence (snapshot tests).
