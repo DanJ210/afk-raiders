@@ -38,6 +38,7 @@ function apply(itemId: string) {
         type="button"
         class="btn-ghost"
         :aria-expanded="!collapsed"
+        :aria-label="collapsed ? 'Show Field Meds' : 'Hide Field Meds'"
         aria-controls="field-meds-list"
         @click="toggle"
       >
