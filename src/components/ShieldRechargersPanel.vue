@@ -40,6 +40,7 @@ function apply(itemId: string) {
         type="button"
         class="btn-ghost"
         :aria-expanded="!collapsed"
+        :aria-label="collapsed ? 'Show Shield Rechargers' : 'Hide Shield Rechargers'"
         aria-controls="shield-rechargers-list"
         @click="toggle"
       >
