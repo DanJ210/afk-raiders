@@ -168,7 +168,6 @@ function isNegativeHpEffect(hp: number | string | undefined): boolean {
   return hp.trim().startsWith('-')
 }
 
-// review and test in future 
 function isPositiveDamageEffect(damage: number | string | undefined): boolean {
   if (damage === undefined) return false
   if (typeof damage === 'number') return damage > 0
@@ -430,7 +429,7 @@ export function resolveShieldRechargerFind(
       id: `shield_recharger_${item.id}_found`,
       tick: state.tick,
       timestamp: now,
-      text: `Found ${item.name}. Into the backpack it goes for a future defensive emergency.`,
+      text: `Found ${item.name}. Into the backpack it goes for the next shield-confidence emergency.`,
       phase: state.raid.phase,
     },
   }

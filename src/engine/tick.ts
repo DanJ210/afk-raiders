@@ -80,7 +80,7 @@ function stashSaleEvent(sold: number, coins: number, tick: number, now: number):
     id: 'stash_overflow_sale',
     tick,
     timestamp: now,
-    text: `Home stash hit ${HOME_STASH_ITEM_LIMIT} items. Auto-sold the ${sold} cheapest item${sold === 1 ? '' : 's'} for ${coins} coin${coins === 1 ? '' : 's'}. The Desperanza pawn guy didn't even haggle.`,
+    text: `Home stash hit ${HOME_STASH_ITEM_LIMIT} items. Auto-sold the ${sold} cheapest item${sold === 1 ? '' : 's'} for ${coins} coin${coins === 1 ? '' : 's'}. The Desperanza Pawn Desk didn't even haggle.`,
     phase: 'HUB',
   }
 }
@@ -508,7 +508,7 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
       // Some events (mostly extraction events) force a phase change:
       //  - EXTRACTING → HUB     = early successful extraction (loot goes home)
       //  - EXTRACTING → RAIDING = failed extraction (backpack kept, back to the zone)
-      //  - EXTRACTING → DOWNED  = died at the LZ (backpack lost on respawn)
+      //  - EXTRACTING → DOWNED  = downed at the LZ (backpack lost during recovery)
       const forcedPhase = template.effects?.forcePhase
       if (forcedPhase && forcedPhase !== currentState.raid.phase) {
         const fromPhase = currentState.raid.phase
@@ -567,8 +567,8 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
   }
 
   // ------------------------------------------------------------------
-  // 3b. Death check — if HP ever reaches 0 outside the hub, the raider
-  //     goes down. Loot is lost; they respawn in Desperanza (HUB) after
+  // 3b. Downed check — if HP ever reaches 0 outside the hub, the raider
+  //     goes down. Loot is lost; they recover in Desperanza (HUB) after
   //     the DOWNED flavor beat.
   // ------------------------------------------------------------------
   if (
