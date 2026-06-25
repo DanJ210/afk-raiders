@@ -8,7 +8,7 @@
  * - Special-case logic (readyUp initiates phase change, etc.)
  */
 
-import type { GameState } from '../engine/types.js'
+import type { GameState, LogEvent } from '../engine/types.js'
 import type { RNG } from '../engine/rng.js'
 import { advanceSignal, refillSignalWithAmplifier, spendSignal, SIGNAL_CAP } from '../engine/signal.js'
 import { tickPhase } from '../engine/raidStateMachine.js'
@@ -84,6 +84,7 @@ export function useHandlerActions(
   persistCallback: (state: GameState, seed: number, lastTickAt: number) => void,
   onResetSave: (newState: GameState, seed: number, lastTickAt: number) => void,
   onAwaySummaryDismiss: () => void,
+  publishEvents?: (events: LogEvent[]) => void,
 ): HandlerActionsReturn {
   function awardSignalUseSkill(now: number, signalSpent: number) {
     const minXp = Math.max(1, signalSpent)
@@ -181,21 +182,24 @@ export function useHandlerActions(
     const { raid: deployingRaid, transition } = tickPhase(stateRef.value.raid, 'DEPLOYING', rngRef.current)
     if (!transition) return
 
+    const transitionEvent = {
+      id: `phase_${transition.from}_to_${transition.to}`,
+      tick: stateRef.value.tick,
+      timestamp: actionNow,
+      text: transition.eventText,
+      phase: transition.to,
+    }
+
     stateRef.value = {
       ...stateRef.value,
       signal: updated,
       raid: deployingRaid,
       log: appendLogEntries(
         stateRef.value.log,
-        [{
-          id: `phase_${transition.from}_to_${transition.to}`,
-          tick: stateRef.value.tick,
-          timestamp: actionNow,
-          text: transition.eventText,
-          phase: transition.to,
-        }],
+        [transitionEvent],
       ),
     }
+    publishEvents?.([transitionEvent])
     awardSignalUseSkill(actionNow, 2)
     persistCallback(stateRef.value, rngRef.current.getSeed(), lastTickAtRef.value)
   }
@@ -243,6 +247,7 @@ export function useHandlerActions(
       stats: recordHealingItemUse(healingUse.state.stats, itemId),
       log,
     }
+    publishEvents?.([healingUse.event])
     persistCallback(stateRef.value, rngRef.current.getSeed(), lastTickAtRef.value)
   }
 
@@ -256,6 +261,7 @@ export function useHandlerActions(
       ...rechargeUse.state,
       log,
     }
+    publishEvents?.([rechargeUse.event])
     persistCallback(stateRef.value, rngRef.current.getSeed(), lastTickAtRef.value)
   }
 
