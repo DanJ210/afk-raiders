@@ -62,6 +62,12 @@ export function useBackpackViewModel(
       }),
   )
 
+  const backpackLootValue = computed(() =>
+    raidRef.value.backpack
+      .filter(item => !isShieldRecharger(item))
+      .reduce((total, item) => total + item.value * item.quantity, 0),
+  )
+
   // Can apply healing when raid is active, raider is alive, and not at full HP
   const canApplyHealing = computed(
     () =>
@@ -160,6 +166,7 @@ export function useBackpackViewModel(
     backpackItems,
     healingItems,
     shieldRechargerItems,
+    backpackLootValue,
 
     // State
     hiddenPocket,
