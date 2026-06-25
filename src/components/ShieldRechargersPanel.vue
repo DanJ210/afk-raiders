@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { rarityBarClass, rarityLabel } from '../utils/rarity'
 
 interface ShieldRechargerViewModel {
@@ -12,11 +13,19 @@ interface ShieldRechargerViewModel {
 const props = defineProps<{
   items: ShieldRechargerViewModel[]
   canApply: boolean
+  collapsed: boolean
 }>()
 
 const emit = defineEmits<{
+  toggle: []
   apply: [itemId: string]
 }>()
+
+const totalQuantity = computed(() => props.items.reduce((total, item) => total + item.quantity, 0))
+
+function toggle() {
+  emit('toggle')
+}
 
 function apply(itemId: string) {
   emit('apply', itemId)
@@ -25,8 +34,20 @@ function apply(itemId: string) {
 
 <template>
   <div v-if="items.length > 0" class="flex flex-col gap-1.5 mb-2.5">
-    <span class="subpanel-label">Shield Rechargers</span>
-    <ul class="flex flex-col gap-comms-entry-y list-none p-0 m-0">
+    <div class="flex items-center justify-between gap-2">
+      <span class="subpanel-label">Shield Rechargers <span class="text-muted">x{{ totalQuantity }}</span></span>
+      <button
+        type="button"
+        class="btn-ghost"
+        :aria-expanded="!collapsed"
+        :aria-label="collapsed ? 'Show Shield Rechargers' : 'Hide Shield Rechargers'"
+        aria-controls="shield-rechargers-list"
+        @click="toggle"
+      >
+        {{ collapsed ? 'Show' : 'Hide' }}
+      </button>
+    </div>
+    <ul v-show="!collapsed" id="shield-rechargers-list" class="flex flex-col gap-comms-entry-y list-none p-0 m-0">
       <li v-for="item in items" :key="item.itemId" class="item-row">
         <span :class="rarityBarClass(item.rarity)" :title="rarityLabel(item.rarity)" aria-hidden="true" />
         <span class="min-w-0">{{ item.name }}</span>
