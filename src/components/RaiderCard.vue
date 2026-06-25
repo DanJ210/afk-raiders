@@ -46,6 +46,14 @@ function toggleTooltip(tooltip: TooltipKey) {
   openTooltip.value = openTooltip.value === tooltip ? null : tooltip
 }
 
+function showTooltip(tooltip: TooltipKey) {
+  openTooltip.value = tooltip
+}
+
+function hideTooltip(tooltip: TooltipKey) {
+  if (openTooltip.value === tooltip) closeTooltip()
+}
+
 function closeTooltip() {
   openTooltip.value = null
 }
@@ -94,8 +102,12 @@ onBeforeUnmount(() => {
           :class="{ 'tooltip-open': openTooltip === 'zone' }"
           :aria-label="currentZoneDescription ? `Zone ${currentZoneName}. ${currentZoneDescription}` : `Zone ${currentZoneName}`"
           :aria-expanded="openTooltip === 'zone'"
-          @click="toggleTooltip('zone')"
+          @pointerdown="toggleTooltip('zone')"
+          @focus="showTooltip('zone')"
+          @blur="hideTooltip('zone')"
           @keydown.escape.stop="closeTooltip"
+          @keydown.enter.prevent="toggleTooltip('zone')"
+          @keydown.space.prevent="toggleTooltip('zone')"
         >
           {{ currentZoneName }}
           <span
@@ -118,8 +130,12 @@ onBeforeUnmount(() => {
           :class="{ 'tooltip-open': openTooltip === 'condition' }"
           :aria-label="currentCondition.description ? `Condition ${currentCondition.name}. ${currentCondition.description}` : `Condition ${currentCondition.name}`"
           :aria-expanded="openTooltip === 'condition'"
-          @click="toggleTooltip('condition')"
+          @pointerdown="toggleTooltip('condition')"
+          @focus="showTooltip('condition')"
+          @blur="hideTooltip('condition')"
           @keydown.escape.stop="closeTooltip"
+          @keydown.enter.prevent="toggleTooltip('condition')"
+          @keydown.space.prevent="toggleTooltip('condition')"
         >
           {{ currentCondition.name }}
           <span
