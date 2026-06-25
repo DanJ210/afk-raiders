@@ -32,6 +32,7 @@ export interface AwaySummary {
 export interface CatchUpResult {
   state: GameState
   summary: AwaySummary
+  events: LogEvent[]
 }
 
 /**
@@ -55,6 +56,7 @@ export function catchUp(
     return {
       state,
       summary: { ticksReplayed: 0, deaths: 0, extracts: 0, itemsGained: 0, lines: [] },
+      events: [],
     }
   }
 
@@ -83,6 +85,7 @@ export function catchUp(
   return {
     state: currentState,
     summary: { ticksReplayed: ticksToReplay, deaths, extracts, itemsGained: lootValueGained, lines },
+    events: replayedEvents,
   }
 }
 

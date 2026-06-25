@@ -15,13 +15,13 @@
     "id": "the_breach",
     "weight": 35,
     "name": "The Breach",
-    "description": "A massive tear in the landscape caused by something A.R.C. refuses to comment on. The silence is louder than the robots."
+    "description": "A massive tear in the landscape caused by something no Desperanza desk will stamp. The silence is louder than the robots."
   },
   {
     "id": "arc_ruins",
     "weight": 40,
     "name": "Chassis Graveyard",
-    "description": "Crumbling A.R.C. facilities filled with malfunctioning tech, broken dreams, and questionable safety protocols."
+    "description": "Crumbling chassis service yards filled with malfunctioning tech, broken dreams, and safety signs that retired badly."
   },
   {
     "id": "the_sunken_highrise",

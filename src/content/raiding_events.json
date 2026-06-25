@@ -854,17 +854,17 @@
       "effects": { "backpackValue": 8, "greedLevel": 4, "mood": 1 }
     },
     {
-      "id": "stella_red_redline_cache",
+      "id": "raid_overtime_red_redline_cache",
       "weight": 8,
-      "text": "Staycation Red painted the loot crate like a prize on a dare show. Opened it. Heard distant machinery applaud.",
-      "requires": { "phase": "RAIDING", "dangerLevel": "High", "minGreed": 15 },
-      "effects": { "backpackValue": 14, "greedLevel": 6, "mood": 2 }
+      "text": "Overtime Red painted the loot crate like an after-hours bonus. Opened it. Heard distant machinery clock in.",
+      "requires": { "phase": "RAIDING", "zoneCondition": "overtime_red", "minGreed": 15 },
+      "effects": { "backpackValue": 10, "greedLevel": 5, "mood": 1 }
     },
     {
-      "id": "stella_red_hunter_ping",
+      "id": "raid_overtime_red_hunter_ping",
       "weight": 7,
-      "text": "The sky went Staycation Red and something pinged my position like I was a limited-time objective.",
-      "requires": { "phase": "RAIDING", "dangerLevel": "High", "minGreed": 20 },
+      "text": "Overtime Red turned the streetlights hostile and something pinged my position like unpaid labor.",
+      "requires": { "phase": "RAIDING", "zoneCondition": "overtime_red", "minGreed": 20 },
       "effects": { "mood": -4, "ratRating": 2, "robotEncounter": "sniper_poor_decisions", "robotDamageMultiplier": 1.5 }
     },
     {

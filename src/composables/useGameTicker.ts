@@ -10,7 +10,7 @@
 
 import { ref, watch, type Ref } from 'vue'
 import { useDocumentVisibility } from '@vueuse/core'
-import type { GameState } from '../engine/types.js'
+import type { GameState, LogEvent } from '../engine/types.js'
 import type { RNG } from '../engine/rng.js'
 import { processTick } from '../engine/tick.js'
 import { catchUp, TICK_INTERVAL_MS } from '../engine/catchUp.js'
@@ -31,6 +31,7 @@ export function useGameTicker(
   lastTickAtRef: Ref<number>,
   rngRef: { current: RNG },
   persistCallback: (state: GameState, seed: number, lastTickAt: number) => void,
+  publishEvents?: (events: LogEvent[]) => void,
 ): GameTickerReturn {
   const awaySummary = ref<AwaySummary | null>(null)
   let timeoutId: ReturnType<typeof setTimeout> | null = null
@@ -59,6 +60,7 @@ export function useGameTicker(
       awaySummary.value = result.summary
       const alignedTickAt = fromTickAt + (result.summary.ticksReplayed * TICK_INTERVAL_MS)
       lastTickAtRef.value = alignedTickAt
+      publishEvents?.(result.events)
       persistCallback(stateRef.value, rngRef.current.getSeed(), alignedTickAt)
     }
   }
@@ -68,6 +70,7 @@ export function useGameTicker(
     const result = processTick(stateRef.value as GameState, rngRef.current, tickNow)
     stateRef.value = result.state
     lastTickAtRef.value = tickNow
+    publishEvents?.(result.events)
     persistCallback(stateRef.value, rngRef.current.getSeed(), tickNow)
   }
 

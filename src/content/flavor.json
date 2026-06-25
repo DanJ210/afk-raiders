@@ -12,14 +12,14 @@
     { "id": "dq_01", "weight": 20, "text": "Honestly, saw this coming." },
     { "id": "dq_02", "weight": 20, "text": "The water bottles were not worth it. Probably." },
     { "id": "dq_03", "weight": 15, "text": "Last words: 'one more crate'." },
-    { "id": "dq_04", "weight": 15, "text": "Death certificate: cause listed as 'hubris'. And also a robot." },
+    { "id": "dq_04", "weight": 15, "text": "Recovery certificate: cause listed as 'hubris'. And also a robot." },
     { "id": "dq_05", "weight": 10, "text": "The Secret Hidden Pocket survived. Small mercies." },
     { "id": "dq_06", "weight": 10, "text": "Statistically this was inevitable from the moment they packed a fourth bag." },
     { "id": "dq_07", "weight": 10, "text": "It was a good run. 'Good' is being generous." }
   ],
   "hub_gossip": [
     { "id": "hg_01", "weight": 20, "text": "Someone in bay 4 is building a shrine out of left boots. Nobody is stopping them." },
-    { "id": "hg_02", "weight": 20, "text": "The vending machine by the airlock gave out two MREs for the price of one. It has since been blessed." },
+    { "id": "hg_02", "weight": 20, "text": "The vending machine by the hatch queue gave out two MREs for the price of one. It has since been blessed." },
     { "id": "hg_03", "weight": 15, "text": "Heard another raider extracted with 50 water bottles. They have been asked not to discuss this." },
     { "id": "hg_04", "weight": 15, "text": "The hub therapist's waiting list is three weeks. Mostly Rat Rating consultations." },
     { "id": "hg_05", "weight": 15, "text": "Someone wrote 'One More Crate' on the memorial wall. It is now the most-touched inscription." },
@@ -35,7 +35,7 @@
   "away_summary_lines": [
     { "id": "as_01", "weight": 20, "text": "Several notable events occurred while you were away." },
     { "id": "as_02", "weight": 20, "text": "Raider survived without your help. Mixed feelings." },
-    { "id": "as_03", "weight": 20, "text": "The simulation continued without incident, or with incident, depending on the ticks." },
+    { "id": "as_03", "weight": 20, "text": "The raid continued without incident, or with incident, depending on the ticks." },
     { "id": "as_04", "weight": 20, "text": "You missed some things. Some things were probably fine." },
     { "id": "as_05", "weight": 20, "text": "Offline recap attached. Raider status: unknown but probably alive-ish." }
   ],

@@ -4,6 +4,7 @@ import { createRNG } from '../../src/engine/rng'
 import { SIGNAL_CAP } from '../../src/engine/signal'
 import { skillDefinitionById } from '../../src/engine/skills'
 import { MAX_LOG_SIZE } from '../../src/engine/log'
+import { processTick } from '../../src/engine/tick'
 import type { GameState } from '../../src/engine/types'
 import { useHandlerActions } from '../../src/composables/useHandlerActions'
 
@@ -12,6 +13,7 @@ function createHarness(state: GameState = createInitialState(0)) {
   const rngRef = { current: createRNG(123) }
   const lastTickAtRef = { value: 0 }
   const persistCallback = vi.fn()
+  const publishEvents = vi.fn()
 
   const actions = useHandlerActions(
     stateRef,
@@ -24,9 +26,10 @@ function createHarness(state: GameState = createInitialState(0)) {
       lastTickAtRef.value = tickTime
     },
     () => undefined,
+    publishEvents,
   )
 
-  return { actions, stateRef, rngRef, persistCallback }
+  return { actions, stateRef, rngRef, persistCallback, publishEvents }
 }
 
 describe('useHandlerActions Signal Handling skill', () => {
@@ -143,5 +146,70 @@ describe('useHandlerActions Signal Handling skill', () => {
     expect(stateRef.value.log[0].id).toBe('existing_1')
     expect(stateRef.value.log.some(entry => entry.id === 'phase_HUB_to_DEPLOYING')).toBe(true)
     expect(persistCallback).toHaveBeenCalledOnce()
+  })
+
+  it('publishes Ready Up transition together with Signal Handling level-up events', () => {
+    const initial = createInitialState(0)
+    const now = Date.now()
+    const signalHandlingLevelOneXp = skillDefinitionById('signal_handling').xpThresholds[0]
+    const { actions, publishEvents } = createHarness({
+      ...initial,
+      raider: {
+        ...initial.raider,
+        skills: {
+          ...initial.raider.skills,
+          signal_handling: {
+            ...initial.raider.skills.signal_handling,
+            xp: signalHandlingLevelOneXp - 1,
+          },
+        },
+      },
+      signal: {
+        ...initial.signal,
+        current: SIGNAL_CAP,
+        lastRegenAt: now,
+      },
+    })
+
+    actions.readyUp()
+
+    expect(publishEvents).toHaveBeenCalledTimes(1)
+    expect(publishEvents.mock.calls[0][0].map(event => event.id)).toEqual([
+      'phase_HUB_to_DEPLOYING',
+      'skill_signal_handling_level_1',
+    ])
+  })
+
+  it('publishes manual bandage use once without replaying it on the next tick', () => {
+    const initial = createInitialState(0)
+    const { actions, stateRef, rngRef, persistCallback, publishEvents } = createHarness({
+      ...initial,
+      tick: 12,
+      raider: { ...initial.raider, hp: 40 },
+      raid: {
+        ...initial.raid,
+        phase: 'RAIDING',
+        phaseTicksRemaining: 120,
+        healingItems: [{
+          itemId: 'bandage_blue',
+          name: 'Blue Bandage',
+          healAmount: 25,
+          moodGain: 3,
+          rarity: 3,
+          quantity: 1,
+        }],
+      },
+    })
+
+    actions.applyHealingItem('bandage_blue')
+
+    expect(stateRef.value.log.filter(entry => entry.id === 'healing_bandage_blue_used')).toHaveLength(1)
+    expect(publishEvents).toHaveBeenCalledTimes(1)
+    expect(publishEvents.mock.calls[0][0].map(event => event.id)).toEqual(['healing_bandage_blue_used'])
+    expect(persistCallback).toHaveBeenCalledOnce()
+
+    stateRef.value = processTick(stateRef.value, rngRef.current, Date.now()).state
+
+    expect(stateRef.value.log.filter(entry => entry.id === 'healing_bandage_blue_used')).toHaveLength(1)
   })
 })

@@ -78,6 +78,22 @@ describe('catchUp', () => {
     expect(result.summary.lines.some(line => line.includes('Gear packed. Pod hatch sealed.'))).toBe(true)
   })
 
+  it('returns replayed events for external publishing', () => {
+    const initial = createInitialState(0)
+    const state = {
+      ...initial,
+      raid: {
+        ...initial.raid,
+        phaseTicksRemaining: 1,
+      },
+    }
+
+    const result = catchUp(state, createRNG(3), 0, TICK_INTERVAL_MS)
+
+    expect(result.events[0].id).toBe('phase_HUB_to_DEPLOYING')
+    expect(result.events.map(event => event.id)).toContain('deploy_tunnel_dark')
+  })
+
   it('timestamps replayed events at elapsed tick times', () => {
     const lastTickAt = 1000
     const result = catchUp(

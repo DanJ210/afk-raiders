@@ -73,8 +73,10 @@ export const useGameStore = defineStore('game', () => {
     lastTickAt,
     rngRef,
     (updatedState, seed, tickTime) => {
-      newEvents.value = updatedState.log.slice(-1) // latest event(s) for UI reactivity
       persistence.persistSave(updatedState, seed, tickTime)
+    },
+    (events) => {
+      newEvents.value = events
     },
   )
 
@@ -99,6 +101,9 @@ export const useGameStore = defineStore('game', () => {
     () => {
       // dismissAwaySummary callback
       ticker.awaySummary.value = null
+    },
+    (events) => {
+      newEvents.value = events
     },
   )
 

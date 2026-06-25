@@ -229,12 +229,12 @@
   {
     "id": "deploy_team_huddle",
     "weight": 17,
-    "text": "Team huddle achieved. No strategy discussed. Still felt productive.",
+    "text": "Pod queue huddle achieved around a hatch map. No strategy survived contact with the labels.",
     "requires": {
       "phase": "DEPLOYING"
     },
     "effects": {
-      "mood": 3
+      "mood": 2
     }
   },
   {
@@ -304,12 +304,12 @@
   {
     "id": "deploy_team_fistbump",
     "weight": 16,
-    "text": "Team fist-bump executed flawlessly. Morale skyrocketed.",
+    "text": "Pre-pod fist-bump executed through two layers of gloves and one layer of denial.",
     "requires": {
       "phase": "DEPLOYING"
     },
     "effects": {
-      "mood": 3
+      "mood": 2
     }
   },
   {
@@ -390,7 +390,7 @@
   {
     "id": "deploy_team_lineup",
     "weight": 14,
-    "text": "Team lined up perfectly. Immediately ruined the formation by fidgeting.",
+    "text": "Raiders lined up at the tube bays. The line looked official until everyone checked a different sign.",
     "requires": {
       "phase": "DEPLOYING"
     },
@@ -441,7 +441,7 @@
   {
     "id": "deploy_team_sync_step",
     "weight": 13,
-    "text": "Team took the first step toward the dropship in perfect sync. Immediately lost sync.",
+    "text": "Pod queue took one synchronized step toward the launch hatches. Immediately lost sync to paperwork.",
     "requires": {
       "phase": "DEPLOYING"
     },
@@ -463,12 +463,12 @@
   {
     "id": "deploy_team_energy",
     "weight": 16,
-    "text": "Team energy was high. Possibly too high. Someone was vibrating.",
+    "text": "Pod queue energy was high. Possibly too high. Someone vibrated into the wrong lane.",
     "requires": {
       "phase": "DEPLOYING"
     },
     "effects": {
-      "mood": 3
+      "mood": 2
     }
   },
   {
@@ -527,7 +527,7 @@
   {
     "id": "deploy_team_awkward_wave",
     "weight": 8,
-    "text": "Waved at another squad deploying. They waved back awkwardly.",
+    "text": "Waved at another pod bay. The raider inside waved back like the hatch had already won.",
     "requires": {
       "phase": "DEPLOYING"
     },

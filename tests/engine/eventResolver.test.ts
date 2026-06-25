@@ -470,7 +470,7 @@ describe('applyEffects — backpack item behavior', () => {
 
     expect(result).not.toBeNull()
     expect(result!.event.id).toBe('robot_anxietick_defeated')
-    expect(result!.event.text).toContain('Well that tick needed to chill')
+    expect(result!.event.text).toContain('files an emotional noise complaint')
     expect(result!.state.raid.backpack).toHaveLength(1)
     expect(['anxietick_gear', 'robot_alloy']).toContain(result!.state.raid.backpack[0].itemId)
     expect(result!.state.raider.hp).toBe(state.raider.hp)

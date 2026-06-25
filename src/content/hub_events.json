@@ -214,7 +214,7 @@
   {
     "id": "hub_terminal_lore",
     "weight": 10,
-    "text": "Terminal displayed a random lore fact. I pretended to care.",
+    "text": "Mission terminal displayed a Before-ish fact sourced from snack packaging. Scholarship has declined, but confidence has not.",
     "requires": {
       "phase": "HUB"
     },
@@ -276,7 +276,7 @@
   {
     "id": "hub_terminal_password",
     "weight": 9,
-    "text": "Terminal asked for a password. I typed 'password'. It worked.",
+    "text": "Terminal asked for a password. Permit Choir hummed the hint in four-part harmony. It did not help.",
     "requires": {
       "phase": "HUB"
     },
@@ -352,7 +352,7 @@
   {
     "id": "hub_cafe_cold_food",
     "weight": 10,
-    "text": "Ordered hot food. It arrived cold. Classic.",
+    "text": "Ordered hot food at Desperanza Cafe. Nearly Fresh policy classified it as temperature-adjacent.",
     "requires": {
       "phase": "HUB"
     },
@@ -392,7 +392,7 @@
   {
     "id": "hub_terminal_wrong_menu",
     "weight": 12,
-    "text": "Accidentally opened the settings menu. Immediately panicked.",
+    "text": "Accidentally opened the Hatch Authority appeals menu. It asked me to define leaving. Immediately panicked.",
     "requires": {
       "phase": "HUB"
     },
@@ -450,7 +450,7 @@
   {
     "id": "hub_cafe_food_regret",
     "weight": 12,
-    "text": "Ate something from the café menu labeled 'experimental'. Regretted everything.",
+    "text": "Ate something from the cafe menu labeled Nearly Fresh Field Trial. Regretted participating in science.",
     "requires": {
       "phase": "HUB"
     },
@@ -470,7 +470,7 @@
   {
     "id": "hub_cafe_awkward_smile",
     "weight": 11,
-    "text": "Smiled at someone. They did not smile back. I am now deceased.",
+    "text": "Smiled at someone near the pod queue. They did not smile back. Social HP took imaginary damage.",
     "requires": {
       "phase": "HUB"
     },
@@ -794,6 +794,66 @@
     "effects": {
       "mood": 1,
       "ratRating": 1
+    }
+  },
+  {
+    "id": "hub_coupon_barons_receipt_duel",
+    "weight": 9,
+    "text": "Coupon Barons challenged my receipt to single combat. The receipt lost on a technicality and I somehow wanted more loot.",
+    "requires": {
+      "phase": "HUB"
+    },
+    "effects": {
+      "greedLevel": 1,
+      "mood": -1
+    }
+  },
+  {
+    "id": "hub_bravado_battery_kiosk_tiny_spark",
+    "weight": 9,
+    "text": "Bravado Battery Kiosk demonstrated a cell labeled COURAGEOUS. It produced one spark and a legally binding thumbs-up.",
+    "requires": {
+      "phase": "HUB"
+    },
+    "effects": {
+      "greedLevel": 1,
+      "mood": 1
+    }
+  },
+  {
+    "id": "hub_nearly_fresh_counter_sample_oath",
+    "weight": 9,
+    "text": "Nearly Fresh Counter made me swear the sample was food before they handed it over. Morale respected the paperwork.",
+    "requires": {
+      "phase": "HUB"
+    },
+    "effects": {
+      "mood": 1,
+      "ratRating": 1
+    }
+  },
+  {
+    "id": "hub_oopsall_claims_window_wrong_box",
+    "weight": 9,
+    "text": "OopsAll Claims Window apologized for my missing package by offering a different missing package. Progress, allegedly.",
+    "requires": {
+      "phase": "HUB"
+    },
+    "effects": {
+      "mood": -1,
+      "greedLevel": 1
+    }
+  },
+  {
+    "id": "hub_exit_strategy_booth_bad_map",
+    "weight": 9,
+    "text": "Exit Strategy Booth sold me a map with three exits and four apologies. I circled the apology nearest the LZ.",
+    "requires": {
+      "phase": "HUB"
+    },
+    "effects": {
+      "greedLevel": 1,
+      "mood": 1
     }
   }
 ]
