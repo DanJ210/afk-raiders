@@ -4,6 +4,8 @@ AFK Raiders groups should be broad social jokes, not deep political lore. They e
 
 Old-world brands should feel like they survived as packaging, signage, bad warranties, and objects that still believe in customer satisfaction.
 
+Recurring vendor voices live in [Traders](traders.md). Add a trader there when a faction or brand becomes a repeated desk, kiosk, or future shop personality.
+
 ## Survivor Groups
 
 | Group | Canon identity | Content hooks |

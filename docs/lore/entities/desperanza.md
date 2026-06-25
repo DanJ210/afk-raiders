@@ -30,6 +30,7 @@ The hub should feel functional enough to keep humanity alive and absurd enough t
 - HUB events should make Desperanza feel lived-in without becoming a menu tutorial.
 - Deployment events can treat the hub as a bureaucracy handing the raider to physics.
 - Stash and vendor text can use pawn desk logic: everything has value if described with enough confidence.
+- Repeated vendor voices should point back to [Traders](traders.md) so future shop content has consistent desks and kiosk personalities.
 
 ## Runtime Seeds
 

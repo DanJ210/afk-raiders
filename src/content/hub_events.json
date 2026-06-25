@@ -795,5 +795,65 @@
       "mood": 1,
       "ratRating": 1
     }
+  },
+  {
+    "id": "hub_coupon_barons_receipt_duel",
+    "weight": 9,
+    "text": "Coupon Barons challenged my receipt to single combat. The receipt lost on a technicality and I somehow wanted more loot.",
+    "requires": {
+      "phase": "HUB"
+    },
+    "effects": {
+      "greedLevel": 1,
+      "mood": -1
+    }
+  },
+  {
+    "id": "hub_bravado_battery_kiosk_tiny_spark",
+    "weight": 9,
+    "text": "Bravado Battery Kiosk demonstrated a cell labeled COURAGEOUS. It produced one spark and a legally binding thumbs-up.",
+    "requires": {
+      "phase": "HUB"
+    },
+    "effects": {
+      "greedLevel": 1,
+      "mood": 1
+    }
+  },
+  {
+    "id": "hub_nearly_fresh_counter_sample_oath",
+    "weight": 9,
+    "text": "Nearly Fresh Counter made me swear the sample was food before they handed it over. Morale respected the paperwork.",
+    "requires": {
+      "phase": "HUB"
+    },
+    "effects": {
+      "mood": 1,
+      "ratRating": 1
+    }
+  },
+  {
+    "id": "hub_oopsall_claims_window_wrong_box",
+    "weight": 9,
+    "text": "OopsAll Claims Window apologized for my missing package by offering a different missing package. Progress, allegedly.",
+    "requires": {
+      "phase": "HUB"
+    },
+    "effects": {
+      "mood": -1,
+      "greedLevel": 1
+    }
+  },
+  {
+    "id": "hub_exit_strategy_booth_bad_map",
+    "weight": 9,
+    "text": "Exit Strategy Booth sold me a map with three exits and four apologies. I circled the apology nearest the LZ.",
+    "requires": {
+      "phase": "HUB"
+    },
+    "effects": {
+      "greedLevel": 1,
+      "mood": 1
+    }
   }
 ]

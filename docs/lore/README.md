@@ -10,6 +10,7 @@ Do not commit copied source-wiki prose, screenshots, logos, codex text, or exact
 - [World History](entities/world-history.md): unreliable AFK eras and old-world context hooks.
 - [Desperanza](entities/desperanza.md): underground hub infrastructure and social texture.
 - [Factions And Brands](entities/factions-and-brands.md): survivor groups and defunct old-world brands.
+- [Traders](entities/traders.md): Desperanza vendor archetypes and future shop voices.
 - [Robots](entities/robots.md): A.R.C. chassis roster, deadliness tiers, and content hooks.
 - [Zones](entities/zones.md): original zone identities, condition hooks, and danger-level tone.
 - [Field Phenomena](entities/field-phenomena.md): surface landmarks, oddities, and condition hooks.

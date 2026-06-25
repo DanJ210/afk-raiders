@@ -20,7 +20,7 @@ This table is the canonical mapping from source-facing tropes or design function
 | Protected pocket / safe container | Secret Hidden Pocket | Parody Equivalent | `RaidState.hiddenPocket`, backpack UI |
 | Skill trees | Cardio, Hoarding, Hiding in Lockers, Signal Handling | Parody Equivalent | `src/content/skills.json` |
 | Surface supply infrastructure | Questionable field caches, suspicious crates, emergency snack boxes | General Extraction-Shooter Trope | Backlog and event templates |
-| Hub traders | Desperanza vendors, pawn clerks, gear weirdos | General Extraction-Shooter Trope | Future hub/store content |
+| Hub traders | Desperanza trader desks: Pawn Desk, Gear Weirdos, Coupon Barons, brand kiosks, and claims windows | General Extraction-Shooter Trope | [Traders](entities/traders.md), hub events, future store content |
 | Lost-history eras and survivor mythmaking | The Before-ish, The Bad Years, The Great Downstairs, The Current Problem | Original AFK Creation | Lore wiki, hub gossip, future flavor tables |
 | Underground civic infrastructure | Hatch Authority, Tube Routes, Hydroponic Arguments, Water Ration Desk, Security Stamp Maze | Original AFK Creation | Hub and deployment events |
 | Survivor social groups | Coupon Barons, Blue-Tarp Nomads, Clipboard Researchers, Permit Choir, Locker Philosophers | Original AFK Creation | Future NPCs, faction-flavored events |
