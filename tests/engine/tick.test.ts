@@ -473,6 +473,7 @@ describe('deterministic snapshot', () => {
     expect(result.state.raid.downed).not.toBeNull()
     expect(result.state.raider.hp).toBe(0)
     expect(result.events.some(e => e.id === 'condition_downed_started')).toBe(true)
+    expect(result.events.find(e => e.id === 'condition_downed_started')?.condition).toBe('DOWNED')
   })
 
   it('honors Call Extract when the raid timer expires on the next tick', () => {
@@ -496,6 +497,7 @@ describe('deterministic snapshot', () => {
     expect(eventIds).toContain('condition_extracting_started')
     expect(eventIds).not.toContain('condition_downed_started')
     expect(result.state.raid.extracting).not.toBeNull()
+    expect(result.events.find(event => event.id === 'condition_extracting_started')?.condition).toBe('EXTRACTING')
   })
 
   it('lets extraction completion beat an expiring DOWNED timer', () => {

@@ -14,7 +14,7 @@
  *   6. Increment tick counter, append events to log.
  */
 
-import type { BackpackItem, GameState, HiddenPocketItem, LogEvent, TickResult } from './types.js'
+import type { BackpackItem, GameState, HiddenPocketItem, LogCondition, LogEvent, TickResult } from './types.js'
 import type { RNG } from './rng.js'
 import { DOWNED_TICKS, EXTRACTING_TICKS, tickPhase, transitionText, type PhaseTransition } from './raidStateMachine.js'
 import { runGreedCheck } from './greedCheck.js'
@@ -52,14 +52,21 @@ function phaseTransitionEvent(transition: PhaseTransition, tick: number, now: nu
   }
 }
 
-function conditionEvent(id: string, text: string, tick: number, now: number): LogEvent {
+function conditionEvent(id: string, text: string, tick: number, now: number, condition: LogCondition): LogEvent {
   return {
     id,
     tick,
     timestamp: now,
     text,
     phase: 'RAIDING',
+    condition,
   }
+}
+
+function logConditionForRaid(raid: GameState['raid']): LogCondition | undefined {
+  if (raid.downed) return 'DOWNED'
+  if (raid.extracting) return 'EXTRACTING'
+  return undefined
 }
 
 function startExtractionCondition(state: GameState, tick: number, now: number): { state: GameState; event: LogEvent | null } {
@@ -75,7 +82,7 @@ function startExtractionCondition(state: GameState, tick: number, now: number): 
         forceExtract: false,
       },
     },
-    event: conditionEvent('condition_extracting_started', transitionText('RAIDING_to_EXTRACTING'), tick, now),
+    event: conditionEvent('condition_extracting_started', transitionText('RAIDING_to_EXTRACTING'), tick, now, 'EXTRACTING'),
   }
 }
 
@@ -91,7 +98,7 @@ function failExtractionCondition(state: GameState, tick: number, now: number): {
         forceExtract: false,
       },
     },
-    event: conditionEvent('condition_extraction_failed', transitionText('EXTRACTING_to_RAIDING'), tick, now),
+    event: conditionEvent('condition_extraction_failed', transitionText('EXTRACTING_to_RAIDING'), tick, now, 'EXTRACTING'),
   }
 }
 
@@ -107,7 +114,7 @@ function startDownedCondition(state: GameState, tick: number, now: number, text 
         downed: { ticksRemaining: DOWNED_TICKS },
       },
     }),
-    event: conditionEvent('condition_downed_started', text, tick, now),
+    event: conditionEvent('condition_downed_started', text, tick, now, 'DOWNED'),
   }
 }
 
@@ -331,23 +338,25 @@ function enterKnockedOutRecovery(state: GameState, emitted: LogEvent[], tick: nu
   return currentState
 }
 
-function skillLevelUpEvent(levelUp: SkillLevelUp, tick: number, now: number, phase: GameState['raid']['phase']): LogEvent {
+function skillLevelUpEvent(levelUp: SkillLevelUp, tick: number, now: number, phase: GameState['raid']['phase'], condition?: LogCondition): LogEvent {
   return {
     id: `skill_${levelUp.skillId}_level_${levelUp.level}`,
     tick,
     timestamp: now,
     text: levelUp.text,
     phase,
+    condition,
   }
 }
 
-function raiderLevelUpEvent(levelUp: RaiderLevelUp, tick: number, now: number, phase: GameState['raid']['phase']): LogEvent {
+function raiderLevelUpEvent(levelUp: RaiderLevelUp, tick: number, now: number, phase: GameState['raid']['phase'], condition?: LogCondition): LogEvent {
   return {
     id: `raider_level_${levelUp.level}`,
     tick,
     timestamp: now,
     text: levelUp.text,
     phase,
+    condition,
   }
 }
 
@@ -497,6 +506,7 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
         timestamp: now,
         text: `Shield recharge completed. ${shieldRechargeBefore?.name ?? 'The shield recharger'} finished its ${shieldRechargeBefore?.totalTicks ?? 5}-tick crawl.`,
         phase: currentState.raid.phase,
+        condition: logConditionForRaid(currentState.raid),
       })
     }
 
@@ -695,6 +705,7 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
       timestamp: now,
       text: resolveFlavorKey('calm_responses', rng),
       phase: currentState.raid.phase,
+      condition: logConditionForRaid(currentState.raid),
     })
   }
   if (currentState.pendingPressure) {
@@ -704,6 +715,7 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
       timestamp: now,
       text: resolveFlavorKey('pressure_responses', rng),
       phase: currentState.raid.phase,
+      condition: logConditionForRaid(currentState.raid),
     })
   }
 
@@ -727,7 +739,8 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
     for (const levelUp of skillResult.levelUps) {
       raiderXpTriggers.push({ reason: 'skill_level_up', minXp: 5 + levelUp.level, maxXp: 7 + levelUp.level * 2 })
     }
-    emitted.push(...skillResult.levelUps.map(levelUp => skillLevelUpEvent(levelUp, state.tick, now, currentState.raid.phase)))
+    const condition = logConditionForRaid(currentState.raid)
+    emitted.push(...skillResult.levelUps.map(levelUp => skillLevelUpEvent(levelUp, state.tick, now, currentState.raid.phase, condition)))
   }
 
   if (raiderXpTriggers.length > 0) {
@@ -740,7 +753,8 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
         levelXp: xpResult.levelXp,
       },
     }
-    emitted.push(...xpResult.levelUps.map(levelUp => raiderLevelUpEvent(levelUp, state.tick, now, currentState.raid.phase)))
+    const condition = logConditionForRaid(currentState.raid)
+    emitted.push(...xpResult.levelUps.map(levelUp => raiderLevelUpEvent(levelUp, state.tick, now, currentState.raid.phase, condition)))
   }
 
   // ------------------------------------------------------------------

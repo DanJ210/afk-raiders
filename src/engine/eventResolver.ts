@@ -11,7 +11,7 @@
  *   6. {count}         → random plausible water-bottle count (for flavor)
  */
 
-import type { EventTemplate, GameState, HealingItem, HealingItemStack, LogEvent, LootItem, Phase, RobotEntry, RobotLootItem, ShieldRechargerItem } from './types.js'
+import type { EventTemplate, GameState, HealingItem, HealingItemStack, LogCondition, LogEvent, LootItem, Phase, RobotEntry, RobotLootItem, ShieldRechargerItem } from './types.js'
 import type { RNG } from './rng.js'
 import hubEventsData from '../content/hub_events.json'
 import deploymentEventsData from '../content/deployment_events.json'
@@ -411,6 +411,12 @@ export interface BackpackConsumableResult {
   event: LogEvent
 }
 
+function logConditionForRaid(raid: GameState['raid']): LogCondition | undefined {
+  if (raid.downed) return 'DOWNED'
+  if (raid.extracting) return 'EXTRACTING'
+  return undefined
+}
+
 /** Finds one bandage for this raid only. It is not backpack loot and never extracts home. */
 export function resolveHealingItemFind(
   state: GameState,
@@ -426,6 +432,7 @@ export function resolveHealingItemFind(
       timestamp: now,
       text: `Found ${item.name}. Tucked it into the current-raid med pocket.`,
       phase: state.raid.phase,
+      condition: logConditionForRaid(state.raid),
     },
   }
 }
@@ -444,6 +451,7 @@ export function resolveShieldRechargerFind(
       timestamp: now,
       text: `Found ${item.name}. Into the backpack it goes for the next shield-confidence emergency.`,
       phase: state.raid.phase,
+      condition: logConditionForRaid(state.raid),
     },
   }
 }
@@ -481,6 +489,7 @@ export function consumeHealingItem(
         timestamp: now,
         text: `Used ${item.name}. Revived Raider with ${hp} HP and gained ${moodGain} mood. Medical dignity returned under protest.`,
         phase: state.raid.phase,
+        condition: logConditionForRaid(state.raid),
       },
     }
   }
@@ -505,6 +514,7 @@ export function consumeHealingItem(
       timestamp: now,
       text: `Used ${item.name}. Restored ${healed} HP and gained ${moodGain} mood. Medical dignity restored to acceptable levels.`,
       phase: state.raid.phase,
+      condition: logConditionForRaid(state.raid),
     },
   }
 }
@@ -553,6 +563,7 @@ export function consumeShieldRecharger(
       timestamp: now,
       text: eventText,
       phase: state.raid.phase,
+      condition: logConditionForRaid(state.raid),
     },
   }
 }
@@ -683,6 +694,7 @@ export function resolveRobotEncounter(
         timestamp: now,
         text: `${successText} Salvaged ${item.name}.`,
         phase: state.raid.phase,
+        condition: logConditionForRaid(state.raid),
       },
     }
   }
@@ -706,6 +718,7 @@ export function resolveRobotEncounter(
       timestamp: now,
       text: `${robot.name} won that exchange. ${describeShieldDamage(damageResult.shieldDamage)} Ran away with the tactical urgency of someone who just learned a lesson.`,
       phase: state.raid.phase,
+      condition: logConditionForRaid(state.raid),
     },
   }
 }
@@ -732,6 +745,7 @@ export function resolveEvent(
     timestamp: now,
     text,
     phase: state.raid.phase,
+    condition: logConditionForRaid(state.raid),
   }
 }
 
