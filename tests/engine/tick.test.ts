@@ -546,7 +546,7 @@ describe('deterministic snapshot', () => {
     expect(eventIds).not.toContain('phase_RAIDING_to_KNOCKED_OUT')
   })
 
-  it('prioritizes EXTRACTING log condition while extraction and DOWNED overlap', () => {
+  it('includes both log conditions while extraction and DOWNED overlap', () => {
     const rng = createRNG(FIXED_SEED)
     const initial = createInitialState(0)
     const state = {
@@ -568,6 +568,29 @@ describe('deterministic snapshot', () => {
     expect(result.state.raid.extracting).not.toBeNull()
     expect(result.state.raid.downed).not.toBeNull()
     expect(conditionEvent?.conditions).toEqual(['EXTRACTING', 'DOWNED'])
+  })
+
+  it('includes EXTRACTING on the DOWNED-start log line when downed starts during extraction', () => {
+    const rng = createRNG(FIXED_SEED)
+    const initial = createInitialState(0)
+    const state = {
+      ...initial,
+      raider: { ...initial.raider, hp: 0 },
+      raid: {
+        ...initial.raid,
+        phase: 'RAIDING' as const,
+        phaseTicksRemaining: 30,
+        extracting: { ticksRemaining: 2 },
+      },
+    }
+
+    const result = processTick(state, rng, 0)
+    const downedEvent = result.events.find(event => event.id === 'condition_downed_started')
+
+    expect(result.state.raid.phase).toBe('RAIDING')
+    expect(result.state.raid.extracting).not.toBeNull()
+    expect(result.state.raid.downed).not.toBeNull()
+    expect(downedEvent?.conditions).toEqual(['EXTRACTING', 'DOWNED'])
   })
 
   it('keeps HP at 0 while the raider remains DOWNED', () => {

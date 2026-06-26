@@ -21,7 +21,7 @@ import { runGreedCheck } from './greedCheck.js'
 import { advanceSignal, applyCalmGreedReduction, applyPressureGreedIncrease } from './signal.js'
 import { describeShieldDamage, resolveEvent, resolveFlavorKey, applyEffects, resolveHealingItemFind, resolveRobotEncounter, resolveShieldRechargerFind, events as allEvents } from './eventResolver.js'
 import { transferBackpackToHomeStash, HOME_STASH_ITEM_LIMIT } from './homeStash.js'
-import { appendLogEntries } from './log.js'
+import { appendLogEntries, logConditionsForRaid } from './log.js'
 import { recordOutcome, recordRobotDefeat } from './stats.js'
 import { advanceShieldRecharge } from './shields.js'
 import { applySkillPractice, getSkillModifierProfile, rollSkillPractice, type SkillLevelUp, type SkillPracticeTrigger } from './skills.js'
@@ -52,43 +52,40 @@ function phaseTransitionEvent(transition: PhaseTransition, tick: number, now: nu
   }
 }
 
-function conditionEvent(id: string, text: string, tick: number, now: number, condition: LogCondition): LogEvent {
+function conditionEvent(id: string, text: string, tick: number, now: number, conditions: LogCondition[]): LogEvent {
   return {
     id,
     tick,
     timestamp: now,
     text,
     phase: 'RAIDING',
-    conditions: [condition],
+    conditions,
   }
-}
-
-function logConditionsForRaid(raid: GameState['raid']): LogCondition[] | undefined {
-  const conditions: LogCondition[] = []
-  if (raid.extracting) conditions.push('EXTRACTING')
-  if (raid.downed) conditions.push('DOWNED')
-  return conditions.length > 0 ? conditions : undefined
 }
 
 function startExtractionCondition(state: GameState, tick: number, now: number): { state: GameState; event: LogEvent | null } {
   if (state.raid.phase !== 'RAIDING' || state.raid.extracting) return { state, event: null }
 
+  const raid = {
+    ...state.raid,
+    activeShieldRecharge: null,
+    extracting: { ticksRemaining: EXTRACTING_TICKS },
+    forceExtract: false,
+  }
+
   return {
     state: {
       ...state,
-      raid: {
-        ...state.raid,
-        activeShieldRecharge: null,
-        extracting: { ticksRemaining: EXTRACTING_TICKS },
-        forceExtract: false,
-      },
+      raid,
     },
-    event: conditionEvent('condition_extracting_started', transitionText('RAIDING_to_EXTRACTING'), tick, now, 'EXTRACTING'),
+    event: conditionEvent('condition_extracting_started', transitionText('RAIDING_to_EXTRACTING'), tick, now, logConditionsForRaid(raid) ?? ['EXTRACTING']),
   }
 }
 
 function failExtractionCondition(state: GameState, tick: number, now: number): { state: GameState; event: LogEvent | null } {
   if (state.raid.phase !== 'RAIDING' || !state.raid.extracting) return { state, event: null }
+
+  const conditions = logConditionsForRaid(state.raid) ?? ['EXTRACTING']
 
   return {
     state: {
@@ -99,23 +96,25 @@ function failExtractionCondition(state: GameState, tick: number, now: number): {
         forceExtract: false,
       },
     },
-    event: conditionEvent('condition_extraction_failed', transitionText('EXTRACTING_to_RAIDING'), tick, now, 'EXTRACTING'),
+    event: conditionEvent('condition_extraction_failed', transitionText('EXTRACTING_to_RAIDING'), tick, now, conditions),
   }
 }
 
 function startDownedCondition(state: GameState, tick: number, now: number, text = transitionText('RAIDING_to_DOWNED')): { state: GameState; event: LogEvent | null } {
   if (state.raid.phase !== 'RAIDING' || state.raid.downed) return { state: enforceIncapacitatedHp(state), event: null }
 
+  const nextState = enforceIncapacitatedHp({
+    ...state,
+    raid: {
+      ...state.raid,
+      activeShieldRecharge: null,
+      downed: { ticksRemaining: DOWNED_TICKS },
+    },
+  })
+
   return {
-    state: enforceIncapacitatedHp({
-      ...state,
-      raid: {
-        ...state.raid,
-        activeShieldRecharge: null,
-        downed: { ticksRemaining: DOWNED_TICKS },
-      },
-    }),
-    event: conditionEvent('condition_downed_started', text, tick, now, 'DOWNED'),
+    state: nextState,
+    event: conditionEvent('condition_downed_started', text, tick, now, logConditionsForRaid(nextState.raid) ?? ['DOWNED']),
   }
 }
 

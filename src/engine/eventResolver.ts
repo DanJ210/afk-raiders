@@ -11,7 +11,7 @@
  *   6. {count}         → random plausible water-bottle count (for flavor)
  */
 
-import type { EventTemplate, GameState, HealingItem, HealingItemStack, LogCondition, LogEvent, LootItem, Phase, RobotEntry, RobotLootItem, ShieldRechargerItem } from './types.js'
+import type { EventTemplate, GameState, HealingItem, HealingItemStack, LogEvent, LootItem, Phase, RobotEntry, RobotLootItem, ShieldRechargerItem } from './types.js'
 import type { RNG } from './rng.js'
 import hubEventsData from '../content/hub_events.json'
 import deploymentEventsData from '../content/deployment_events.json'
@@ -38,6 +38,7 @@ import { applyShieldedDamage, startShieldRecharge, type ShieldDamageResult } fro
 import { getSkillModifierProfile } from './skills.js'
 import { getRaiderLevelBenefitProfile } from './raiderLevel.js'
 import { clampGreedLevel, getGreedDangerEventWeightMultiplier, getGreedRarityWeightMultiplier } from './greed.js'
+import { logConditionsForRaid } from './log.js'
 
 // Lifecycle phase events plus RAIDING condition events.
 const events = [
@@ -409,13 +410,6 @@ export interface HealingItemResult {
 export interface BackpackConsumableResult {
   state: GameState
   event: LogEvent
-}
-
-function logConditionsForRaid(raid: GameState['raid']): LogCondition[] | undefined {
-  const conditions: LogCondition[] = []
-  if (raid.extracting) conditions.push('EXTRACTING')
-  if (raid.downed) conditions.push('DOWNED')
-  return conditions.length > 0 ? conditions : undefined
 }
 
 /** Finds one bandage for this raid only. It is not backpack loot and never extracts home. */
