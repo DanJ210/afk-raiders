@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import { useDocumentVisibility, useNow } from '@vueuse/core'
 import { useGameStore } from '../stores/gameStore'
 import { TICK_INTERVAL_MS } from '../engine/catchUp'
+import type { LogEvent } from '../engine/types'
 import { usePinnedTopLog } from '../composables/usePinnedTopLog'
 import RaiderStatusHeaderStats from './RaiderStatusHeaderStats.vue'
 
@@ -66,6 +67,12 @@ function phaseBadge(phase: string): string {
   return badges[phase] ?? '📡'
 }
 
+function logBadge(entry: LogEvent): string {
+  const badges = entry.conditions?.map(condition => condition === 'EXTRACTING' ? '🚨' : '🛏️')
+  if (badges && badges.length > 0) return badges.join('')
+  return phaseBadge(entry.phase)
+}
+
 </script>
 
 <template>
@@ -117,7 +124,7 @@ function phaseBadge(phase: string): string {
         class="flex gap-2 px-3.5 py-comms-entry-y text-sm leading-normal border-b border-border-subtle last:border-b-0"
       >
         <span class="shrink-0 text-muted font-mono text-[0.75rem] pt-0.5 min-w-comms-timestamp">
-          {{ phaseBadge(entry.phase) }} {{ formatTime(entry.timestamp) }}
+          {{ logBadge(entry) }} {{ formatTime(entry.timestamp) }}
         </span>
         <span class="text-text font-mono">{{ entry.text }}</span>
       </div>

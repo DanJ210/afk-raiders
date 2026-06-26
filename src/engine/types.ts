@@ -275,12 +275,15 @@ export interface SignalState {
   lastRegenAt: number  // timestamp ms
 }
 
+export type LogCondition = 'DOWNED' | 'EXTRACTING'
+
 export interface LogEvent {
   id: string
   tick: number
   timestamp: number  // ms since epoch
   text: string
   phase: Phase
+  conditions?: LogCondition[]
 }
 
 export interface GameState {

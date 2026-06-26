@@ -38,6 +38,7 @@ import { applyShieldedDamage, startShieldRecharge, type ShieldDamageResult } fro
 import { getSkillModifierProfile } from './skills.js'
 import { getRaiderLevelBenefitProfile } from './raiderLevel.js'
 import { clampGreedLevel, getGreedDangerEventWeightMultiplier, getGreedRarityWeightMultiplier } from './greed.js'
+import { logConditionsForRaid } from './log.js'
 
 // Lifecycle phase events plus RAIDING condition events.
 const events = [
@@ -426,6 +427,7 @@ export function resolveHealingItemFind(
       timestamp: now,
       text: `Found ${item.name}. Tucked it into the current-raid med pocket.`,
       phase: state.raid.phase,
+      conditions: logConditionsForRaid(state.raid),
     },
   }
 }
@@ -444,6 +446,7 @@ export function resolveShieldRechargerFind(
       timestamp: now,
       text: `Found ${item.name}. Into the backpack it goes for the next shield-confidence emergency.`,
       phase: state.raid.phase,
+      conditions: logConditionsForRaid(state.raid),
     },
   }
 }
@@ -481,6 +484,7 @@ export function consumeHealingItem(
         timestamp: now,
         text: `Used ${item.name}. Revived Raider with ${hp} HP and gained ${moodGain} mood. Medical dignity returned under protest.`,
         phase: state.raid.phase,
+        conditions: logConditionsForRaid(state.raid),
       },
     }
   }
@@ -505,6 +509,7 @@ export function consumeHealingItem(
       timestamp: now,
       text: `Used ${item.name}. Restored ${healed} HP and gained ${moodGain} mood. Medical dignity restored to acceptable levels.`,
       phase: state.raid.phase,
+      conditions: logConditionsForRaid(state.raid),
     },
   }
 }
@@ -553,6 +558,7 @@ export function consumeShieldRecharger(
       timestamp: now,
       text: eventText,
       phase: state.raid.phase,
+      conditions: logConditionsForRaid(state.raid),
     },
   }
 }
@@ -683,6 +689,7 @@ export function resolveRobotEncounter(
         timestamp: now,
         text: `${successText} Salvaged ${item.name}.`,
         phase: state.raid.phase,
+        conditions: logConditionsForRaid(state.raid),
       },
     }
   }
@@ -706,6 +713,7 @@ export function resolveRobotEncounter(
       timestamp: now,
       text: `${robot.name} won that exchange. ${describeShieldDamage(damageResult.shieldDamage)} Ran away with the tactical urgency of someone who just learned a lesson.`,
       phase: state.raid.phase,
+      conditions: logConditionsForRaid(state.raid),
     },
   }
 }
@@ -732,6 +740,7 @@ export function resolveEvent(
     timestamp: now,
     text,
     phase: state.raid.phase,
+    conditions: logConditionsForRaid(state.raid),
   }
 }
 
