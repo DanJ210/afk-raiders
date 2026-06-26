@@ -155,4 +155,29 @@ describe('useGamePersistence', () => {
     expect(loaded?.state.raid.downed).toBeNull()
     expect(loaded?.state.raid.healingItems).toEqual([])
   })
+
+  it('sanitizes corrupted RAIDING condition timers', () => {
+    const initial = createInitialState(1000)
+    const legacySave = {
+      state: {
+        ...initial,
+        version: 7,
+        raid: {
+          ...initial.raid,
+          phase: 'RAIDING',
+          downed: { ticksRemaining: 'two more apologies' },
+          extracting: { ticksRemaining: -8 },
+        },
+      },
+      seed: 123,
+      lastTickAt: 1000,
+      version: 7,
+    }
+    stubLocalStorage([[STORAGE_KEY, JSON.stringify(legacySave)]])
+
+    const loaded = useGamePersistence().loadSave()
+
+    expect(loaded?.state.raid.downed).toEqual({ ticksRemaining: 2 })
+    expect(loaded?.state.raid.extracting).toEqual({ ticksRemaining: 1 })
+  })
 })

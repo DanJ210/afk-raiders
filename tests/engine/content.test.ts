@@ -75,7 +75,6 @@ const contentJsonModules = import.meta.glob('../../src/content/**/*.json', { eag
 const NON_PLAYER_FACING_CONTENT_KEYS = new Set([
   'category',
   'dangerLevel',
-  'forcePhase',
   'id',
   'phase',
   'robotEncounter',
@@ -315,6 +314,15 @@ describe('content validation', () => {
       expect(shieldEvents.length).toBeGreaterThan(0)
       for (const event of shieldEvents) {
         expect(event.requires?.phase, `shield event "${event.id}" must require RAIDING`).toBe('RAIDING')
+      }
+    })
+
+    it('does not use legacy forcePhase effects', () => {
+      for (const event of events) {
+        expect(
+          Object.prototype.hasOwnProperty.call(event.effects ?? {}, 'forcePhase'),
+          `event "${event.id}" should use condition-specific extraction effects instead of forcePhase`,
+        ).toBe(false)
       }
     })
   })

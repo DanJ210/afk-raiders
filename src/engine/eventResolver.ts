@@ -198,8 +198,7 @@ function isPositiveDamageEffect(damage: number | string | undefined): boolean {
 function isRiskyExtractionEvent(template: EventTemplate): boolean {
   const effects = template.effects
   if (!effects) return false
-  return effects.forcePhase === 'RAIDING' ||
-    effects.failExtraction === true ||
+  return effects.failExtraction === true ||
     effects.startDowned === true ||
     effects.robotEncounter !== undefined ||
     isPositiveDamageEffect(effects.damage) ||
@@ -209,7 +208,7 @@ function isRiskyExtractionEvent(template: EventTemplate): boolean {
 function isSafeExtractionEvent(template: EventTemplate): boolean {
   const effects = template.effects
   if (!effects) return false
-  return effects.forcePhase === 'HUB' || effects.completeExtraction === true || (!isRiskyExtractionEvent(template) && (effects.mood ?? 0) > 0)
+  return effects.completeExtraction === true || (!isRiskyExtractionEvent(template) && (effects.mood ?? 0) > 0)
 }
 
 function adjustedEventWeight(template: EventTemplate, state: GameState): number {

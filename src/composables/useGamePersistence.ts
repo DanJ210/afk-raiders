@@ -74,6 +74,13 @@ function normalizeLegacyPhase(value: unknown): LegacyPhase {
   return 'HUB'
 }
 
+function normalizeTimedCondition(value: unknown, fallbackTicks: number): { ticksRemaining: number } | null {
+  if (!isRecord(value)) return null
+  return {
+    ticksRemaining: Math.max(1, sanitizeTicksRemaining(value.ticksRemaining, fallbackTicks)),
+  }
+}
+
 function normalizeRaidState(raid: GameState['raid']): GameState['raid'] {
   const phase = normalizeLegacyPhase(raid.phase)
   const baseRaid: GameState['raid'] = {
@@ -84,8 +91,8 @@ function normalizeRaidState(raid: GameState['raid']): GameState['raid'] {
     healingItems: raid.healingItems ?? [],
     dangerLevel: raid.dangerLevel ?? null,
     zoneCondition: raid.zoneCondition ?? null,
-    downed: raid.downed ?? null,
-    extracting: raid.extracting ?? null,
+    downed: normalizeTimedCondition(raid.downed, PHASE_DURATIONS.KNOCKED_OUT),
+    extracting: normalizeTimedCondition(raid.extracting, EXTRACTING_TICKS),
   }
 
   if (phase === 'EXTRACTING') {

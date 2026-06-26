@@ -30,7 +30,6 @@ export interface EventTemplate extends ContentEntry {
     damage?: number | string // number or dice string like "15d6"
     greedLevel?: number
     ratRating?: number
-    forcePhase?: Phase
     /** Robot id from robots.json. Triggers the placeholder robot combat roll. */
     robotEncounter?: string
     /** Multiplies menace-based robot damage on failed robot encounters. */
