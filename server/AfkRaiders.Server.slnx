@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="AfkRaiders.Api.Tests/AfkRaiders.Api.Tests.csproj" />
+  <Project Path="AfkRaiders.Api/AfkRaiders.Api.csproj" />
+</Solution>

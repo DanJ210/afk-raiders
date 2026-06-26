@@ -1,0 +1,13 @@
+@AfkRaidersApi_HostAddress = http://localhost:5191
+
+GET {{AfkRaidersApi_HostAddress}}/health
+Accept: application/json
+
+###
+
+GET {{AfkRaidersApi_HostAddress}}/api/me
+Accept: application/json
+X-AFK-Dev-User: local-dev
+X-AFK-Dev-Display-Name: Local Handler
+
+###

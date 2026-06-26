@@ -16,7 +16,7 @@ Use:
 
 - Runtime/framework: **.NET 8+** (preferably ASP.NET Core Web API)
 - Authentication: ASP.NET Core auth middleware with external provider(s) mapped to an internal `user_id`
-- Database: PostgreSQL for account/save metadata + JSONB payload
+- Database: Azure SQL Database for account/save metadata + JSON save payload
 - API: HTTPS JSON endpoints for profile, save fetch/upload/reset, optional history
 - Client persistence: localStorage remains local cache; signed-in users sync remote saves
 - Conflict handling: optimistic concurrency via server `revision`
@@ -25,37 +25,39 @@ Use:
 
 ```sql
 create table app_user (
-  id uuid primary key,
-  auth_provider text not null,
-  auth_subject text not null,
-  display_name text,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now(),
+  id uniqueidentifier primary key,
+  auth_provider nvarchar(64) not null,
+  auth_subject nvarchar(256) not null,
+  display_name nvarchar(80),
+  created_at datetimeoffset not null default sysdatetimeoffset(),
+  updated_at datetimeoffset not null default sysdatetimeoffset(),
   unique (auth_provider, auth_subject)
 );
 
 create table raider_save (
-  user_id uuid primary key references app_user(id) on delete cascade,
+  user_id uniqueidentifier primary key references app_user(id) on delete cascade,
   save_version integer not null,
   revision bigint not null default 1,
   seed integer not null,
-  last_tick_at timestamptz not null,
-  state jsonb not null,
-  checksum text not null,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
+  last_tick_at datetimeoffset not null,
+  state nvarchar(max) not null,
+  checksum nvarchar(128) not null,
+  created_at datetimeoffset not null default sysdatetimeoffset(),
+  updated_at datetimeoffset not null default sysdatetimeoffset(),
+  constraint ck_raider_save_state_is_json check (isjson(state) = 1)
 );
 
 create table save_snapshot (
-  id uuid primary key,
-  user_id uuid not null references app_user(id) on delete cascade,
+  id uniqueidentifier primary key,
+  user_id uniqueidentifier not null references app_user(id) on delete cascade,
   revision bigint not null,
   save_version integer not null,
   seed integer not null,
-  last_tick_at timestamptz not null,
-  state jsonb not null,
-  checksum text not null,
-  created_at timestamptz not null default now(),
+  last_tick_at datetimeoffset not null,
+  state nvarchar(max) not null,
+  checksum nvarchar(128) not null,
+  created_at datetimeoffset not null default sysdatetimeoffset(),
+  constraint ck_save_snapshot_state_is_json check (isjson(state) = 1),
   unique (user_id, revision)
 );
 
@@ -68,7 +70,7 @@ create index idx_save_snapshot_last_tick_at on save_snapshot (last_tick_at);
 create index idx_save_snapshot_seed on save_snapshot (seed);
 ```
 
-`raider_save.state` should store current `GameState` shape from `src/engine/types.ts`. Keep `seed`, `lastTickAt`, and `save_version` as top-level columns and index them outside payload for migration/catch-up checks. Log entries inside `state.log` may include ordered `conditions?: LogCondition[]` metadata for RAIDING overlays; the server should preserve this payload field and validate it only against supported condition labels, not derive it independently.
+`raider_save.state` should store current `GameState` shape from `src/engine/types.ts` as JSON text validated by `ISJSON`. Keep `seed`, `lastTickAt`, and `save_version` as top-level columns and index them outside payload for migration/catch-up checks. Log entries inside `state.log` may include ordered `conditions?: LogCondition[]` metadata for RAIDING overlays; the server should preserve this payload field and validate it only against supported condition labels, not derive it independently.
 
 `save_snapshot` is optional in first cut; if used, cap retention to avoid unbounded growth.
 
@@ -124,6 +126,51 @@ interface LocalSaveData {
 
 `PUT /api/save` should return `409 Conflict` for stale revisions.
 
+## Current implementation slice
+
+The initial backend scaffold lives in `server/`:
+
+- `server/AfkRaiders.Api` implements the first ASP.NET Core API slice with development auth, EF Core/SQL Server persistence, save validation, and the endpoints listed above.
+- `server/AfkRaiders.Api.Tests` covers account provisioning, save create/fetch, stale revision conflicts, checksum validation, missing-state validation, and preservation of `state.log[*].conditions` metadata.
+- `server/AfkRaiders.Api/Data/Migrations` contains the initial SQL Server migration for `app_user` and `raider_save`.
+
+This slice intentionally uses a development auth scheme as a local stand-in for future external provider auth. Production config keeps development users disabled unless explicitly enabled.
+
+## Azure hosting readiness and Docker decision
+
+The current server project is a good local/API foundation, but it is not fully Azure-production-ready yet. It can build and run as an ASP.NET Core API, but hosted Azure environments still need production authentication, deployment infrastructure, secure configuration, database connectivity, CORS, and operational checks.
+
+Recommended first hosting path:
+
+1. Host the Vue PWA as a static site using the existing static deployment path, likely Azure Static Web Apps or equivalent static hosting.
+2. Host `server/AfkRaiders.Api` on Azure App Service for ASP.NET Core.
+3. Store saves in Azure SQL Database.
+4. Configure secrets and connection strings through Azure app settings and, later, Key Vault references. Do not commit production connection strings.
+5. Use managed identity where supported and least-privilege access for Azure resources.
+6. Add Infrastructure as Code under `infra/`, preferably Bicep/azd, before real deployment. Preview/what-if deployments before applying infrastructure changes.
+
+Docker is not required for the first hosted save API. Azure App Service can run the .NET API directly with fewer moving parts, which fits the current scope better than containerizing immediately.
+
+Revisit Docker when one of these becomes true:
+
+- The API moves to Azure Container Apps.
+- Push notification workers, scheduled jobs, or background processors need the same deployable runtime shape as the API.
+- Local development needs a repeatable multi-service stack for API + SQL Server + worker processes.
+- Runtime dependencies become more complex than normal App Service deployment supports comfortably.
+
+If Docker is introduced later, test the image locally before Azure deployment and ensure the container listening port matches the Azure Container Apps target port.
+
+Azure readiness checklist before production use:
+
+- Replace development auth with a real external provider mapped to `app_user.auth_provider` and `app_user.auth_subject`.
+- Add CORS allowing only the deployed frontend origin.
+- Add a database-backed health check in addition to the lightweight `/health` endpoint.
+- Add Application Insights or equivalent structured logging/telemetry.
+- Add deployment-time migration policy for Azure SQL Database. Migrations should run intentionally from CI/CD or a controlled deployment step, not accidentally from every app startup.
+- Add CI validation for `dotnet test server/AfkRaiders.Server.slnx` alongside existing frontend checks.
+- Add Azure configuration documentation for `ConnectionStrings:AfkRaiders`, auth settings, allowed origins, and save validation settings.
+- Keep push notifications, friends, live presence, and server-side catch-up out of the first Azure hosting milestone unless the scope is explicitly reopened.
+
 ## Sync behavior
 
 On app start:
@@ -143,6 +190,30 @@ During play:
 5. Clear dirty only after accepted server write.
 
 Offline progression remains required: the server is never required for normal tick processing.
+
+## Push notifications and friends readiness
+
+The account/save backend is the right prerequisite for push notifications and future friends/social features, but those should not be in the first storage implementation.
+
+Push notifications need server-owned state beyond the save envelope:
+
+- Browser/native push subscriptions tied to `user_id`
+- Notification preferences and quiet hours
+- A notification outbox with dedupe keys so one DOWNED event does not send repeatedly
+- A sender worker/job that retries failed sends and removes expired subscriptions
+
+With the selected offline-first model, reliable push notifications are split into two tiers:
+
+1. **Client-observed notifications:** straightforward after accounts exist. When the open app advances a tick and uploads a save showing a new important event such as DOWNED, extraction success, KNOCKED_OUT recovery, or Signal cap, the server can enqueue a push from that accepted save upload.
+2. **Closed-app notifications:** more complex. If the app is fully closed, the backend cannot know the Raider became DOWNED unless the backend can replay or predict simulation from the last uploaded `{ state, seed, lastTickAt }`. That implies a later server-side catch-up worker or shared deterministic simulation package. Do not add this to the first storage phase.
+
+Friends/social visibility can also build on the same account/save foundation:
+
+- A future friendship/follow table can grant read access to a small public Raider status projection.
+- The first projection can be **last-known status** derived from the latest accepted save: Raider name, phase, active `LogEvent.conditions`/raid conditions, zone, danger level, updated timestamp, and maybe the most recent public-safe comms line.
+- True **live raiding/DOWNED status** is possible but more complex. If the player has the app open, SignalR/WebSocket presence plus debounced status updates can make friends see near-live changes. If the player is offline or the PWA is closed, the status is only as fresh as the last synced save unless a later server catch-up worker exists.
+
+Implementation recommendation: first ship authenticated save sync, then add public status projections, then add push subscriptions/outbox, and only then consider live presence or server-side catch-up.
 
 ## Early-stage reset policy
 
@@ -173,11 +244,14 @@ This first phase prioritizes integrity and isolation over anti-cheat hardening.
 - `src/services/saveSyncService.ts`: fetch/upload/conflict/dirty handling
 - New account + sync UI
 - New .NET 8+ backend project (auth, save API, persistence, migrations, health checks)
+- Azure hosting readiness: production auth provider, App Service config, Azure SQL Database config, CORS, DB health checks, telemetry, and IaC under `infra/`
 - Tests for authz, validation, version/reset behavior, offline sync, conflict paths
+- Later services/tables for push subscriptions, notification outbox, friendships/follows, public status projection, and optional live presence
 
 ## Scope boundaries
 
 - Do not move simulation to server in this phase.
+- Do not implement push notifications, friends, live presence, or server-side catch-up in the first storage phase.
 - Do not introduce non-.NET backend runtime for this feature.
 - Keep first backend phase narrow: accounts, authentication, save storage, reset, offline sync conflict handling.
 - Defer social/leaderboard/other-Raider features.

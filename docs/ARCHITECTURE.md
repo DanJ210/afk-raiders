@@ -259,4 +259,4 @@ When `RaidState.downed` and `RaidState.extracting` overlap, both timers continue
 ## Planned account-backed save phase
 - Future server-side account/save work is documented in [`docs/SERVER_STORAGE_AND_ACCOUNTS.md`](./SERVER_STORAGE_AND_ACCOUNTS.md).
 - Scope for that phase remains offline-first: local simulation stays authoritative while offline, with remote sync when signed in and online.
-- Backend target for that phase is .NET 8+ with PostgreSQL and revision-based conflict handling.
+- Backend target for that phase is .NET 8+ with Azure SQL Database and revision-based conflict handling.

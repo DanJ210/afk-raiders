@@ -16,6 +16,8 @@ dist-ssr
 project.lock.json
 project.fragment.lock.json
 artifacts/
+[Bb]in/
+[Oo]bj/
 
 # ASP.NET Scaffolding
 ScaffoldingReadMe.txt
@@ -55,6 +57,5 @@ node_modules
 *.suo
 *.ntvs*
 *.njsproj
-*.sln
 *.sw?
 .vite/
