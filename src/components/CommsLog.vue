@@ -1,11 +1,18 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
+import type { ComponentPublicInstance } from 'vue'
 import { useDocumentVisibility, useNow } from '@vueuse/core'
 import { useGameStore } from '../stores/gameStore'
 import { TICK_INTERVAL_MS } from '../engine/catchUp'
 import type { LogEvent } from '../engine/types'
 import { usePinnedTopLog } from '../composables/usePinnedTopLog'
 import RaiderStatusHeaderStats from './RaiderStatusHeaderStats.vue'
+
+const props = withDefaults(defineProps<{
+  isActive?: boolean
+}>(), {
+  isActive: true,
+})
 
 const store = useGameStore()
 const entries = computed(() => [...store.log].reverse())
@@ -33,15 +40,123 @@ const showPhaseTimer = computed(() => showMobileRaiderStatus.value && phaseTimer
 // Re-key the tick bar on every new tick AND whenever the tab becomes visible,
 // so the animation restarts from the correct elapsed offset instead of 0.
 const visibility = useDocumentVisibility()
-const tickBarKey = computed(() => `${store.lastTickAt}-${visibility.value}`)
+const tickBarKey = computed(() => `${store.lastTickAt}-${visibility.value}-${props.isActive}`)
 const tickAnimationDelay = computed(() => {
-  // Include visibility as a dependency so delay recomputes when the tab becomes visible.
+  // Include visibility/activity as dependencies so delay recomputes when the tab becomes visible.
   void visibility.value
+  void props.isActive
   const elapsed = Math.min(TICK_INTERVAL_MS, Math.max(0, Date.now() - store.lastTickAt))
   return `-${elapsed}ms`
 })
 
 const pinnedTopLog = usePinnedTopLog(logEntryCount)
+const unseenEntryKeys = ref<Set<string>>(new Set())
+const logEntryKeys = computed(() => store.log.map(logEntryKey))
+const entryElements = new Map<string, HTMLElement>()
+const seenDissipationTimers = new Map<string, number>()
+let entrySeenObserver: IntersectionObserver | null = null
+
+watch(logEntryKeys, (keys, previousKeys = []) => {
+  const previousKeySet = new Set(previousKeys)
+  const currentKeySet = new Set(keys)
+  const nextUnseenKeys = new Set([...unseenEntryKeys.value].filter(key => currentKeySet.has(key)))
+  for (const key of keys) {
+    if (!previousKeySet.has(key)) nextUnseenKeys.add(key)
+  }
+  unseenEntryKeys.value = nextUnseenKeys
+
+  void nextTick(() => observeUnseenEntries())
+})
+
+onBeforeUnmount(() => {
+  entrySeenObserver?.disconnect()
+  for (const timerId of seenDissipationTimers.values()) window.clearTimeout(timerId)
+})
+
+function logEntryKey(entry: LogEvent): string {
+  return `${entry.tick}-${entry.id}`
+}
+
+function isEntryUnseen(entry: LogEvent): boolean {
+  return unseenEntryKeys.value.has(logEntryKey(entry))
+}
+
+function bindEntryElement(entry: LogEvent, element: Element | ComponentPublicInstance | null) {
+  const key = logEntryKey(entry)
+  const existingElement = entryElements.get(key)
+  if (existingElement) entrySeenObserver?.unobserve(existingElement)
+
+  if (element instanceof HTMLElement) {
+    entryElements.set(key, element)
+    if (unseenEntryKeys.value.has(key)) getEntrySeenObserver().observe(element)
+    return
+  }
+
+  entryElements.delete(key)
+}
+
+function markEntrySeen(entry: LogEvent) {
+  const key = logEntryKey(entry)
+  markEntryKeySeen(key)
+}
+
+function markEntryKeySeen(key: string) {
+  if (!unseenEntryKeys.value.has(key)) return
+
+  const timerId = seenDissipationTimers.get(key)
+  if (timerId !== undefined) {
+    window.clearTimeout(timerId)
+    seenDissipationTimers.delete(key)
+  }
+
+  const nextUnseenKeys = new Set(unseenEntryKeys.value)
+  nextUnseenKeys.delete(key)
+  unseenEntryKeys.value = nextUnseenKeys
+
+  const element = entryElements.get(key)
+  if (element) entrySeenObserver?.unobserve(element)
+}
+
+function observeUnseenEntries() {
+  for (const key of unseenEntryKeys.value) {
+    const element = entryElements.get(key)
+    if (element) getEntrySeenObserver().observe(element)
+  }
+}
+
+function getEntrySeenObserver(): IntersectionObserver {
+  if (entrySeenObserver) return entrySeenObserver
+
+  entrySeenObserver = new IntersectionObserver(entries => {
+    for (const observerEntry of entries) {
+      const key = (observerEntry.target as HTMLElement).dataset.logEntryKey
+      if (!key) continue
+
+      if (observerEntry.isIntersecting) {
+        scheduleEntrySeen(key)
+      } else {
+        cancelScheduledEntrySeen(key)
+      }
+    }
+  }, { threshold: 0.7 })
+
+  return entrySeenObserver
+}
+
+function scheduleEntrySeen(key: string) {
+  if (!unseenEntryKeys.value.has(key) || seenDissipationTimers.has(key)) return
+
+  const timerId = window.setTimeout(() => markEntryKeySeen(key), 900)
+  seenDissipationTimers.set(key, timerId)
+}
+
+function cancelScheduledEntrySeen(key: string) {
+  const timerId = seenDissipationTimers.get(key)
+  if (timerId === undefined) return
+
+  window.clearTimeout(timerId)
+  seenDissipationTimers.delete(key)
+}
 
 function formatDuration(ms: number): string {
   const totalSeconds = Math.max(0, Math.floor(ms / 1000))
@@ -120,8 +235,13 @@ function logBadge(entry: LogEvent): string {
       </p>
       <div
         v-for="entry in entries"
-        :key="`${entry.tick}-${entry.id}`"
-        class="flex gap-2 px-3.5 py-comms-entry-y text-sm leading-normal border-b border-border-subtle last:border-b-0"
+        :key="logEntryKey(entry)"
+        :ref="element => bindEntryElement(entry, element)"
+        :data-log-entry-key="logEntryKey(entry)"
+        class="comms-log__entry flex gap-2 px-3.5 py-comms-entry-y text-sm leading-normal border-b border-border-subtle last:border-b-0"
+        :class="{ 'comms-log__entry--unseen': isEntryUnseen(entry) }"
+        :tabindex="isEntryUnseen(entry) ? 0 : undefined"
+        @focusin="markEntrySeen(entry)"
       >
         <span class="shrink-0 text-muted font-mono text-[0.75rem] pt-0.5 min-w-comms-timestamp">
           {{ logBadge(entry) }} {{ formatTime(entry.timestamp) }}
@@ -136,6 +256,20 @@ function logBadge(entry: LogEvent): string {
 </template>
 
 <style scoped>
+.comms-log__entry {
+  transition: background-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.comms-log__entry--unseen {
+  background: color-mix(in srgb, var(--color-accent) 22%, transparent);
+  box-shadow: inset 3px 0 0 var(--color-accent);
+}
+
+.comms-log__entry--unseen:focus-visible {
+  outline: 1px solid var(--color-accent);
+  outline-offset: -2px;
+}
+
 .comms-log__tick-bar {
   height: 100%;
   width: 0%;
