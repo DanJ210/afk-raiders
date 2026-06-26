@@ -546,7 +546,7 @@ describe('deterministic snapshot', () => {
     expect(eventIds).not.toContain('phase_RAIDING_to_KNOCKED_OUT')
   })
 
-  it('prioritizes EXTRACTING log condition while extraction and DOWNED overlap', () => {
+it('includes both EXTRACTING and DOWNED log conditions (EXTRACTING first) while they overlap', () => {
     const rng = createRNG(FIXED_SEED)
     const initial = createInitialState(0)
     const state = {
