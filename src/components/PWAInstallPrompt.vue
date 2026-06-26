@@ -64,7 +64,7 @@ const shouldShow = computed(() => settings.showInstallPrompt && !settings.isAppI
 .pwa-install-text p {
   margin: 0;
   font-size: 0.85rem;
-  color: #ccc;
+  color: #fff;
 }
 
 .pwa-install-actions {
@@ -94,8 +94,8 @@ const shouldShow = computed(() => settings.showInstallPrompt && !settings.isAppI
 
 .pwa-btn-secondary {
   background: transparent;
-  color: #ccc;
-  border: 1px solid #ccc;
+  color: #fff;
+  border: 1px solid #fff;
 }
 
 .pwa-btn-secondary:hover {

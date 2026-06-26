@@ -21,11 +21,11 @@ const isMobile = useMediaQuery('(max-width: 600px)')
 type MobileTabId = 'comms' | 'stash' | 'raider' | 'raid' | 'stats'
 
 const mobileTabs: Array<{ id: MobileTabId; label: string; icon: string }> = [
-  { id: 'comms', label: 'Comms', icon: '📻' },
-  { id: 'raid', label: 'Raid', icon: '🎒' },
-  { id: 'raider', label: 'Raider', icon: '🧍' },
   { id: 'stash', label: 'Stash', icon: '🏠' },
-  { id: 'stats', label: 'Stats', icon: '📊' },
+  { id: 'raid', label: 'Raid', icon: '🎒' },
+  { id: 'comms', label: 'Comms', icon: '📻' },
+  { id: 'raider', label: 'Raider', icon: '🧍' },
+  { id: 'stats', label: 'Stats', icon: '📊' }
 ]
 
 const activeMobileTab = ref<MobileTabId>('comms')
