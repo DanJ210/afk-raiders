@@ -241,6 +241,8 @@ If RAIDING time expires without extraction completing, the raid enters the loss 
 ### 6. State updates are immutable-style
 `processTick(state, rng)` returns `{ state: GameState, events: LogEvent[] }` without mutating its input. This keeps Pinia reactivity simple, enables snapshot tests, and makes catch-up a pure fold over ticks.
 
+`LogEvent` records the lifecycle `phase` plus optional ordered `conditions?: LogCondition[]` for RAIDING overlays. Condition ordering is centralized in `src/engine/log.ts` via `logConditionsForRaid()` so `processTick()` and `eventResolver.ts` emit the same metadata. When both EXTRACTING and DOWNED overlap, log entries preserve both as `['EXTRACTING', 'DOWNED']`; `CommsLog.vue` renders condition icons before falling back to phase icons.
+
 ### 7. RAIDING condition timeout behavior
 When `RaidState.downed` and `RaidState.extracting` overlap, both timers continue. If extraction completes before or on the same tick as the DOWNED timer expires, extraction wins and the raid transitions `RAIDING -> HUB`. If the DOWNED timer expires first, the raid transitions `RAIDING -> KNOCKED_OUT`. KNOCKED_OUT then transitions to HUB after its short recovery timer and runs failed-raid bookkeeping.
 

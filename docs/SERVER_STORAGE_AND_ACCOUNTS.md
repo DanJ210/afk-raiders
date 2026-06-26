@@ -68,7 +68,7 @@ create index idx_save_snapshot_last_tick_at on save_snapshot (last_tick_at);
 create index idx_save_snapshot_seed on save_snapshot (seed);
 ```
 
-`raider_save.state` should store current `GameState` shape from `src/engine/types.ts`. Keep `seed`, `lastTickAt`, and `save_version` as top-level columns and index them outside payload for migration/catch-up checks.
+`raider_save.state` should store current `GameState` shape from `src/engine/types.ts`. Keep `seed`, `lastTickAt`, and `save_version` as top-level columns and index them outside payload for migration/catch-up checks. Log entries inside `state.log` may include ordered `conditions?: LogCondition[]` metadata for RAIDING overlays; the server should preserve this payload field and validate it only against supported condition labels, not derive it independently.
 
 `save_snapshot` is optional in first cut; if used, cap retention to avoid unbounded growth.
 

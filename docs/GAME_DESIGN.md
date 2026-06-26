@@ -97,6 +97,8 @@ Everything funny flows through an autoscrolling text feed:
 >
 > 📻 *14:31 — Met another raider. We emoted at each other for 5 minutes then both ran away.*
 
+Log entries carry phase context and any active RAIDING conditions. The UI uses that metadata for quick scan icons: DOWNED entries show a pillow/bed marker, EXTRACTING entries show a red alarm light, and overlapping EXTRACTING+DOWNED entries show both so the extraction race stays visible.
+
 ## 5. Parody Content Table (legally distinct names)
 The canonical expanded parody reference lives in [docs/lore/PARODY_MAPPING.md](lore/PARODY_MAPPING.md). This table is the short design-doc summary.
 
@@ -137,7 +139,7 @@ The canonical expanded parody reference lives in [docs/lore/PARODY_MAPPING.md](l
 - **Coins** — accumulated value from stash overflow auto-sales
 - **Lifetime Stats** — extracts/deaths totals and context breakdowns, robot defeats, healing usage
 - **Shield Layer** — current raid shield state (starter shield for now)
-- **EventLog** — the comms feed entries
+- **EventLog** — the comms feed entries, including lifecycle phase and ordered active RAIDING conditions for condition-aware badges
 - **Inventory / Gear** — hub stash, equipped items
 - **Quest** — active parody quests
 - *(Later phases: Squad, Friends, Leaderboards)*
