@@ -168,8 +168,9 @@ describe('deterministic snapshot', () => {
         ...createInitialState(0).raid,
         zone: 'damp_battlegrounds',
         dangerLevel: 'Medium' as const,
-        phase: 'EXTRACTING' as const,
-        phaseTicksRemaining: 1,
+        phase: 'RAIDING' as const,
+        phaseTicksRemaining: 30,
+        extracting: { ticksRemaining: 1 },
         backpack: [
           {
             itemId: 'water_bottle',
@@ -223,8 +224,9 @@ describe('deterministic snapshot', () => {
         ...initial.raid,
         zone: 'damp_battlegrounds',
         dangerLevel: 'High' as const,
-        phase: 'EXTRACTING' as const,
-        phaseTicksRemaining: 1,
+        phase: 'RAIDING' as const,
+        phaseTicksRemaining: 30,
+        extracting: { ticksRemaining: 1 },
         backpack: [
           {
             itemId: 'water_bottle',
@@ -259,8 +261,9 @@ describe('deterministic snapshot', () => {
         ...initial.raid,
         zone: 'damp_battlegrounds',
         dangerLevel: 'Medium' as const,
-        phase: 'EXTRACTING' as const,
-        phaseTicksRemaining: 1,
+        phase: 'RAIDING' as const,
+        phaseTicksRemaining: 30,
+        extracting: { ticksRemaining: 1 },
         backpack: [
           {
             itemId: 'water_bottle',
@@ -290,8 +293,9 @@ describe('deterministic snapshot', () => {
         ...initial.raid,
         zone: 'damp_battlegrounds',
         dangerLevel: 'Low' as const,
-        phase: 'EXTRACTING' as const,
-        phaseTicksRemaining: 1,
+        phase: 'RAIDING' as const,
+        phaseTicksRemaining: 30,
+        extracting: { ticksRemaining: 1 },
         backpack: [],
         backpackValue: 0,
       },
@@ -316,8 +320,9 @@ describe('deterministic snapshot', () => {
         ...initial.raid,
         zone: 'damp_battlegrounds',
         dangerLevel: 'Low' as const,
-        phase: 'EXTRACTING' as const,
-        phaseTicksRemaining: 1,
+        phase: 'RAIDING' as const,
+        phaseTicksRemaining: 30,
+        extracting: { ticksRemaining: 1 },
         backpack: [
           {
             itemId: 'water_bottle',
@@ -355,8 +360,8 @@ describe('deterministic snapshot', () => {
         ...initial.raid,
         zone: 'damp_battlegrounds',
         dangerLevel: 'Medium' as const,
-        phase: 'DEPLOYING' as const,
-        phaseTicksRemaining: 2,
+        phase: 'RAIDING' as const,
+        phaseTicksRemaining: 30,
         greedLevel: 0,
         backpack: [
           {
@@ -373,10 +378,11 @@ describe('deterministic snapshot', () => {
 
     const rng = createRNG(FIXED_SEED)
     const result = processTick(state, rng, 0)
-    expect(result.state.raid.phase).toBe('DOWNED')
-    expect(result.events.some(e => e.id === 'phase_DEPLOYING_to_DOWNED')).toBe(true)
+  expect(result.state.raid.phase).toBe('RAIDING')
+  expect(result.state.raid.downed).not.toBeNull()
+  expect(result.events.some(e => e.id === 'condition_downed_started')).toBe(true)
 
-    // Ride out DOWNED → HUB: loot must be lost, HP restored, death counted
+  // Ride out DOWNED → KNOCKED_OUT → HUB: loot must be lost, HP restored, death counted
     let downedState = result.state
     const deathsBefore = downedState.raider.deathCount
     const stashBefore = downedState.homeStash
@@ -426,7 +432,8 @@ describe('deterministic snapshot', () => {
 
     const rng = createRNG(FIXED_SEED)
     const firstTick = processTick(state, rng, 0)
-    expect(firstTick.state.raid.phase).toBe('DOWNED')
+    expect(firstTick.state.raid.phase).toBe('RAIDING')
+    expect(firstTick.state.raid.downed).not.toBeNull()
 
     let downedState = firstTick.state
     for (let i = 0; i < 5 && downedState.raid.phase !== 'HUB'; i++) {
@@ -462,9 +469,10 @@ describe('deterministic snapshot', () => {
     }
 
     const result = processTick(state, rng, 0)
-    expect(result.state.raid.phase).toBe('DOWNED')
+    expect(result.state.raid.phase).toBe('RAIDING')
+    expect(result.state.raid.downed).not.toBeNull()
     expect(result.state.raider.hp).toBe(0)
-    expect(result.events.some(e => e.id === 'phase_RAIDING_to_DOWNED')).toBe(true)
+    expect(result.events.some(e => e.id === 'condition_downed_started')).toBe(true)
   })
 
   it('honors Call Extract when the raid timer expires on the next tick', () => {
@@ -483,12 +491,57 @@ describe('deterministic snapshot', () => {
     }
 
     const result = processTick(state, rng, 0)
-    const phaseTransitionIds = result.events
-      .map(event => event.id)
-      .filter(id => id.startsWith('phase_'))
+    const eventIds = result.events.map(event => event.id)
 
-    expect(phaseTransitionIds).toContain('phase_RAIDING_to_EXTRACTING')
-    expect(phaseTransitionIds).not.toContain('phase_RAIDING_to_DOWNED')
+    expect(eventIds).toContain('condition_extracting_started')
+    expect(eventIds).not.toContain('condition_downed_started')
+    expect(result.state.raid.extracting).not.toBeNull()
+  })
+
+  it('lets extraction completion beat an expiring DOWNED timer', () => {
+    const rng = createRNG(FIXED_SEED)
+    const initial = createInitialState(0)
+    const state = {
+      ...initial,
+      raider: { ...initial.raider, hp: 0 },
+      raid: {
+        ...initial.raid,
+        zone: 'damp_battlegrounds',
+        dangerLevel: 'High' as const,
+        phase: 'RAIDING' as const,
+        phaseTicksRemaining: 0,
+        extracting: { ticksRemaining: 1 },
+        downed: { ticksRemaining: 1 },
+        backpack: [
+          {
+            itemId: 'water_bottle',
+            name: 'Water Bottle',
+            value: 5,
+            rarity: 1,
+            quantity: 1,
+          },
+        ],
+        backpackValue: 5,
+      },
+    }
+
+    const result = processTick(state, rng, 0)
+    const eventIds = result.events.map(event => event.id)
+
+    expect(result.state.raid.phase).toBe('HUB')
+    expect(result.state.raider.extractCount).toBe(1)
+    expect(result.state.raider.deathCount).toBe(0)
+    expect(result.state.homeStash).toEqual([
+      {
+        itemId: 'water_bottle',
+        name: 'Water Bottle',
+        value: 5,
+        rarity: 1,
+        quantity: 1,
+      },
+    ])
+    expect(eventIds).toContain('phase_RAIDING_to_HUB')
+    expect(eventIds).not.toContain('phase_RAIDING_to_KNOCKED_OUT')
   })
 
   it('keeps HP at 0 while the raider remains DOWNED', () => {
@@ -499,14 +552,16 @@ describe('deterministic snapshot', () => {
       raider: { ...initial.raider, hp: 42 },
       raid: {
         ...initial.raid,
-        phase: 'DOWNED' as const,
-        phaseTicksRemaining: 2,
+        phase: 'RAIDING' as const,
+        phaseTicksRemaining: 30,
+        downed: { ticksRemaining: 2 },
       },
     }
 
     const result = processTick(state, rng, 0)
 
-    expect(result.state.raid.phase).toBe('DOWNED')
+    expect(result.state.raid.phase).toBe('RAIDING')
+    expect(result.state.raid.downed?.ticksRemaining).toBe(1)
     expect(result.state.raider.hp).toBe(0)
   })
 
@@ -526,8 +581,9 @@ describe('deterministic snapshot', () => {
       ],
       raid: {
         ...initial.raid,
-        phase: 'EXTRACTING' as const,
-        phaseTicksRemaining: 1,
+        phase: 'RAIDING' as const,
+        phaseTicksRemaining: 30,
+        extracting: { ticksRemaining: 1 },
         backpack: [
           {
             itemId: 'ammo',
@@ -597,8 +653,9 @@ describe('deterministic snapshot', () => {
       ...initial,
       raid: {
         ...initial.raid,
-        phase: 'EXTRACTING' as const,
-        phaseTicksRemaining: 1,
+        phase: 'RAIDING' as const,
+        phaseTicksRemaining: 30,
+        extracting: { ticksRemaining: 1 },
         backpack: [
           {
             itemId: 'fizz_cell',

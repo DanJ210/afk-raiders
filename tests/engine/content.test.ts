@@ -64,7 +64,7 @@ const DEADLINESS_RANK = {
 
 // Known non-table slot names handled directly in fillSlots()
 const BUILT_IN_SLOTS = new Set(['mundane_item', 'water_item', 'healing_item', 'count'])
-const VALID_PHASES = new Set<Phase>(['HUB', 'DEPLOYING', 'RAIDING', 'EXTRACTING', 'DOWNED'])
+const VALID_PHASES = new Set<Phase>(['HUB', 'DEPLOYING', 'RAIDING', 'KNOCKED_OUT'])
 const VALID_DANGER_LEVELS = new Set<DangerLevel>(['Low', 'Medium', 'High'])
 const VALID_SKILL_IDS = new Set<SkillTrackId>(['cardio', 'hoarding', 'hiding_in_lockers', 'signal_handling'])
 const VALID_ZONE_CONDITION_IDS = new Set([
@@ -75,7 +75,6 @@ const contentJsonModules = import.meta.glob('../../src/content/**/*.json', { eag
 const NON_PLAYER_FACING_CONTENT_KEYS = new Set([
   'category',
   'dangerLevel',
-  'forcePhase',
   'id',
   'phase',
   'robotEncounter',
@@ -317,6 +316,15 @@ describe('content validation', () => {
         expect(event.requires?.phase, `shield event "${event.id}" must require RAIDING`).toBe('RAIDING')
       }
     })
+
+    it('does not use legacy forcePhase effects', () => {
+      for (const event of events) {
+        expect(
+          Object.prototype.hasOwnProperty.call(event.effects ?? {}, 'forcePhase'),
+          `event "${event.id}" should use condition-specific extraction effects instead of forcePhase`,
+        ).toBe(false)
+      }
+    })
   })
 
   describe('flavor.json', () => {
@@ -492,7 +500,8 @@ describe('content validation', () => {
 
   describe('healing_items.json', () => {
     it('defines the four bandage tiers with exact heal amounts', () => {
-      const amounts = Object.fromEntries(healingItems.map(item => [item.id, item.healAmount]))
+      const bandages = healingItems.filter(item => item.id.startsWith('bandage_'))
+      const amounts = Object.fromEntries(bandages.map(item => [item.id, item.healAmount]))
       expect(amounts).toEqual({
         bandage_white: 5,
         bandage_green: 10,
@@ -502,7 +511,8 @@ describe('content validation', () => {
     })
 
     it('higher-tier bandages grant higher mood gains', () => {
-      const moodGains = Object.fromEntries(healingItems.map(item => [item.id, item.moodGain]))
+      const bandages = healingItems.filter(item => item.id.startsWith('bandage_'))
+      const moodGains = Object.fromEntries(bandages.map(item => [item.id, item.moodGain]))
       expect(moodGains).toEqual({
         bandage_white: 1,
         bandage_green: 2,
@@ -515,6 +525,10 @@ describe('content validation', () => {
       for (const item of healingItems) {
         expect(item.weight, `healing item "${item.id}" has weight ${item.weight}`).toBeGreaterThan(0)
         expect(item.healAmount, `healing item "${item.id}" exceeds one-use heal cap`).toBeLessThanOrEqual(50)
+        expect(item.healAmount + (item.reviveAmount ?? 0), `healing item "${item.id}" must heal or revive`).toBeGreaterThan(0)
+        if (item.reviveAmount !== undefined) {
+          expect(item.reviveAmount, `healing item "${item.id}" reviveAmount must be positive`).toBeGreaterThan(0)
+        }
         expect(item.moodGain, `healing item "${item.id}" moodGain must be positive`).toBeGreaterThan(0)
         expect(item.rarity, `healing item "${item.id}" rarity must be >= 1`).toBeGreaterThanOrEqual(1)
         expect(item.rarity, `healing item "${item.id}" rarity must be <= 5`).toBeLessThanOrEqual(5)
@@ -524,6 +538,15 @@ describe('content validation', () => {
     it('all healing item IDs are unique', () => {
       const ids = healingItems.map(item => item.id)
       expect(new Set(ids).size).toBe(ids.length)
+    })
+
+    it('defines Panic Paddles as a revive-only field med', () => {
+      const item = healingItems.find(entry => entry.id === 'panic_paddles')
+      expect(item).toMatchObject({
+        name: 'Panic Paddles',
+        healAmount: 0,
+        reviveAmount: 25,
+      })
     })
   })
 

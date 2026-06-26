@@ -7,7 +7,7 @@ import { createInitialLifetimeStats } from './stats.js'
 import { createStarterShieldState } from './shields.js'
 import { createInitialSkills } from './skills.js'
 
-export const SAVE_VERSION = 6
+export const SAVE_VERSION = 7
 
 export function createInitialState(now: number = Date.now()): GameState {
   return {
@@ -38,6 +38,8 @@ export function createInitialState(now: number = Date.now()): GameState {
       greedLevel: 0,
       phase: 'HUB',
       phaseTicksRemaining: PHASE_DURATIONS['HUB'],
+      downed: null,
+      extracting: null,
       forceExtract: false,
     },
     signal: initialSignalState(now),

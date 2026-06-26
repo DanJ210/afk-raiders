@@ -92,6 +92,12 @@ describe('signal', () => {
     expect(updated?.current).toBe(5 - SIGNAL_COSTS.CALL_EXTRACT)
   })
 
+  it('spendSignal deducts cost for REVIVE', () => {
+    const s = makeSignal(5)
+    const updated = spendSignal(s, 'REVIVE')
+    expect(updated?.current).toBe(5 - SIGNAL_COSTS.REVIVE)
+  })
+
   it('spendSignal returns null when insufficient signal', () => {
     const s = makeSignal(0)
     expect(spendSignal(s, 'CALM')).toBeNull()
@@ -104,6 +110,10 @@ describe('signal', () => {
 
   it('SIGNAL_COSTS.CALL_EXTRACT is 3', () => {
     expect(SIGNAL_COSTS.CALL_EXTRACT).toBe(3)
+  })
+
+  it('SIGNAL_COSTS.REVIVE is 5', () => {
+    expect(SIGNAL_COSTS.REVIVE).toBe(5)
   })
 
   it('applyCalmGreedReduction reduces greed by configured amount', () => {

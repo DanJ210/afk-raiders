@@ -7,6 +7,7 @@
  *   PRESSURE     → 1 Signal
  *   READY_UP     → 2 Signal
  *   CALL_EXTRACT → 3 Signal
+ *   REVIVE       → 5 Signal
  */
 
 import type { SignalState } from './types.js'
@@ -20,6 +21,7 @@ export const SIGNAL_COSTS = {
   PRESSURE: 1,
   READY_UP: 2,
   CALL_EXTRACT: 3,
+  REVIVE: 5,
 } as const
 
 export interface SignalAdvanceResult {

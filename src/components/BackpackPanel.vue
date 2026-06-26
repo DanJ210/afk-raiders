@@ -77,6 +77,7 @@ const greedColorClass = computed(() => {
       <FieldMedsPanel
         :items="viewModel.healingItems.value"
         :can-apply="viewModel.canApplyHealing.value"
+        :can-apply-item="viewModel.canApplyHealingItem"
         :collapsed="fieldMedsCollapsed"
         @toggle="toggleFieldMeds"
         @apply="store.applyHealingItem"

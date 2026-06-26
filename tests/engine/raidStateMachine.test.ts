@@ -86,7 +86,7 @@ describe('raidStateMachine', () => {
     expect(result.raid.zoneCondition?.id).toBe(selectedConditionId)
   })
 
-  it('clears healing items on natural RAIDING timeout into DOWNED', () => {
+  it('leaves RAIDING timeout resolution to processTick', () => {
     const initial = createInitialState(0)
     const result = tickPhase({
       ...initial.raid,
@@ -105,32 +105,36 @@ describe('raidStateMachine', () => {
       ],
     })
 
-    expect(result.transition?.from).toBe('RAIDING')
-    expect(result.transition?.to).toBe('DOWNED')
-    expect(result.raid.phase).toBe('DOWNED')
-    expect(result.raid.healingItems).toEqual([])
-    expect(result.raid.greedLevel).toBe(0)
+    expect(result.transition).toBeNull()
+    expect(result.raid.phase).toBe('RAIDING')
+    expect(result.raid.phaseTicksRemaining).toBe(0)
+    expect(result.raid.healingItems).toHaveLength(1)
+    expect(result.raid.greedLevel).toBe(48)
   })
 
-  it('resets greed when forced into DOWNED', () => {
+  it('resets greed when forced into KNOCKED_OUT recovery', () => {
     const initial = createInitialState(0)
     const result = tickPhase({
       ...initial.raid,
-      phase: 'EXTRACTING',
+      phase: 'RAIDING',
       greedLevel: 64,
-    }, 'DOWNED')
+      downed: { ticksRemaining: 1 },
+      extracting: { ticksRemaining: 2 },
+    }, 'KNOCKED_OUT')
 
-    expect(result.transition?.from).toBe('EXTRACTING')
-    expect(result.transition?.to).toBe('DOWNED')
-    expect(result.raid.phase).toBe('DOWNED')
+    expect(result.transition?.from).toBe('RAIDING')
+    expect(result.transition?.to).toBe('KNOCKED_OUT')
+    expect(result.raid.phase).toBe('KNOCKED_OUT')
     expect(result.raid.greedLevel).toBe(0)
+    expect(result.raid.downed).toBeNull()
+    expect(result.raid.extracting).toBeNull()
   })
 
   it('fully repairs and refills the current shield when returning to HUB', () => {
     const initial = createInitialState(0)
     const result = tickPhase({
       ...initial.raid,
-      phase: 'EXTRACTING',
+      phase: 'KNOCKED_OUT',
       phaseTicksRemaining: 1,
       shield: {
         shieldId: 'salvaged_plate_wall',
@@ -150,7 +154,7 @@ describe('raidStateMachine', () => {
       },
       zone: 'damp_battlegrounds',
       dangerLevel: 'Medium',
-      greedLevel: 80,
+      greedLevel: 0,
       zoneCondition: {
         id: 'heavy_fog',
         name: 'Heavy Fog',
@@ -172,7 +176,7 @@ describe('raidStateMachine', () => {
     expect(result.raid.zone).toBeNull()
     expect(result.raid.dangerLevel).toBeNull()
     expect(result.raid.zoneCondition).toBeNull()
-    expect(result.raid.greedLevel).toBe(decayGreedForHubReturn(80))
+    expect(result.raid.greedLevel).toBe(0)
   })
 
   it('clears zone condition when forced back to HUB', () => {

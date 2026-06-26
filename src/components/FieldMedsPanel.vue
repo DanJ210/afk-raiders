@@ -6,6 +6,7 @@ import type { HealingItemStack } from '../engine/types'
 const props = defineProps<{
   items: HealingItemStack[]
   canApply: boolean
+  canApplyItem?: (item: HealingItemStack) => boolean
   collapsed: boolean
 }>()
 
@@ -16,6 +17,19 @@ const emit = defineEmits<{
 
 function moodGain(item: HealingItemStack): number {
   return item.moodGain ?? Math.max(1, Math.min(4, item.rarity))
+}
+
+function itemEffectLabel(item: HealingItemStack): string {
+  if ((item.reviveAmount ?? 0) > 0) return `Revive +${item.reviveAmount} HP`
+  return `+${item.healAmount} HP`
+}
+
+function applyButtonLabel(item: HealingItemStack): string {
+  return (item.reviveAmount ?? 0) > 0 ? 'Revive' : 'Apply'
+}
+
+function canApplyItem(item: HealingItemStack): boolean {
+  return props.canApplyItem ? props.canApplyItem(item) : props.canApply
 }
 
 const hasItems = computed(() => props.items.length > 0)
@@ -49,16 +63,16 @@ function apply(itemId: string) {
       <li v-for="item in items" :key="item.itemId" class="item-row">
         <span :class="rarityBarClass(item.rarity)" :title="rarityLabel(item.rarity)" aria-hidden="true" />
         <span>{{ item.name }}</span>
-        <span>+{{ item.healAmount }} HP</span>
+        <span>{{ itemEffectLabel(item) }}</span>
         <span>+{{ moodGain(item) }} Mood</span>
         <span v-if="item.quantity > 1">x{{ item.quantity }}</span>
         <button
           type="button"
           class="btn-ghost"
-          :disabled="!canApply"
+          :disabled="!canApplyItem(item)"
           @click="apply(item.itemId)"
         >
-          Apply
+          {{ applyButtonLabel(item) }}
         </button>
       </li>
     </ul>

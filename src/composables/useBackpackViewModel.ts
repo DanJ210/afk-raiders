@@ -72,20 +72,30 @@ export function useBackpackViewModel(
   const canApplyHealing = computed(
     () =>
       raidRef.value.phase !== 'HUB' &&
-      raidRef.value.phase !== 'DOWNED' &&
+      raidRef.value.phase !== 'KNOCKED_OUT' &&
+      raidRef.value.downed === null &&
       raiderRef.value.hp > 0 &&
       raiderRef.value.hp < raiderRef.value.maxHp,
   )
 
+  function canApplyHealingItem(item: GameState['raid']['healingItems'][number]): boolean {
+    if ((item.reviveAmount ?? 0) > 0) {
+      return raidRef.value.phase === 'RAIDING' && raidRef.value.downed !== null
+    }
+    return canApplyHealing.value
+  }
+
   // Can manage pocket (set/clear) when raid is active
   const canManageHiddenPocket = computed(
-    () => raidRef.value.phase !== 'HUB' && raidRef.value.phase !== 'DOWNED',
+    () => raidRef.value.phase !== 'HUB' && raidRef.value.phase !== 'KNOCKED_OUT' && raidRef.value.downed === null,
   )
 
   // Can apply shield recharge when actively raiding with charge available
   const canApplyShieldCharge = computed(
     () =>
       raidRef.value.phase === 'RAIDING' &&
+      raidRef.value.extracting === null &&
+      raidRef.value.downed === null &&
       raidRef.value.activeShieldRecharge === null &&
       shield.value !== null &&
       shield.value.durability > 0 &&
@@ -174,6 +184,7 @@ export function useBackpackViewModel(
 
     // Can-* predicates
     canApplyHealing,
+    canApplyHealingItem,
     canManageHiddenPocket,
     canApplyShieldCharge,
     canApplyAnyShieldRecharger,

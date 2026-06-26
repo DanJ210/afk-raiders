@@ -8,15 +8,15 @@
  *   1. Tick phase counter; if transitioning apply transition event.
  *   2. If RAIDING, run the Greed Check to decide push-deeper / extract / downed.
  *   3. Resolve a flavor event for the current phase.
- *   4. Apply event effects. If HP hits 0, the raider goes DOWNED and returns
- *      home with nothing.
+ *   4. Apply event effects. If HP hits 0, start the DOWNED condition; unresolved
+ *      DOWNED recovery moves through KNOCKED_OUT before returning home.
  *   5. Consume pending Handler actions (calm / pressure).
  *   6. Increment tick counter, append events to log.
  */
 
 import type { BackpackItem, GameState, HiddenPocketItem, LogEvent, TickResult } from './types.js'
 import type { RNG } from './rng.js'
-import { tickPhase } from './raidStateMachine.js'
+import { DOWNED_TICKS, EXTRACTING_TICKS, tickPhase, transitionText, type PhaseTransition } from './raidStateMachine.js'
 import { runGreedCheck } from './greedCheck.js'
 import { advanceSignal, applyCalmGreedReduction, applyPressureGreedIncrease } from './signal.js'
 import { describeShieldDamage, resolveEvent, resolveFlavorKey, applyEffects, resolveHealingItemFind, resolveRobotEncounter, resolveShieldRechargerFind, events as allEvents } from './eventResolver.js'
@@ -31,14 +31,111 @@ const LOOT_BONUS_HEALING_ITEM_CHANCE = 0.2 // 20% chance to find a healing item 
 const LOOT_BONUS_SHIELD_RECHARGER_CHANCE = 0.15 // 15% chance to find a shield recharger on any loot event, independent of normal loot rolls
 const NEUTRAL_MOOD_THRESHOLD = 0 // Mood above this is positive, below is negative; separate from the "mood" number which can go up to +5 or down to -5
 
-function enforceDownedHp(state: GameState): GameState {
-  if (state.raid.phase !== 'DOWNED' || state.raider.hp === 0) return state
+function enforceIncapacitatedHp(state: GameState): GameState {
+  if ((!state.raid.downed && state.raid.phase !== 'KNOCKED_OUT') || state.raider.hp === 0) return state
   return {
     ...state,
     raider: {
       ...state.raider,
       hp: 0,
     },
+  }
+}
+
+function phaseTransitionEvent(transition: PhaseTransition, tick: number, now: number, text = transition.eventText): LogEvent {
+  return {
+    id: `phase_${transition.from}_to_${transition.to}`,
+    tick,
+    timestamp: now,
+    text,
+    phase: transition.to,
+  }
+}
+
+function conditionEvent(id: string, text: string, tick: number, now: number): LogEvent {
+  return {
+    id,
+    tick,
+    timestamp: now,
+    text,
+    phase: 'RAIDING',
+  }
+}
+
+function startExtractionCondition(state: GameState, tick: number, now: number): { state: GameState; event: LogEvent | null } {
+  if (state.raid.phase !== 'RAIDING' || state.raid.extracting) return { state, event: null }
+
+  return {
+    state: {
+      ...state,
+      raid: {
+        ...state.raid,
+        activeShieldRecharge: null,
+        extracting: { ticksRemaining: EXTRACTING_TICKS },
+        forceExtract: false,
+      },
+    },
+    event: conditionEvent('condition_extracting_started', transitionText('RAIDING_to_EXTRACTING'), tick, now),
+  }
+}
+
+function failExtractionCondition(state: GameState, tick: number, now: number): { state: GameState; event: LogEvent | null } {
+  if (state.raid.phase !== 'RAIDING' || !state.raid.extracting) return { state, event: null }
+
+  return {
+    state: {
+      ...state,
+      raid: {
+        ...state.raid,
+        extracting: null,
+        forceExtract: false,
+      },
+    },
+    event: conditionEvent('condition_extraction_failed', transitionText('EXTRACTING_to_RAIDING'), tick, now),
+  }
+}
+
+function startDownedCondition(state: GameState, tick: number, now: number, text = transitionText('RAIDING_to_DOWNED')): { state: GameState; event: LogEvent | null } {
+  if (state.raid.phase !== 'RAIDING' || state.raid.downed) return { state: enforceIncapacitatedHp(state), event: null }
+
+  return {
+    state: enforceIncapacitatedHp({
+      ...state,
+      raid: {
+        ...state.raid,
+        activeShieldRecharge: null,
+        downed: { ticksRemaining: DOWNED_TICKS },
+      },
+    }),
+    event: conditionEvent('condition_downed_started', text, tick, now),
+  }
+}
+
+function advanceRaidConditions(state: GameState): { state: GameState; extractionCompleted: boolean; downedExpired: boolean } {
+  if (state.raid.phase !== 'RAIDING') {
+    return { state, extractionCompleted: false, downedExpired: false }
+  }
+
+  const extracting = state.raid.extracting
+    ? { ticksRemaining: state.raid.extracting.ticksRemaining - 1 }
+    : null
+  const downed = state.raid.downed
+    ? { ticksRemaining: state.raid.downed.ticksRemaining - 1 }
+    : null
+  const extractionCompleted = extracting !== null && extracting.ticksRemaining <= 0
+  const downedExpired = downed !== null && downed.ticksRemaining <= 0
+
+  return {
+    state: {
+      ...state,
+      raid: {
+        ...state.raid,
+        extracting: extractionCompleted ? null : extracting,
+        downed: downedExpired ? null : downed,
+      },
+    },
+    extractionCompleted,
+    downedExpired,
   }
 }
 
@@ -177,6 +274,63 @@ function queueDeathRecoveryRaiderXp(queue: RaiderXpTrigger[], dangerLevel: GameS
   queue.push({ reason: 'death_recovered', minXp: 3 + dangerBonus, maxXp: 6 + dangerBonus })
 }
 
+function completeExtractionCondition(
+  state: GameState,
+  skillPracticeTriggers: SkillPracticeTrigger[],
+  raiderXpTriggers: RaiderXpTrigger[],
+  emitted: LogEvent[],
+  tick: number,
+  now: number,
+): GameState {
+  const extractedRaid = state.raid
+  const { raid: hubRaid, transition } = tickPhase(state.raid, 'HUB')
+  let currentState: GameState = { ...state, raid: hubRaid }
+
+  if (transition) {
+    emitted.push(phaseTransitionEvent(transition, tick, now))
+  }
+
+  queueSuccessfulExtractionSkillPractice(skillPracticeTriggers, {
+    backpack: extractedRaid.backpack,
+    backpackValue: extractedRaid.backpackValue,
+    dangerLevel: extractedRaid.dangerLevel,
+    hp: state.raider.hp,
+    maxHp: state.raider.maxHp,
+  })
+  queueSuccessfulExtractionRaiderXp(raiderXpTriggers, {
+    backpack: extractedRaid.backpack,
+    backpackValue: extractedRaid.backpackValue,
+    dangerLevel: extractedRaid.dangerLevel,
+    hp: state.raider.hp,
+    maxHp: state.raider.maxHp,
+  })
+
+  const extraction = applySuccessfulExtraction(currentState, extractedRaid.backpack, {
+    zone: extractedRaid.zone,
+    dangerLevel: extractedRaid.dangerLevel,
+  })
+  currentState = extraction.state
+  if (extraction.levelCoinBonus > 0) {
+    emitted.push(raiderLevelExtractionBonusEvent(extraction.levelCoinBonus, tick, now))
+  }
+  if (extraction.soldItemCount > 0) {
+    skillPracticeTriggers.push({ skillId: 'hoarding', reason: 'stash_overflow_sale', minXp: 2, maxXp: 4 })
+    raiderXpTriggers.push({ reason: 'stash_overflow_sale', minXp: 2, maxXp: 4 })
+    emitted.push(stashSaleEvent(extraction.soldItemCount, extraction.coinsGained, tick, now))
+  }
+
+  return currentState
+}
+
+function enterKnockedOutRecovery(state: GameState, emitted: LogEvent[], tick: number, now: number): GameState {
+  const { raid: knockedOutRaid, transition } = tickPhase(state.raid, 'KNOCKED_OUT')
+  const currentState = enforceIncapacitatedHp({ ...state, raid: knockedOutRaid })
+  if (transition) {
+    emitted.push(phaseTransitionEvent(transition, tick, now))
+  }
+  return currentState
+}
+
 function skillLevelUpEvent(levelUp: SkillLevelUp, tick: number, now: number, phase: GameState['raid']['phase']): LogEvent {
   return {
     id: `skill_${levelUp.skillId}_level_${levelUp.level}`,
@@ -275,84 +429,64 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
     signal: signalAdvance.signal,
     signalAmplifiers: state.signalAmplifiers + signalAdvance.amplifiersGained,
   }
-  currentState = enforceDownedHp(currentState)
+  currentState = enforceIncapacitatedHp(currentState)
 
   if (transition) {
-    const transitionText =
-      transition.from === 'RAIDING' && transition.to === 'DOWNED'
-        ? 'Raid timer hit zero. Zone nuke confirmed. Raider was still in the blast radius.'
-        : transition.eventText
-    emitted.push({
-      id: `phase_${transition.from}_to_${transition.to}`,
-      tick: state.tick,
-      timestamp: now,
-      text: transitionText,
-      phase: transition.to,
-    })
+    emitted.push(phaseTransitionEvent(transition, state.tick, now))
 
-    // Reset raider HP on HUB return; bookkeep deaths and extractions; transfer loot to home stash.
-    // NOTE: tickPhase already cleared the backpack on HUB entry, so read the
-    // pre-tick backpack from the input state.
-    if (transition.to === 'HUB') {
-      if (transition.from === 'DOWNED') {
-        queueDeathRecoveryRaiderXp(raiderXpTriggers, state.raid.dangerLevel)
-        const recovery = applyHiddenPocketFailureRecovery(currentState, state.raid.hiddenPocket)
-        currentState = {
-          ...recovery.state,
-          raider: {
-            ...recovery.state.raider,
-            hp: recovery.state.raider.maxHp,
-            mood: 0,
-            deathCount: recovery.state.raider.deathCount + 1,
-          },
-          stats: recordOutcome(currentState.stats, 'deaths', state.raid.zone, state.raid.dangerLevel),
-        }
-        if (recovery.saved && recovery.savedItemName) {
-          skillPracticeTriggers.push({ skillId: 'hiding_in_lockers', reason: 'hidden_pocket_saved', minXp: 2, maxXp: 4 })
-          raiderXpTriggers.push({ reason: 'hidden_pocket_saved', minXp: 3, maxXp: 6 })
-          emitted.push(hiddenPocketSavedEvent(recovery.savedItemName, state.tick, now))
-        }
-        if (recovery.soldItemCount > 0) {
-          skillPracticeTriggers.push({ skillId: 'hoarding', reason: 'stash_overflow_sale', minXp: 2, maxXp: 4 })
-          raiderXpTriggers.push({ reason: 'stash_overflow_sale', minXp: 2, maxXp: 4 })
-          emitted.push(stashSaleEvent(recovery.soldItemCount, recovery.coinsGained, state.tick, now))
-        }
-      } else if (transition.from === 'EXTRACTING') {
-        queueSuccessfulExtractionSkillPractice(skillPracticeTriggers, {
-          backpack: state.raid.backpack,
-          backpackValue: state.raid.backpackValue,
-          dangerLevel: state.raid.dangerLevel,
-          hp: state.raider.hp,
-          maxHp: state.raider.maxHp,
-        })
-        queueSuccessfulExtractionRaiderXp(raiderXpTriggers, {
-          backpack: state.raid.backpack,
-          backpackValue: state.raid.backpackValue,
-          dangerLevel: state.raid.dangerLevel,
-          hp: state.raider.hp,
-          maxHp: state.raider.maxHp,
-        })
-        const extraction = applySuccessfulExtraction(currentState, state.raid.backpack, {
-          zone: state.raid.zone,
-          dangerLevel: state.raid.dangerLevel,
-        })
-        currentState = extraction.state
-        if (extraction.levelCoinBonus > 0) {
-          emitted.push(raiderLevelExtractionBonusEvent(extraction.levelCoinBonus, state.tick, now))
-        }
-        if (extraction.soldItemCount > 0) {
-          skillPracticeTriggers.push({ skillId: 'hoarding', reason: 'stash_overflow_sale', minXp: 2, maxXp: 4 })
-          raiderXpTriggers.push({ reason: 'stash_overflow_sale', minXp: 2, maxXp: 4 })
-          emitted.push(stashSaleEvent(extraction.soldItemCount, extraction.coinsGained, state.tick, now))
-        }
+    // KNOCKED_OUT -> HUB performs failed-raid bookkeeping. tickPhase has
+    // already cleared the raid snapshot, so read loss context from input state.
+    if (transition.to === 'HUB' && transition.from === 'KNOCKED_OUT') {
+      queueDeathRecoveryRaiderXp(raiderXpTriggers, state.raid.dangerLevel)
+      const recovery = applyHiddenPocketFailureRecovery(currentState, state.raid.hiddenPocket)
+      currentState = {
+        ...recovery.state,
+        raider: {
+          ...recovery.state.raider,
+          hp: recovery.state.raider.maxHp,
+          mood: 0,
+          deathCount: recovery.state.raider.deathCount + 1,
+        },
+        stats: recordOutcome(currentState.stats, 'deaths', state.raid.zone, state.raid.dangerLevel),
       }
+      if (recovery.saved && recovery.savedItemName) {
+        skillPracticeTriggers.push({ skillId: 'hiding_in_lockers', reason: 'hidden_pocket_saved', minXp: 2, maxXp: 4 })
+        raiderXpTriggers.push({ reason: 'hidden_pocket_saved', minXp: 3, maxXp: 6 })
+        emitted.push(hiddenPocketSavedEvent(recovery.savedItemName, state.tick, now))
+      }
+      if (recovery.soldItemCount > 0) {
+        skillPracticeTriggers.push({ skillId: 'hoarding', reason: 'stash_overflow_sale', minXp: 2, maxXp: 4 })
+        raiderXpTriggers.push({ reason: 'stash_overflow_sale', minXp: 2, maxXp: 4 })
+        emitted.push(stashSaleEvent(recovery.soldItemCount, recovery.coinsGained, state.tick, now))
+      }
+    }
+  }
+
+  const conditionAdvance = advanceRaidConditions(currentState)
+  currentState = conditionAdvance.state
+  if (conditionAdvance.extractionCompleted) {
+    currentState = completeExtractionCondition(currentState, skillPracticeTriggers, raiderXpTriggers, emitted, state.tick, now)
+  } else if (conditionAdvance.downedExpired) {
+    currentState = enterKnockedOutRecovery(currentState, emitted, state.tick, now)
+  }
+
+  if (
+    currentState.raider.hp <= 0 &&
+    currentState.raid.phase === 'RAIDING' &&
+    !currentState.raid.downed
+  ) {
+    const downed = startDownedCondition(currentState, state.tick, now)
+    currentState = downed.state
+    if (downed.event) {
+      emitted.push(downed.event)
     }
   }
 
   // ------------------------------------------------------------------
   // 2. Greed Check (RAIDING phase only, once per tick)
   // ------------------------------------------------------------------
-  if (currentState.raid.phase === 'RAIDING') {
+  let startedExtractionThisTick = false
+  if (currentState.raid.phase === 'RAIDING' && !currentState.raid.extracting && !currentState.raid.downed) {
     const shieldRechargeBefore = currentState.raid.activeShieldRecharge
     const shieldRechargeResult = advanceShieldRecharge(currentState.raid)
     currentState = { ...currentState, raid: shieldRechargeResult.raid }
@@ -384,7 +518,7 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
       {
         currentHp: currentState.raider.hp,
         maxHp: currentState.raider.maxHp,
-        hasHealingItems: currentState.raid.healingItems.length > 0,
+        hasHealingItems: currentState.raid.healingItems.some(item => item.healAmount > 0),
         extractionChanceBonus: getSkillModifierProfile(currentState.raider.skills).extractionChanceBonus,
         deathChanceMultiplier: getSkillModifierProfile(currentState.raider.skills).ambientRaidDeathChanceMultiplier,
       },
@@ -398,34 +532,38 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
 
     if (greedResult.outcome === 'EXTRACT') {
       skillPracticeTriggers.push({ skillId: 'cardio', reason: 'extraction_started', minXp: 1, maxXp: 2 })
-      const { raid: r2, transition: t2 } = tickPhase(
-        { ...currentState.raid, forceExtract: false },
-        'EXTRACTING',
-      )
-      currentState = { ...currentState, raid: r2 }
-      if (t2) {
-        emitted.push({
-          id: 'phase_RAIDING_to_EXTRACTING',
-          tick: state.tick,
-          timestamp: now,
-          text: t2.eventText,
-          phase: 'EXTRACTING',
-        })
+      const started = startExtractionCondition(currentState, state.tick, now)
+      currentState = started.state
+      startedExtractionThisTick = started.event !== null
+      if (started.event) {
+        emitted.push(started.event)
       }
     } else if (greedResult.outcome === 'DOWNED') {
-      const { raid: r2, transition: t2 } = tickPhase(currentState.raid, 'DOWNED')
-      currentState = enforceDownedHp({ ...currentState, raid: r2 })
-      if (t2) {
-        emitted.push({
-          id: 'phase_RAIDING_to_DOWNED',
-          tick: state.tick,
-          timestamp: now,
-          text: t2.eventText,
-          phase: 'DOWNED',
-        })
+      const downed = startDownedCondition(currentState, state.tick, now)
+      currentState = downed.state
+      if (downed.event) {
+        emitted.push(downed.event)
       }
     }
     // PUSH_DEEPER -> stay in RAIDING (greedLevel already updated above)
+  }
+
+  if (
+    currentState.raid.phase === 'RAIDING' &&
+    currentState.raid.phaseTicksRemaining <= 0 &&
+    !currentState.raid.downed &&
+    !startedExtractionThisTick
+  ) {
+    const downed = startDownedCondition(
+      currentState,
+      state.tick,
+      now,
+      'Raid timer hit zero. Zone nuke confirmed. Raider is down but the extraction clock may still matter.',
+    )
+    currentState = downed.state
+    if (downed.event) {
+      emitted.push(downed.event)
+    }
   }
 
   // ------------------------------------------------------------------
@@ -505,95 +643,47 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
         }
       }
 
-      // Some events (mostly extraction events) force a phase change:
-      //  - EXTRACTING → HUB     = early successful extraction (loot goes home)
-      //  - EXTRACTING → RAIDING = failed extraction (backpack kept, back to the zone)
-      //  - EXTRACTING → DOWNED  = downed at the LZ (backpack lost during recovery)
-      const forcedPhase = template.effects?.forcePhase
-      if (forcedPhase && forcedPhase !== currentState.raid.phase) {
-        const fromPhase = currentState.raid.phase
-        const backpackBeforeForce = currentState.raid.backpack
-        const backpackValueBeforeForce = currentState.raid.backpackValue
-        const zoneBeforeForce = currentState.raid.zone
-        const dangerLevelBeforeForce = currentState.raid.dangerLevel
-        const { raid: forcedRaid, transition: forcedTransition } = tickPhase(
-          currentState.raid,
-          forcedPhase,
-        )
-        currentState = enforceDownedHp({ ...currentState, raid: forcedRaid })
-        if (forcedTransition) {
-          emitted.push({
-            id: `phase_${forcedTransition.from}_to_${forcedTransition.to}`,
-            tick: state.tick,
-            timestamp: now,
-            text: forcedTransition.eventText,
-            phase: forcedTransition.to,
-          })
+      if (template.effects?.startDowned) {
+        const downed = startDownedCondition(currentState, state.tick, now, transitionText('EXTRACTING_to_DOWNED'))
+        currentState = downed.state
+        if (downed.event) {
+          emitted.push(downed.event)
         }
-        if (fromPhase === 'EXTRACTING' && forcedPhase === 'HUB') {
-          queueSuccessfulExtractionSkillPractice(skillPracticeTriggers, {
-            backpack: backpackBeforeForce,
-            backpackValue: backpackValueBeforeForce,
-            dangerLevel: dangerLevelBeforeForce,
-            hp: currentState.raider.hp,
-            maxHp: currentState.raider.maxHp,
-          })
-          queueSuccessfulExtractionRaiderXp(raiderXpTriggers, {
-            backpack: backpackBeforeForce,
-            backpackValue: backpackValueBeforeForce,
-            dangerLevel: dangerLevelBeforeForce,
-            hp: currentState.raider.hp,
-            maxHp: currentState.raider.maxHp,
-          })
-          const extraction = applySuccessfulExtraction(currentState, backpackBeforeForce, {
-            zone: zoneBeforeForce,
-            dangerLevel: dangerLevelBeforeForce,
-          })
-          currentState = extraction.state
-          if (extraction.levelCoinBonus > 0) {
-            emitted.push(raiderLevelExtractionBonusEvent(extraction.levelCoinBonus, state.tick, now))
-          }
-          if (extraction.soldItemCount > 0) {
-            skillPracticeTriggers.push({ skillId: 'hoarding', reason: 'stash_overflow_sale', minXp: 2, maxXp: 4 })
-            raiderXpTriggers.push({ reason: 'stash_overflow_sale', minXp: 2, maxXp: 4 })
-            emitted.push(stashSaleEvent(extraction.soldItemCount, extraction.coinsGained, state.tick, now))
-          }
-        } else if (fromPhase === 'EXTRACTING' && forcedPhase === 'RAIDING') {
+      }
+
+      if (template.effects?.failExtraction) {
+        const failed = failExtractionCondition(currentState, state.tick, now)
+        currentState = failed.state
+        if (failed.event) {
           skillPracticeTriggers.push({ skillId: 'hiding_in_lockers', reason: 'failed_extraction', minXp: 1, maxXp: 3 })
           raiderXpTriggers.push({ reason: 'failed_extraction', minXp: 2, maxXp: 4 })
+          emitted.push(failed.event)
         }
+      }
+
+      if (template.effects?.completeExtraction) {
+        currentState = completeExtractionCondition(currentState, skillPracticeTriggers, raiderXpTriggers, emitted, state.tick, now)
       }
     }
   }
 
   // ------------------------------------------------------------------
-  // 3b. Downed check — if HP ever reaches 0 outside the hub, the raider
-  //     goes down. Loot is lost; they recover in Desperanza (HUB) after
-  //     the DOWNED flavor beat.
+  // 3b. Downed check — if HP ever reaches 0 during RAIDING, the raider
+  //     becomes DOWNED as a condition. Extraction can still win the race.
   // ------------------------------------------------------------------
   if (
     currentState.raider.hp <= 0 &&
-    currentState.raid.phase !== 'DOWNED' &&
-    currentState.raid.phase !== 'HUB'
+    currentState.raid.phase === 'RAIDING' &&
+    !currentState.raid.downed
   ) {
-    const fromPhase = currentState.raid.phase
-    const { raid: downedRaid, transition: downedTransition } = tickPhase(
-      currentState.raid,
-      'DOWNED',
-    )
-    currentState = enforceDownedHp({ ...currentState, raid: downedRaid })
-    if (downedTransition) {
-      emitted.push({
-        id: `phase_${fromPhase}_to_DOWNED`,
-        tick: state.tick,
-        timestamp: now,
-        text: downedTransition.eventText,
-        phase: 'DOWNED',
-      })
+    const downed = startDownedCondition(currentState, state.tick, now)
+    currentState = downed.state
+    if (downed.event) {
+      emitted.push(downed.event)
     }
   }
 
-  currentState = enforceDownedHp(currentState)
+  currentState = enforceIncapacitatedHp(currentState)
 
   // ------------------------------------------------------------------
   // 4. Consume pending Handler actions (emit a feedback line)

@@ -22,6 +22,7 @@ import { applySkillPractice, rollSkillPractice, type SkillLevelUp } from '../eng
 import type { BackpackItem } from '../engine/types.js'
 
 const RAIDER_NAME_MAX_LENGTH = 25
+const REVIVE_HP_RESTORE = 25
 
 export interface HandlerActionsReturn {
   calm: () => void
@@ -29,6 +30,7 @@ export interface HandlerActionsReturn {
   applySignalAmplifier: () => void
   readyUp: () => void
   callExtract: () => void
+  revive: () => void
   applyHealingItem: (itemId: string) => void
   applyShieldRecharger: (itemId: string) => void
   setHiddenPocketItem: (itemId: string) => void
@@ -146,6 +148,7 @@ export function useHandlerActions(
 
   function calm() {
     if (stateRef.value.raid.phase !== 'RAIDING') return
+    if (stateRef.value.raid.extracting || stateRef.value.raid.downed) return
     if (hasPendingHandlerAction()) return
     const actionNow = Date.now()
     const updated = spendSignal(syncSignalProgress(actionNow), 'CALM')
@@ -161,6 +164,7 @@ export function useHandlerActions(
 
   function pressure() {
     if (stateRef.value.raid.phase !== 'RAIDING') return
+    if (stateRef.value.raid.extracting || stateRef.value.raid.downed) return
     if (hasPendingHandlerAction()) return
     const actionNow = Date.now()
     const updated = spendSignal(syncSignalProgress(actionNow), 'PRESSURE')
@@ -207,6 +211,7 @@ export function useHandlerActions(
 
   function callExtract() {
     if (stateRef.value.raid.phase !== 'RAIDING') return
+    if (stateRef.value.raid.extracting || stateRef.value.raid.downed) return
     if (hasPendingHandlerAction()) return
     const actionNow = Date.now()
     const updated = spendSignal(syncSignalProgress(actionNow), 'CALL_EXTRACT')
@@ -217,6 +222,39 @@ export function useHandlerActions(
       raid: { ...stateRef.value.raid, forceExtract: true },
     }
     awardSignalUseSkill(actionNow, 3)
+    persistCallback(stateRef.value, rngRef.current.getSeed(), lastTickAtRef.value)
+  }
+
+  function revive() {
+    if (stateRef.value.raid.phase !== 'RAIDING') return
+    if (!stateRef.value.raid.downed) return
+    const actionNow = Date.now()
+    const updated = spendSignal(syncSignalProgress(actionNow), 'REVIVE')
+    if (!updated) return
+
+    const reviveEvent: LogEvent = {
+      id: 'handler_revive_used',
+      tick: stateRef.value.tick,
+      timestamp: actionNow,
+      text: 'Revive signal punched through. Raider is upright, offended, and technically alive.',
+      phase: stateRef.value.raid.phase,
+    }
+
+    stateRef.value = {
+      ...stateRef.value,
+      signal: updated,
+      raider: {
+        ...stateRef.value.raider,
+        hp: Math.min(stateRef.value.raider.maxHp, REVIVE_HP_RESTORE),
+      },
+      raid: {
+        ...stateRef.value.raid,
+        downed: null,
+      },
+      log: appendLogEntries(stateRef.value.log, [reviveEvent]),
+    }
+    const signalUseEvents = awardSignalUseSkill(actionNow, 5)
+    publishEvents?.([reviveEvent, ...signalUseEvents])
     persistCallback(stateRef.value, rngRef.current.getSeed(), lastTickAtRef.value)
   }
 
@@ -267,7 +305,7 @@ export function useHandlerActions(
   }
 
   function setHiddenPocketItem(itemId: string) {
-    if (stateRef.value.raid.phase === 'HUB' || stateRef.value.raid.phase === 'DOWNED') return
+    if (stateRef.value.raid.phase === 'HUB' || stateRef.value.raid.phase === 'KNOCKED_OUT' || stateRef.value.raid.downed) return
     const sourceItem = stateRef.value.raid.backpack.find(item => item.itemId === itemId)
     if (!sourceItem || sourceItem.quantity <= 0) return
 
@@ -332,6 +370,7 @@ export function useHandlerActions(
     applySignalAmplifier,
     readyUp,
     callExtract,
+    revive,
     applyHealingItem,
     applyShieldRecharger,
     setHiddenPocketItem,

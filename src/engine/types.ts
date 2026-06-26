@@ -13,6 +13,8 @@ export interface EventTemplate extends ContentEntry {
   text: string
   requires?: {
     phase?: Phase | Phase[]
+    extracting?: boolean
+    downed?: boolean
     dangerLevel?: DangerLevel | DangerLevel[]
     zoneCondition?: string | string[]
     minGreed?: number
@@ -28,7 +30,6 @@ export interface EventTemplate extends ContentEntry {
     damage?: number | string // number or dice string like "15d6"
     greedLevel?: number
     ratRating?: number
-    forcePhase?: Phase
     /** Robot id from robots.json. Triggers the placeholder robot combat roll. */
     robotEncounter?: string
     /** Multiplies menace-based robot damage on failed robot encounters. */
@@ -37,6 +38,12 @@ export interface EventTemplate extends ContentEntry {
     healingItem?: boolean
     /** Finds a manual-use shield recharger and adds it to the backpack. */
     shieldRecharger?: boolean
+    /** Completes the active extraction condition successfully. */
+    completeExtraction?: boolean
+    /** Cancels the active extraction condition and leaves the raid in progress. */
+    failExtraction?: boolean
+    /** Starts the downed condition while the raid remains in RAIDING. */
+    startDowned?: boolean
   }
 }
 
@@ -69,6 +76,7 @@ export interface HealingItem extends ContentEntry {
   name: string
   healAmount: number
   moodGain: number
+  reviveAmount?: number
   flavor?: string
   /** 1 = Common … 5 = Legendary (higher = rarer). */
   rarity: number
@@ -128,7 +136,7 @@ export interface FlavorTable {
 // Game state
 // ---------------------------------------------------------------------------
 
-export type Phase = 'HUB' | 'DEPLOYING' | 'RAIDING' | 'EXTRACTING' | 'DOWNED'
+export type Phase = 'HUB' | 'DEPLOYING' | 'RAIDING' | 'KNOCKED_OUT'
 
 export type BackpackItemKind = 'loot' | 'shield_recharger'
 
@@ -161,6 +169,7 @@ export interface HealingItemStack {
   itemId: string
   name: string
   healAmount: number
+  reviveAmount?: number
   /** Optional for backward compatibility with saved current-raid meds. */
   moodGain?: number
   rarity: number
@@ -187,6 +196,14 @@ export interface ActiveShieldRecharge {
   ticksRemaining: number
 }
 
+export interface DownedState {
+  ticksRemaining: number
+}
+
+export interface ExtractingState {
+  ticksRemaining: number
+}
+
 export interface ZoneCondition {
   id: string
   name: string
@@ -208,6 +225,8 @@ export interface RaidState {
   greedLevel: number   // 0–100; higher = stronger loot appetite and major-condition momentum
   phase: Phase
   phaseTicksRemaining: number
+  downed: DownedState | null
+  extracting: ExtractingState | null
   /** Set by CALL_EXTRACT action to force next greed check toward extraction */
   forceExtract: boolean
 }

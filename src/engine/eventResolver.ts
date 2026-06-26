@@ -18,6 +18,7 @@ import deploymentEventsData from '../content/deployment_events.json'
 import raidingEventsData from '../content/raiding_events.json'
 import extractionEventsData from '../content/extraction_events.json'
 import downedEventsData from '../content/downed_events.json'
+import knockedOutEventsData from '../content/knocked_out_events.json'
 import healingItemsData from '../content/healing_items.json'
 import shieldRechargersData from '../content/shield_rechargers.json'
 import robotsData from '../content/robots.json'
@@ -38,13 +39,14 @@ import { getSkillModifierProfile } from './skills.js'
 import { getRaiderLevelBenefitProfile } from './raiderLevel.js'
 import { clampGreedLevel, getGreedDangerEventWeightMultiplier, getGreedRarityWeightMultiplier } from './greed.js'
 
-// One events file per phase: HUB, DEPLOYING, RAIDING, EXTRACTING, DOWNED
+// Lifecycle phase events plus RAIDING condition events.
 const events = [
   ...hubEventsData,
   ...deploymentEventsData,
   ...raidingEventsData,
   ...extractionEventsData,
   ...downedEventsData,
+  ...knockedOutEventsData,
 ] as EventTemplate[]
 const baseLoot = [
   ...(apparelAccessoriesData as { items: LootItem[] }).items,
@@ -144,6 +146,16 @@ export function eligibleEvents(state: GameState): EventTemplate[] {
       const phases: Phase[] = Array.isArray(r.phase) ? r.phase : [r.phase]
       if (!phases.includes(raid.phase)) return false
     }
+    if (raid.downed) {
+      if (r.downed !== true) return false
+    } else if (r.downed !== undefined && r.downed !== false) {
+      return false
+    }
+    if (raid.extracting) {
+      if (r.extracting !== true && r.downed !== true) return false
+    } else if (r.extracting !== undefined && r.extracting !== false) {
+      return false
+    }
     if (r.dangerLevel) {
       if (!raid.dangerLevel) return false
       const levels = Array.isArray(r.dangerLevel) ? r.dangerLevel : [r.dangerLevel]
@@ -186,8 +198,8 @@ function isPositiveDamageEffect(damage: number | string | undefined): boolean {
 function isRiskyExtractionEvent(template: EventTemplate): boolean {
   const effects = template.effects
   if (!effects) return false
-  return effects.forcePhase === 'RAIDING' ||
-    effects.forcePhase === 'DOWNED' ||
+  return effects.failExtraction === true ||
+    effects.startDowned === true ||
     effects.robotEncounter !== undefined ||
     isPositiveDamageEffect(effects.damage) ||
     isNegativeHpEffect(effects.hp)
@@ -196,7 +208,7 @@ function isRiskyExtractionEvent(template: EventTemplate): boolean {
 function isSafeExtractionEvent(template: EventTemplate): boolean {
   const effects = template.effects
   if (!effects) return false
-  return effects.forcePhase === 'HUB' || (!isRiskyExtractionEvent(template) && (effects.mood ?? 0) > 0)
+  return effects.completeExtraction === true || (!isRiskyExtractionEvent(template) && (effects.mood ?? 0) > 0)
 }
 
 function adjustedEventWeight(template: EventTemplate, state: GameState): number {
@@ -207,7 +219,7 @@ function adjustedEventWeight(template: EventTemplate, state: GameState): number 
     weight *= profile.robotEncounterWeightMultiplier * getGreedDangerEventWeightMultiplier(state.raid.greedLevel)
   }
 
-  if (state.raid.phase === 'EXTRACTING') {
+  if (state.raid.extracting) {
     if (isRiskyExtractionEvent(template)) {
       weight *= profile.extractionRiskEventWeightMultiplier * getGreedDangerEventWeightMultiplier(state.raid.greedLevel)
     } else if (isSafeExtractionEvent(template)) {
@@ -364,6 +376,7 @@ function addHealingItem(
         itemId: item.id,
         name: item.name,
         healAmount: item.healAmount,
+        reviveAmount: item.reviveAmount,
         moodGain: item.moodGain,
         rarity: item.rarity,
         flavor: item.flavor,
@@ -435,18 +448,45 @@ export function resolveShieldRechargerFind(
   }
 }
 
-/** Uses one specific current-raid bandage if the raider is hurt and alive. */
+/** Uses one specific current-raid med if its current condition allows it. */
 export function consumeHealingItem(
   state: GameState,
   itemId: string,
   now: number,
 ): HealingItemResult | null {
-  if (state.raid.phase === 'HUB' || state.raid.phase === 'DOWNED') return null
-  if (state.raider.hp <= 0 || state.raider.hp >= state.raider.maxHp) return null
+  if (state.raid.phase === 'HUB' || state.raid.phase === 'KNOCKED_OUT') return null
   if (state.raid.healingItems.length === 0) return null
 
   const item = state.raid.healingItems.find(entry => entry.itemId === itemId)
   if (!item) return null
+  const reviveAmount = item.reviveAmount ?? 0
+  if (reviveAmount > 0) {
+    if (state.raid.phase !== 'RAIDING' || !state.raid.downed) return null
+    const hp = Math.min(state.raider.maxHp, reviveAmount)
+    const moodGain = healingMoodGain(item)
+    const mood = clampMood(state.raider.mood + moodGain)
+
+    return {
+      state: {
+        ...state,
+        raider: { ...state.raider, hp, mood },
+        raid: {
+          ...removeHealingItem(state.raid, item),
+          downed: null,
+        },
+      },
+      event: {
+        id: `healing_${item.itemId}_used`,
+        tick: state.tick,
+        timestamp: now,
+        text: `Used ${item.name}. Revived Raider with ${hp} HP and gained ${moodGain} mood. Medical dignity returned under protest.`,
+        phase: state.raid.phase,
+      },
+    }
+  }
+
+  if (state.raid.downed) return null
+  if (state.raider.hp <= 0 || state.raider.hp >= state.raider.maxHp) return null
   const missingHp = state.raider.maxHp - state.raider.hp
   const healed = Math.min(50, item.healAmount, missingHp)
   const moodGain = healingMoodGain(item)
@@ -475,6 +515,7 @@ export function consumeShieldRecharger(
   now: number,
 ): BackpackConsumableResult | null {
   if (state.raid.phase !== 'RAIDING') return null
+  if (state.raid.extracting || state.raid.downed) return null
   if (!state.raid.shield || state.raid.shield.durability <= 0) return null
   if (state.raid.shield.charge >= state.raid.shield.maxCharge) return null
   if (state.raid.activeShieldRecharge) return null

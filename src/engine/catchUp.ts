@@ -90,11 +90,11 @@ export function catchUp(
 }
 
 function isDeathTransition(event: LogEvent): boolean {
-  return event.id.startsWith('phase_') && event.id.endsWith('_to_DOWNED')
+  return event.id === 'phase_RAIDING_to_KNOCKED_OUT'
 }
 
 function isExtractionTransition(event: LogEvent): boolean {
-  return event.id === 'phase_EXTRACTING_to_HUB'
+  return event.id === 'phase_RAIDING_to_HUB'
 }
 
 function buildSummaryLines(
@@ -148,7 +148,7 @@ function summaryPriority(event: LogEvent): number {
   if (event.id === 'stash_overflow_sale' || event.id.startsWith('robot_')) return 4
   if (event.id.startsWith('healing_')) return 3
   if (event.id.startsWith('phase_')) return 2
-  if (event.phase === 'RAIDING' || event.phase === 'EXTRACTING') return 1
+  if (event.phase === 'RAIDING') return 1
   return 0
 }
 

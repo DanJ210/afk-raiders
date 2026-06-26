@@ -20,6 +20,13 @@ const phaseTimerMs = computed(() => {
   return Math.max(0, phaseRemainingMs - elapsedSinceLastTick)
 })
 const phaseTimerText = computed(() => formatDuration(phaseTimerMs.value))
+const downedTimerMs = computed(() => {
+  if (!store.raid.downed) return 0
+  const downedRemainingMs = store.raid.downed.ticksRemaining * TICK_INTERVAL_MS
+  const elapsedSinceLastTick = Math.max(0, now.value.getTime() - store.lastTickAt)
+  return Math.max(0, downedRemainingMs - elapsedSinceLastTick)
+})
+const downedTimerText = computed(() => formatDuration(downedTimerMs.value))
 const showPhaseTimer = computed(() => showMobileRaiderStatus.value && phaseTimerMs.value > 0)
 
 // Re-key the tick bar on every new tick AND whenever the tab becomes visible,
@@ -54,8 +61,7 @@ function phaseBadge(phase: string): string {
     HUB: '🏠',
     DEPLOYING: '🚁',
     RAIDING: '⚡',
-    EXTRACTING: '🚨',
-    DOWNED: '💀',
+    KNOCKED_OUT: '💀',
   }
   return badges[phase] ?? '📡'
 }
@@ -76,6 +82,9 @@ function phaseBadge(phase: string): string {
       <RaiderStatusHeaderStats
         :raider="store.raider"
         :phase="store.phase"
+        :is-extracting="store.raid.extracting !== null"
+        :is-downed="store.raid.downed !== null"
+        :downed-timer-text="downedTimerText"
         :show-phase-timer="showPhaseTimer"
         :phase-timer-text="phaseTimerText"
         :raid-shield="raidShield"
