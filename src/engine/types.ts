@@ -283,7 +283,7 @@ export interface LogEvent {
   timestamp: number  // ms since epoch
   text: string
   phase: Phase
-  condition?: LogCondition
+  conditions?: LogCondition[]
 }
 
 export interface GameState {

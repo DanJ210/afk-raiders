@@ -473,7 +473,7 @@ describe('deterministic snapshot', () => {
     expect(result.state.raid.downed).not.toBeNull()
     expect(result.state.raider.hp).toBe(0)
     expect(result.events.some(e => e.id === 'condition_downed_started')).toBe(true)
-    expect(result.events.find(e => e.id === 'condition_downed_started')?.condition).toBe('DOWNED')
+    expect(result.events.find(e => e.id === 'condition_downed_started')?.conditions).toEqual(['DOWNED'])
   })
 
   it('honors Call Extract when the raid timer expires on the next tick', () => {
@@ -497,7 +497,7 @@ describe('deterministic snapshot', () => {
     expect(eventIds).toContain('condition_extracting_started')
     expect(eventIds).not.toContain('condition_downed_started')
     expect(result.state.raid.extracting).not.toBeNull()
-    expect(result.events.find(event => event.id === 'condition_extracting_started')?.condition).toBe('EXTRACTING')
+    expect(result.events.find(event => event.id === 'condition_extracting_started')?.conditions).toEqual(['EXTRACTING'])
   })
 
   it('lets extraction completion beat an expiring DOWNED timer', () => {
@@ -544,6 +544,30 @@ describe('deterministic snapshot', () => {
     ])
     expect(eventIds).toContain('phase_RAIDING_to_HUB')
     expect(eventIds).not.toContain('phase_RAIDING_to_KNOCKED_OUT')
+  })
+
+  it('prioritizes EXTRACTING log condition while extraction and DOWNED overlap', () => {
+    const rng = createRNG(FIXED_SEED)
+    const initial = createInitialState(0)
+    const state = {
+      ...initial,
+      raider: { ...initial.raider, hp: 0 },
+      raid: {
+        ...initial.raid,
+        phase: 'RAIDING' as const,
+        phaseTicksRemaining: 30,
+        extracting: { ticksRemaining: 2 },
+        downed: { ticksRemaining: 2 },
+      },
+    }
+
+    const result = processTick(state, rng, 0)
+    const conditionEvent = result.events.find(event => event.phase === 'RAIDING' && event.conditions !== undefined)
+
+    expect(result.state.raid.phase).toBe('RAIDING')
+    expect(result.state.raid.extracting).not.toBeNull()
+    expect(result.state.raid.downed).not.toBeNull()
+    expect(conditionEvent?.conditions).toEqual(['EXTRACTING', 'DOWNED'])
   })
 
   it('keeps HP at 0 while the raider remains DOWNED', () => {

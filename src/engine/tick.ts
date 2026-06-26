@@ -59,14 +59,15 @@ function conditionEvent(id: string, text: string, tick: number, now: number, con
     timestamp: now,
     text,
     phase: 'RAIDING',
-    condition,
+    conditions: [condition],
   }
 }
 
-function logConditionForRaid(raid: GameState['raid']): LogCondition | undefined {
-  if (raid.downed) return 'DOWNED'
-  if (raid.extracting) return 'EXTRACTING'
-  return undefined
+function logConditionsForRaid(raid: GameState['raid']): LogCondition[] | undefined {
+  const conditions: LogCondition[] = []
+  if (raid.extracting) conditions.push('EXTRACTING')
+  if (raid.downed) conditions.push('DOWNED')
+  return conditions.length > 0 ? conditions : undefined
 }
 
 function startExtractionCondition(state: GameState, tick: number, now: number): { state: GameState; event: LogEvent | null } {
@@ -338,25 +339,25 @@ function enterKnockedOutRecovery(state: GameState, emitted: LogEvent[], tick: nu
   return currentState
 }
 
-function skillLevelUpEvent(levelUp: SkillLevelUp, tick: number, now: number, phase: GameState['raid']['phase'], condition?: LogCondition): LogEvent {
+function skillLevelUpEvent(levelUp: SkillLevelUp, tick: number, now: number, phase: GameState['raid']['phase'], conditions?: LogCondition[]): LogEvent {
   return {
     id: `skill_${levelUp.skillId}_level_${levelUp.level}`,
     tick,
     timestamp: now,
     text: levelUp.text,
     phase,
-    condition,
+    conditions,
   }
 }
 
-function raiderLevelUpEvent(levelUp: RaiderLevelUp, tick: number, now: number, phase: GameState['raid']['phase'], condition?: LogCondition): LogEvent {
+function raiderLevelUpEvent(levelUp: RaiderLevelUp, tick: number, now: number, phase: GameState['raid']['phase'], conditions?: LogCondition[]): LogEvent {
   return {
     id: `raider_level_${levelUp.level}`,
     tick,
     timestamp: now,
     text: levelUp.text,
     phase,
-    condition,
+    conditions,
   }
 }
 
@@ -506,7 +507,7 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
         timestamp: now,
         text: `Shield recharge completed. ${shieldRechargeBefore?.name ?? 'The shield recharger'} finished its ${shieldRechargeBefore?.totalTicks ?? 5}-tick crawl.`,
         phase: currentState.raid.phase,
-        condition: logConditionForRaid(currentState.raid),
+        conditions: logConditionsForRaid(currentState.raid),
       })
     }
 
@@ -705,7 +706,7 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
       timestamp: now,
       text: resolveFlavorKey('calm_responses', rng),
       phase: currentState.raid.phase,
-      condition: logConditionForRaid(currentState.raid),
+      conditions: logConditionsForRaid(currentState.raid),
     })
   }
   if (currentState.pendingPressure) {
@@ -715,7 +716,7 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
       timestamp: now,
       text: resolveFlavorKey('pressure_responses', rng),
       phase: currentState.raid.phase,
-      condition: logConditionForRaid(currentState.raid),
+      conditions: logConditionsForRaid(currentState.raid),
     })
   }
 
@@ -739,8 +740,8 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
     for (const levelUp of skillResult.levelUps) {
       raiderXpTriggers.push({ reason: 'skill_level_up', minXp: 5 + levelUp.level, maxXp: 7 + levelUp.level * 2 })
     }
-    const condition = logConditionForRaid(currentState.raid)
-    emitted.push(...skillResult.levelUps.map(levelUp => skillLevelUpEvent(levelUp, state.tick, now, currentState.raid.phase, condition)))
+    const conditions = logConditionsForRaid(currentState.raid)
+    emitted.push(...skillResult.levelUps.map(levelUp => skillLevelUpEvent(levelUp, state.tick, now, currentState.raid.phase, conditions)))
   }
 
   if (raiderXpTriggers.length > 0) {
@@ -753,8 +754,8 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
         levelXp: xpResult.levelXp,
       },
     }
-    const condition = logConditionForRaid(currentState.raid)
-    emitted.push(...xpResult.levelUps.map(levelUp => raiderLevelUpEvent(levelUp, state.tick, now, currentState.raid.phase, condition)))
+    const conditions = logConditionsForRaid(currentState.raid)
+    emitted.push(...xpResult.levelUps.map(levelUp => raiderLevelUpEvent(levelUp, state.tick, now, currentState.raid.phase, conditions)))
   }
 
   // ------------------------------------------------------------------

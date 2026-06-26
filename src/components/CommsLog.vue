@@ -68,8 +68,8 @@ function phaseBadge(phase: string): string {
 }
 
 function logBadge(entry: LogEvent): string {
-  if (entry.condition === 'DOWNED') return '🛏️'
-  if (entry.condition === 'EXTRACTING') return '🚨'
+  const badges = entry.conditions?.map(condition => condition === 'EXTRACTING' ? '🚨' : '🛏️')
+  if (badges && badges.length > 0) return badges.join('')
   return phaseBadge(entry.phase)
 }
 
