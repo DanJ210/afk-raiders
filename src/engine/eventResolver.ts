@@ -11,7 +11,7 @@
  *   6. {count}         → random plausible water-bottle count (for flavor)
  */
 
-import type { EventTemplate, GameState, HealingItem, HealingItemStack, LogEvent, LootItem, Phase, RobotEntry, RobotLootItem, ShieldRechargerItem } from './types.js'
+import type { ActivityLogEvent, EventTemplate, GameState, HealingItem, HealingItemStack, LogEvent, LootItem, Phase, RobotEntry, RobotLootItem, ShieldRechargerItem } from './types.js'
 import type { RNG } from './rng.js'
 import hubEventsData from '../content/hub_events.json'
 import deploymentEventsData from '../content/deployment_events.json'
@@ -33,10 +33,9 @@ import scrapComponentsData from '../content/loot-tables/scrap_components.json'
 import valuablesData from '../content/loot-tables/valuables.json'
 import weaponsPartsData from '../content/loot-tables/weapons_parts.json'
 import { getDangerLevelProfile, rarityWeight, type DangerLevelProfile } from './dangerLevelProfiles.js'
-import { clampMood, getMoodRarityWeightMultiplier, getMoodResilienceReductionPercent } from './mood.js'
+import { clampMood, getMoodRarityWeightMultiplier } from './mood.js'
 import { applyShieldedDamage, startShieldRecharge, type ShieldDamageResult } from './shields.js'
 import { getSkillModifierProfile } from './skills.js'
-import { getRaiderLevelBenefitProfile } from './raiderLevel.js'
 import { clampGreedLevel, getGreedDangerEventWeightMultiplier, getGreedRarityWeightMultiplier } from './greed.js'
 import { logConditionsForRaid } from './log.js'
 
@@ -92,10 +91,6 @@ function mergeLootTables(items: LootItem[]): LootItem[] {
 const robotLoot = robots.flatMap(robot => robot.lootTable.map(item => toLootItem(item, robot)))
 const loot = mergeLootTables([...baseLoot, ...robotLoot])
 
-const ROBOT_LETHAL_HP_RATIO = 0.5
-const ROBOT_NONLETHAL_MIN_HP_RATIO = 0.25
-const ROBOT_DAMAGE_PER_MENACE = 2
-const LETHAL_ROBOT_DEADLINESS: ReadonlySet<RobotEntry['deadliness']> = new Set(['nasty', 'deadly'])
 function healingMoodGain(item: HealingItemStack): number {
   return item.moodGain ?? Math.max(1, Math.min(4, item.rarity))
 }
@@ -162,6 +157,11 @@ export function eligibleEvents(state: GameState): EventTemplate[] {
       const levels = Array.isArray(r.dangerLevel) ? r.dangerLevel : [r.dangerLevel]
       if (!levels.includes(raid.dangerLevel)) return false
     }
+    if (r.zone) {
+      if (!raid.zone) return false
+      const zones = Array.isArray(r.zone) ? r.zone : [r.zone]
+      if (!zones.includes(raid.zone)) return false
+    }
     if (r.zoneCondition) {
       if (!raid.zoneCondition) return false
       const conditionIds = Array.isArray(r.zoneCondition) ? r.zoneCondition : [r.zoneCondition]
@@ -201,7 +201,7 @@ function isRiskyExtractionEvent(template: EventTemplate): boolean {
   if (!effects) return false
   return effects.failExtraction === true ||
     effects.startDowned === true ||
-    effects.robotEncounter !== undefined ||
+    effects.startRaidActivity?.kind === 'ROBOT_ENCOUNTER' ||
     isPositiveDamageEffect(effects.damage) ||
     isNegativeHpEffect(effects.hp)
 }
@@ -216,7 +216,7 @@ function adjustedEventWeight(template: EventTemplate, state: GameState): number 
   const profile = getDangerLevelProfile(state.raid.dangerLevel)
   let weight = template.weight
 
-  if (template.effects?.robotEncounter) {
+  if (template.effects?.startRaidActivity?.kind === 'ROBOT_ENCOUNTER') {
     weight *= profile.robotEncounterWeightMultiplier * getGreedDangerEventWeightMultiplier(state.raid.greedLevel)
   }
 
@@ -410,6 +410,7 @@ export interface HealingItemResult {
 export interface BackpackConsumableResult {
   state: GameState
   event: LogEvent
+  activityEvent?: ActivityLogEvent
 }
 
 /** Finds one bandage for this raid only. It is not backpack loot and never extracts home. */
@@ -538,6 +539,15 @@ export function consumeShieldRecharger(
 
   const baseRaid = {
     ...removeBackpackItem(start.raid, item.itemId),
+    activeRaidActivity: start.completedImmediately
+      ? null
+      : {
+          id: `shield_recharge_${item.itemId}`,
+          name: `${item.name} Recharge`,
+          kind: 'SHIELD_RECHARGE' as const,
+          ticksRemaining: start.raid.activeShieldRecharge!.ticksRemaining,
+          totalTicks: start.raid.activeShieldRecharge!.totalTicks,
+        },
     backpackValue: Math.max(0, state.raid.backpackValue - item.value),
   }
 
@@ -560,161 +570,20 @@ export function consumeShieldRecharger(
       phase: state.raid.phase,
       conditions: logConditionsForRaid(state.raid),
     },
-  }
-}
-
-function pickRobotLoot(robot: RobotEntry, rng: RNG): LootItem {
-  const item = rng.weightedPick(robot.lootTable)
-  return toLootItem(item, robot)
-}
-
-function canRobotEncounterBeLethal(state: GameState, robot: RobotEntry): boolean {
-  if (!LETHAL_ROBOT_DEADLINESS.has(robot.deadliness)) return false
-  if (state.raider.maxHp <= 0) return false
-  return state.raider.hp / state.raider.maxHp <= ROBOT_LETHAL_HP_RATIO
-}
-
-function applyRobotDamage(
-  state: GameState,
-  robot: RobotEntry,
-  incomingDamage: number,
-  skillDamageReduced: number = 0,
-): { raider: GameState['raider']; raid: GameState['raid']; damage: number; shieldDamage: ShieldDamageResult } {
-  const deliveredDamage = Math.max(0, Math.ceil(incomingDamage))
-  const skillReduction = Math.max(0, Math.min(deliveredDamage, Math.floor(skillDamageReduced)))
-  const damageAfterSkills = Math.max(0, deliveredDamage - skillReduction)
-  const moodResilienceReductionPercent = getMoodResilienceReductionPercent(state.raider.mood)
-  const levelResilienceReductionPercent = getRaiderLevelBenefitProfile(state.raider.levelXp).resilienceReductionPercent
-  const resilienceReductionPercent = moodResilienceReductionPercent + levelResilienceReductionPercent
-  const damageAfterResilience = resilienceReductionPercent > 0 && damageAfterSkills > 0
-    ? Math.max(1, Math.floor(damageAfterSkills * (1 - (resilienceReductionPercent / 100))))
-    : damageAfterSkills
-  const resilienceDamageReduced = Math.max(0, damageAfterSkills - damageAfterResilience)
-  const preShieldDamage = damageAfterResilience
-  const preShieldDamageReduced = Math.max(0, deliveredDamage - preShieldDamage)
-
-  if (state.raider.hp <= 0) {
-    return {
-      raider: state.raider,
-      raid: state.raid,
-      damage: 0,
-      shieldDamage: {
-        raider: state.raider,
-        raid: state.raid,
-        incomingDamage: deliveredDamage,
-        preShieldDamage,
-        preShieldDamageReduced,
-        hpDamage: 0,
-        shieldChargeLost: 0,
-        shieldDurabilityLost: 0,
-        shieldDamageReduced: 0,
-        mitigated: false,
-        resilienceDamageReduced: resilienceDamageReduced > 0 ? resilienceDamageReduced : undefined,
-        skillDamageReduced: skillReduction > 0 ? skillReduction : undefined,
-      },
-    }
-  }
-
-  const shielded = applyShieldedDamage(state.raider, state.raid, preShieldDamage)
-  const shieldDamage = {
-    ...shielded,
-    incomingDamage: deliveredDamage,
-    preShieldDamage,
-    preShieldDamageReduced,
-    resilienceDamageReduced: resilienceDamageReduced > 0 ? resilienceDamageReduced : undefined,
-    skillDamageReduced: skillReduction > 0 ? skillReduction : undefined,
-  }
-
-  if (state.raider.maxHp <= 0) {
-    return {
-      raider: shielded.raider,
-      raid: shielded.raid,
-      damage: state.raider.hp - shielded.raider.hp,
-      shieldDamage,
-    }
-  }
-
-  const hpAfterShield = shielded.raider.hp
-  let hp = hpAfterShield
-  if (!canRobotEncounterBeLethal(state, robot)) {
-    const nonlethalFloor = state.raider.hp / state.raider.maxHp > ROBOT_LETHAL_HP_RATIO
-      ? Math.ceil(state.raider.maxHp * ROBOT_NONLETHAL_MIN_HP_RATIO)
-      : 1
-    hp = Math.max(nonlethalFloor, hp)
-  }
-  const nonlethalFloorDamagePrevented = Math.max(0, hp - hpAfterShield)
-
-  return {
-    raider: { ...shielded.raider, hp },
-    raid: shielded.raid,
-    damage: state.raider.hp - hp,
-    shieldDamage: {
-      ...shieldDamage,
-      raider: { ...shielded.raider, hp },
-      hpDamage: state.raider.hp - hp,
-      nonlethalFloorDamagePrevented: nonlethalFloorDamagePrevented > 0 ? nonlethalFloorDamagePrevented : undefined,
-    },
-  }
-}
-
-export interface RobotEncounterResult {
-  state: GameState
-  event: LogEvent
-}
-
-/**
- * Placeholder robot combat: roll 1-10, beat menace to win. Future weapons can
- * replace the roll/modifier here without changing event content.
- */
-export function resolveRobotEncounter(
-  state: GameState,
-  robotId: string,
-  rng: RNG,
-  now: number,
-  opts: { damageMultiplier?: number } = {},
-): RobotEncounterResult | null {
-  const robot = robots.find(entry => entry.id === robotId)
-  if (!robot) return null
-
-  const roll = rng.int(1, 10)
-  if (roll > robot.menace) {
-    const item = pickRobotLoot(robot, rng)
-    const raid = addBackpackItem(state.raid, item)
-    const successText = rng.pick(robot.successText)
-    return {
-      state: { ...state, raid },
-      event: {
-        id: `robot_${robot.id}_defeated`,
-        tick: state.tick,
-        timestamp: now,
-        text: `${successText} Salvaged ${item.name}.`,
-        phase: state.raid.phase,
-        conditions: logConditionsForRaid(state.raid),
-      },
-    }
-  }
-
-  const profile = getDangerLevelProfile(state.raid.dangerLevel)
-  const skillModifiers = getSkillModifierProfile(state.raider.skills)
-  const damageMultiplier = Math.max(0, (opts.damageMultiplier ?? 1) * profile.robotFailureDamageMultiplier)
-  const rawDamageBeforeSkills = Math.ceil(robot.menace * ROBOT_DAMAGE_PER_MENACE * damageMultiplier)
-  const rawDamage = Math.ceil(rawDamageBeforeSkills * skillModifiers.robotFailureDamageMultiplier)
-  const skillDamageReduced = Math.max(0, rawDamageBeforeSkills - rawDamage)
-  const damageResult = applyRobotDamage(state, robot, rawDamageBeforeSkills, skillDamageReduced)
-  return {
-    state: {
-      ...state,
-      raider: damageResult.raider,
-      raid: damageResult.raid,
-    },
-    event: {
-      id: `robot_${robot.id}_escaped`,
-      tick: state.tick,
-      timestamp: now,
-      text: `${robot.name} won that exchange. ${describeShieldDamage(damageResult.shieldDamage)} Ran away with the tactical urgency of someone who just learned a lesson.`,
-      phase: state.raid.phase,
-      conditions: logConditionsForRaid(state.raid),
-    },
+    activityEvent: start.completedImmediately
+      ? undefined
+      : {
+          id: 'activity_shield_recharge_started',
+          activityId: `shield_recharge_${item.itemId}`,
+          activityName: `${item.name} Recharge`,
+          activity: 'SHIELD_RECHARGE',
+          status: 'started',
+          tick: state.tick,
+          timestamp: now,
+          text: `${item.name} thread opened. Shield recharge is pretending this is a careful medical procedure.`,
+          phase: state.raid.phase,
+          conditions: logConditionsForRaid(state.raid),
+        },
   }
 }
 

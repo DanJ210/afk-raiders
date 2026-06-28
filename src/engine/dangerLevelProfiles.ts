@@ -19,7 +19,7 @@ export const DANGER_LEVEL_PROFILES: Record<DangerLevel, DangerLevelProfile> = {
     dangerLevel: 'Low',
     lootValueMultiplier: 0.85,
     lootRarityWeights: { 1: 1.25, 2: 1, 3: 0.75, 4: 0.5, 5: 0.25 },
-    robotEncounterWeightMultiplier: 0.95,
+    robotEncounterWeightMultiplier: 0.4,
     robotFailureDamageMultiplier: 0.95,
     ambientRaidDeathChance: 0,
     extractionRiskEventWeightMultiplier: 1.25,

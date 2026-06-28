@@ -100,6 +100,7 @@ export function tickPhase(
       forcedRaid = {
         ...forcedRaid,
         activeShieldRecharge: null,
+        activeRaidActivity: null,
         shield: restoreShieldAtHub(forcedRaid.shield),
         backpack: [],
         hiddenPocket: null,
@@ -119,6 +120,7 @@ export function tickPhase(
       forcedRaid = {
         ...forcedRaid,
         activeShieldRecharge: null,
+        activeRaidActivity: null,
         healingItems: [],
         greedLevel: resetGreedAfterDowned(),
         forceExtract: false,
@@ -164,6 +166,7 @@ export function tickPhase(
     updatedRaid = {
       ...updatedRaid,
       activeShieldRecharge: null,
+      activeRaidActivity: null,
       shield: restoreShieldAtHub(updatedRaid.shield),
       backpack: [],
       hiddenPocket: null,

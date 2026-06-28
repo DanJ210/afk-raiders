@@ -4,7 +4,7 @@ import type { ComponentPublicInstance } from 'vue'
 import { useDocumentVisibility, useNow } from '@vueuse/core'
 import { useGameStore } from '../stores/gameStore'
 import { TICK_INTERVAL_MS } from '../engine/catchUp'
-import type { LogEvent } from '../engine/types'
+import type { ActivityLogEvent, LogEvent } from '../engine/types'
 import { usePinnedTopLog } from '../composables/usePinnedTopLog'
 import RaiderStatusHeaderStats from './RaiderStatusHeaderStats.vue'
 
@@ -16,6 +16,8 @@ const props = withDefaults(defineProps<{
 
 const store = useGameStore()
 const entries = computed(() => [...store.log].reverse())
+const activityEntries = computed(() => [...store.activityLog].reverse())
+const currentActivityName = computed(() => store.raid.activeRaidActivity?.name ?? activityEntries.value[0]?.activityName ?? null)
 const logEntryCount = computed(() => store.log.length)
 const raidShield = computed(() => store.raid.shield)
 const raidShieldRecharge = computed(() => store.raid.activeShieldRecharge)
@@ -188,6 +190,17 @@ function logBadge(entry: LogEvent): string {
   return phaseBadge(entry.phase)
 }
 
+function activityBadge(entry: ActivityLogEvent): string {
+  const badges: Record<ActivityLogEvent['activity'], string> = {
+    SEARCH: '🔎',
+    ROBOT_ENCOUNTER: '🤖',
+    EXTRACTION: '🚨',
+    DOWNED: '🛏️',
+    SHIELD_RECHARGE: '🛡️',
+  }
+  return badges[entry.activity]
+}
+
 </script>
 
 <template>
@@ -222,40 +235,173 @@ function logBadge(entry: LogEvent): string {
         :style="{ animationDuration: `${TICK_INTERVAL_MS}ms`, animationDelay: tickAnimationDelay }"
       ></div>
     </div>
-    <div
-      :ref="pinnedTopLog.logEl"
-      class="flex-1 overflow-y-auto py-2 scroll-smooth"
-      role="log"
-      aria-live="polite"
-      aria-relevant="additions"
-      @scroll="pinnedTopLog.onScroll"
-    >
-      <p v-if="store.log.length === 0" class="px-4 py-4 text-muted italic text-raider-value">
-        Waiting for transmission…
-      </p>
-      <div
-        v-for="entry in entries"
-        :key="logEntryKey(entry)"
-        :ref="element => bindEntryElement(entry, element)"
-        :data-log-entry-key="logEntryKey(entry)"
-        class="comms-log__entry flex gap-2 px-3.5 py-comms-entry-y text-sm leading-normal border-b border-border-subtle last:border-b-0"
-        :class="{ 'comms-log__entry--unseen': isEntryUnseen(entry) }"
-        :tabindex="isEntryUnseen(entry) ? 0 : undefined"
-        @focusin="markEntrySeen(entry)"
-      >
-        <span class="shrink-0 text-muted font-mono text-[0.75rem] pt-0.5 min-w-comms-timestamp">
-          {{ logBadge(entry) }} {{ formatTime(entry.timestamp) }}
-        </span>
-        <span class="text-text font-mono">{{ entry.text }}</span>
+    <section class="comms-log__activity" aria-label="Activity Log">
+      <header class="comms-log__activity-header">
+        <span>ACTIVE ACTIVITY</span>
+        <span v-if="currentActivityName" class="comms-log__activity-current">{{ currentActivityName }}</span>
+      </header>
+      <div class="comms-log__activity-list" role="log" aria-live="polite" aria-relevant="additions">
+        <p v-if="activityEntries.length === 0" class="comms-log__activity-empty">
+          No active thread.
+        </p>
+        <div
+          v-for="entry in activityEntries"
+          :key="`${entry.tick}-${entry.id}-${entry.timestamp}`"
+          class="comms-log__activity-entry"
+        >
+          <span class="comms-log__activity-time">{{ activityBadge(entry) }} {{ formatTime(entry.timestamp) }}</span>
+          <span class="comms-log__activity-text">
+            <span v-if="entry.activityName" class="comms-log__activity-name">{{ entry.activityName }}</span>
+            {{ entry.text }}
+          </span>
+        </div>
       </div>
-    </div>
-    <div v-if="pinnedTopLog.userScrolledDown.value" class="px-3.5 py-1.5 bg-accent text-bg text-[0.75rem] text-center cursor-pointer font-mono" @click="pinnedTopLog.jumpToTop()">
-      ▲ New messages at top
-    </div>
+    </section>
+    <section class="comms-log__handler" aria-label="Handler Comms">
+      <header class="comms-log__handler-header">
+        <span>HANDLER COMMS</span>
+      </header>
+      <div
+        :ref="pinnedTopLog.logEl"
+        class="comms-log__handler-list flex-1 overflow-y-auto py-2 scroll-smooth"
+        role="log"
+        aria-live="polite"
+        aria-relevant="additions"
+        @scroll="pinnedTopLog.onScroll"
+      >
+        <p v-if="store.log.length === 0" class="px-4 py-4 text-muted italic text-raider-value">
+          Waiting for transmission…
+        </p>
+        <div
+          v-for="entry in entries"
+          :key="logEntryKey(entry)"
+          :ref="element => bindEntryElement(entry, element)"
+          :data-log-entry-key="logEntryKey(entry)"
+          class="comms-log__entry flex gap-2 px-3.5 py-comms-entry-y text-sm leading-normal border-b border-border-subtle last:border-b-0"
+          :class="{ 'comms-log__entry--unseen': isEntryUnseen(entry) }"
+          :tabindex="isEntryUnseen(entry) ? 0 : undefined"
+          @focusin="markEntrySeen(entry)"
+        >
+          <span class="shrink-0 text-muted font-mono text-[0.75rem] pt-0.5 min-w-comms-timestamp">
+            {{ logBadge(entry) }} {{ formatTime(entry.timestamp) }}
+          </span>
+          <span class="text-text font-mono">{{ entry.text }}</span>
+        </div>
+      </div>
+      <div v-if="pinnedTopLog.userScrolledDown.value" class="px-3.5 py-1.5 bg-accent text-bg text-[0.75rem] text-center cursor-pointer font-mono" @click="pinnedTopLog.jumpToTop()">
+        ▲ New messages at top
+      </div>
+    </section>
   </section>
 </template>
 
 <style scoped>
+.comms-log__activity {
+  margin: 0.55rem 0.75rem 0;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: 0.45rem;
+  background: color-mix(in srgb, var(--color-surface-raised) 80%, var(--color-bg));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-accent-secondary) 10%, transparent);
+  min-height: 10.5rem;
+}
+
+.comms-log__activity-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.875rem 0.2rem;
+  color: var(--color-accent-secondary);
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.comms-log__activity-current {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--color-text);
+  font-size: 0.72rem;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.comms-log__activity-list {
+  max-height: 7.5rem;
+  overflow-y: auto;
+  padding: 0.15rem 0 0.45rem;
+}
+
+.comms-log__handler {
+  min-height: 0;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  margin-top: 0.65rem;
+  border-top: 1px solid var(--color-border);
+  background: color-mix(in srgb, var(--color-surface) 88%, var(--color-bg));
+}
+
+.comms-log__handler-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.875rem 0.35rem;
+  border-bottom: 1px solid var(--color-border-subtle);
+  color: var(--color-accent);
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.comms-log__handler-list {
+  min-height: 0;
+}
+
+.comms-log__activity-empty,
+.comms-log__activity-entry {
+  margin: 0;
+  padding: 0.25rem 0.875rem;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+}
+
+.comms-log__activity-empty {
+  color: var(--color-muted);
+  font-style: italic;
+}
+
+.comms-log__activity-entry {
+  display: flex;
+  gap: 0.5rem;
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+.comms-log__activity-time {
+  flex: 0 0 var(--spacing-comms-timestamp);
+  color: var(--color-muted);
+}
+
+.comms-log__activity-text {
+  min-width: 0;
+  color: var(--color-text);
+}
+
+.comms-log__activity-name {
+  color: var(--color-accent-secondary);
+  font-weight: 700;
+}
+
+.comms-log__activity-name::after {
+  content: ': ';
+  color: var(--color-text);
+  font-weight: 400;
+}
+
 .comms-log__entry {
   transition: background-color 0.18s ease, box-shadow 0.18s ease;
 }

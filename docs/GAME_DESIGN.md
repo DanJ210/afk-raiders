@@ -15,7 +15,7 @@ You are **not** the raider. You are their Handler back in the underground hub, w
 ## 2. Core Loop
 1. **Prep phase (hub):** Raider sells loot, buys questionable gear, eats expired MREs, gossips with NPCs.
 2. **Deploy:** Raider autonomously picks a zone and a seeded **zone condition** (for example Light Fog, Acid Rain, Robot Surge). Greed carried over from the last raid nudges whether the next condition comes from the minor or major condition pool.
-3. **Raid events:** Loot finds, robot encounters, weather, meeting other AI raiders (alliance → inevitable betrayal). The selected condition sets a `dangerLevel` (Low/Medium/High), which then drives the danger-level profile for both upside (loot value/rarity) and risk (ambient downed pressure, robot pressure, extraction danger).
+3. **Raid diary and active threads:** Ambient raid diary lines cover loot finds, weather, suspicious noises, and Raider commentary. Multi-tick active threads cover searches, extraction drama, DOWNED recovery, shield recharge progress, and robot fights. The selected condition sets a `dangerLevel` (Low/Medium/High), which then drives the danger-level profile for both upside (loot value/rarity) and risk (ambient downed pressure, robot pressure, extraction danger).
    - Raider **mood** now provides a tiny secondary bias to loot quality: positive mood slightly improves higher-rarity odds, while negative mood slightly favors lower-rarity outcomes. Greed adds a second small loot-appetite bias toward higher-rarity finds.
 4. **The Greed Check™ (signature mechanic):** Every tick in active RAIDING, the Raider rolls to start extracting *or* keep looting. Natural extraction is locked out for roughly the first half of RAIDING (30 ticks / 15 minutes by default) so the raider cannot immediately bail after deployment; CALL EXTRACT bypasses this. **Greed rises slowly when the Raider keeps pushing deeper**, can jump from specific raiding/extraction-condition events, and is modified by Handler actions (Calm lowers it, Pressure raises it). Higher greed does not directly lower extraction chance; instead it nudges rare loot odds, makes risky robot/extraction events more likely, and decays into major-condition momentum after successful returns. Failed raids that reach KNOCKED_OUT reset greed to 0. Pure dramatic tension, zero input required — the Handler can only nudge via Signal actions.
 5. **Extract or get knocked out:** Extraction is a timed condition layered on RAIDING, not a separate phase. During that window **extraction events** can fire — the shuttle may arrive early, the beacon may get jammed and clear the extracting condition, or the raider may get DOWNED at the LZ. DOWNED is also a RAIDING condition: the raider is incapacitated, normal events/actions stop, and a short revive timer starts. Revive costs 5 Signal, clears DOWNED, and restores 25 HP; the in-raid Panic Paddles field med can do the same if found before the disaster. If extraction completes before the DOWNED timer expires, the raid succeeds and returns straight to HUB. If the DOWNED timer expires first, the raid transitions to KNOCKED_OUT, then briefly resets to HUB with a sheepish wake-up log entry.
@@ -24,6 +24,7 @@ You are **not** the raider. You are their Handler back in the underground hub, w
 `RAIDING` is the field phase. `DOWNED` and `EXTRACTING` are timed conditions that can overlap during RAIDING:
 - **EXTRACTING** is the only successful way to leave a raid. When it completes, the raid transitions `RAIDING → HUB` and the backpack transfers into Home Stash.
 - **DOWNED** means the raider is still in the raid but unable to perform normal actions. Normal raiding/extraction events pause unless a comms event explicitly requires the DOWNED condition.
+- EXTRACTING and DOWNED also write progress into the active-thread log so timed danger is visible separately from ordinary diary chatter.
 - If DOWNED and EXTRACTING overlap, the timers race. Extraction completing first is a successful return; the DOWNED timer expiring first transitions `RAIDING → KNOCKED_OUT`.
 - **KNOCKED_OUT** is the short recovery/reset phase after failed revival or raid-timeout loss. `KNOCKED_OUT → HUB` performs failed-raid bookkeeping.
 
@@ -47,7 +48,7 @@ The Raider now starts each raid with a basic **Makeshift Confidence Shield** lay
 - Shields mitigate incoming damage while they still have both charge and durability.
 - Shields are not extra HP; they reduce the HP damage taken from a hit while spending shield charge.
 - Shield durability wears down as shield charge is spent.
-- When a shield soaks part of a hit, the comms feed shows both the shield loss and the remaining HP damage so the mitigation is visible.
+- When a shield soaks part of a hit, the active-thread feed shows both the shield loss and the remaining HP damage so the mitigation is visible beside the fight or hazard that caused it.
 - For the MVP, returning to the HUB restores the starter shield to full charge and durability.
 - In future phases, a loadout and store loop can decide which shield is equipped and how it persists.
 
@@ -56,7 +57,7 @@ Mood also feeds a small hidden **resilience** bonus against robot damage:
 - Positive mood slightly reduces failed-robot damage before shield mitigation.
 - Mood at or below zero gives no resilience bonus.
 - Robots still roll and hit for the same raw damage; resilience only trims the amount that reaches shields and HP.
-- The comms feed calls out the bonus when it happens so the player can see the mood effect.
+- The active-thread feed calls out the bonus when it happens so the player can see the mood effect in the same place as the fight math.
 
 ### Shield Rechargers
 Shield rechargers are manual-use backpack loot found during RAIDING:
@@ -86,8 +87,15 @@ Keeping input this thin is the point — it must remain firmly zero-player.
 
 Mood therefore matters beyond flavor text: keeping the raider in a better mood gives a subtle long-run boost to item quality without overriding danger-level risk/reward tuning.
 
-## 4. The Comms Log — the content engine
-Everything funny flows through an autoscrolling text feed:
+## 4. The Comms Log — diary plus active thread
+The UI has two coordinated text streams:
+
+- **Diary / comms feed:** the broad autoscrolling story feed for ambient jokes, loot observations, phase transitions, Handler feedback, and Raider personality.
+- **Active thread:** a compact second feed for the thing currently taking multiple ticks: searching Medical, waiting for extraction, lying DOWNED, applying a shield recharge, or fighting a robot.
+
+Damage and fighting should live in the active thread, not in one-off diary events. A diary line can announce that a robot appeared or that Medical is being searched, but the active thread owns the progress ticks, HP/shield changes, combat outcome, and completion/failure text.
+
+Diary examples:
 
 > 📻 *Day 12, 14:02 — Found a water bottle. That's 47 now. I have a system.*
 >
@@ -96,6 +104,12 @@ Everything funny flows through an autoscrolling text feed:
 > 📻 *14:15 — Hiding in a locker. The robot is also waiting. We're both very patient.*
 >
 > 📻 *14:31 — Met another raider. We emoted at each other for 5 minutes then both ran away.*
+
+Active-thread examples:
+
+> 🚨 *14:33 — Extraction thread: 2 ticks remaining. Raider is negotiating with flares and panic.*
+>
+> 🛡️ *14:34 — Tattletale fight round 2: shield lost 6 charge, 4 HP got through. Raider called that "a learning invoice."*
 
 ## 5. Parody Content Table (legally distinct names)
 The canonical expanded parody reference lives in [docs/lore/PARODY_MAPPING.md](lore/PARODY_MAPPING.md). This table is the short design-doc summary.
@@ -137,7 +151,9 @@ The canonical expanded parody reference lives in [docs/lore/PARODY_MAPPING.md](l
 - **Coins** — accumulated value from stash overflow auto-sales
 - **Lifetime Stats** — extracts/deaths totals and context breakdowns, robot defeats, healing usage
 - **Shield Layer** — current raid shield state (starter shield for now)
-- **EventLog** — the comms feed entries
+- **EventLog** — the diary/comms feed entries
+- **ActivityLog** — active-thread entries for multi-tick tasks, damage, fighting, extraction, and DOWNED progress
+- **ActiveRaidActivity** — planned current-raid task state for searches, robot encounters, and other multi-tick actions; see [ACTIVE_RAID_ACTIVITY_PLAN.md](ACTIVE_RAID_ACTIVITY_PLAN.md)
 - **Inventory / Gear** — hub stash, equipped items
 - **Quest** — active parody quests
 - *(Later phases: Squad, Friends, Leaderboards)*
@@ -145,7 +161,7 @@ The canonical expanded parody reference lives in [docs/lore/PARODY_MAPPING.md](l
 ## 8. Roadmap
 | Phase | Scope |
 |---|---|
-| **1 — MVP (the toy)** | One raider, one zone pool, tick engine, comms log, loot/greed/extract loop, Ready Up/Calm/Pressure/CALL EXTRACT, offline catch-up, PWA. **Ship when the log alone makes people laugh.** |
+| **1 — MVP (the toy)** | One raider, one zone pool, tick engine, diary + active-thread logs, loot/greed/extract loop, Ready Up/Calm/Pressure/CALL EXTRACT, offline catch-up, PWA. **Ship when the logs alone make people laugh.** |
 | **2 — Depth** | More zones, robot bestiary, quests, traders, gear-crafting parody, achievements, The Wipe |
 | **3 — Social** | Accounts, leaderboards ("Most Water Bottles"), spectate friends' raiders, squads |
 | **4 — Native** | Capacitor builds, push notifications, app store release |

@@ -14,18 +14,19 @@
  *   6. Increment tick counter, append events to log.
  */
 
-import type { BackpackItem, GameState, HiddenPocketItem, LogCondition, LogEvent, TickResult } from './types.js'
+import type { ActivityLogEvent, ActivityStatus, BackpackItem, GameState, HiddenPocketItem, LogCondition, LogEvent, TickResult } from './types.js'
 import type { RNG } from './rng.js'
 import { DOWNED_TICKS, EXTRACTING_TICKS, tickPhase, transitionText, type PhaseTransition } from './raidStateMachine.js'
 import { runGreedCheck } from './greedCheck.js'
 import { advanceSignal, applyCalmGreedReduction, applyPressureGreedIncrease } from './signal.js'
-import { describeShieldDamage, resolveEvent, resolveFlavorKey, applyEffects, resolveHealingItemFind, resolveRobotEncounter, resolveShieldRechargerFind, events as allEvents } from './eventResolver.js'
+import { describeShieldDamage, resolveEvent, resolveFlavorKey, applyEffects, resolveHealingItemFind, resolveShieldRechargerFind, events as allEvents } from './eventResolver.js'
 import { transferBackpackToHomeStash, HOME_STASH_ITEM_LIMIT } from './homeStash.js'
-import { appendLogEntries, logConditionsForRaid } from './log.js'
+import { appendActivityLogEntries, appendLogEntries, logConditionsForRaid } from './log.js'
 import { recordOutcome, recordRobotDefeat } from './stats.js'
 import { advanceShieldRecharge } from './shields.js'
 import { applySkillPractice, getSkillModifierProfile, rollSkillPractice, type SkillLevelUp, type SkillPracticeTrigger } from './skills.js'
 import { applyRaiderXpGain, getRaiderLevelBenefitProfile, rollRaiderXp, type RaiderLevelUp, type RaiderXpTrigger } from './raiderLevel.js'
+import { advanceRaidActivity, raidActivities, startRaidActivity } from './raidActivities.js'
 
 const LOOT_BONUS_HEALING_ITEM_CHANCE = 0.2 // 20% chance to find a healing item on any loot event, independent of normal loot rolls
 const LOOT_BONUS_SHIELD_RECHARGER_CHANCE = 0.15 // 15% chance to find a shield recharger on any loot event, independent of normal loot rolls
@@ -63,12 +64,122 @@ function conditionEvent(id: string, text: string, tick: number, now: number, con
   }
 }
 
+function formatTickCount(ticks: number): string {
+  return `${ticks} tick${ticks === 1 ? '' : 's'}`
+}
+
+function fillTimedActivityText(text: string, ticksRemaining: number): string {
+  return text
+    .replaceAll('{ticks_remaining}', String(ticksRemaining))
+    .replaceAll('{tick_count}', formatTickCount(ticksRemaining))
+}
+
+function activityEvent(
+  params: {
+    id: string
+    activityId: string
+    activityName?: string
+    activity: ActivityLogEvent['activity']
+    status: ActivityStatus
+    tick: number
+    timestamp: number
+    text: string
+    phase: GameState['raid']['phase']
+    conditions?: LogCondition[]
+  },
+): ActivityLogEvent {
+  return params
+}
+
+function extractionActivityEvent(status: ActivityStatus, tick: number, now: number, ticksRemaining = 0): ActivityLogEvent {
+  const definition = raidActivities.find(activity => activity.id === 'extraction_countdown')
+  const textTemplate = status === 'progress'
+    ? definition?.text.progress[0]
+    : definition?.text[status]
+  const fallbackTextByStatus: Record<ActivityStatus, string> = {
+    started: `Extraction thread opened. LZ timer: ${formatTickCount(ticksRemaining)}.`,
+    progress: `Extraction thread: ${formatTickCount(ticksRemaining)} remaining. Raider is negotiating with flares and panic.`,
+    completed: 'Extraction thread closed. Raider made it back with the bag and several legal questions.',
+    failed: 'Extraction thread failed. LZ rejected the vibes; raid continues.',
+  }
+  const text = fillTimedActivityText(textTemplate ?? fallbackTextByStatus[status], ticksRemaining)
+
+  return activityEvent({
+    id: `activity_extraction_${status}`,
+    activityId: 'current_extraction',
+    activityName: definition?.name ?? 'Extraction Thread',
+    activity: 'EXTRACTION',
+    status,
+    tick,
+    timestamp: now,
+    text,
+    phase: status === 'completed' ? 'HUB' : 'RAIDING',
+    conditions: status === 'completed' ? undefined : ['EXTRACTING'],
+  })
+}
+
+function downedActivityEvent(status: ActivityStatus, tick: number, now: number, ticksRemaining = 0): ActivityLogEvent {
+  const definition = raidActivities.find(activity => activity.id === 'downed_countdown')
+  const textTemplate = status === 'progress'
+    ? definition?.text.progress[0]
+    : definition?.text[status]
+  const fallbackTextByStatus: Record<ActivityStatus, string> = {
+    started: `Downed thread opened. ${formatTickCount(ticksRemaining)} before the zone writes the ending.`,
+    progress: `Downed thread: ${formatTickCount(ticksRemaining)} left for a miracle or medically questionable idea.`,
+    completed: 'Downed thread closed. Raider is upright and loudly disputing gravity.',
+    failed: 'Downed thread failed. Recovery team is preparing the apology clipboard.',
+  }
+  const text = fillTimedActivityText(textTemplate ?? fallbackTextByStatus[status], ticksRemaining)
+
+  return activityEvent({
+    id: `activity_downed_${status}`,
+    activityId: 'downed_recovery',
+    activityName: definition?.name ?? 'Downed Thread',
+    activity: 'DOWNED',
+    status,
+    tick,
+    timestamp: now,
+    text,
+    phase: status === 'failed' ? 'KNOCKED_OUT' : 'RAIDING',
+    conditions: status === 'failed' ? undefined : ['DOWNED'],
+  })
+}
+
+function shieldRechargeActivityEvent(
+  status: ActivityStatus,
+  tick: number,
+  now: number,
+  params: { itemId?: string; name?: string; ticksRemaining?: number; chargeApplied?: number } = {},
+): ActivityLogEvent {
+  const name = params.name ?? 'Shield recharger'
+  const ticksRemaining = params.ticksRemaining ?? 0
+  const textByStatus: Record<ActivityStatus, string> = {
+    started: `${name} thread opened. Shield recharge is pretending this is a careful medical procedure.`,
+    progress: `${name} thread: restored ${params.chargeApplied ?? 0} shield charge; ${formatTickCount(ticksRemaining)} remaining.`,
+    completed: `${name} thread completed. Confidence field humming again.`,
+    failed: `${name} thread failed. The shield made a tiny disappointed noise.`,
+  }
+
+  return activityEvent({
+    id: `activity_shield_recharge_${status}`,
+    activityId: `shield_recharge_${params.itemId ?? 'active'}`,
+    activityName: `${name} Recharge`,
+    activity: 'SHIELD_RECHARGE',
+    status,
+    tick,
+    timestamp: now,
+    text: textByStatus[status],
+    phase: 'RAIDING',
+  })
+}
+
 function startExtractionCondition(state: GameState, tick: number, now: number): { state: GameState; event: LogEvent | null } {
   if (state.raid.phase !== 'RAIDING' || state.raid.extracting) return { state, event: null }
 
   const raid = {
     ...state.raid,
     activeShieldRecharge: null,
+    activeRaidActivity: null,
     extracting: { ticksRemaining: EXTRACTING_TICKS },
     forceExtract: false,
   }
@@ -108,6 +219,7 @@ function startDownedCondition(state: GameState, tick: number, now: number, text 
     raid: {
       ...state.raid,
       activeShieldRecharge: null,
+      activeRaidActivity: null,
       downed: { ticksRemaining: DOWNED_TICKS },
     },
   })
@@ -424,6 +536,7 @@ function applyHiddenPocketFailureRecovery(
 
 export function processTick(state: GameState, rng: RNG, now: number = Date.now()): TickResult {
   const emitted: LogEvent[] = []
+  const activityEmitted: ActivityLogEvent[] = []
   const skillPracticeTriggers: SkillPracticeTrigger[] = []
   const raiderXpTriggers: RaiderXpTrigger[] = []
   const signalAdvance = advanceSignal(state.signal, now)
@@ -474,9 +587,18 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
   const conditionAdvance = advanceRaidConditions(currentState)
   currentState = conditionAdvance.state
   if (conditionAdvance.extractionCompleted) {
+    activityEmitted.push(extractionActivityEvent('completed', state.tick, now))
     currentState = completeExtractionCondition(currentState, skillPracticeTriggers, raiderXpTriggers, emitted, state.tick, now)
   } else if (conditionAdvance.downedExpired) {
+    activityEmitted.push(downedActivityEvent('failed', state.tick, now))
     currentState = enterKnockedOutRecovery(currentState, emitted, state.tick, now)
+  } else {
+    if (currentState.raid.extracting) {
+      activityEmitted.push(extractionActivityEvent('progress', state.tick, now, currentState.raid.extracting.ticksRemaining))
+    }
+    if (currentState.raid.downed) {
+      activityEmitted.push(downedActivityEvent('progress', state.tick, now, currentState.raid.downed.ticksRemaining))
+    }
   }
 
   if (
@@ -488,6 +610,7 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
     currentState = downed.state
     if (downed.event) {
       emitted.push(downed.event)
+      activityEmitted.push(downedActivityEvent('started', state.tick, now, currentState.raid.downed?.ticksRemaining ?? DOWNED_TICKS))
     }
   }
 
@@ -495,10 +618,62 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
   // 2. Greed Check (RAIDING phase only, once per tick)
   // ------------------------------------------------------------------
   let startedExtractionThisTick = false
-  if (currentState.raid.phase === 'RAIDING' && !currentState.raid.extracting && !currentState.raid.downed) {
+  let advancedBlockingActivity = false
+  let advancedActivityThisTick = false
+  if (
+    currentState.raid.phase === 'RAIDING' &&
+    !currentState.raid.extracting &&
+    !currentState.raid.downed &&
+    currentState.raid.activeRaidActivity?.kind !== 'SHIELD_RECHARGE'
+  ) {
+    const activityResult = advanceRaidActivity(currentState, rng, now)
+    currentState = activityResult.state
+    activityEmitted.push(...activityResult.activityEvents)
+    advancedBlockingActivity = activityResult.blocking
+    advancedActivityThisTick = activityResult.activityEvents.length > 0 && activityResult.blocking
+    if (activityResult.robotDefeatedId) {
+      currentState = {
+        ...currentState,
+        stats: recordRobotDefeat(currentState.stats, activityResult.robotDefeatedId),
+      }
+      raiderXpTriggers.push({ reason: 'robot_defeated', minXp: 4, maxXp: 7 })
+    } else if (activityResult.robotSurvivedId && currentState.raider.hp > 0) {
+      skillPracticeTriggers.push({ skillId: 'hiding_in_lockers', reason: 'robot_survived', minXp: 1, maxXp: 3 })
+      raiderXpTriggers.push({ reason: 'robot_survived', minXp: 2, maxXp: 4 })
+    }
+  }
+
+  if (currentState.raid.phase === 'RAIDING' && !currentState.raid.extracting && !currentState.raid.downed && !advancedBlockingActivity) {
     const shieldRechargeBefore = currentState.raid.activeShieldRecharge
     const shieldRechargeResult = advanceShieldRecharge(currentState.raid)
-    currentState = { ...currentState, raid: shieldRechargeResult.raid }
+    currentState = {
+      ...currentState,
+      raid: {
+        ...shieldRechargeResult.raid,
+        activeRaidActivity: shieldRechargeResult.completed && shieldRechargeBefore
+          ? null
+          : shieldRechargeResult.raid.activeRaidActivity?.kind === 'SHIELD_RECHARGE'
+            ? {
+                ...shieldRechargeResult.raid.activeRaidActivity,
+                ticksRemaining: shieldRechargeResult.raid.activeShieldRecharge?.ticksRemaining ?? 0,
+              }
+            : shieldRechargeResult.raid.activeRaidActivity,
+      },
+    }
+    if (shieldRechargeBefore && shieldRechargeResult.chargeApplied > 0) {
+      activityEmitted.push(shieldRechargeActivityEvent(
+        shieldRechargeResult.completed ? 'completed' : 'progress',
+        state.tick,
+        now,
+        {
+          itemId: shieldRechargeBefore.itemId,
+          name: shieldRechargeBefore.name,
+          ticksRemaining: currentState.raid.activeShieldRecharge?.ticksRemaining ?? 0,
+          chargeApplied: shieldRechargeResult.chargeApplied,
+        },
+      ))
+      advancedActivityThisTick = true
+    }
     if (shieldRechargeResult.completed && shieldRechargeResult.chargeApplied > 0) {
       emitted.push({
         id: `shield_recharger_${shieldRechargeBefore?.itemId ?? 'completed'}_completed`,
@@ -547,12 +722,14 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
       startedExtractionThisTick = started.event !== null
       if (started.event) {
         emitted.push(started.event)
+        activityEmitted.push(extractionActivityEvent('started', state.tick, now, currentState.raid.extracting?.ticksRemaining ?? EXTRACTING_TICKS))
       }
     } else if (greedResult.outcome === 'DOWNED') {
       const downed = startDownedCondition(currentState, state.tick, now)
       currentState = downed.state
       if (downed.event) {
         emitted.push(downed.event)
+        activityEmitted.push(downedActivityEvent('started', state.tick, now, currentState.raid.downed?.ticksRemaining ?? DOWNED_TICKS))
       }
     }
     // PUSH_DEEPER -> stay in RAIDING (greedLevel already updated above)
@@ -573,13 +750,14 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
     currentState = downed.state
     if (downed.event) {
       emitted.push(downed.event)
+      activityEmitted.push(downedActivityEvent('started', state.tick, now, currentState.raid.downed?.ticksRemaining ?? DOWNED_TICKS))
     }
   }
 
   // ------------------------------------------------------------------
   // 3. Resolve flavor event for current phase
   // ------------------------------------------------------------------
-  const resolvedEvent = resolveEvent(currentState, rng, now)
+  const resolvedEvent = advancedBlockingActivity || advancedActivityThisTick ? null : resolveEvent(currentState, rng, now)
   if (resolvedEvent) {
     const template = allEvents.find(e => e.id === resolvedEvent.id)
     if (template) {
@@ -632,24 +810,11 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
         emitted.push(rechargerFind.event)
       }
 
-      const robotId = template.effects?.robotEncounter
-      if (robotId) {
-        const robotResult = resolveRobotEncounter(currentState, robotId, rng, now, {
-          damageMultiplier: template.effects?.robotDamageMultiplier,
-        })
-        if (robotResult) {
-          currentState = robotResult.state
-          if (robotResult.event.id.endsWith('_defeated')) {
-            currentState = {
-              ...currentState,
-              stats: recordRobotDefeat(currentState.stats, robotId),
-            }
-            raiderXpTriggers.push({ reason: 'robot_defeated', minXp: 4, maxXp: 7 })
-          } else if (robotResult.event.id.endsWith('_escaped') && currentState.raider.hp > 0) {
-            skillPracticeTriggers.push({ skillId: 'hiding_in_lockers', reason: 'robot_survived', minXp: 1, maxXp: 3 })
-            raiderXpTriggers.push({ reason: 'robot_survived', minXp: 2, maxXp: 4 })
-          }
-          emitted.push(robotResult.event)
+      if (template.effects?.startRaidActivity) {
+        const started = startRaidActivity(currentState, template.effects.startRaidActivity, rng, now)
+        if (started) {
+          currentState = started.state
+          activityEmitted.push(started.activityEvent)
         }
       }
 
@@ -658,6 +823,7 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
         currentState = downed.state
         if (downed.event) {
           emitted.push(downed.event)
+          activityEmitted.push(downedActivityEvent('started', state.tick, now, currentState.raid.downed?.ticksRemaining ?? DOWNED_TICKS))
         }
       }
 
@@ -668,10 +834,12 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
           skillPracticeTriggers.push({ skillId: 'hiding_in_lockers', reason: 'failed_extraction', minXp: 1, maxXp: 3 })
           raiderXpTriggers.push({ reason: 'failed_extraction', minXp: 2, maxXp: 4 })
           emitted.push(failed.event)
+          activityEmitted.push(extractionActivityEvent('failed', state.tick, now))
         }
       }
 
       if (template.effects?.completeExtraction) {
+        activityEmitted.push(extractionActivityEvent('completed', state.tick, now))
         currentState = completeExtractionCondition(currentState, skillPracticeTriggers, raiderXpTriggers, emitted, state.tick, now)
       }
     }
@@ -690,6 +858,7 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
     currentState = downed.state
     if (downed.event) {
       emitted.push(downed.event)
+      activityEmitted.push(downedActivityEvent('started', state.tick, now, currentState.raid.downed?.ticksRemaining ?? DOWNED_TICKS))
     }
   }
 
@@ -761,13 +930,16 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
   // 5. Finalize: increment tick, append events to log
   // ------------------------------------------------------------------
   const newLog = appendLogEntries(currentState.log, emitted)
+  const newActivityLog = appendActivityLogEntries(currentState.activityLog, activityEmitted)
 
   return {
     state: {
       ...currentState,
       tick: currentState.tick + 1,
       log: newLog,
+      activityLog: newActivityLog,
     },
     events: emitted,
+    activityEvents: activityEmitted,
   }
 }

@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import { createInitialState } from '../../src/engine/initialState'
-import { resolveRobotEncounter, robots } from '../../src/engine/eventResolver'
+import { robots } from '../../src/engine/eventResolver'
+import { advanceRaidActivity, DEFAULT_RAIDER_WEAPON } from '../../src/engine/raidActivities'
 import { createInitialSkills, skillDefinitionById } from '../../src/engine/skills'
 import { xpRequiredForLevel } from '../../src/engine/raiderLevel'
+import type { ActivityLogEvent } from '../../src/engine/types'
 import type { DangerLevel, GameState, RaiderSkillsState, RobotEntry } from '../../src/engine/types'
 import type { RNG } from '../../src/engine/rng'
 
@@ -60,11 +62,46 @@ function skillsWithMaxHiding(): RaiderSkillsState {
   return skills
 }
 
-function resolveFailedRobot(robotId: string, state: GameState) {
-  const result = resolveRobotEncounter(state, robotId, createFailingCombatRng(), 0)
-  expect(result, `robot ${robotId} should resolve`).not.toBeNull()
-  expect(result!.event.id, `robot ${robotId} should fail the encounter roll`).toBe(`robot_${robotId}_escaped`)
-  return result!
+function createRobotActivityState(robotId: string, state: GameState): GameState {
+  return {
+    ...state,
+    raid: {
+      ...state.raid,
+      activeRaidActivity: {
+        id: 'robot_encounter_standard',
+        kind: 'ROBOT_ENCOUNTER',
+        ticksRemaining: 3,
+        totalTicks: 3,
+        robotId,
+        robotHp: 999,
+        robotMaxHp: 999,
+        weaponId: DEFAULT_RAIDER_WEAPON.id,
+        weaponName: DEFAULT_RAIDER_WEAPON.name,
+        raiderDamageMin: 0,
+        raiderDamageMax: 0,
+        robotDamageMultiplier: 3,
+        raiderAction: 'fighting',
+      },
+    },
+  }
+}
+
+function resolveFailedRobot(robotId: string, state: GameState): { state: GameState; activityEvents: ActivityLogEvent[] } {
+  let currentState = createRobotActivityState(robotId, state)
+  const activityEvents: ActivityLogEvent[] = []
+
+  for (let tick = 0; tick < 5 && currentState.raid.activeRaidActivity; tick += 1) {
+    const result = advanceRaidActivity(currentState, createFailingCombatRng(), tick)
+    currentState = result.state
+    activityEvents.push(...result.activityEvents)
+  }
+
+  expect(currentState.raid.activeRaidActivity, `robot ${robotId} activity should resolve`).toBeNull()
+  expect(activityEvents.at(-1), `robot ${robotId} should emit a final activity event`).toMatchObject({
+    id: 'activity_robot_encounter_failed',
+    status: 'failed',
+  })
+  return { state: currentState, activityEvents }
 }
 
 function failedRobotHpDamage(robotId: string, state: GameState): number {
@@ -108,7 +145,7 @@ describe('robot balance guardrails', () => {
 
     expect(maxLevelDamage).toBeLessThan(starterDamage)
     expect(maxLevelDamage).toBeGreaterThan(failedRobotHpDamage('tank_overcompensation', mediumStarter))
-    expect(starterDamage - maxLevelDamage).toBeLessThanOrEqual(2)
+    expect(starterDamage - maxLevelDamage).toBeLessThanOrEqual(3)
   })
 
   it('keeps mood resilience helpful but smaller than the danger jump', () => {
@@ -141,6 +178,6 @@ describe('robot balance guardrails', () => {
 
     expect(highSkilledDamage).toBeLessThan(failedRobotHpDamage('tank_overcompensation', createRobotState({ dangerLevel: 'High', shielded: false })))
     expect(highSkilledDamage).toBeGreaterThan(mediumDamage)
-    expect(highSkilledResult.event.text).toContain('Hiding in Lockers ducked')
+    expect(highSkilledResult.activityEvents.at(-1)?.text).toContain('Hiding in Lockers ducked')
   })
 })

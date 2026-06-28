@@ -24,8 +24,10 @@ import skillsData from '../../src/content/skills.json'
 import progressionConfigData from '../../src/content/progression_config.json'
 import raiderLevelsData from '../../src/content/raider_levels.json'
 import zoneConditionsData from '../../src/content/zones/zone_conditions.json'
+import zonesData from '../../src/content/zones/zones.json'
 import { MAX_RAIDER_LEVEL } from '../../src/engine/raiderLevel'
-import type { RaiderLevelContent, SkillDefinition, SkillTrackId } from '../../src/engine/types'
+import { raidActivities } from '../../src/engine/raidActivities'
+import type { RaidActivityDefinition, RaiderLevelContent, SkillDefinition, SkillTrackId } from '../../src/engine/types'
 
 const rawLoot = [
   ...(apparelAccessoriesData as { items: typeof loot }).items,
@@ -71,6 +73,7 @@ const VALID_ZONE_CONDITION_IDS = new Set([
   ...zoneConditionsData.minor_conditions,
   ...zoneConditionsData.major_conditions,
 ].map(condition => condition.id))
+const VALID_ZONE_IDS = new Set(zonesData.map(zone => zone.id))
 const contentJsonModules = import.meta.glob('../../src/content/**/*.json', { eager: true }) as Record<string, { default: unknown }>
 const NON_PLAYER_FACING_CONTENT_KEYS = new Set([
   'category',
@@ -79,6 +82,7 @@ const NON_PLAYER_FACING_CONTENT_KEYS = new Set([
   'phase',
   'robotEncounter',
   'skillXpThresholdProfile',
+  'zone',
   'zoneCondition',
 ])
 const FORBIDDEN_PLAYER_FACING_TERMS = [
@@ -94,6 +98,9 @@ const progressionConfig = progressionConfigData as {
   skillXpThresholdProfiles: Record<string, number[]>
 }
 const raiderLevels = raiderLevelsData as RaiderLevelContent
+const VALID_RAID_ACTIVITY_KINDS = new Set<RaidActivityDefinition['kind']>(['SEARCH', 'ROBOT_ENCOUNTER', 'EXTRACTION', 'DOWNED', 'SHIELD_RECHARGE'])
+const VALID_ROBOT_DEADLINESS = new Set(robots.map(robot => robot.deadliness))
+const VALID_SEARCH_LOOT_TABLE_IDS = new Set(['scrap_components', 'water_bottles'])
 
 // Robot flavor slots: {robot_flavor_<robotId>}
 function isRobotFlavorSlot(slot: string): boolean {
@@ -108,7 +115,7 @@ function extractSlots(text: string): string[] {
 }
 
 function getRobotEncounterEvents(robotId: string) {
-  return events.filter(event => event.effects?.robotEncounter === robotId)
+  return events.filter(event => event.effects?.startRaidActivity?.robotId === robotId)
 }
 
 function getMaxFailureDamage(robotId: string): number {
@@ -116,7 +123,7 @@ function getMaxFailureDamage(robotId: string): number {
   expect(robot, `unknown robot "${robotId}"`).toBeDefined()
 
   const maxMultiplier = Math.max(
-    ...getRobotEncounterEvents(robotId).map(event => event.effects?.robotDamageMultiplier ?? 1),
+    ...getRobotEncounterEvents(robotId).map(event => event.effects?.startRaidActivity?.robotDamageMultiplier ?? 1),
   )
 
   return Math.ceil(robot!.menace * 5 * maxMultiplier)
@@ -124,6 +131,12 @@ function getMaxFailureDamage(robotId: string): number {
 
 function getTotalEncounterWeight(robotId: string): number {
   return getRobotEncounterEvents(robotId).reduce((sum, event) => sum + event.weight, 0)
+}
+
+function isNegativeHpEffect(hp: unknown): boolean {
+  if (typeof hp === 'number') return hp < 0
+  if (typeof hp === 'string') return hp.trim().startsWith('-')
+  return false
 }
 
 function collectPlayerFacingStrings(value: unknown, path: string[] = []): Array<{ path: string[], text: string }> {
@@ -179,7 +192,7 @@ describe('content validation', () => {
       expect(unique.size).toBe(ids.length)
     })
 
-    it('all phase, danger-level, and zone-condition requirements are valid', () => {
+    it('all phase, danger-level, zone, and zone-condition requirements are valid', () => {
       for (const event of events) {
         const phases = event.requires?.phase === undefined
           ? []
@@ -187,6 +200,9 @@ describe('content validation', () => {
         const dangerLevels = event.requires?.dangerLevel === undefined
           ? []
           : Array.isArray(event.requires.dangerLevel) ? event.requires.dangerLevel : [event.requires.dangerLevel]
+        const zones = event.requires?.zone === undefined
+          ? []
+          : Array.isArray(event.requires.zone) ? event.requires.zone : [event.requires.zone]
         const zoneConditions = event.requires?.zoneCondition === undefined
           ? []
           : Array.isArray(event.requires.zoneCondition) ? event.requires.zoneCondition : [event.requires.zoneCondition]
@@ -196,6 +212,9 @@ describe('content validation', () => {
         }
         for (const dangerLevel of dangerLevels) {
           expect(VALID_DANGER_LEVELS.has(dangerLevel), `event "${event.id}" has invalid dangerLevel "${dangerLevel}"`).toBe(true)
+        }
+        for (const zone of zones) {
+          expect(VALID_ZONE_IDS.has(zone), `event "${event.id}" has invalid zone "${zone}"`).toBe(true)
         }
         for (const zoneCondition of zoneConditions) {
           expect(VALID_ZONE_CONDITION_IDS.has(zoneCondition), `event "${event.id}" has invalid zoneCondition "${zoneCondition}"`).toBe(true)
@@ -223,31 +242,67 @@ describe('content validation', () => {
       expect(unknown).toEqual([])
     })
 
-    it('all robot encounter effects reference known robots', () => {
+    it('ordinary diary events do not use legacy robot encounter effects', () => {
+      const legacy = events
+        .filter(event => (
+          Object.prototype.hasOwnProperty.call(event.effects ?? {}, 'robotEncounter') ||
+          Object.prototype.hasOwnProperty.call(event.effects ?? {}, 'robotDamageMultiplier')
+        ))
+        .map(event => event.id)
+
+      expect(legacy).toEqual([])
+    })
+
+    it('all startRaidActivity effects reference known activity and robot IDs', () => {
+      const activityIds = new Set(raidActivities.map(activity => activity.id))
       const robotIds = new Set(robots.map(robot => robot.id))
-      const unknown = events
-        .map(event => ({ eventId: event.id, robotId: event.effects?.robotEncounter }))
-        .filter(({ robotId }) => robotId !== undefined && !robotIds.has(robotId))
+      const unknown: string[] = []
+
+      for (const event of events) {
+        const effect = event.effects?.startRaidActivity
+        if (!effect) continue
+
+        if (!activityIds.has(effect.activityId)) {
+          unknown.push(`event "${event.id}" references unknown activity "${effect.activityId}"`)
+        }
+        if (effect.robotId !== undefined && !robotIds.has(effect.robotId)) {
+          unknown.push(`event "${event.id}" references unknown activity robot "${effect.robotId}"`)
+        }
+        if (effect.robotDamageMultiplier !== undefined && effect.robotDamageMultiplier < 0) {
+          unknown.push(`event "${event.id}" has negative activity robotDamageMultiplier`)
+        }
+        if (effect.hazardDamage !== undefined && effect.hazardDamage < 0) {
+          unknown.push(`event "${event.id}" has negative activity hazardDamage`)
+        }
+      }
 
       expect(unknown).toEqual([])
     })
 
-    it('robot damage multipliers are non-negative when present', () => {
-      for (const event of events) {
-        const multiplier = event.effects?.robotDamageMultiplier
-        if (multiplier !== undefined) {
-          expect(
-            multiplier,
-            `event "${event.id}" has negative robotDamageMultiplier`,
-          ).toBeGreaterThanOrEqual(0)
-        }
-      }
+    it('ordinary diary events do not apply direct damage or negative HP effects', () => {
+      const directDamageEvents = events
+        .filter(event => (
+          Object.prototype.hasOwnProperty.call(event.effects ?? {}, 'damage') ||
+          isNegativeHpEffect(event.effects?.hp)
+        ))
+        .map(event => event.id)
+
+      expect(directDamageEvents).toEqual([])
     })
 
-    it('all robots have at least one encounter event', () => {
+    it('has at least one generic robot activity starter that selects from a robot pool', () => {
+      const genericRobotStarters = events.filter(event => {
+        const effect = event.effects?.startRaidActivity
+        return effect?.kind === 'ROBOT_ENCOUNTER' && effect.robotId === undefined && effect.robotPool !== undefined
+      })
+
+      expect(genericRobotStarters.length).toBeGreaterThan(0)
+    })
+
+    it('all robots have at least one robot activity starter event', () => {
       const encounterRobotIds = new Set(
         events
-          .map(event => event.effects?.robotEncounter)
+          .map(event => event.effects?.startRaidActivity?.robotId)
           .filter((robotId): robotId is string => robotId !== undefined),
       )
 
@@ -301,19 +356,29 @@ describe('content validation', () => {
       }
     })
 
-    it('healing item find events only appear during RAIDING', () => {
+    it('healing item find events and activity starters only appear during RAIDING', () => {
       const healingEvents = events.filter(event => event.effects?.healingItem)
-      expect(healingEvents.length).toBeGreaterThan(0)
       for (const event of healingEvents) {
         expect(event.requires?.phase, `healing event "${event.id}" must require RAIDING`).toBe('RAIDING')
       }
+
+      const healingActivityStarters = events.filter(event => event.effects?.startRaidActivity?.healingItem)
+      expect(healingEvents.length + healingActivityStarters.length).toBeGreaterThan(0)
+      for (const event of healingActivityStarters) {
+        expect(event.requires?.phase, `healing activity event "${event.id}" must require RAIDING`).toBe('RAIDING')
+      }
     })
 
-    it('shield recharger find events only appear during RAIDING', () => {
+    it('shield recharger find events and activity starters only appear during RAIDING', () => {
       const shieldEvents = events.filter(event => event.effects?.shieldRecharger)
-      expect(shieldEvents.length).toBeGreaterThan(0)
       for (const event of shieldEvents) {
         expect(event.requires?.phase, `shield event "${event.id}" must require RAIDING`).toBe('RAIDING')
+      }
+
+      const shieldActivityStarters = events.filter(event => event.effects?.startRaidActivity?.shieldRecharger)
+      expect(shieldEvents.length + shieldActivityStarters.length).toBeGreaterThan(0)
+      for (const event of shieldActivityStarters) {
+        expect(event.requires?.phase, `shield activity event "${event.id}" must require RAIDING`).toBe('RAIDING')
       }
     })
 
@@ -366,6 +431,153 @@ describe('content validation', () => {
           }
         }
       }
+      expect(unknown).toEqual([])
+    })
+  })
+
+  describe('raid_activities.json', () => {
+    it('all activity weights, durations, and IDs are valid', () => {
+      const ids = raidActivities.map(activity => activity.id)
+      expect(new Set(ids).size, 'raid activity IDs must be unique').toBe(ids.length)
+
+      for (const activity of raidActivities) {
+        expect(activity.weight, `activity "${activity.id}" has weight ${activity.weight}`).toBeGreaterThan(0)
+        expect(activity.name, `activity "${activity.id}" needs a user-facing name`).toBeTruthy()
+        expect(activity.ticks, `activity "${activity.id}" must take at least one tick`).toBeGreaterThan(0)
+        expect(VALID_RAID_ACTIVITY_KINDS.has(activity.kind), `activity "${activity.id}" has invalid kind`).toBe(true)
+        expect(activity.text.started, `activity "${activity.id}" needs started text`).toBeTruthy()
+        expect(activity.text.progress.length, `activity "${activity.id}" needs progress text`).toBeGreaterThan(0)
+        expect(activity.text.completed, `activity "${activity.id}" needs completed text`).toBeTruthy()
+        expect(activity.text.failed, `activity "${activity.id}" needs failed text`).toBeTruthy()
+
+        const dangerLevels = activity.requires?.dangerLevel === undefined
+          ? []
+          : Array.isArray(activity.requires.dangerLevel) ? activity.requires.dangerLevel : [activity.requires.dangerLevel]
+        const zones = activity.requires?.zone === undefined
+          ? []
+          : Array.isArray(activity.requires.zone) ? activity.requires.zone : [activity.requires.zone]
+        const zoneConditions = activity.requires?.zoneCondition === undefined
+          ? []
+          : Array.isArray(activity.requires.zoneCondition) ? activity.requires.zoneCondition : [activity.requires.zoneCondition]
+
+        for (const dangerLevel of dangerLevels) {
+          expect(VALID_DANGER_LEVELS.has(dangerLevel), `activity "${activity.id}" has invalid dangerLevel "${dangerLevel}"`).toBe(true)
+        }
+        for (const zone of zones) {
+          expect(VALID_ZONE_IDS.has(zone), `activity "${activity.id}" has invalid zone "${zone}"`).toBe(true)
+        }
+        for (const zoneCondition of zoneConditions) {
+          expect(VALID_ZONE_CONDITION_IDS.has(zoneCondition), `activity "${activity.id}" has invalid zoneCondition "${zoneCondition}"`).toBe(true)
+        }
+      }
+    })
+
+    it('has JSON-backed extraction countdown activity text', () => {
+      const extractionCountdown = raidActivities.find(activity => activity.id === 'extraction_countdown')
+
+      expect(extractionCountdown).toMatchObject({
+        kind: 'EXTRACTION',
+        ticks: 4,
+      })
+      expect(extractionCountdown?.text.started).toContain('{ticks_remaining}')
+      expect(extractionCountdown?.text.progress.some(line => line.includes('{ticks_remaining}'))).toBe(true)
+    })
+
+    it('has JSON-backed downed countdown activity text', () => {
+      const downedCountdown = raidActivities.find(activity => activity.id === 'downed_countdown')
+
+      expect(downedCountdown).toMatchObject({
+        kind: 'DOWNED',
+        ticks: 2,
+      })
+      expect(downedCountdown?.text.started).toContain('{tick_count}')
+      expect(downedCountdown?.text.progress.some(line => line.includes('{tick_count}'))).toBe(true)
+    })
+
+    it('has a JSON-backed medical search activity', () => {
+      const medicalSearch = raidActivities.find(activity => activity.id === 'search_medical_pouch')
+
+      expect(medicalSearch).toMatchObject({
+        kind: 'SEARCH',
+        healingItem: true,
+      })
+      expect(medicalSearch?.text.completed).toContain('{healing_item}')
+    })
+
+    it('has a JSON-backed shield recharger search activity', () => {
+      const shieldSearch = raidActivities.find(activity => activity.id === 'search_shield_recharger_crate')
+
+      expect(shieldSearch).toMatchObject({
+        kind: 'SEARCH',
+        shieldRecharger: true,
+      })
+      expect(shieldSearch?.text.completed).toContain('{shield_recharger}')
+    })
+
+    it('has a JSON-backed water bottle search activity', () => {
+      const waterSearch = raidActivities.find(activity => activity.id === 'search_water_bottle_stash')
+
+      expect(waterSearch).toMatchObject({
+        kind: 'SEARCH',
+        lootTableId: 'water_bottles',
+      })
+      expect(waterSearch?.text.completed).toContain('{loot_name}')
+    })
+
+    it('robot activity definitions reference known robots and deadliness tiers', () => {
+      const robotIds = new Set(robots.map(robot => robot.id))
+      const unknown: string[] = []
+
+      for (const activity of raidActivities) {
+        if (activity.robotId !== undefined && !robotIds.has(activity.robotId)) {
+          unknown.push(`activity "${activity.id}" references unknown robot "${activity.robotId}"`)
+        }
+
+        const deadliness = activity.robotPool?.deadliness === undefined
+          ? []
+          : Array.isArray(activity.robotPool.deadliness) ? activity.robotPool.deadliness : [activity.robotPool.deadliness]
+        const dangerLevels = activity.robotPool?.dangerLevel === undefined
+          ? []
+          : Array.isArray(activity.robotPool.dangerLevel) ? activity.robotPool.dangerLevel : [activity.robotPool.dangerLevel]
+        const zones = activity.robotPool?.zone === undefined
+          ? []
+          : Array.isArray(activity.robotPool.zone) ? activity.robotPool.zone : [activity.robotPool.zone]
+        const zoneConditions = activity.robotPool?.zoneCondition === undefined
+          ? []
+          : Array.isArray(activity.robotPool.zoneCondition) ? activity.robotPool.zoneCondition : [activity.robotPool.zoneCondition]
+        for (const tier of deadliness) {
+          if (!VALID_ROBOT_DEADLINESS.has(tier)) {
+            unknown.push(`activity "${activity.id}" references unknown deadliness "${tier}"`)
+          }
+        }
+        for (const dangerLevel of dangerLevels) {
+          if (!VALID_DANGER_LEVELS.has(dangerLevel)) {
+            unknown.push(`activity "${activity.id}" references unknown dangerLevel "${dangerLevel}"`)
+          }
+        }
+        for (const zone of zones) {
+          if (!VALID_ZONE_IDS.has(zone)) {
+            unknown.push(`activity "${activity.id}" references unknown zone "${zone}"`)
+          }
+        }
+        for (const zoneCondition of zoneConditions) {
+          if (!VALID_ZONE_CONDITION_IDS.has(zoneCondition)) {
+            unknown.push(`activity "${activity.id}" references unknown zoneCondition "${zoneCondition}"`)
+          }
+        }
+      }
+
+      expect(unknown).toEqual([])
+    })
+
+    it('search activity definitions reference known search loot tables', () => {
+      const unknown = raidActivities
+        .filter(activity => activity.kind === 'SEARCH')
+        .filter(activity => !activity.shieldRecharger)
+        .filter(activity => !activity.healingItem)
+        .filter(activity => activity.lootTableId === undefined || !VALID_SEARCH_LOOT_TABLE_IDS.has(activity.lootTableId))
+        .map(activity => `${activity.id}:${activity.lootTableId ?? 'missing'}`)
+
       expect(unknown).toEqual([])
     })
   })

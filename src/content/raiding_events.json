@@ -4,7 +4,11 @@
     "weight": 35,
     "text": "Found {mundane_item}. {hoarder_justification}",
     "requires": {
-      "phase": "RAIDING"
+      "phase": "RAIDING",
+      "dangerLevel": [
+        "Low",
+        "Medium"
+      ]
     },
     "effects": {
       "backpackValue": 2,
@@ -16,11 +20,23 @@
     "weight": 30,
     "text": "Found a {water_item}. Current count: indeterminate. Packing it anyway.",
     "requires": {
-      "phase": "RAIDING"
+      "phase": "RAIDING",
+      "dangerLevel": [
+        "Low",
+        "Medium"
+      ],
+      "zone": [
+        "damp_battlegrounds",
+        "the_sunken_highrise"
+      ]
     },
     "effects": {
-      "backpackValue": 1,
-      "mood": 1
+      "mood": 1,
+      "startRaidActivity": {
+        "activityId": "search_water_bottle_stash",
+        "kind": "SEARCH",
+        "lootTableId": "water_bottles"
+      }
     }
   },
   {
@@ -31,8 +47,12 @@
       "phase": "RAIDING"
     },
     "effects": {
-      "healingItem": true,
-      "mood": 1
+      "mood": 1,
+      "startRaidActivity": {
+        "activityId": "search_medical_pouch",
+        "kind": "SEARCH",
+        "healingItem": true
+      }
     }
   },
   {
@@ -43,8 +63,12 @@
       "phase": "RAIDING"
     },
     "effects": {
-      "shieldRecharger": true,
-      "mood": 1
+      "mood": 1,
+      "startRaidActivity": {
+        "activityId": "search_shield_recharger_crate",
+        "kind": "SEARCH",
+        "shieldRecharger": true
+      }
     }
   },
   {
@@ -57,7 +81,11 @@
     "effects": {
       "mood": -1,
       "ratRating": 1,
-      "robotEncounter": "anxietick"
+      "startRaidActivity": {
+        "activityId": "robot_encounter_standard",
+        "kind": "ROBOT_ENCOUNTER",
+        "robotId": "anxietick"
+      }
     }
   },
   {
@@ -70,8 +98,12 @@
     "effects": {
       "mood": -2,
       "ratRating": 2,
-      "robotEncounter": "anxietick",
-      "robotDamageMultiplier": 2
+      "startRaidActivity": {
+        "activityId": "robot_encounter_standard",
+        "kind": "ROBOT_ENCOUNTER",
+        "robotId": "anxietick",
+        "robotDamageMultiplier": 2
+      }
     }
   },
   {
@@ -84,8 +116,12 @@
     "effects": {
       "mood": -3,
       "ratRating": 3,
-      "robotEncounter": "anxietick",
-      "robotDamageMultiplier": 4
+      "startRaidActivity": {
+        "activityId": "robot_encounter_standard",
+        "kind": "ROBOT_ENCOUNTER",
+        "robotId": "anxietick",
+        "robotDamageMultiplier": 4
+      }
     }
   },
   {
@@ -98,7 +134,11 @@
     "effects": {
       "mood": -2,
       "ratRating": 2,
-      "robotEncounter": "tattletale"
+      "startRaidActivity": {
+        "activityId": "robot_encounter_standard",
+        "kind": "ROBOT_ENCOUNTER",
+        "robotId": "tattletale"
+      }
     }
   },
   {
@@ -111,8 +151,12 @@
     "effects": {
       "mood": -3,
       "ratRating": 2,
-      "robotEncounter": "tattletale",
-      "robotDamageMultiplier": 2.5
+      "startRaidActivity": {
+        "activityId": "robot_encounter_standard",
+        "kind": "ROBOT_ENCOUNTER",
+        "robotId": "tattletale",
+        "robotDamageMultiplier": 2.5
+      }
     }
   },
   {
@@ -125,8 +169,12 @@
     "effects": {
       "mood": -4,
       "ratRating": 3,
-      "robotEncounter": "tattletale",
-      "robotDamageMultiplier": 4
+      "startRaidActivity": {
+        "activityId": "robot_encounter_standard",
+        "kind": "ROBOT_ENCOUNTER",
+        "robotId": "tattletale",
+        "robotDamageMultiplier": 4
+      }
     }
   },
   {
@@ -140,7 +188,11 @@
     "effects": {
       "mood": -3,
       "ratRating": 1,
-      "robotEncounter": "roomba_prime"
+      "startRaidActivity": {
+        "activityId": "robot_encounter_standard",
+        "kind": "ROBOT_ENCOUNTER",
+        "robotId": "roomba_prime"
+      }
     }
   },
   {
@@ -154,8 +206,12 @@
     "effects": {
       "mood": -5,
       "ratRating": 3,
-      "robotEncounter": "roomba_prime",
-      "robotDamageMultiplier": 1.75
+      "startRaidActivity": {
+        "activityId": "robot_encounter_standard",
+        "kind": "ROBOT_ENCOUNTER",
+        "robotId": "roomba_prime",
+        "robotDamageMultiplier": 1.75
+      }
     }
   },
   {
@@ -169,8 +225,12 @@
     "effects": {
       "mood": -5,
       "ratRating": 4,
-      "robotEncounter": "roomba_prime",
-      "robotDamageMultiplier": 3
+      "startRaidActivity": {
+        "activityId": "robot_encounter_standard",
+        "kind": "ROBOT_ENCOUNTER",
+        "robotId": "roomba_prime",
+        "robotDamageMultiplier": 3
+      }
     }
   },
   {
@@ -184,8 +244,12 @@
     "effects": {
       "mood": -5,
       "ratRating": 3,
-      "robotEncounter": "bomber_misread",
-      "robotDamageMultiplier": 2.5
+      "startRaidActivity": {
+        "activityId": "robot_encounter_standard",
+        "kind": "ROBOT_ENCOUNTER",
+        "robotId": "bomber_misread",
+        "robotDamageMultiplier": 2.5
+      }
     }
   },
   {
@@ -235,832 +299,1356 @@
       "greedLevel": 5
     }
   },
-    {
-      "id": "raid_trip_on_rock",
-      "weight": 14,
-      "text": "Tripped on a rock. The rock won.",
-      "requires": {
-        "phase": "RAIDING"
-      },
-      "effects": {
-        "mood": -2,
-        "ratRating": 1
+  {
+    "id": "raid_metallic_noise_pool",
+    "weight": 10,
+    "text": "Something metallic rummaged nearby. Raider investigated because survival instincts were apparently out of office.",
+    "requires": {
+      "phase": "RAIDING",
+      "dangerLevel": [
+        "Medium",
+        "High"
+      ],
+      "downed": false,
+      "extracting": false
+    },
+    "effects": {
+      "mood": -2,
+      "ratRating": 1,
+      "startRaidActivity": {
+        "activityId": "robot_encounter_standard",
+        "kind": "ROBOT_ENCOUNTER",
+        "robotPool": {
+          "dangerLevel": [
+            "Medium",
+            "High"
+          ],
+          "zone": [
+            "arc_ruins",
+            "the_breach"
+          ],
+          "deadliness": [
+            "moderate",
+            "dangerous",
+            "nasty"
+          ]
+        }
       }
-    },
-    {
-      "id": "raid_robot_heard_me",
-      "weight": 12,
-      "text": "Stepped on a twig. A Tattletale drone swiveled toward me instantly.",
-      "requires": {
-        "phase": "RAIDING"
-      },
-      "effects": {
-        "mood": -3,
-        "robotEncounter": "tattletale"
-      }
-    },
-    {
-      "id": "raid_crate_but_not",
-      "weight": 15,
-      "text": "Thought I saw a crate. It was an Anxietick pretending to be a crate. It panicked first.",
-      "requires": {
-        "phase": "RAIDING",
-        "minGreed": 20
-      },
-      "effects": {
-        "mood": -2,
-        "ratRating": 1,
-        "robotEncounter": "anxietick"
-      }
-    },
-    {
-      "id": "raid_teammate_sneeze",
-      "weight": 10,
-      "text": "Teammate sneezed loudly. A Tattletale drone immediately broadcast our location.",
-      "requires": {
-        "phase": "RAIDING"
-      },
-      "effects": {
-        "mood": -3,
-        "robotEncounter": "tattletale"
-      }
-    },
-    {
-      "id": "raid_loot_too_far",
-      "weight": 18,
-      "text": "Saw loot in the distance. It was too far. Emotionally and physically.",
-      "requires": {
-        "phase": "RAIDING",
-        "minGreed": 10
-      },
-      "effects": {
-        "greedLevel": 3,
-        "mood": -1
-      }
-    },
-    {
-      "id": "raid_robot_whirring",
-      "weight": 11,
-      "text": "Heard a nervous whirring behind me. An Anxietick froze mid‑skitter.",
-      "requires": {
-        "phase": "RAIDING"
-      },
-      "effects": {
-        "mood": -2,
-        "robotEncounter": "anxietick"
-      }
-    },
-    {
-      "id": "raid_teammate_loot_steal",
-      "weight": 16,
-      "text": "Teammate grabbed the loot I was reaching for. I pretended not to care.",
-      "requires": {
-        "phase": "RAIDING"
-      },
-      "effects": {
-        "mood": -2,
-        "ratRating": 2
-      }
-    },
-    {
-      "id": "raid_robot_scan",
-      "weight": 9,
-      "text": "A Tattletale drone scanned me from head to toe. I failed whatever test it was running.",
-      "requires": {
-        "phase": "RAIDING"
-      },
-      "effects": {
-        "mood": -3,
-        "robotEncounter": "tattletale"
-      }
-    },
-    {
-      "id": "raid_crate_falls_apart",
-      "weight": 13,
-      "text": "Opened a crate. It fell apart like my hopes.",
-      "requires": {
-        "phase": "RAIDING"
-      },
-      "effects": {
-        "mood": -2
-      }
-    },
-    {
-      "id": "raid_robot_shadow",
-      "weight": 10,
-      "text": "Saw a shadow before the robot. It was a Crusher of Dreams. Terrifying.",
-      "requires": {
-        "phase": "RAIDING",
-        "minGreed": 20
-      },
-      "effects": {
-        "mood": -4,
-        "robotEncounter": "crusher_of_dreams"
-      }
-    },
-    {
-      "id": "raid_teammate_runs",
-      "weight": 12,
-      "text": "Teammate sprinted past me screaming. I followed without asking questions.",
-      "requires": {
-        "phase": "RAIDING"
-      },
-      "effects": {
-        "mood": -1
-      }
-    },
-    {
-      "id": "raid_robot_ping",
-      "weight": 8,
-      "text": "A Tattletale drone pinged loudly. I pinged back. It judged me.",
-      "requires": {
-        "phase": "RAIDING"
-      },
-      "effects": {
-        "mood": -2,
-        "robotEncounter": "tattletale"
-      }
-    },
-    {
-      "id": "raid_loot_glow",
-      "weight": 17,
-      "text": "Saw glowing loot. Ran toward it. Immediately regretted running.",
-      "requires": {
-        "phase": "RAIDING",
-        "minGreed": 15
-      },
-      "effects": {
-        "greedLevel": 4,
-        "mood": -1
-      }
-    },
-    {
-      "id": "raid_robot_footsteps",
-      "weight": 11,
-      "text": "Heard heavy footsteps. Not mine. Not good. Definitely a Roomba Prime.",
-      "requires": {
-        "phase": "RAIDING",
-        "minGreed": 20
-      },
-      "effects": {
-        "mood": -4,
-        "robotEncounter": "roomba_prime"
-      }
-    },
-    {
-      "id": "raid_teammate_wrong_way",
-      "weight": 14,
-      "text": "Teammate confidently led us the wrong way. We followed anyway.",
-      "requires": {
-        "phase": "RAIDING"
-      },
-      "effects": {
-        "mood": -1
-      }
-    },
-    {
-      "id": "raid_robot_beeps",
-      "weight": 9,
-      "text": "A Tattletale drone beeped aggressively at me. I beeped back. Mistake.",
-      "requires": {
-        "phase": "RAIDING"
-      },
-      "effects": {
-        "mood": -2,
-        "robotEncounter": "tattletale"
-      }
-    },
-    {
-      "id": "raid_loot_but_explosive",
-      "weight": 7,
-      "text": "Loot crate exploded when I touched it. I pretended that was normal.",
-      "requires": {
-        "phase": "RAIDING",
-        "minGreed": 25
-      },
-      "effects": {
-        "mood": -4,
-        "ratRating": 2
-      }
-    },
-    {
-      "id": "raid_robot_spotted",
-      "weight": 10,
-      "text": "A Tattletale drone spotted me instantly. I was standing completely still.",
-      "requires": {
-        "phase": "RAIDING"
-      },
-      "effects": {
-        "mood": -3,
-        "robotEncounter": "tattletale"
-      }
-    },
-    {
-      "id": "raid_teammate_loot_ping",
-      "weight": 15,
-      "text": "Teammate pinged loot. It was a rock. They insisted it looked shiny.",
-      "requires": {
-        "phase": "RAIDING"
-      },
-      "effects": {
-        "mood": -1,
-        "ratRating": 1
-      }
-    },
-    {
-      "id": "raid_robot_siren",
-      "weight": 8,
-      "text": "A Tattletale drone activated a siren. I activated panic.",
-      "requires": {
-        "phase": "RAIDING"
-      },
-      "effects": {
-        "mood": -4,
-        "robotEncounter": "tattletale"
-      }
-    },
-    {
-      "id": "raid_loot_behind_robot",
-      "weight": 16,
-      "text": "Saw loot behind a Bomber Who Misreads the Room. Considered my options. None were good.",
-      "requires": {
-        "phase": "RAIDING",
-        "minGreed": 20
-      },
-      "effects": {
-        "greedLevel": 5,
-        "mood": -2,
-        "robotEncounter": "bomber_misread"
-      }
-    },
-    {
-      "id": "raid_robot_turns_slowly",
-      "weight": 9,
-      "text": "A Walker Texas Malfunction turned toward me very slowly. Too slowly.",
-      "requires": {
-        "phase": "RAIDING",
-        "minGreed": 10
-      },
-      "effects": {
-        "mood": -3,
-        "robotEncounter": "walker_texas_malfunction"
-      }
-    },
-    {
-      "id": "raid_teammate_falls",
-      "weight": 12,
-      "text": "Teammate fell off a ledge. I pretended not to laugh.",
-      "requires": {
-        "phase": "RAIDING"
-      },
-      "effects": {
-        "mood": -1
-      }
-    },
-    {
-      "id": "raid_robot_ambush",
-      "weight": 7,
-      "text": "A Bomber Who Misreads the Room ambushed us from behind a crate. I screamed internally.",
-      "requires": {
-        "phase": "RAIDING",
-        "minGreed": 20
-      },
-      "effects": {
-        "mood": -4,
-        "robotEncounter": "bomber_misread",
-        "robotDamageMultiplier": 2.5
-      }
-    },
-    {
-      "id": "raid_loot_is_bait",
-      "weight": 15,
-      "text": "Loot was placed in the open. Too open. Definitely bait.",
-      "requires": {
-        "phase": "RAIDING",
-        "minGreed": 10
-      },
-      "effects": {
-        "greedLevel": 3,
-        "mood": -2
-      }
-    },
-    {
-      "id": "raid_robot_laser_warning",
-      "weight": 8,
-      "text": "A laser dot appeared on my chest. Roomba Prime was nearby. I chose not to investigate.",
-      "requires": {
-        "phase": "RAIDING",
-        "minGreed": 20
-      },
-      "effects": {
-        "mood": -4,
-        "robotEncounter": "roomba_prime"
-      }
-    },
-    {
-      "id": "raid_teammate_loot_race",
-      "weight": 14,
-      "text": "Teammate and I raced for loot. They won. I pretended I let them.",
-      "requires": {
-        "phase": "RAIDING"
-      },
-      "effects": {
-        "mood": -1,
-        "ratRating": 1
-      }
-    },
-    {
-      "id": "raid_robot_sparks",
-      "weight": 9,
-      "text": "A Walker Texas Malfunction sparked violently. I took that personally.",
-      "requires": {
-        "phase": "RAIDING",
-        "minGreed": 10
-      },
-      "effects": {
-        "mood": -2,
-        "robotEncounter": "walker_texas_malfunction"
-      }
-    },
-    {
-      "id": "raid_loot_underwater",
-      "weight": 11,
-      "text": "Saw loot underwater. Decided drowning wasn’t worth it. Barely.",
-      "requires": {
-        "phase": "RAIDING"
-      },
-      "effects": {
-        "greedLevel": -1,
-        "mood": -1
-      }
-    },
-    {
-      "id": "raid_robot_breathing",
-      "weight": 7,
-      "text": "Heard a robot making a breathing noise. It was an Anxietick. Somehow worse.",
-      "requires": {
-        "phase": "RAIDING"
-      },
-      "effects": {
-        "mood": -2,
-        "robotEncounter": "anxietick"
-      }
-    },
-    {
-      "id": "raid_teammate_panic",
-      "weight": 12,
-      "text": "Teammate yelled 'RUN!' without context. I ran anyway.",
-      "requires": {
-        "phase": "RAIDING"
-      },
-      "effects": {
-        "mood": -2
-      }
-    },
-    {
-      "id": "raid_robot_stare",
-      "weight": 10,
-      "text": "A Crusher of Dreams stared at me for a full five seconds. I blinked first.",
-      "requires": {
-        "phase": "RAIDING",
-        "minGreed": 20
-      },
-      "effects": {
-        "mood": -3,
-        "robotEncounter": "crusher_of_dreams",
-        "robotDamageMultiplier": 2.5
-      }
-    },
-    {
-      "id": "raid_loot_just_out_of_reach",
-      "weight": 15,
-      "text": "Loot was just out of reach. I stretched. I failed.",
-      "requires": {
-        "phase": "RAIDING"
-      },
-      "effects": {
-        "mood": -1
-      }
-    },
-    {
-      "id": "raid_robot_alarm",
-      "weight": 8,
-      "text": "A Tattletale drone triggered an alarm. I triggered despair.",
-      "requires": {
-        "phase": "RAIDING"
-      },
-      "effects": {
-        "mood": -4,
-        "robotEncounter": "tattletale"
-      }
-    },
-    {
-      "id": "raid_teammate_loot_drop",
-      "weight": 13,
-      "text": "Teammate dropped loot while running. I considered picking it up. Considered.",
-      "requires": {
-        "phase": "RAIDING"
-      },
-      "effects": {
-        "greedLevel": 2,
-        "ratRating": 1
-      }
-    },
-    {
-      "id": "raid_robot_behind_me",
-      "weight": 9,
-      "text": "A Roomba Prime appeared behind me silently. Too silently.",
-      "requires": {
-        "phase": "RAIDING",
-        "minGreed": 20
-      },
-      "effects": {
-        "mood": -4,
-        "robotEncounter": "roomba_prime"
-      }
-    },
-    {
-      "id": "raid_loot_in_tree",
-      "weight": 11,
-      "text": "Loot was stuck in a tree. I stared at it helplessly.",
-      "requires": {
-        "phase": "RAIDING"
-      },
-      "effects": {
-        "mood": -1
-      }
-    },
-    {
-      "id": "raid_robot_warning_beep",
-      "weight": 7,
-      "text": "A Tattletale drone emitted a warning beep. I emitted a warning scream.",
-      "requires": {
-        "phase": "RAIDING"
-      },
-      "effects": {
-        "mood": -3,
-        "robotEncounter": "tattletale"
-      }
-    },
-    {
-      "id": "raid_teammate_wrong_ping",
-      "weight": 14,
-      "text": "Teammate pinged danger. It was a bush.",
-      "requires": {
-        "phase": "RAIDING"
-      },
-      "effects": {
-        "mood": -1,
-        "ratRating": 1
-      }
-    },
-    {
-      "id": "raid_robot_overhead",
-      "weight": 8,
-      "text": "A Roomba Prime flew overhead. I froze like a malfunctioning toaster.",
-      "requires": {
-        "phase": "RAIDING",
-        "minGreed": 20
-      },
-      "effects": {
-        "mood": -4,
-        "robotEncounter": "roomba_prime"
-      }
-    },
-    {
-      "id": "encounter_overthinker_tick",
-      "weight": 22,
-      "text": "An Overthinker Tick {robot_flavor_overthinker_tick}. Eventually chose attack. Eventually.",
-      "requires": { "phase": "RAIDING" },
-      "effects": { "mood": -1, "robotEncounter": "overthinker_tick" }
-    },
-    {
-      "id": "encounter_overthinker_tick_spiral",
-      "weight": 8,
-      "text": "An Overthinker Tick {robot_flavor_overthinker_tick}. Considered every option. Chose all of them simultaneously.",
-      "requires": { "phase": "RAIDING" },
-      "effects": { "mood": -2, "ratRating": 1, "robotEncounter": "overthinker_tick", "robotDamageMultiplier": 2 }
-    },
-    {
-      "id": "encounter_passive_aggressor",
-      "weight": 16,
-      "text": "A Passive-Aggressor Drone {robot_flavor_passive_aggressor}. Did not fire. The judgment was worse.",
-      "requires": { "phase": "RAIDING", "minGreed": 10 },
-      "effects": { "mood": -2, "ratRating": 1, "robotEncounter": "passive_aggressor" }
-    },
-    {
-      "id": "encounter_seeker_validation",
-      "weight": 14,
-      "text": "A Seeker of Validation {robot_flavor_seeker_validation}. It hesitated mid-charge, waiting for feedback. I did not provide any.",
-      "requires": { "phase": "RAIDING", "minGreed": 15 },
-      "effects": { "mood": -2, "robotEncounter": "seeker_validation" }
-    },
-    {
-      "id": "encounter_harvester_annoyance",
-      "weight": 14,
-      "text": "A Harvester of Mild Annoyances {robot_flavor_harvester_annoyance}. Blocked every useful path while loudly collecting nothing.",
-      "requires": { "phase": "RAIDING", "minGreed": 10 },
-      "effects": { "mood": -2, "ratRating": 1, "robotEncounter": "harvester_annoyance" }
-    },
-    {
-      "id": "encounter_enforcer_inconvenience",
-      "weight": 11,
-      "text": "An Enforcer of Minor Inconveniences {robot_flavor_enforcer_inconvenience}. Technically following protocol. Technically.",
-      "requires": { "phase": "RAIDING", "minGreed": 15 },
-      "effects": { "mood": -3, "robotEncounter": "enforcer_inconvenience" }
-    },
-    {
-      "id": "encounter_enforcer_inconvenience_citation",
-      "weight": 5,
-      "text": "An Enforcer of Minor Inconveniences deployed suppressive fire. Mostly at the wrong targets. Including me.",
-      "requires": { "phase": "RAIDING", "minGreed": 20 },
-      "effects": { "mood": -4, "ratRating": 2, "robotEncounter": "enforcer_inconvenience", "robotDamageMultiplier": 2.5 }
-    },
-    {
-      "id": "encounter_receipt_printer_doom",
-      "weight": 13,
-      "text": "A Receipt Printer of Doom {robot_flavor_receipt_printer_doom}. It cited me for loitering near value.",
-      "requires": { "phase": "RAIDING", "minGreed": 10 },
-      "effects": { "mood": -2, "ratRating": 1, "robotEncounter": "receipt_printer_doom" }
-    },
-    {
-      "id": "encounter_receipt_printer_doom_paper_jam",
-      "weight": 4,
-      "text": "A Receipt Printer of Doom jammed, screamed, and weaponized the paperwork backlog.",
-      "requires": { "phase": "RAIDING", "minGreed": 15 },
-      "effects": { "mood": -3, "robotEncounter": "receipt_printer_doom", "robotDamageMultiplier": 1.5 }
-    },
-    {
-      "id": "encounter_apology_turret",
-      "weight": 10,
-      "text": "An Apology Turret {robot_flavor_apology_turret}. Very sorry. Very armed.",
-      "requires": { "phase": "RAIDING", "minGreed": 15 },
-      "effects": { "mood": -3, "ratRating": 1, "robotEncounter": "apology_turret" }
-    },
-    {
-      "id": "encounter_apology_turret_hold_still",
-      "weight": 4,
-      "text": "An Apology Turret asked me to hold still for a courtesy burst. I declined. It escalated politely.",
-      "requires": { "phase": "RAIDING", "minGreed": 20 },
-      "effects": { "mood": -4, "ratRating": 2, "robotEncounter": "apology_turret", "robotDamageMultiplier": 2 }
-    },
-    {
-      "id": "encounter_sniper_poor_decisions",
-      "weight": 5,
-      "text": "A Sniper of Poor Decisions {robot_flavor_sniper_poor_decisions}. It waited until I stopped moving. Classic.",
-      "requires": { "phase": "RAIDING", "minGreed": 20 },
-      "effects": { "mood": -5, "ratRating": 3, "robotEncounter": "sniper_poor_decisions", "robotDamageMultiplier": 2.5 }
-    },
-    {
-      "id": "encounter_sniper_poor_decisions_miss",
-      "weight": 3,
-      "text": "A Sniper of Poor Decisions missed me. Once. It did not miss again.",
-      "requires": { "phase": "RAIDING", "minGreed": 20 },
-      "effects": { "mood": -4, "robotEncounter": "sniper_poor_decisions" }
-    },
-    {
-      "id": "encounter_tank_overcompensation",
-      "weight": 4,
-      "text": "A Tank of Overcompensation {robot_flavor_tank_overcompensation}. It announced the attack several times. Still terrifying.",
-      "requires": { "phase": "RAIDING", "minGreed": 20 },
-      "effects": { "mood": -5, "ratRating": 3, "robotEncounter": "tank_overcompensation", "robotDamageMultiplier": 2.5 }
-    },
-    {
-      "id": "encounter_tank_overcompensation_revving",
-      "weight": 2,
-      "text": "A Tank of Overcompensation revved its engine unnecessarily before charging. The floor vibrated. So did I.",
-      "requires": { "phase": "RAIDING", "minGreed": 20 },
-      "effects": { "mood": -5, "robotEncounter": "tank_overcompensation" }
-    },
-    {
-      "id": "day_clear_sightline_loot",
-      "weight": 12,
-      "text": "Daylight revealed a safe-looking supply nook. Suspiciously normal. Looted it with one eye on the exit.",
-      "requires": { "phase": "RAIDING", "dangerLevel": "Low" },
-      "effects": { "backpackValue": 2, "mood": 1 }
-    },
-    {
-      "id": "night_alerted_patrol",
-      "weight": 10,
-      "text": "Night patrol lights swept the street. Every robot suddenly looked like it had coffee and a promotion to chase.",
-      "requires": { "phase": "RAIDING", "dangerLevel": "Medium", "minGreed": 10 },
-      "effects": { "mood": -2, "ratRating": 1, "robotEncounter": "tattletale" }
-    },
-    {
-      "id": "night_black_box_cache",
-      "weight": 8,
-      "text": "Found a black-box cache humming in the dark. It was valuable in the way warning labels are valuable.",
-      "requires": { "phase": "RAIDING", "dangerLevel": "Medium", "minGreed": 15 },
-      "effects": { "backpackValue": 8, "greedLevel": 4, "mood": 1 }
-    },
-    {
-      "id": "raid_overtime_red_redline_cache",
-      "weight": 8,
-      "text": "Overtime Red painted the loot crate like an after-hours bonus. Opened it. Heard distant machinery clock in.",
-      "requires": { "phase": "RAIDING", "zoneCondition": "overtime_red", "minGreed": 15 },
-      "effects": { "backpackValue": 10, "greedLevel": 5, "mood": 1 }
-    },
-    {
-      "id": "raid_overtime_red_hunter_ping",
-      "weight": 7,
-      "text": "Overtime Red turned the streetlights hostile and something pinged my position like unpaid labor.",
-      "requires": { "phase": "RAIDING", "zoneCondition": "overtime_red", "minGreed": 20 },
-      "effects": { "mood": -4, "ratRating": 2, "robotEncounter": "sniper_poor_decisions", "robotDamageMultiplier": 1.5 }
-    },
-    {
-      "id": "raid_field_cache_receipts",
-      "weight": 13,
-      "text": "Found a field cache with one battery, two lies, and three receipts. Filed all of it under loot.",
-      "requires": { "phase": "RAIDING", "minGreed": 10 },
-      "effects": { "backpackValue": 4, "greedLevel": 2, "mood": 1 }
-    },
-    {
-      "id": "raid_supply_drop_puddle",
-      "weight": 12,
-      "text": "Supply drop landed in a puddle with perfect comedic timing. Loot still mostly loot.",
-      "requires": { "phase": "RAIDING", "dangerLevel": "Low" },
-      "effects": { "backpackValue": 3, "mood": 1 }
-    },
-    {
-      "id": "raid_strange_markings_warning",
-      "weight": 9,
-      "text": "Found strange markings that clearly meant STOP TOUCHING CRATES. Took a rubbing for later ignoring.",
-      "requires": { "phase": "RAIDING", "minGreed": 15 },
-      "effects": { "greedLevel": 3, "mood": 1 }
-    },
-    {
-      "id": "raid_water_pipe_heroic",
-      "weight": 10,
-      "text": "Broken water pipe sprayed heroically. Filled the canteen, the boots, and several regrets.",
-      "requires": { "phase": "RAIDING", "dangerLevel": "Low" },
-      "effects": { "mood": 1 }
-    },
-    {
-      "id": "raid_security_turnstile",
-      "weight": 9,
-      "text": "Old security turnstile demanded a badge. I vaulted it and felt briefly employed.",
-      "requires": { "phase": "RAIDING", "minGreed": 10 },
-      "effects": { "mood": 2, "ratRating": 1 }
-    },
-    {
-      "id": "raid_greenhouse_judgment",
-      "weight": 10,
-      "text": "Abandoned grow trays contained one surviving lettuce. It looked disappointed in my loadout.",
-      "requires": { "phase": "RAIDING" },
-      "effects": { "backpackValue": 2, "mood": -1 }
-    },
-    {
-      "id": "raid_warning_label_layer",
-      "weight": 11,
-      "text": "Peeled a warning label off a machine. Under it: a second warning label with better handwriting.",
-      "requires": { "phase": "RAIDING", "minGreed": 10 },
-      "effects": { "greedLevel": 2, "mood": 1 }
-    },
-    {
-      "id": "raid_kiosk_customer_survey",
-      "weight": 10,
-      "text": "Abandoned kiosk asked me to rate the raid experience. Selected 'in progress' and stole the pen.",
-      "requires": { "phase": "RAIDING" },
-      "effects": { "backpackValue": 1, "mood": 1 }
-    },
-    {
-      "id": "raid_crate_with_decoy_crate",
-      "weight": 9,
-      "text": "Opened a crate and found a smaller decoy crate inside. The smaller crate looked smug.",
-      "requires": { "phase": "RAIDING", "minGreed": 15 },
-      "effects": { "greedLevel": 4, "mood": -1 }
-    },
-    {
-      "id": "raid_turnkey_without_door",
-      "weight": 11,
-      "text": "Found a key labeled TURNKEY. No door nearby. Packed it because destiny loves clutter.",
-      "requires": { "phase": "RAIDING", "minGreed": 10 },
-      "effects": { "backpackValue": 3, "greedLevel": 2 }
-    },
-    {
-      "id": "raid_escalator_argument",
-      "weight": 10,
-      "text": "Broken escalator claimed to be stairs. I accepted its truth and climbed with resentment.",
-      "requires": { "phase": "RAIDING" },
-      "effects": { "mood": -1, "ratRating": 1 }
-    },
-    {
-      "id": "raid_apology_weather_forecast",
-      "weight": 11,
-      "text": "Apology Weather apologized into the comms, then made the stairs slippery anyway.",
-      "requires": { "phase": "RAIDING", "zoneCondition": "apology_weather" },
-      "effects": { "mood": -1, "ratRating": 1 }
-    },
-    {
-      "id": "raid_polite_glyphs_customer_service",
-      "weight": 10,
-      "text": "Polite Glyphs suggested I stop opening crates. I appreciated the tone and ignored the message.",
-      "requires": { "phase": "RAIDING", "zoneCondition": "polite_glyphs", "minGreed": 10 },
-      "effects": { "greedLevel": 2, "mood": 1 }
-    },
-    {
-      "id": "raid_tremor_bad_priorities_shuffle",
-      "weight": 9,
-      "text": "A Tremor of Bad Priorities moved the exit farther away and a crate closer. Nature has opinions.",
-      "requires": { "phase": "RAIDING", "zoneCondition": "tremor_bad_priorities", "minGreed": 10 },
-      "effects": { "backpackValue": 3, "greedLevel": 3, "mood": -1 }
-    },
-    {
-      "id": "raid_humming_crate_migration_bait",
-      "weight": 8,
-      "text": "A humming crate migrated into the open and waited for me to develop character flaws.",
-      "requires": { "phase": "RAIDING", "zoneCondition": "humming_crate_migration", "minGreed": 20 },
-      "effects": { "greedLevel": 5, "mood": -2, "robotEncounter": "tattletale" }
-    },
-    {
-      "id": "raid_oopsall_misdelivery_cache",
-      "weight": 11,
-      "text": "Found an OopsAll Logistics crate addressed to ELSEWHERE. Took responsibility for the delivery chain.",
-      "requires": { "phase": "RAIDING", "minGreed": 10 },
-      "effects": { "backpackValue": 4, "greedLevel": 2, "mood": 1 }
-    },
-    {
-      "id": "raid_hushtone_static_confession",
-      "weight": 9,
-      "text": "A cracked HushTone receiver whispered static with the confidence of a secret. Packed it for evidence.",
-      "requires": { "phase": "RAIDING" },
-      "effects": { "backpackValue": 2, "mood": 1 }
-    },
-    {
-      "id": "raid_exit_strategy_bad_map",
-      "weight": 10,
-      "text": "Found an Exit Strategy Unlimited route card. It labeled the nearest wall as OPTION B.",
-      "requires": { "phase": "RAIDING", "minGreed": 10 },
-      "effects": { "greedLevel": -1, "mood": -1 }
-    },
-    {
-      "id": "raid_damaged_dam_leak_math",
-      "weight": 10,
-      "text": "Passed a damaged dam still labeled CIVIC CONFIDENCE PROJECT. It leaked water and several promises.",
-      "requires": { "phase": "RAIDING", "dangerLevel": "Low" },
-      "effects": { "mood": -1 }
-    },
-    {
-      "id": "raid_buried_retail_escalator_bait",
-      "weight": 10,
-      "text": "Buried retail district had an escalator pointing at a half-open store kiosk. Terrible route. Excellent crate smell.",
-      "requires": { "phase": "RAIDING", "minGreed": 15 },
-      "effects": { "backpackValue": 4, "greedLevel": 3, "mood": -1 }
-    },
-    {
-      "id": "raid_failed_transit_departure_board",
-      "weight": 9,
-      "text": "Old transit board said all departures were delayed, not cancelled. I admire the commitment to denial.",
-      "requires": { "phase": "RAIDING" },
-      "effects": { "mood": 1, "ratRating": 1 }
-    },
-    {
-      "id": "raid_soggy_tower_top_floor_bait",
-      "weight": 8,
-      "text": "Soggy tower stairs led up to top-floor loot and down to several physics concerns. I chose up because I am unwell.",
-      "requires": { "phase": "RAIDING", "minGreed": 20 },
-      "effects": { "backpackValue": 6, "greedLevel": 4, "mood": -2 }
-    },
-    {
-      "id": "raid_warning_sign_museum_collection",
-      "weight": 10,
-      "text": "Found a warning-sign museum. Every sign said DO NOT. I took the smallest one for morale.",
-      "requires": { "phase": "RAIDING", "minGreed": 10 },
-      "effects": { "backpackValue": 2, "greedLevel": 2, "mood": 1 }
-    },
-    {
-      "id": "raid_launch_manifest_clipboard",
-      "weight": 9,
-      "text": "Found a launch manifest clipboard under rubble. Every name was crossed out except WAITLIST. Took it as a sign.",
-      "requires": { "phase": "RAIDING", "minGreed": 10 },
-      "effects": { "backpackValue": 2, "greedLevel": 2, "mood": -1 }
-    },
-    {
-      "id": "raid_emergency_snack_shrine_offering",
-      "weight": 10,
-      "text": "Found an emergency snack shrine arranged around a tiny warning label. Took the trial mix. Left a bolt as tribute.",
-      "requires": { "phase": "RAIDING", "minGreed": 10 },
-      "effects": { "backpackValue": 3, "greedLevel": 2, "mood": 2 }
-    },
-    {
-      "id": "raid_questionable_field_cache_generous",
-      "weight": 9,
-      "text": "Found a questionable field cache packed with exactly the kind of loot that makes people ignore footsteps.",
-      "requires": { "phase": "RAIDING", "minGreed": 15 },
-      "effects": { "backpackValue": 7, "greedLevel": 5, "mood": 1, "ratRating": 1 }
-    },
-    {
-      "id": "raid_staycation_tent_decoy_crate",
-      "weight": 9,
-      "text": "Found a Staycation tent with a decoy crate outside and three suspiciously patient footprints inside.",
-      "requires": { "phase": "RAIDING", "minGreed": 15 },
-      "effects": { "backpackValue": 3, "greedLevel": 3, "mood": -1, "ratRating": 2 }
-    },
-    {
-      "id": "raid_staycation_locker_philosophy",
-      "weight": 8,
-      "text": "A raider in a locker whispered that camping is just patience with furniture. I hate how prepared that sounded.",
-      "requires": { "phase": "RAIDING", "dangerLevel": ["Medium", "High"], "minGreed": 10 },
-      "effects": { "mood": -1, "ratRating": 2 }
     }
+  },
+  {
+    "id": "raid_trip_on_rock",
+    "weight": 14,
+    "text": "Tripped on a rock. The rock won.",
+    "requires": {
+      "phase": "RAIDING"
+    },
+    "effects": {
+      "mood": -2,
+      "ratRating": 1
+    }
+  },
+  {
+    "id": "raid_robot_heard_me",
+    "weight": 12,
+    "text": "Stepped on a twig. A Tattletale drone swiveled toward me instantly.",
+    "requires": {
+      "phase": "RAIDING"
+    },
+    "effects": {
+      "mood": -3,
+      "startRaidActivity": {
+        "activityId": "robot_encounter_standard",
+        "kind": "ROBOT_ENCOUNTER",
+        "robotId": "tattletale"
+      }
+    }
+  },
+  {
+    "id": "raid_crate_but_not",
+    "weight": 15,
+    "text": "Thought I saw a crate. It was an Anxietick pretending to be a crate. It panicked first.",
+    "requires": {
+      "phase": "RAIDING",
+      "minGreed": 20
+    },
+    "effects": {
+      "mood": -2,
+      "ratRating": 1,
+      "startRaidActivity": {
+        "activityId": "robot_encounter_standard",
+        "kind": "ROBOT_ENCOUNTER",
+        "robotId": "anxietick"
+      }
+    }
+  },
+  {
+    "id": "raid_teammate_sneeze",
+    "weight": 10,
+    "text": "Teammate sneezed loudly. A Tattletale drone immediately broadcast our location.",
+    "requires": {
+      "phase": "RAIDING"
+    },
+    "effects": {
+      "mood": -3,
+      "startRaidActivity": {
+        "activityId": "robot_encounter_standard",
+        "kind": "ROBOT_ENCOUNTER",
+        "robotId": "tattletale"
+      }
+    }
+  },
+  {
+    "id": "raid_loot_too_far",
+    "weight": 18,
+    "text": "Saw loot in the distance. It was too far. Emotionally and physically.",
+    "requires": {
+      "phase": "RAIDING",
+      "minGreed": 10
+    },
+    "effects": {
+      "greedLevel": 3,
+      "mood": -1
+    }
+  },
+  {
+    "id": "raid_robot_whirring",
+    "weight": 11,
+    "text": "Heard a nervous whirring behind me. An Anxietick froze mid‑skitter.",
+    "requires": {
+      "phase": "RAIDING"
+    },
+    "effects": {
+      "mood": -2,
+      "startRaidActivity": {
+        "activityId": "robot_encounter_standard",
+        "kind": "ROBOT_ENCOUNTER",
+        "robotId": "anxietick"
+      }
+    }
+  },
+  {
+    "id": "raid_teammate_loot_steal",
+    "weight": 16,
+    "text": "Teammate grabbed the loot I was reaching for. I pretended not to care.",
+    "requires": {
+      "phase": "RAIDING"
+    },
+    "effects": {
+      "mood": -2,
+      "ratRating": 2
+    }
+  },
+  {
+    "id": "raid_robot_scan",
+    "weight": 9,
+    "text": "A Tattletale drone scanned me from head to toe. I failed whatever test it was running.",
+    "requires": {
+      "phase": "RAIDING"
+    },
+    "effects": {
+      "mood": -3,
+      "startRaidActivity": {
+        "activityId": "robot_encounter_standard",
+        "kind": "ROBOT_ENCOUNTER",
+        "robotId": "tattletale"
+      }
+    }
+  },
+  {
+    "id": "raid_crate_falls_apart",
+    "weight": 13,
+    "text": "Opened a crate. It fell apart like my hopes.",
+    "requires": {
+      "phase": "RAIDING"
+    },
+    "effects": {
+      "mood": -2
+    }
+  },
+  {
+    "id": "raid_robot_shadow",
+    "weight": 10,
+    "text": "Saw a shadow before the robot. It was a Crusher of Dreams. Terrifying.",
+    "requires": {
+      "phase": "RAIDING",
+      "minGreed": 20
+    },
+    "effects": {
+      "mood": -4,
+      "startRaidActivity": {
+        "activityId": "robot_encounter_standard",
+        "kind": "ROBOT_ENCOUNTER",
+        "robotId": "crusher_of_dreams"
+      }
+    }
+  },
+  {
+    "id": "raid_teammate_runs",
+    "weight": 12,
+    "text": "Teammate sprinted past me screaming. I followed without asking questions.",
+    "requires": {
+      "phase": "RAIDING"
+    },
+    "effects": {
+      "mood": -1
+    }
+  },
+  {
+    "id": "raid_robot_ping",
+    "weight": 8,
+    "text": "A Tattletale drone pinged loudly. I pinged back. It judged me.",
+    "requires": {
+      "phase": "RAIDING"
+    },
+    "effects": {
+      "mood": -2,
+      "startRaidActivity": {
+        "activityId": "robot_encounter_standard",
+        "kind": "ROBOT_ENCOUNTER",
+        "robotId": "tattletale"
+      }
+    }
+  },
+  {
+    "id": "raid_loot_glow",
+    "weight": 17,
+    "text": "Saw glowing loot. Ran toward it. Immediately regretted running.",
+    "requires": {
+      "phase": "RAIDING",
+      "minGreed": 15
+    },
+    "effects": {
+      "greedLevel": 4,
+      "mood": -1
+    }
+  },
+  {
+    "id": "raid_robot_footsteps",
+    "weight": 11,
+    "text": "Heard heavy footsteps. Not mine. Not good. Definitely a Roomba Prime.",
+    "requires": {
+      "phase": "RAIDING",
+      "minGreed": 20
+    },
+    "effects": {
+      "mood": -4,
+      "startRaidActivity": {
+        "activityId": "robot_encounter_standard",
+        "kind": "ROBOT_ENCOUNTER",
+        "robotId": "roomba_prime"
+      }
+    }
+  },
+  {
+    "id": "raid_teammate_wrong_way",
+    "weight": 14,
+    "text": "Teammate confidently led us the wrong way. We followed anyway.",
+    "requires": {
+      "phase": "RAIDING"
+    },
+    "effects": {
+      "mood": -1
+    }
+  },
+  {
+    "id": "raid_robot_beeps",
+    "weight": 9,
+    "text": "A Tattletale drone beeped aggressively at me. I beeped back. Mistake.",
+    "requires": {
+      "phase": "RAIDING"
+    },
+    "effects": {
+      "mood": -2,
+      "startRaidActivity": {
+        "activityId": "robot_encounter_standard",
+        "kind": "ROBOT_ENCOUNTER",
+        "robotId": "tattletale"
+      }
+    }
+  },
+  {
+    "id": "raid_loot_but_explosive",
+    "weight": 7,
+    "text": "Loot crate exploded when I touched it. I pretended that was normal.",
+    "requires": {
+      "phase": "RAIDING",
+      "minGreed": 25
+    },
+    "effects": {
+      "mood": -4,
+      "ratRating": 2
+    }
+  },
+  {
+    "id": "raid_robot_spotted",
+    "weight": 10,
+    "text": "A Tattletale drone spotted me instantly. I was standing completely still.",
+    "requires": {
+      "phase": "RAIDING"
+    },
+    "effects": {
+      "mood": -3,
+      "startRaidActivity": {
+        "activityId": "robot_encounter_standard",
+        "kind": "ROBOT_ENCOUNTER",
+        "robotId": "tattletale"
+      }
+    }
+  },
+  {
+    "id": "raid_teammate_loot_ping",
+    "weight": 15,
+    "text": "Teammate pinged loot. It was a rock. They insisted it looked shiny.",
+    "requires": {
+      "phase": "RAIDING"
+    },
+    "effects": {
+      "mood": -1,
+      "ratRating": 1
+    }
+  },
+  {
+    "id": "raid_robot_siren",
+    "weight": 8,
+    "text": "A Tattletale drone activated a siren. I activated panic.",
+    "requires": {
+      "phase": "RAIDING"
+    },
+    "effects": {
+      "mood": -4,
+      "startRaidActivity": {
+        "activityId": "robot_encounter_standard",
+        "kind": "ROBOT_ENCOUNTER",
+        "robotId": "tattletale"
+      }
+    }
+  },
+  {
+    "id": "raid_loot_behind_robot",
+    "weight": 16,
+    "text": "Saw loot behind a Bomber Who Misreads the Room. Considered my options. None were good.",
+    "requires": {
+      "phase": "RAIDING",
+      "minGreed": 20
+    },
+    "effects": {
+      "greedLevel": 5,
+      "mood": -2,
+      "startRaidActivity": {
+        "activityId": "robot_encounter_standard",
+        "kind": "ROBOT_ENCOUNTER",
+        "robotId": "bomber_misread"
+      }
+    }
+  },
+  {
+    "id": "raid_robot_turns_slowly",
+    "weight": 9,
+    "text": "A Walker Texas Malfunction turned toward me very slowly. Too slowly.",
+    "requires": {
+      "phase": "RAIDING",
+      "minGreed": 10
+    },
+    "effects": {
+      "mood": -3,
+      "startRaidActivity": {
+        "activityId": "robot_encounter_standard",
+        "kind": "ROBOT_ENCOUNTER",
+        "robotId": "walker_texas_malfunction"
+      }
+    }
+  },
+  {
+    "id": "raid_teammate_falls",
+    "weight": 12,
+    "text": "Teammate fell off a ledge. I pretended not to laugh.",
+    "requires": {
+      "phase": "RAIDING"
+    },
+    "effects": {
+      "mood": -1
+    }
+  },
+  {
+    "id": "raid_robot_ambush",
+    "weight": 7,
+    "text": "A Bomber Who Misreads the Room ambushed us from behind a crate. I screamed internally.",
+    "requires": {
+      "phase": "RAIDING",
+      "minGreed": 20
+    },
+    "effects": {
+      "mood": -4,
+      "startRaidActivity": {
+        "activityId": "robot_encounter_standard",
+        "kind": "ROBOT_ENCOUNTER",
+        "robotId": "bomber_misread",
+        "robotDamageMultiplier": 2.5
+      }
+    }
+  },
+  {
+    "id": "raid_loot_is_bait",
+    "weight": 15,
+    "text": "Loot was placed in the open. Too open. Definitely bait.",
+    "requires": {
+      "phase": "RAIDING",
+      "minGreed": 10
+    },
+    "effects": {
+      "greedLevel": 3,
+      "mood": -2
+    }
+  },
+  {
+    "id": "raid_robot_laser_warning",
+    "weight": 8,
+    "text": "A laser dot appeared on my chest. Roomba Prime was nearby. I chose not to investigate.",
+    "requires": {
+      "phase": "RAIDING",
+      "minGreed": 20
+    },
+    "effects": {
+      "mood": -4,
+      "startRaidActivity": {
+        "activityId": "robot_encounter_standard",
+        "kind": "ROBOT_ENCOUNTER",
+        "robotId": "roomba_prime"
+      }
+    }
+  },
+  {
+    "id": "raid_teammate_loot_race",
+    "weight": 14,
+    "text": "Teammate and I raced for loot. They won. I pretended I let them.",
+    "requires": {
+      "phase": "RAIDING"
+    },
+    "effects": {
+      "mood": -1,
+      "ratRating": 1
+    }
+  },
+  {
+    "id": "raid_robot_sparks",
+    "weight": 9,
+    "text": "A Walker Texas Malfunction sparked violently. I took that personally.",
+    "requires": {
+      "phase": "RAIDING",
+      "minGreed": 10
+    },
+    "effects": {
+      "mood": -2,
+      "startRaidActivity": {
+        "activityId": "robot_encounter_standard",
+        "kind": "ROBOT_ENCOUNTER",
+        "robotId": "walker_texas_malfunction"
+      }
+    }
+  },
+  {
+    "id": "raid_loot_underwater",
+    "weight": 11,
+    "text": "Saw loot underwater. Decided drowning wasn’t worth it. Barely.",
+    "requires": {
+      "phase": "RAIDING"
+    },
+    "effects": {
+      "greedLevel": -1,
+      "mood": -1
+    }
+  },
+  {
+    "id": "raid_robot_breathing",
+    "weight": 7,
+    "text": "Heard a robot making a breathing noise. It was an Anxietick. Somehow worse.",
+    "requires": {
+      "phase": "RAIDING"
+    },
+    "effects": {
+      "mood": -2,
+      "startRaidActivity": {
+        "activityId": "robot_encounter_standard",
+        "kind": "ROBOT_ENCOUNTER",
+        "robotId": "anxietick"
+      }
+    }
+  },
+  {
+    "id": "raid_teammate_panic",
+    "weight": 12,
+    "text": "Teammate yelled 'RUN!' without context. I ran anyway.",
+    "requires": {
+      "phase": "RAIDING"
+    },
+    "effects": {
+      "mood": -2
+    }
+  },
+  {
+    "id": "raid_robot_stare",
+    "weight": 10,
+    "text": "A Crusher of Dreams stared at me for a full five seconds. I blinked first.",
+    "requires": {
+      "phase": "RAIDING",
+      "minGreed": 20
+    },
+    "effects": {
+      "mood": -3,
+      "startRaidActivity": {
+        "activityId": "robot_encounter_standard",
+        "kind": "ROBOT_ENCOUNTER",
+        "robotId": "crusher_of_dreams",
+        "robotDamageMultiplier": 2.5
+      }
+    }
+  },
+  {
+    "id": "raid_loot_just_out_of_reach",
+    "weight": 15,
+    "text": "Loot was just out of reach. I stretched. I failed.",
+    "requires": {
+      "phase": "RAIDING"
+    },
+    "effects": {
+      "mood": -1
+    }
+  },
+  {
+    "id": "raid_robot_alarm",
+    "weight": 8,
+    "text": "A Tattletale drone triggered an alarm. I triggered despair.",
+    "requires": {
+      "phase": "RAIDING"
+    },
+    "effects": {
+      "mood": -4,
+      "startRaidActivity": {
+        "activityId": "robot_encounter_standard",
+        "kind": "ROBOT_ENCOUNTER",
+        "robotId": "tattletale"
+      }
+    }
+  },
+  {
+    "id": "raid_teammate_loot_drop",
+    "weight": 13,
+    "text": "Teammate dropped loot while running. I considered picking it up. Considered.",
+    "requires": {
+      "phase": "RAIDING"
+    },
+    "effects": {
+      "greedLevel": 2,
+      "ratRating": 1
+    }
+  },
+  {
+    "id": "raid_robot_behind_me",
+    "weight": 9,
+    "text": "A Roomba Prime appeared behind me silently. Too silently.",
+    "requires": {
+      "phase": "RAIDING",
+      "minGreed": 20
+    },
+    "effects": {
+      "mood": -4,
+      "startRaidActivity": {
+        "activityId": "robot_encounter_standard",
+        "kind": "ROBOT_ENCOUNTER",
+        "robotId": "roomba_prime"
+      }
+    }
+  },
+  {
+    "id": "raid_loot_in_tree",
+    "weight": 11,
+    "text": "Loot was stuck in a tree. I stared at it helplessly.",
+    "requires": {
+      "phase": "RAIDING"
+    },
+    "effects": {
+      "mood": -1
+    }
+  },
+  {
+    "id": "raid_robot_warning_beep",
+    "weight": 7,
+    "text": "A Tattletale drone emitted a warning beep. I emitted a warning scream.",
+    "requires": {
+      "phase": "RAIDING"
+    },
+    "effects": {
+      "mood": -3,
+      "startRaidActivity": {
+        "activityId": "robot_encounter_standard",
+        "kind": "ROBOT_ENCOUNTER",
+        "robotId": "tattletale"
+      }
+    }
+  },
+  {
+    "id": "raid_teammate_wrong_ping",
+    "weight": 14,
+    "text": "Teammate pinged danger. It was a bush.",
+    "requires": {
+      "phase": "RAIDING"
+    },
+    "effects": {
+      "mood": -1,
+      "ratRating": 1
+    }
+  },
+  {
+    "id": "raid_robot_overhead",
+    "weight": 8,
+    "text": "A Roomba Prime flew overhead. I froze like a malfunctioning toaster.",
+    "requires": {
+      "phase": "RAIDING",
+      "minGreed": 20
+    },
+    "effects": {
+      "mood": -4,
+      "startRaidActivity": {
+        "activityId": "robot_encounter_standard",
+        "kind": "ROBOT_ENCOUNTER",
+        "robotId": "roomba_prime"
+      }
+    }
+  },
+  {
+    "id": "encounter_overthinker_tick",
+    "weight": 22,
+    "text": "An Overthinker Tick {robot_flavor_overthinker_tick}. Eventually chose attack. Eventually.",
+    "requires": {
+      "phase": "RAIDING"
+    },
+    "effects": {
+      "mood": -1,
+      "startRaidActivity": {
+        "activityId": "robot_encounter_standard",
+        "kind": "ROBOT_ENCOUNTER",
+        "robotId": "overthinker_tick"
+      }
+    }
+  },
+  {
+    "id": "encounter_overthinker_tick_spiral",
+    "weight": 8,
+    "text": "An Overthinker Tick {robot_flavor_overthinker_tick}. Considered every option. Chose all of them simultaneously.",
+    "requires": {
+      "phase": "RAIDING"
+    },
+    "effects": {
+      "mood": -2,
+      "ratRating": 1,
+      "startRaidActivity": {
+        "activityId": "robot_encounter_standard",
+        "kind": "ROBOT_ENCOUNTER",
+        "robotId": "overthinker_tick",
+        "robotDamageMultiplier": 2
+      }
+    }
+  },
+  {
+    "id": "encounter_passive_aggressor",
+    "weight": 16,
+    "text": "A Passive-Aggressor Drone {robot_flavor_passive_aggressor}. Did not fire. The judgment was worse.",
+    "requires": {
+      "phase": "RAIDING",
+      "minGreed": 10
+    },
+    "effects": {
+      "mood": -2,
+      "ratRating": 1,
+      "startRaidActivity": {
+        "activityId": "robot_encounter_standard",
+        "kind": "ROBOT_ENCOUNTER",
+        "robotId": "passive_aggressor"
+      }
+    }
+  },
+  {
+    "id": "encounter_seeker_validation",
+    "weight": 14,
+    "text": "A Seeker of Validation {robot_flavor_seeker_validation}. It hesitated mid-charge, waiting for feedback. I did not provide any.",
+    "requires": {
+      "phase": "RAIDING",
+      "minGreed": 15
+    },
+    "effects": {
+      "mood": -2,
+      "startRaidActivity": {
+        "activityId": "robot_encounter_standard",
+        "kind": "ROBOT_ENCOUNTER",
+        "robotId": "seeker_validation"
+      }
+    }
+  },
+  {
+    "id": "encounter_harvester_annoyance",
+    "weight": 14,
+    "text": "A Harvester of Mild Annoyances {robot_flavor_harvester_annoyance}. Blocked every useful path while loudly collecting nothing.",
+    "requires": {
+      "phase": "RAIDING",
+      "minGreed": 10
+    },
+    "effects": {
+      "mood": -2,
+      "ratRating": 1,
+      "startRaidActivity": {
+        "activityId": "robot_encounter_standard",
+        "kind": "ROBOT_ENCOUNTER",
+        "robotId": "harvester_annoyance"
+      }
+    }
+  },
+  {
+    "id": "encounter_enforcer_inconvenience",
+    "weight": 11,
+    "text": "An Enforcer of Minor Inconveniences {robot_flavor_enforcer_inconvenience}. Technically following protocol. Technically.",
+    "requires": {
+      "phase": "RAIDING",
+      "minGreed": 15
+    },
+    "effects": {
+      "mood": -3,
+      "startRaidActivity": {
+        "activityId": "robot_encounter_standard",
+        "kind": "ROBOT_ENCOUNTER",
+        "robotId": "enforcer_inconvenience"
+      }
+    }
+  },
+  {
+    "id": "encounter_enforcer_inconvenience_citation",
+    "weight": 5,
+    "text": "An Enforcer of Minor Inconveniences deployed suppressive fire. Mostly at the wrong targets. Including me.",
+    "requires": {
+      "phase": "RAIDING",
+      "minGreed": 20
+    },
+    "effects": {
+      "mood": -4,
+      "ratRating": 2,
+      "startRaidActivity": {
+        "activityId": "robot_encounter_standard",
+        "kind": "ROBOT_ENCOUNTER",
+        "robotId": "enforcer_inconvenience",
+        "robotDamageMultiplier": 2.5
+      }
+    }
+  },
+  {
+    "id": "encounter_receipt_printer_doom",
+    "weight": 13,
+    "text": "A Receipt Printer of Doom {robot_flavor_receipt_printer_doom}. It cited me for loitering near value.",
+    "requires": {
+      "phase": "RAIDING",
+      "minGreed": 10
+    },
+    "effects": {
+      "mood": -2,
+      "ratRating": 1,
+      "startRaidActivity": {
+        "activityId": "robot_encounter_standard",
+        "kind": "ROBOT_ENCOUNTER",
+        "robotId": "receipt_printer_doom"
+      }
+    }
+  },
+  {
+    "id": "encounter_receipt_printer_doom_paper_jam",
+    "weight": 4,
+    "text": "A Receipt Printer of Doom jammed, screamed, and weaponized the paperwork backlog.",
+    "requires": {
+      "phase": "RAIDING",
+      "minGreed": 15
+    },
+    "effects": {
+      "mood": -3,
+      "startRaidActivity": {
+        "activityId": "robot_encounter_standard",
+        "kind": "ROBOT_ENCOUNTER",
+        "robotId": "receipt_printer_doom",
+        "robotDamageMultiplier": 1.5
+      }
+    }
+  },
+  {
+    "id": "encounter_apology_turret",
+    "weight": 10,
+    "text": "An Apology Turret {robot_flavor_apology_turret}. Very sorry. Very armed.",
+    "requires": {
+      "phase": "RAIDING",
+      "minGreed": 15
+    },
+    "effects": {
+      "mood": -3,
+      "ratRating": 1,
+      "startRaidActivity": {
+        "activityId": "robot_encounter_standard",
+        "kind": "ROBOT_ENCOUNTER",
+        "robotId": "apology_turret"
+      }
+    }
+  },
+  {
+    "id": "encounter_apology_turret_hold_still",
+    "weight": 4,
+    "text": "An Apology Turret asked me to hold still for a courtesy burst. I declined. It escalated politely.",
+    "requires": {
+      "phase": "RAIDING",
+      "minGreed": 20
+    },
+    "effects": {
+      "mood": -4,
+      "ratRating": 2,
+      "startRaidActivity": {
+        "activityId": "robot_encounter_standard",
+        "kind": "ROBOT_ENCOUNTER",
+        "robotId": "apology_turret",
+        "robotDamageMultiplier": 2
+      }
+    }
+  },
+  {
+    "id": "encounter_sniper_poor_decisions",
+    "weight": 5,
+    "text": "A Sniper of Poor Decisions {robot_flavor_sniper_poor_decisions}. It waited until I stopped moving. Classic.",
+    "requires": {
+      "phase": "RAIDING",
+      "minGreed": 20
+    },
+    "effects": {
+      "mood": -5,
+      "ratRating": 3,
+      "startRaidActivity": {
+        "activityId": "robot_encounter_standard",
+        "kind": "ROBOT_ENCOUNTER",
+        "robotId": "sniper_poor_decisions",
+        "robotDamageMultiplier": 2.5
+      }
+    }
+  },
+  {
+    "id": "encounter_sniper_poor_decisions_miss",
+    "weight": 3,
+    "text": "A Sniper of Poor Decisions missed me. Once. It did not miss again.",
+    "requires": {
+      "phase": "RAIDING",
+      "minGreed": 20
+    },
+    "effects": {
+      "mood": -4,
+      "startRaidActivity": {
+        "activityId": "robot_encounter_standard",
+        "kind": "ROBOT_ENCOUNTER",
+        "robotId": "sniper_poor_decisions"
+      }
+    }
+  },
+  {
+    "id": "encounter_tank_overcompensation",
+    "weight": 4,
+    "text": "A Tank of Overcompensation {robot_flavor_tank_overcompensation}. It announced the attack several times. Still terrifying.",
+    "requires": {
+      "phase": "RAIDING",
+      "minGreed": 20
+    },
+    "effects": {
+      "mood": -5,
+      "ratRating": 3,
+      "startRaidActivity": {
+        "activityId": "robot_encounter_standard",
+        "kind": "ROBOT_ENCOUNTER",
+        "robotId": "tank_overcompensation",
+        "robotDamageMultiplier": 2.5
+      }
+    }
+  },
+  {
+    "id": "encounter_tank_overcompensation_revving",
+    "weight": 2,
+    "text": "A Tank of Overcompensation revved its engine unnecessarily before charging. The floor vibrated. So did I.",
+    "requires": {
+      "phase": "RAIDING",
+      "minGreed": 20
+    },
+    "effects": {
+      "mood": -5,
+      "startRaidActivity": {
+        "activityId": "robot_encounter_standard",
+        "kind": "ROBOT_ENCOUNTER",
+        "robotId": "tank_overcompensation"
+      }
+    }
+  },
+  {
+    "id": "day_clear_sightline_loot",
+    "weight": 12,
+    "text": "Daylight revealed a safe-looking supply nook. Suspiciously normal. Looted it with one eye on the exit.",
+    "requires": {
+      "phase": "RAIDING",
+      "dangerLevel": "Low"
+    },
+    "effects": {
+      "backpackValue": 2,
+      "mood": 1
+    }
+  },
+  {
+    "id": "night_alerted_patrol",
+    "weight": 10,
+    "text": "Night patrol lights swept the street. Every robot suddenly looked like it had coffee and a promotion to chase.",
+    "requires": {
+      "phase": "RAIDING",
+      "dangerLevel": "Medium",
+      "minGreed": 10
+    },
+    "effects": {
+      "mood": -2,
+      "ratRating": 1,
+      "startRaidActivity": {
+        "activityId": "robot_encounter_standard",
+        "kind": "ROBOT_ENCOUNTER",
+        "robotId": "tattletale"
+      }
+    }
+  },
+  {
+    "id": "night_black_box_cache",
+    "weight": 8,
+    "text": "Found a black-box cache humming in the dark. It was valuable in the way warning labels are valuable.",
+    "requires": {
+      "phase": "RAIDING",
+      "dangerLevel": "Medium",
+      "minGreed": 15
+    },
+    "effects": {
+      "greedLevel": 4,
+      "mood": 1,
+      "startRaidActivity": {
+        "activityId": "search_black_box_cache",
+        "kind": "SEARCH",
+        "lootTableId": "scrap_components"
+      }
+    }
+  },
+  {
+    "id": "raid_overtime_red_redline_cache",
+    "weight": 8,
+    "text": "Overtime Red painted the loot crate like an after-hours bonus. Opened it. Heard distant machinery clock in.",
+    "requires": {
+      "phase": "RAIDING",
+      "zoneCondition": "overtime_red",
+      "minGreed": 15
+    },
+    "effects": {
+      "backpackValue": 10,
+      "greedLevel": 5,
+      "mood": 1
+    }
+  },
+  {
+    "id": "raid_overtime_red_hunter_ping",
+    "weight": 7,
+    "text": "Overtime Red turned the streetlights hostile and something pinged my position like unpaid labor.",
+    "requires": {
+      "phase": "RAIDING",
+      "zoneCondition": "overtime_red",
+      "minGreed": 20
+    },
+    "effects": {
+      "mood": -4,
+      "ratRating": 2,
+      "startRaidActivity": {
+        "activityId": "robot_encounter_standard",
+        "kind": "ROBOT_ENCOUNTER",
+        "robotId": "sniper_poor_decisions",
+        "robotDamageMultiplier": 1.5
+      }
+    }
+  },
+  {
+    "id": "raid_field_cache_receipts",
+    "weight": 13,
+    "text": "Found a field cache with one battery, two lies, and three receipts. Filed all of it under loot.",
+    "requires": {
+      "phase": "RAIDING",
+      "minGreed": 10
+    },
+    "effects": {
+      "backpackValue": 4,
+      "greedLevel": 2,
+      "mood": 1
+    }
+  },
+  {
+    "id": "raid_supply_drop_puddle",
+    "weight": 12,
+    "text": "Supply drop landed in a puddle with perfect comedic timing. Loot still mostly loot.",
+    "requires": {
+      "phase": "RAIDING",
+      "dangerLevel": "Low"
+    },
+    "effects": {
+      "backpackValue": 3,
+      "mood": 1
+    }
+  },
+  {
+    "id": "raid_strange_markings_warning",
+    "weight": 9,
+    "text": "Found strange markings that clearly meant STOP TOUCHING CRATES. Took a rubbing for later ignoring.",
+    "requires": {
+      "phase": "RAIDING",
+      "minGreed": 15
+    },
+    "effects": {
+      "greedLevel": 3,
+      "mood": 1
+    }
+  },
+  {
+    "id": "raid_water_pipe_heroic",
+    "weight": 10,
+    "text": "Broken water pipe sprayed heroically. Filled the canteen, the boots, and several regrets.",
+    "requires": {
+      "phase": "RAIDING",
+      "dangerLevel": "Low"
+    },
+    "effects": {
+      "mood": 1
+    }
+  },
+  {
+    "id": "raid_security_turnstile",
+    "weight": 9,
+    "text": "Old security turnstile demanded a badge. I vaulted it and felt briefly employed.",
+    "requires": {
+      "phase": "RAIDING",
+      "minGreed": 10
+    },
+    "effects": {
+      "mood": 2,
+      "ratRating": 1
+    }
+  },
+  {
+    "id": "raid_greenhouse_judgment",
+    "weight": 10,
+    "text": "Abandoned grow trays contained one surviving lettuce. It looked disappointed in my loadout.",
+    "requires": {
+      "phase": "RAIDING"
+    },
+    "effects": {
+      "backpackValue": 2,
+      "mood": -1
+    }
+  },
+  {
+    "id": "raid_warning_label_layer",
+    "weight": 11,
+    "text": "Peeled a warning label off a machine. Under it: a second warning label with better handwriting.",
+    "requires": {
+      "phase": "RAIDING",
+      "minGreed": 10
+    },
+    "effects": {
+      "greedLevel": 2,
+      "mood": 1
+    }
+  },
+  {
+    "id": "raid_kiosk_customer_survey",
+    "weight": 10,
+    "text": "Abandoned kiosk asked me to rate the raid experience. Selected 'in progress' and stole the pen.",
+    "requires": {
+      "phase": "RAIDING"
+    },
+    "effects": {
+      "backpackValue": 1,
+      "mood": 1
+    }
+  },
+  {
+    "id": "raid_crate_with_decoy_crate",
+    "weight": 9,
+    "text": "Opened a crate and found a smaller decoy crate inside. The smaller crate looked smug.",
+    "requires": {
+      "phase": "RAIDING",
+      "minGreed": 15
+    },
+    "effects": {
+      "greedLevel": 4,
+      "mood": -1
+    }
+  },
+  {
+    "id": "raid_turnkey_without_door",
+    "weight": 11,
+    "text": "Found a key labeled TURNKEY. No door nearby. Packed it because destiny loves clutter.",
+    "requires": {
+      "phase": "RAIDING",
+      "minGreed": 10
+    },
+    "effects": {
+      "backpackValue": 3,
+      "greedLevel": 2
+    }
+  },
+  {
+    "id": "raid_escalator_argument",
+    "weight": 10,
+    "text": "Broken escalator claimed to be stairs. I accepted its truth and climbed with resentment.",
+    "requires": {
+      "phase": "RAIDING"
+    },
+    "effects": {
+      "mood": -1,
+      "ratRating": 1
+    }
+  },
+  {
+    "id": "raid_apology_weather_forecast",
+    "weight": 11,
+    "text": "Apology Weather apologized into the comms, then made the stairs slippery anyway.",
+    "requires": {
+      "phase": "RAIDING",
+      "zoneCondition": "apology_weather"
+    },
+    "effects": {
+      "mood": -1,
+      "ratRating": 1
+    }
+  },
+  {
+    "id": "raid_polite_glyphs_customer_service",
+    "weight": 10,
+    "text": "Polite Glyphs suggested I stop opening crates. I appreciated the tone and ignored the message.",
+    "requires": {
+      "phase": "RAIDING",
+      "zoneCondition": "polite_glyphs",
+      "minGreed": 10
+    },
+    "effects": {
+      "greedLevel": 2,
+      "mood": 1
+    }
+  },
+  {
+    "id": "raid_tremor_bad_priorities_shuffle",
+    "weight": 9,
+    "text": "A Tremor of Bad Priorities moved the exit farther away and a crate closer. Nature has opinions.",
+    "requires": {
+      "phase": "RAIDING",
+      "zoneCondition": "tremor_bad_priorities",
+      "minGreed": 10
+    },
+    "effects": {
+      "backpackValue": 3,
+      "greedLevel": 3,
+      "mood": -1
+    }
+  },
+  {
+    "id": "raid_humming_crate_migration_bait",
+    "weight": 8,
+    "text": "A humming crate migrated into the open and waited for me to develop character flaws.",
+    "requires": {
+      "phase": "RAIDING",
+      "zoneCondition": "humming_crate_migration",
+      "minGreed": 20
+    },
+    "effects": {
+      "greedLevel": 5,
+      "mood": -2,
+      "startRaidActivity": {
+        "activityId": "robot_encounter_standard",
+        "kind": "ROBOT_ENCOUNTER",
+        "robotId": "tattletale"
+      }
+    }
+  },
+  {
+    "id": "raid_oopsall_misdelivery_cache",
+    "weight": 11,
+    "text": "Found an OopsAll Logistics crate addressed to ELSEWHERE. Took responsibility for the delivery chain.",
+    "requires": {
+      "phase": "RAIDING",
+      "minGreed": 10
+    },
+    "effects": {
+      "backpackValue": 4,
+      "greedLevel": 2,
+      "mood": 1
+    }
+  },
+  {
+    "id": "raid_hushtone_static_confession",
+    "weight": 9,
+    "text": "A cracked HushTone receiver whispered static with the confidence of a secret. Packed it for evidence.",
+    "requires": {
+      "phase": "RAIDING"
+    },
+    "effects": {
+      "backpackValue": 2,
+      "mood": 1
+    }
+  },
+  {
+    "id": "raid_exit_strategy_bad_map",
+    "weight": 10,
+    "text": "Found an Exit Strategy Unlimited route card. It labeled the nearest wall as OPTION B.",
+    "requires": {
+      "phase": "RAIDING",
+      "minGreed": 10
+    },
+    "effects": {
+      "greedLevel": -1,
+      "mood": -1
+    }
+  },
+  {
+    "id": "raid_damaged_dam_leak_math",
+    "weight": 10,
+    "text": "Passed a damaged dam still labeled CIVIC CONFIDENCE PROJECT. It leaked water and several promises.",
+    "requires": {
+      "phase": "RAIDING",
+      "dangerLevel": "Low"
+    },
+    "effects": {
+      "mood": -1
+    }
+  },
+  {
+    "id": "raid_buried_retail_escalator_bait",
+    "weight": 10,
+    "text": "Buried retail district had an escalator pointing at a half-open store kiosk. Terrible route. Excellent crate smell.",
+    "requires": {
+      "phase": "RAIDING",
+      "minGreed": 15
+    },
+    "effects": {
+      "backpackValue": 4,
+      "greedLevel": 3,
+      "mood": -1
+    }
+  },
+  {
+    "id": "raid_failed_transit_departure_board",
+    "weight": 9,
+    "text": "Old transit board said all departures were delayed, not cancelled. I admire the commitment to denial.",
+    "requires": {
+      "phase": "RAIDING"
+    },
+    "effects": {
+      "mood": 1,
+      "ratRating": 1
+    }
+  },
+  {
+    "id": "raid_soggy_tower_top_floor_bait",
+    "weight": 8,
+    "text": "Soggy tower stairs led up to top-floor loot and down to several physics concerns. I chose up because I am unwell.",
+    "requires": {
+      "phase": "RAIDING",
+      "minGreed": 20
+    },
+    "effects": {
+      "backpackValue": 6,
+      "greedLevel": 4,
+      "mood": -2
+    }
+  },
+  {
+    "id": "raid_warning_sign_museum_collection",
+    "weight": 10,
+    "text": "Found a warning-sign museum. Every sign said DO NOT. I took the smallest one for morale.",
+    "requires": {
+      "phase": "RAIDING",
+      "minGreed": 10
+    },
+    "effects": {
+      "backpackValue": 2,
+      "greedLevel": 2,
+      "mood": 1
+    }
+  },
+  {
+    "id": "raid_launch_manifest_clipboard",
+    "weight": 9,
+    "text": "Found a launch manifest clipboard under rubble. Every name was crossed out except WAITLIST. Took it as a sign.",
+    "requires": {
+      "phase": "RAIDING",
+      "minGreed": 10
+    },
+    "effects": {
+      "backpackValue": 2,
+      "greedLevel": 2,
+      "mood": -1
+    }
+  },
+  {
+    "id": "raid_emergency_snack_shrine_offering",
+    "weight": 10,
+    "text": "Found an emergency snack shrine arranged around a tiny warning label. Took the trial mix. Left a bolt as tribute.",
+    "requires": {
+      "phase": "RAIDING",
+      "minGreed": 10
+    },
+    "effects": {
+      "backpackValue": 3,
+      "greedLevel": 2,
+      "mood": 2
+    }
+  },
+  {
+    "id": "raid_questionable_field_cache_generous",
+    "weight": 9,
+    "text": "Found a questionable field cache packed with exactly the kind of loot that makes people ignore footsteps.",
+    "requires": {
+      "phase": "RAIDING",
+      "minGreed": 15
+    },
+    "effects": {
+      "backpackValue": 7,
+      "greedLevel": 5,
+      "mood": 1,
+      "ratRating": 1
+    }
+  },
+  {
+    "id": "raid_staycation_tent_decoy_crate",
+    "weight": 9,
+    "text": "Found a Staycation tent with a decoy crate outside and three suspiciously patient footprints inside.",
+    "requires": {
+      "phase": "RAIDING",
+      "minGreed": 15
+    },
+    "effects": {
+      "backpackValue": 3,
+      "greedLevel": 3,
+      "mood": -1,
+      "ratRating": 2
+    }
+  },
+  {
+    "id": "raid_staycation_locker_philosophy",
+    "weight": 8,
+    "text": "A raider in a locker whispered that camping is just patience with furniture. I hate how prepared that sounded.",
+    "requires": {
+      "phase": "RAIDING",
+      "dangerLevel": [
+        "Medium",
+        "High"
+      ],
+      "minGreed": 10
+    },
+    "effects": {
+      "mood": -1,
+      "ratRating": 2
+    }
+  }
 ]

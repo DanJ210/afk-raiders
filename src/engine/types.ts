@@ -16,6 +16,7 @@ export interface EventTemplate extends ContentEntry {
     extracting?: boolean
     downed?: boolean
     dangerLevel?: DangerLevel | DangerLevel[]
+    zone?: string | string[]
     zoneCondition?: string | string[]
     minGreed?: number
     maxGreed?: number
@@ -30,10 +31,6 @@ export interface EventTemplate extends ContentEntry {
     damage?: number | string // number or dice string like "15d6"
     greedLevel?: number
     ratRating?: number
-    /** Robot id from robots.json. Triggers the placeholder robot combat roll. */
-    robotEncounter?: string
-    /** Multiplies menace-based robot damage on failed robot encounters. */
-    robotDamageMultiplier?: number
     /** Finds a current-raid-only healing item from healing_items.json. */
     healingItem?: boolean
     /** Finds a manual-use shield recharger and adds it to the backpack. */
@@ -44,7 +41,64 @@ export interface EventTemplate extends ContentEntry {
     failExtraction?: boolean
     /** Starts the downed condition while the raid remains in RAIDING. */
     startDowned?: boolean
+    /** Starts a JSON-backed multi-tick raid activity. */
+    startRaidActivity?: StartRaidActivityEffect
   }
+}
+
+export interface RobotActivityPool {
+  dangerLevel?: DangerLevel | DangerLevel[]
+  zone?: string | string[]
+  zoneCondition?: string | string[]
+  deadliness?: RobotEntry['deadliness'] | RobotEntry['deadliness'][]
+  minGreed?: number
+  maxGreed?: number
+}
+
+export interface RaidActivityRequires {
+  dangerLevel?: DangerLevel | DangerLevel[]
+  zone?: string | string[]
+  zoneCondition?: string | string[]
+  minGreed?: number
+  maxGreed?: number
+}
+
+export interface StartRaidActivityEffect {
+  activityId: string
+  kind?: RaidActivityKind
+  hazardDamage?: number
+  healingItem?: boolean
+  lootTableId?: string
+  shieldRecharger?: boolean
+  robotId?: string
+  robotPool?: RobotActivityPool
+  robotDamageMultiplier?: number
+}
+
+export interface RaidActivityTextSet {
+  started: string
+  progress: string[]
+  completed: string
+  failed: string
+}
+
+export interface RaidActivityDefinition extends ContentEntry {
+  name: string
+  kind: RaidActivityKind
+  ticks: number
+  requires?: RaidActivityRequires
+  text: RaidActivityTextSet
+  blocking?: boolean
+  hazardDamage?: number
+  healingItem?: boolean
+  lootTableId?: string
+  shieldRecharger?: boolean
+  robotId?: string
+  robotPool?: RobotActivityPool
+  weaponId?: string
+  weaponName?: string
+  raiderDamageMin?: number
+  raiderDamageMax?: number
 }
 
 export interface LootItem extends ContentEntry {
@@ -196,6 +250,29 @@ export interface ActiveShieldRecharge {
   ticksRemaining: number
 }
 
+export type RaidActivityKind = 'SEARCH' | 'ROBOT_ENCOUNTER' | 'EXTRACTION' | 'DOWNED' | 'SHIELD_RECHARGE'
+
+export interface ActiveRaidActivity {
+  id: string
+  name?: string
+  kind: RaidActivityKind
+  ticksRemaining: number
+  totalTicks: number
+  locationId?: string
+  healingItem?: boolean
+  lootTableId?: string
+  shieldRecharger?: boolean
+  robotId?: string
+  robotHp?: number
+  robotMaxHp?: number
+  weaponId?: string
+  weaponName?: string
+  raiderDamageMin?: number
+  raiderDamageMax?: number
+  robotDamageMultiplier?: number
+  raiderAction?: 'fighting' | 'hiding' | 'fleeing' | 'searching'
+}
+
 export interface DownedState {
   ticksRemaining: number
 }
@@ -216,6 +293,7 @@ export interface RaidState {
   zoneCondition?: ZoneCondition | null
   shield: ShieldState | null
   activeShieldRecharge: ActiveShieldRecharge | null
+  activeRaidActivity: ActiveRaidActivity | null
   backpack: BackpackItem[]
   /** Optional manually-selected single item saved on backpack-loss failures. */
   hiddenPocket: HiddenPocketItem | null
@@ -286,6 +364,16 @@ export interface LogEvent {
   conditions?: LogCondition[]
 }
 
+export type ActivityKind = RaidActivityKind
+export type ActivityStatus = 'started' | 'progress' | 'completed' | 'failed'
+
+export interface ActivityLogEvent extends LogEvent {
+  activityId: string
+  activityName?: string
+  activity: ActivityKind
+  status: ActivityStatus
+}
+
 export interface GameState {
   version: number
   tick: number
@@ -294,6 +382,7 @@ export interface GameState {
   signal: SignalState
   signalAmplifiers: number
   log: LogEvent[]
+  activityLog: ActivityLogEvent[]
   homeStash: BackpackItem[]
   /** Coin stash from auto-sold overflow loot — value is never deleted, only converted */
   coins: number
@@ -310,4 +399,5 @@ export interface GameState {
 export interface TickResult {
   state: GameState
   events: LogEvent[]
+  activityEvents: ActivityLogEvent[]
 }

@@ -19,15 +19,16 @@ This document exists so coding agents can extend the shield feature without re-d
 - Shield rechargers are backpack items. If unused, they extract home like normal loot.
 - Loot pickups can also grant bonus consumables: one healing-item roll and one shield-recharger roll are evaluated independently whenever backpack loot is awarded.
 - These bonus rolls are independent, so a single loot pickup can grant normal loot plus one healing item plus one shield recharger.
-- When a shield mitigates part of a hit, the comms feed should show the split between shield charge lost and HP damage landed.
-- Engine contract: every processed damage instance must emit a damage flavor line in comms, including unshielded hits and lethal hits that down the raider.
+- When a shield mitigates part of a hit, the active-thread feed should show the split between shield charge lost and HP damage landed.
+- Engine contract: every processed damage instance must emit a damage flavor line in `activityLog`, including unshielded hits and lethal hits that down the raider.
 - Home stash items remain non-usable; only current-raid backpack items can be applied.
 - HUB fully restores shields and durability for now; later loadout/store systems can change that behavior.
 
 ## Engine Boundaries
 - All shield math belongs in `src/engine/shields.ts`.
 - HP damage paths must route through the shared shield helper rather than subtracting HP ad hoc.
-- Current integration points are `applyEffects()` and `resolveRobotEncounter()` in `src/engine/eventResolver.ts`.
+- Transitional integration points are `applyEffects()` and `resolveRobotEncounter()` in `src/engine/eventResolver.ts`.
+- Target integration belongs in the active raid activity resolver described in [ACTIVE_RAID_ACTIVITY_PLAN.md](ACTIVE_RAID_ACTIVITY_PLAN.md); ordinary diary events should start activity, not apply HP damage or resolve fights.
 - Loot-bonus consumable rolls are triggered from `processTick()` in `src/engine/tick.ts` after a loot event successfully adds backpack loot.
 - UI should never compute shield outcomes; it only renders state and dispatches manual use actions.
 
@@ -45,8 +46,8 @@ This document exists so coding agents can extend the shield feature without re-d
 ## Testing Priorities
 - Shield mitigation applies to negative HP event effects.
 - Shield mitigation applies to failed robot encounters.
-- Shielded hits should emit readable damage summaries that show both shield charge lost and final HP damage.
-- Unshielded and lethal hits should also emit damage flavor summaries in the same tick damage is processed.
+- Shielded hits should emit readable activity-log damage summaries that show both shield charge lost and final HP damage.
+- Unshielded and lethal hits should also emit activity-log damage flavor summaries in the same tick damage is processed.
 - Non-lethal robot safeguards still hold after shield mitigation.
 - Rechargers can be found as backpack loot, manually consumed, and extracted if unused.
 - Save migration backfills missing shield state on older profiles.

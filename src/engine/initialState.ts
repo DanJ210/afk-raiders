@@ -7,7 +7,7 @@ import { createInitialLifetimeStats } from './stats.js'
 import { createStarterShieldState } from './shields.js'
 import { createInitialSkills } from './skills.js'
 
-export const SAVE_VERSION = 7
+export const SAVE_VERSION = 8
 
 export function createInitialState(now: number = Date.now()): GameState {
   return {
@@ -31,6 +31,7 @@ export function createInitialState(now: number = Date.now()): GameState {
       zoneCondition: null,
       shield: createStarterShieldState(),
       activeShieldRecharge: null,
+      activeRaidActivity: null,
       backpack: [],
       hiddenPocket: null,
       healingItems: [],
@@ -45,6 +46,7 @@ export function createInitialState(now: number = Date.now()): GameState {
     signal: initialSignalState(now),
     signalAmplifiers: 0,
     log: [],
+    activityLog: [],
     homeStash: [],
     coins: 0,
     stats: createInitialLifetimeStats(),
