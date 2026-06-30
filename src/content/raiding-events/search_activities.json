@@ -755,5 +755,69 @@
             "completed": "Revival completed. Raider staggered upright. Dignity remains negotiable.",
             "failed": "Revival failed. Medkit was empty or defective. Sometimes both."
         }
+    },
+    {
+        "id": "extraction_low_difficulty_zone",
+        "name": "Extraction: Friendly Territory",
+        "weight": 100,
+        "kind": "EXTRACTION",
+        "ticks": 3,
+        "blocking": true,
+        "requires": {
+            "zone": ["forgotten_fields", "stella"]
+        },
+        "text": {
+            "started": "Extraction thread opened in friendly territory. LZ: {ticks_remaining} ticks. Everything is calm and boring, mercifully.",
+            "progress": [
+                "Extraction thread (friendly): {ticks_remaining} ticks. Shuttle pilot is peacefully sipping coffee.",
+                "Extraction thread (friendly): {ticks_remaining} ticks. This might actually work out."
+            ],
+            "completed": "Extraction thread closed. Safe return achieved. The Raider is already bragging.",
+            "failed": "Extraction thread failed. Even the zone's friendly vibes couldn't save this."
+        }
+    },
+    {
+        "id": "extraction_standard_zone",
+        "name": "Extraction: Standard Difficulty",
+        "weight": 100,
+        "kind": "EXTRACTION",
+        "ticks": 4,
+        "blocking": true,
+        "requires": {
+            "zone": ["damp_battlegrounds", "buried_city", "the_sunken_highrise"]
+        },
+        "text": {
+            "started": "Extraction thread opened in contested territory. LZ: {ticks_remaining} ticks. Standard chaos level engaged.",
+            "progress": [
+                "Extraction thread (standard): {ticks_remaining} ticks. Shuttle pilot's coffee is now cold.",
+                "Extraction thread (standard): {ticks_remaining} ticks. Nothing catastrophic yet, but there's time.",
+                "Extraction thread (standard): {ticks_remaining} ticks. Pilot is reconsidering career choices."
+            ],
+            "completed": "Extraction thread closed. Raider made it back. Only minor panic.",
+            "failed": "Extraction thread failed. The zone won that round."
+        }
+    },
+    {
+        "id": "extraction_high_difficulty_zone",
+        "name": "Extraction: Hostile Territory",
+        "weight": 100,
+        "kind": "EXTRACTION",
+        "ticks": 6,
+        "blocking": true,
+        "requires": {
+            "zone": ["the_breach", "arc_ruins"]
+        },
+        "text": {
+            "started": "Extraction thread opened in extremely hostile territory. LZ: {ticks_remaining} ticks. Pilot is updating will.",
+            "progress": [
+                "Extraction thread (hostile): {ticks_remaining} ticks. Everything wants the Raider dead.",
+                "Extraction thread (hostile): {ticks_remaining} ticks. Shuttle pilot upgraded from coffee to hard liquor.",
+                "Extraction thread (hostile): {ticks_remaining} ticks. The zone has personal opinions about everyone leaving.",
+                "Extraction thread (hostile): {ticks_remaining} ticks. Pilot is honking the horn aggressively.",
+                "Extraction thread (hostile): {ticks_remaining} ticks. Survival became negotiable."
+            ],
+            "completed": "Extraction thread closed. Against all odds, the Raider survived and extracted.",
+            "failed": "Extraction thread failed. The zone was simply too angry."
+        }
     }
 ]

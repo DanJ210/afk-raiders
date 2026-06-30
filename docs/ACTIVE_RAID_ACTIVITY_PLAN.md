@@ -228,9 +228,29 @@ Added comprehensive activity definitions for extraction and downed outcomes:
      - Triggers HUB transition after outcome completes
    - ✅ All 263 tests passing; comprehensive testing validates outcome logic
 
-3. [Deferred] Add zone-specific extraction difficulty modifiers.
-   - Use activity `requires` gates to vary extraction duration/difficulty by zone
-   - Integrate with danger level scaling already in place
+3. [In Progress] Add zone-specific extraction difficulty modifiers.
+   - **Target**: Vary extraction timer duration and complication probability by zone
+   - **Completed**:
+     ✅ Created zone personality classification:
+       - Friendly zones: forgotten_fields, stella
+       - Standard zones: damp_battlegrounds, buried_city, the_sunken_highrise
+       - Hostile zones: the_breach, arc_ruins
+     ✅ Added 3 zone-specific extraction activity definitions:
+       - `extraction_low_difficulty_zone` (3 ticks, friendly zones)
+       - `extraction_standard_zone` (4 ticks, standard zones)
+       - `extraction_high_difficulty_zone` (6 ticks, hostile zones)
+     ✅ Enhanced `determineExtractionOutcome()` to consider zone personality:
+       - Friendly zones: 40% success bonus chance, 25% complication chance in Medium danger
+       - Hostile zones: 50% complication chance in High danger, 35% in Medium danger
+       - Balanced zone effects on outcome probabilities
+   - **Remaining Work**:
+     - Integrate zone-specific extraction activities into extraction startup flow
+     - Replace hardcoded EXTRACTING_TICKS with zone-aware extraction duration selection
+     - Test zone-specific extraction behavior across all danger levels
+   - **Notes**:
+     - Zone activities are defined in `search_activities.json` with proper requirements gates
+     - Outcome probabilities now reflect zone difficulty without blocking HUB transition
+     - All 263 tests passing with zone-aware outcome logic
 
 4. [Future] Integrate downed revival cost scaling with raider level.
 

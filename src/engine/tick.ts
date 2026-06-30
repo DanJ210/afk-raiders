@@ -397,30 +397,51 @@ function queueDeathRecoveryRaiderXp(queue: RaiderXpTrigger[], dangerLevel: GameS
  * Determine if an extraction outcome activity should fire after extraction completes.
  * Outcome activities provide narrative flourishes before transitioning to HUB.
  * Returns the activity ID if one should fire, or null for immediate HUB transition.
+ * 
+ * Zone personality affects complication and success bonus probabilities:
+ * - Hostile zones (breach, ruins): higher complication chance
+ * - Friendly zones (fields, staycation): higher success bonus chance
+ * - Standard zones: balanced outcome chances
  */
 function determineExtractionOutcome(
   raid: RaidState,
   raider: { hp: number; maxHp: number },
   rng: RNG,
 ): string | null {
+  // Zone personality: classify zones for outcome tuning
+  const friendlyZones = new Set(['forgotten_fields', 'stella'])
+  const hostileZones = new Set(['the_breach', 'arc_ruins'])
+  
+  const isHostile = hostileZones.has(raid.zone)
+  const isFriendly = friendlyZones.has(raid.zone)
+  
   // High-danger zones get complication outcomes (closer call required)
-  if (raid.dangerLevel === 'High' && rng.next() < 0.4) {
-    return 'extraction_complication_close_call'
+  if (raid.dangerLevel === 'High') {
+    const complicationChance = isHostile ? 0.5 : 0.4
+    if (rng.next() < complicationChance) {
+      return 'extraction_complication_close_call'
+    }
   }
   
-  // Medium-danger zones have moderate complication chance
-  if (raid.dangerLevel === 'Medium' && rng.next() < 0.25) {
-    return 'extraction_complication_close_call'
+  // Medium-danger zones have moderate complication chance (higher in hostile zones)
+  if (raid.dangerLevel === 'Medium') {
+    const complicationChance = isHostile ? 0.35 : 0.25
+    if (rng.next() < complicationChance) {
+      return 'extraction_complication_close_call'
+    }
   }
   
   // Successful extractions with decent health can trigger bonus outcomes
-  if (raider.hp >= raider.maxHp * 0.6 && rng.next() < 0.3) {
+  // (slightly more likely in friendly zones)
+  const bonusChance = isFriendly ? 0.4 : 0.3
+  if (raider.hp >= raider.maxHp * 0.6 && rng.next() < bonusChance) {
     return 'extraction_success_bonus'
   }
   
   // No outcome activity — transition to HUB immediately
   return null
 }
+
 
 
 function completeExtractionCondition(
