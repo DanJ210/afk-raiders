@@ -665,5 +665,95 @@
             "completed": "Downed thread closed. Raider is upright and loudly disputing gravity.",
             "failed": "Downed thread failed. Recovery team is preparing the apology clipboard."
         }
+    },
+    {
+        "id": "extraction_success_bonus",
+        "name": "Extraction Victory",
+        "weight": 100,
+        "kind": "EXTRACTION",
+        "ticks": 1,
+        "blocking": false,
+        "text": {
+            "started": "Extraction bonus: perfect timing and optimal greed payoff. Morale spike incoming.",
+            "progress": [],
+            "completed": "Extraction bonus applied. Raider is basking in the safe-house glow.",
+            "failed": "Extraction bonus fizzled. Still counts as leaving alive, but with less pizzazz."
+        }
+    },
+    {
+        "id": "extraction_high_difficulty",
+        "name": "High-Danger Extraction",
+        "weight": 100,
+        "kind": "EXTRACTION",
+        "ticks": 5,
+        "blocking": true,
+        "requires": {
+            "dangerLevel": ["High"]
+        },
+        "text": {
+            "started": "Extraction thread opened in hostile zone. LZ timer: {ticks_remaining} ticks. Shuttle is very quiet.",
+            "progress": [
+                "Extraction thread (high-danger): {ticks_remaining} ticks remaining. Everything is on fire. This is fine.",
+                "Extraction thread (high-danger): {ticks_remaining} ticks left. Shuttle pilot upgraded to meditation voice.",
+                "Extraction thread (high-danger): {ticks_remaining} ticks to go. The zone has opinions about everyone leaving."
+            ],
+            "completed": "Extraction thread closed. Raider made it back with the bag and several new trauma memories.",
+            "failed": "Extraction thread failed. The zone had stronger opinions than the shuttle."
+        }
+    },
+    {
+        "id": "extraction_complication_close_call",
+        "name": "Close Call at LZ",
+        "weight": 100,
+        "kind": "EXTRACTION",
+        "ticks": 2,
+        "blocking": true,
+        "requires": {
+            "dangerLevel": ["Medium", "High"]
+        },
+        "text": {
+            "started": "Extraction complication: robots still in the zone. Shuttle pilot is reconsidering patience.",
+            "progress": [
+                "Close call: {ticks_remaining} ticks. Everyone is sprinting. Dignity is a luxury.",
+                "Close call: {ticks_remaining} ticks. The backpack is dragging slightly. Pilot is honking."
+            ],
+            "completed": "Close call resolved. Made it aboard. Shuttle lifted off with extreme enthusiasm.",
+            "failed": "Close call failed. Shuttle left without us. Radio traffic is very blue."
+        }
+    },
+    {
+        "id": "downed_high_danger",
+        "name": "Downed in Hostile Zone",
+        "weight": 100,
+        "kind": "DOWNED",
+        "ticks": 1,
+        "blocking": true,
+        "requires": {
+            "dangerLevel": ["High"]
+        },
+        "text": {
+            "started": "Downed thread opened in high-danger zone. {tick_count} before things get worse.",
+            "progress": [
+                "Downed thread (high-danger): {tick_count} left. The zone is not sympathetic to medical emergencies."
+            ],
+            "completed": "Downed thread closed. Raider got lucky and is upright. Still arguing with gravity.",
+            "failed": "Downed thread failed. The zone declined to cooperate with recovery efforts."
+        }
+    },
+    {
+        "id": "downed_revival_attempt",
+        "name": "Revival in Progress",
+        "weight": 100,
+        "kind": "DOWNED",
+        "ticks": 1,
+        "blocking": true,
+        "text": {
+            "started": "Revival signal sent. Raider is attempting to use remaining Signal for emergency revival.",
+            "progress": [
+                "Revival attempt: medkit activation... systems responding... profanity increasing."
+            ],
+            "completed": "Revival completed. Raider staggered upright. Dignity remains negotiable.",
+            "failed": "Revival failed. Medkit was empty or defective. Sometimes both."
+        }
     }
 ]

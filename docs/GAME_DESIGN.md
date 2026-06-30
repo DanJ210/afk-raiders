@@ -26,6 +26,7 @@ You are **not** the raider. You are their Handler back in the underground hub, w
 - **DOWNED** means the raider is still in the raid but unable to perform normal actions. Normal raiding/extraction events pause unless a comms event explicitly requires the DOWNED condition.
 - EXTRACTING and DOWNED also write progress into the active-thread log so timed danger is visible separately from ordinary diary chatter.
 - If DOWNED and EXTRACTING overlap, the timers race. Extraction completing first is a successful return; the DOWNED timer expiring first transitions `RAIDING → KNOCKED_OUT`.
+- **Danger-level scaling:** In high-danger zones, extraction timers extend to reflect increased LZ complications and detection risk, while DOWNED recovery windows compress to create urgency. Low-danger deployments give the raider more breathing room in both scenarios.
 - **KNOCKED_OUT** is the short recovery/reset phase after failed revival or raid-timeout loss. `KNOCKED_OUT → HUB` performs failed-raid bookkeeping.
 
 ### The Home Stash

@@ -19,7 +19,7 @@ This document tracks the migration from single-tick damage events toward Godvill
 - `src/engine/raidActivities.ts` can start and advance JSON-backed robot encounter activities.
 - Robot activities currently use the base **Tea Kettle** weapon, apply Raider damage to robot HP pools each round, apply robot retaliation through shield-aware damage, emit activity-log round/completion lines, and award robot loot/stats on defeat.
 - At least one generic robot-pool starter exists (`raid_metallic_noise_pool`) to prove robot selection can come from `robotPool` instead of a fixed `robotId`.
-- `raiding_events.json` and `extraction_events.json` have been sanitized so robot-triggering diary entries now use `effects.startRaidActivity` instead of legacy `effects.robotEncounter` / top-level `effects.robotDamageMultiplier`.
+- Raiding event files have been sanitized so robot-triggering diary entries now use `effects.startRaidActivity` instead of legacy `effects.robotEncounter` / top-level `effects.robotDamageMultiplier`.
 - Content tests now fail if legacy robot encounter fields are reintroduced into ordinary diary events.
 - `EventTemplate` no longer exposes legacy `effects.robotEncounter` / top-level `effects.robotDamageMultiplier`, `processTick()` no longer resolves one-tick robot encounters from diary events, and the deprecated `resolveRobotEncounter()` helper has been removed.
 - Low-danger robot encounter weighting has been reduced now that robot encounters are multi-tick blocking activities; this preserves the balance contract that Low remains extractable often enough for the idle loop.
@@ -27,7 +27,7 @@ This document tracks the migration from single-tick damage events toward Godvill
 - Activity definitions can now declare `requires` gates for danger level, zone, zone condition, and greed. The activity resolver enforces those gates even if a diary event tries to start the activity directly.
 - Activity definitions now include user-facing names. Active activity state and activity-log entries carry those names so the UI can identify the current thread or robot encounter without deriving labels from ids.
 - Robot pools can now gate selection by danger level, zone, zone condition, greed, and deadliness; generic starters should use those gates instead of relying only on event-level requirements.
-- Damage-only extraction diary events now start `extraction_hazard_damage` activities instead of applying direct `effects.damage`; content tests guard `extraction_events.json` against direct damage effects.
+- Damage-only extraction diary events now start `extraction_hazard_damage` activities instead of applying direct `effects.damage`; content tests guard `src/content/raiding-events/extraction_events.json` against direct damage effects.
 - Extraction countdown activity-log text is now sourced from `extraction_countdown` in `src/content/raiding-events/search_activities.json` while `RaidState.extracting` remains the lifecycle guardrail.
 - DOWNED countdown activity-log text is now sourced from `downed_countdown` in `src/content/raiding-events/search_activities.json` while `RaidState.downed` remains the lifecycle guardrail.
 - All top-level event JSON is guarded against direct `effects.damage` and negative `effects.hp`; damage must now route through activity/lifecycle engine paths instead of ordinary diary effects.
@@ -208,16 +208,32 @@ Added comprehensive activity definitions for extraction and downed outcomes:
    - All 263 tests passing; migration validated
    - Old `raid_activities.json` removed; migration to split files complete
 
-2. [Next] Add outcome-activity triggers for extraction success/failure within lifecycle system.
-   - Currently: extraction completion transitions directly to HUB
-   - Target: add conditional outcome activities (success bonus, complication resolution)
-   - Will allow richer extraction narratives and Handler influence points
+2. [Done] Add outcome-activity triggers for extraction success/failure within lifecycle system.
+   - ✅ Added 5 new outcome activity definitions to `search_activities.json`:
+     - `extraction_success_bonus` (1 tick, non-blocking, High/Medium/Low danger)
+     - `extraction_high_difficulty` (5 ticks, blocking, High danger only)
+     - `extraction_complication_close_call` (2 ticks, blocking, Medium/High danger only)
+     - `downed_high_danger` (1 tick, blocking, High danger only)
+     - `downed_revival_attempt` (1 tick, blocking, all danger levels)
+   - ✅ Implemented `determineExtractionOutcome()` to probabilistically select outcome activities based on:
+     - High-danger zones: 40% complication chance
+     - Medium-danger zones: 25% complication chance
+     - Healthy raider extractions: 30% success bonus chance
+   - ✅ Modified `completeExtractionCondition()` to:
+     - Apply extraction bookkeeping immediately (transfer loot, heal raider, etc.)
+     - Conditionally start outcome activities before HUB transition
+     - Stay in RAIDING phase if outcome activity starts (no phase transition yet)
+   - ✅ Added outcome activity completion detection:
+     - Detects when outcome activities complete in the raid loop
+     - Triggers HUB transition after outcome completes
+   - ✅ All 263 tests passing; comprehensive testing validates outcome logic
 
 3. [Deferred] Add zone-specific extraction difficulty modifiers.
    - Use activity `requires` gates to vary extraction duration/difficulty by zone
    - Integrate with danger level scaling already in place
 
 4. [Future] Integrate downed revival cost scaling with raider level.
+
 
 ## Testing Checklist
 - Same seed + same state yields the same diary and activity event sequences.

@@ -1,4 +1,6 @@
-import raidActivitiesData from '../content/raid_activities.json'
+//import raidActivitiesBase from '../content/raid_activities.json'
+import raidActivitiesEncounters from '../content/raiding-events/robot_encounter_activities.json'
+import raidActivitiesSearches from '../content/raiding-events/search_activities.json'
 import healingItemsData from '../content/healing_items.json'
 import robotsData from '../content/robots.json'
 import shieldRechargersData from '../content/shield_rechargers.json'
@@ -20,7 +22,143 @@ export const DEFAULT_RAIDER_WEAPON = {
   damageMax: 6,
 } as const
 
-export const raidActivities = raidActivitiesData as RaidActivityDefinition[]
+function normalizeActivityText(value: unknown): RaidActivityDefinition['text'] | null {
+  if (typeof value === 'string') {
+    return {
+      started: value,
+      progress: [value],
+      completed: value,
+      failed: value,
+    }
+  }
+
+  if (Array.isArray(value)) {
+    const lines = value.filter((line): line is string => typeof line === 'string')
+    if (lines.length === 0) return null
+
+    const started = lines[0]
+    const completed = lines[lines.length - 1]
+    const progressSource = lines.length > 2 ? lines.slice(1, -1) : lines
+    const progress = progressSource.length > 0 ? progressSource : [started]
+
+    return {
+      started,
+      progress,
+      completed,
+      failed: completed,
+    }
+  }
+
+  if (!value || typeof value !== 'object') return null
+  const candidate = value as Record<string, unknown>
+
+  const flattenTextValues = (input: Record<string, unknown>): string[] => {
+    return Object.values(input).flatMap((entry): string[] => {
+      if (typeof entry === 'string') return [entry]
+      if (Array.isArray(entry)) {
+        return entry.filter((line): line is string => typeof line === 'string')
+      }
+
+      return []
+    })
+  }
+
+  const started = typeof candidate.started === 'string'
+    ? candidate.started
+    : null
+  const completed = typeof candidate.completed === 'string'
+    ? candidate.completed
+    : null
+  const failed = typeof candidate.failed === 'string'
+    ? candidate.failed
+    : null
+
+  const progressRaw = candidate.progress
+  const progress = Array.isArray(progressRaw)
+    ? progressRaw.filter((line): line is string => typeof line === 'string')
+    : typeof progressRaw === 'string'
+      ? [progressRaw]
+      : []
+
+  if (!started || !completed || !failed || progress.length === 0) {
+    const lines = flattenTextValues(candidate)
+    if (lines.length === 0) return null
+
+    const fallbackStarted = lines[0]
+    const fallbackCompleted = lines[lines.length - 1]
+    const fallbackProgressSource = lines.length > 2 ? lines.slice(1, -1) : lines
+    const fallbackProgress = fallbackProgressSource.length > 0 ? fallbackProgressSource : [fallbackStarted]
+
+    return {
+      started: fallbackStarted,
+      progress: fallbackProgress,
+      completed: fallbackCompleted,
+      failed: fallbackCompleted,
+    }
+  }
+
+  return {
+    started,
+    progress,
+    completed,
+    failed,
+  }
+}
+
+function normalizeRaidActivities(source: unknown): RaidActivityDefinition[] {
+  if (!Array.isArray(source)) return []
+
+  return source.flatMap((entry): RaidActivityDefinition[] => {
+    if (!entry || typeof entry !== 'object') return []
+
+    const candidate = entry as Partial<RaidActivityDefinition> & {
+      parameters?: { weight?: number }
+    }
+
+    if (
+      typeof candidate.id !== 'string'
+      || typeof candidate.name !== 'string'
+      || typeof candidate.kind !== 'string'
+      || typeof candidate.ticks !== 'number'
+      || !candidate.text
+    ) {
+      return []
+    }
+
+    const text = normalizeActivityText(candidate.text)
+    if (!text) return []
+
+    const {
+      parameters,
+      text: _text,
+      weight: candidateWeight,
+      ...rest
+    } = candidate as Partial<RaidActivityDefinition> & {
+      parameters?: { weight?: number }
+      weight?: number
+    }
+
+    const weight = typeof candidateWeight === 'number'
+      ? candidateWeight
+      : parameters?.weight
+
+    return [{
+      ...(rest as Omit<RaidActivityDefinition, 'weight' | 'text'>),
+      weight: typeof weight === 'number' ? weight : 100,
+      text: {
+        started: text.started,
+        progress: text.progress,
+        completed: text.completed,
+        failed: text.failed,
+      },
+    }]
+  })
+}
+
+export const raidActivities = [
+  ...normalizeRaidActivities(raidActivitiesEncounters),
+  ...normalizeRaidActivities(raidActivitiesSearches)
+]
 
 const healingItems = healingItemsData as HealingItem[]
 const robots = robotsData as RobotEntry[]

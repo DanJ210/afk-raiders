@@ -39,6 +39,8 @@ const downedTimerMs = computed(() => {
 const downedTimerText = computed(() => formatDuration(downedTimerMs.value))
 const showPhaseTimer = computed(() => showMobileRaiderStatus.value && phaseTimerMs.value > 0)
 
+const activeActivity = computed(() => store.raid.activeRaidActivity)
+
 // Re-key the tick bar on every new tick AND whenever the tab becomes visible,
 // so the animation restarts from the correct elapsed offset instead of 0.
 const visibility = useDocumentVisibility()

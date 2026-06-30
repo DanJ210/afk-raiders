@@ -88,7 +88,7 @@ During active RAIDING, only one Handler action can be pending at a time (`pendin
 - The first implementation targets DOWNED = 2 ticks, EXTRACTING = 4 ticks, KNOCKED_OUT = 2 ticks, and revive restoring 25 HP while preserving shield state exactly as-is. Keep KNOCKED_OUT duration behind a helper so skills can improve it later.
 
 ### Extraction Event Outcomes
-- `src/content/extraction_events.json` describes EXTRACTING-condition comms/outcomes and should be gated by `requires.phase: "RAIDING"` plus `requires.extracting: true` once extraction is represented as a condition.
+- `src/content/raiding-events/extraction_events.json` describes EXTRACTING-condition comms/outcomes and should be gated by `requires.phase: "RAIDING"` plus `requires.extracting: true` once extraction is represented as a condition.
 - Avoid using `effects.forcePhase` for condition-only outcomes. Use condition effects/events for extraction failure, extraction success, and downed-at-LZ outcomes; reserve phase transitions for lifecycle moves (`RAIDING -> HUB`, `RAIDING -> KNOCKED_OUT`, `KNOCKED_OUT -> HUB`).
 - Failed extraction clears `RaidState.extracting` and continues the original RAIDING timer instead of refreshing it. If no raid time remains, the DOWNED/KNOCKED_OUT loss path should win unless extraction completed first.
 

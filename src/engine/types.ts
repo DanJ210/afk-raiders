@@ -11,6 +11,7 @@ export interface ContentEntry {
 
 export interface EventTemplate extends ContentEntry {
   text: string
+  parameters?: Record<string, string | number>
   requires?: {
     phase?: Phase | Phase[]
     extracting?: boolean

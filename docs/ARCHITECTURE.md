@@ -60,7 +60,7 @@ afk-raiders/
 │   │   ├── hub_events.json      # Desperanza rest & prep (≤5 min)
 │   │   ├── deployment_events.json # One-person tunnel pod ride (2 min)
 │   │   ├── raiding_events.json  # Looting, robots, greed (≤30 min + nuke risk)
-│   │   ├── extraction_events.json # RAIDING extraction-condition drama
+│   │   ├── extraction_events.json # RAIDING extraction-condition drama (moved to raiding-events/)
 │   │   ├── knocked_out_events.json # Recovery reset quips
 │   │   ├── loot.json            # Many varieties of original comedy/parody loot items
 │   │   ├── healing_items.json   # Current-raid-only field meds
@@ -135,7 +135,7 @@ Events may also use condition requirements for RAIDING overlays. Extraction is r
 }
 ```
 
-Normal RAIDING events must not fire while `downed` or `extracting` is active unless they explicitly require the matching condition. `extraction_events.json` remains the home for extraction-condition comms and outcomes while extraction is represented as a timed condition. DOWNED condition comms may live in `raiding_events.json` or a dedicated condition file as long as they require `downed: true`. Use phase transitions only for lifecycle changes (`RAIDING -> HUB`, `RAIDING -> KNOCKED_OUT`, `KNOCKED_OUT -> HUB`); use condition/activity events for starting, failing, completing, or expiring `downed`, `extracting`, and future `activeRaidActivity` threads.
+Normal RAIDING events must not fire while `downed` or `extracting` is active unless they explicitly require the matching condition. `src/content/raiding-events/extraction_events.json` remains the home for extraction-condition comms and outcomes while extraction is represented as a timed condition. DOWNED condition comms may live in `raiding_events.json` or a dedicated condition file as long as they require `downed: true`. Use phase transitions only for lifecycle changes (`RAIDING -> HUB`, `RAIDING -> KNOCKED_OUT`, `KNOCKED_OUT -> HUB`); use condition/activity events for starting, failing, completing, or expiring `downed`, `extracting`, and future `activeRaidActivity` threads.
 
 Events may also gate themselves by `requires.dangerLevel` (`Low`, `Medium`, or `High`). The danger level is determined by a seeded combination of zone selection and zone condition selection (from `src/content/zones/zone_conditions.json`). Zone conditions are split into minor and major pools; carried-over greed from successful previous raids nudges the seeded pool roll toward major conditions, then the selected condition sets danger level. KNOCKED_OUT recovery outcomes reset greed to 0 before the next deployment. The engine applies the matching danger-level profile in `src/engine/dangerLevelProfiles.ts`: Low has lower loot value and rarity bias, Medium raises loot upside and ambient/robot/extraction pressure, and High has the highest loot ceiling with the harshest ambient pressure, robot pressure, and LZ risk. These profiles are the economy guardrail for risk/reward tuning.
 

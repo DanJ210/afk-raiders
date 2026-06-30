@@ -393,6 +393,36 @@ function queueDeathRecoveryRaiderXp(queue: RaiderXpTrigger[], dangerLevel: GameS
   queue.push({ reason: 'death_recovered', minXp: 3 + dangerBonus, maxXp: 6 + dangerBonus })
 }
 
+/**
+ * Determine if an extraction outcome activity should fire after extraction completes.
+ * Outcome activities provide narrative flourishes before transitioning to HUB.
+ * Returns the activity ID if one should fire, or null for immediate HUB transition.
+ */
+function determineExtractionOutcome(
+  raid: RaidState,
+  raider: { hp: number; maxHp: number },
+  rng: RNG,
+): string | null {
+  // High-danger zones get complication outcomes (closer call required)
+  if (raid.dangerLevel === 'High' && rng.next() < 0.4) {
+    return 'extraction_complication_close_call'
+  }
+  
+  // Medium-danger zones have moderate complication chance
+  if (raid.dangerLevel === 'Medium' && rng.next() < 0.25) {
+    return 'extraction_complication_close_call'
+  }
+  
+  // Successful extractions with decent health can trigger bonus outcomes
+  if (raider.hp >= raider.maxHp * 0.6 && rng.next() < 0.3) {
+    return 'extraction_success_bonus'
+  }
+  
+  // No outcome activity — transition to HUB immediately
+  return null
+}
+
+
 function completeExtractionCondition(
   state: GameState,
   skillPracticeTriggers: SkillPracticeTrigger[],
@@ -400,15 +430,12 @@ function completeExtractionCondition(
   emitted: LogEvent[],
   tick: number,
   now: number,
+  rng: RNG,
 ): GameState {
   const extractedRaid = state.raid
-  const { raid: hubRaid, transition } = tickPhase(state.raid, 'HUB')
-  let currentState: GameState = { ...state, raid: hubRaid }
+  let currentState: GameState = state
 
-  if (transition) {
-    emitted.push(phaseTransitionEvent(transition, tick, now))
-  }
-
+  // First, apply the successful extraction bookkeeping (transfer loot, heal, etc.)
   queueSuccessfulExtractionSkillPractice(skillPracticeTriggers, {
     backpack: extractedRaid.backpack,
     backpackValue: extractedRaid.backpackValue,
@@ -438,8 +465,33 @@ function completeExtractionCondition(
     emitted.push(stashSaleEvent(extraction.soldItemCount, extraction.coinsGained, tick, now))
   }
 
+  // Check if an extraction outcome activity should fire before transitioning to HUB
+  const outcomeActivityId = determineExtractionOutcome(extractedRaid, state.raider, rng)
+  if (outcomeActivityId) {
+    // Start the outcome activity and stay in RAIDING phase
+    const effectsPayload: RaidActivityEffect = {
+      kind: 'SEARCH',
+      activityId: outcomeActivityId,
+    }
+    const startActivity = startRaidActivity(currentState, effectsPayload, rng, now)
+    if (startActivity) {
+      // Outcome activity started successfully — stay in RAIDING, don't transition to HUB yet
+      return startActivity.state
+    }
+  }
+
+
+  // No outcome activity or failed to start — proceed with normal HUB transition
+  const { raid: hubRaid, transition } = tickPhase(currentState.raid, 'HUB')
+  currentState = { ...currentState, raid: hubRaid }
+
+  if (transition) {
+    emitted.push(phaseTransitionEvent(transition, tick, now))
+  }
+
   return currentState
 }
+
 
 function enterKnockedOutRecovery(state: GameState, emitted: LogEvent[], tick: number, now: number): GameState {
   const { raid: knockedOutRaid, transition } = tickPhase(state.raid, 'KNOCKED_OUT')
@@ -588,7 +640,7 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
   currentState = conditionAdvance.state
   if (conditionAdvance.extractionCompleted) {
     activityEmitted.push(extractionActivityEvent('completed', state.tick, now))
-    currentState = completeExtractionCondition(currentState, skillPracticeTriggers, raiderXpTriggers, emitted, state.tick, now)
+    currentState = completeExtractionCondition(currentState, skillPracticeTriggers, raiderXpTriggers, emitted, state.tick, now, rng)
   } else if (conditionAdvance.downedExpired) {
     activityEmitted.push(downedActivityEvent('failed', state.tick, now))
     currentState = enterKnockedOutRecovery(currentState, emitted, state.tick, now)
@@ -683,6 +735,21 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
         phase: currentState.raid.phase,
         conditions: logConditionsForRaid(currentState.raid),
       })
+    }
+
+    // Handle extraction outcome activity completion — when an outcome activity completes,
+    // transition from RAIDING to HUB.
+    const outcomeActivityIds = new Set(['extraction_success_bonus', 'extraction_high_difficulty', 'extraction_complication_close_call'])
+    const completedOutcome = !currentState.raid.activeRaidActivity && activityEmitted.some(evt => {
+      const lastActivityId = state.raid.activeRaidActivity?.id
+      return lastActivityId && outcomeActivityIds.has(lastActivityId)
+    })
+    if (completedOutcome && currentState.raid.phase === 'RAIDING') {
+      const { raid: hubRaid, transition } = tickPhase(currentState.raid, 'HUB')
+      currentState = { ...currentState, raid: hubRaid }
+      if (transition) {
+        emitted.push(phaseTransitionEvent(transition, state.tick, now))
+      }
     }
 
     const raidForGreedCheck = currentState.pendingCalm
@@ -840,7 +907,7 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
 
       if (template.effects?.completeExtraction) {
         activityEmitted.push(extractionActivityEvent('completed', state.tick, now))
-        currentState = completeExtractionCondition(currentState, skillPracticeTriggers, raiderXpTriggers, emitted, state.tick, now)
+        currentState = completeExtractionCondition(currentState, skillPracticeTriggers, raiderXpTriggers, emitted, state.tick, now, rng)
       }
     }
   }

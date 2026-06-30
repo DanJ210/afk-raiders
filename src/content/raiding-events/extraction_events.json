@@ -274,7 +274,7 @@
         "activityId": "robot_encounter_standard",
         "kind": "ROBOT_ENCOUNTER",
         "robotId": "roomba_prime",
-        "robotDamageMultiplier": 2
+        "robotDamageMultiplier": 3
       }
     }
   },

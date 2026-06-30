@@ -100,7 +100,18 @@ const progressionConfig = progressionConfigData as {
 const raiderLevels = raiderLevelsData as RaiderLevelContent
 const VALID_RAID_ACTIVITY_KINDS = new Set<RaidActivityDefinition['kind']>(['SEARCH', 'ROBOT_ENCOUNTER', 'EXTRACTION', 'DOWNED', 'SHIELD_RECHARGE'])
 const VALID_ROBOT_DEADLINESS = new Set(robots.map(robot => robot.deadliness))
-const VALID_SEARCH_LOOT_TABLE_IDS = new Set(['scrap_components', 'water_bottles'])
+const VALID_SEARCH_LOOT_TABLE_IDS = new Set([
+  'scrap_components',
+  'water_bottles',
+  'apparel_accessories',
+  'arc_tech',
+  'consumables',
+  'cursed_weird_items',
+  'loot',
+  'personal_junk',
+  'valuables',
+  'weapons_parts'
+])
 
 // Robot flavor slots: {robot_flavor_<robotId>}
 function isRobotFlavorSlot(slot: string): boolean {
@@ -435,6 +446,7 @@ describe('content validation', () => {
     })
   })
 
+  // TODO Update test to match new structure in content/raiding-events
   describe('raid_activities.json', () => {
     it('all activity weights, durations, and IDs are valid', () => {
       const ids = raidActivities.map(activity => activity.id)
