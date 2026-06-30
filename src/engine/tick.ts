@@ -14,7 +14,7 @@
  *   6. Increment tick counter, append events to log.
  */
 
-import type { ActivityLogEvent, ActivityStatus, BackpackItem, GameState, HiddenPocketItem, LogCondition, LogEvent, TickResult } from './types.js'
+import type { ActivityLogEvent, ActivityStatus, BackpackItem, GameState, HiddenPocketItem, LogCondition, LogEvent, StartRaidActivityEffect, RaidState, TickResult } from './types.js'
 import type { RNG } from './rng.js'
 import { DOWNED_TICKS, EXTRACTING_TICKS, tickPhase, transitionText, type PhaseTransition } from './raidStateMachine.js'
 import { runGreedCheck } from './greedCheck.js'
@@ -173,14 +173,33 @@ function shieldRechargeActivityEvent(
   })
 }
 
+/**
+ * Determine extraction duration based on zone difficulty.
+ * Zones have inherent difficulty that affects extraction timer length.
+ * - Friendly zones: 3 ticks (quick escape)
+ * - Standard zones: 4 ticks (normal extraction)
+ * - Hostile zones: 6 ticks (extended danger)
+ */
+function getExtractionDurationForZone(zone: string | null): number {
+  if (!zone) return 4 // Default to standard if no zone
+  const friendlyZones = new Set(['forgotten_fields', 'stella'])
+  const hostileZones = new Set(['the_breach', 'arc_ruins'])
+
+  if (friendlyZones.has(zone)) return 3
+  if (hostileZones.has(zone)) return 6
+  return 4 // Standard zones: damp_battlegrounds, buried_city, the_sunken_highrise
+}
+
 function startExtractionCondition(state: GameState, tick: number, now: number): { state: GameState; event: LogEvent | null } {
   if (state.raid.phase !== 'RAIDING' || state.raid.extracting) return { state, event: null }
+
+  const extractionDuration = getExtractionDurationForZone(state.raid.zone)
 
   const raid = {
     ...state.raid,
     activeShieldRecharge: null,
     activeRaidActivity: null,
-    extracting: { ticksRemaining: EXTRACTING_TICKS },
+    extracting: { ticksRemaining: extractionDuration },
     forceExtract: false,
   }
 
@@ -192,6 +211,7 @@ function startExtractionCondition(state: GameState, tick: number, now: number): 
     event: conditionEvent('condition_extracting_started', transitionText('RAIDING_to_EXTRACTING'), tick, now, logConditionsForRaid(raid) ?? ['EXTRACTING']),
   }
 }
+
 
 function failExtractionCondition(state: GameState, tick: number, now: number): { state: GameState; event: LogEvent | null } {
   if (state.raid.phase !== 'RAIDING' || !state.raid.extracting) return { state, event: null }
@@ -412,8 +432,8 @@ function determineExtractionOutcome(
   const friendlyZones = new Set(['forgotten_fields', 'stella'])
   const hostileZones = new Set(['the_breach', 'arc_ruins'])
   
-  const isHostile = hostileZones.has(raid.zone)
-  const isFriendly = friendlyZones.has(raid.zone)
+  const isHostile = raid.zone ? hostileZones.has(raid.zone) : false
+  const isFriendly = raid.zone ? friendlyZones.has(raid.zone) : false
   
   // High-danger zones get complication outcomes (closer call required)
   if (raid.dangerLevel === 'High') {
@@ -490,7 +510,7 @@ function completeExtractionCondition(
   const outcomeActivityId = determineExtractionOutcome(extractedRaid, state.raider, rng)
   if (outcomeActivityId) {
     // Start the outcome activity and stay in RAIDING phase
-    const effectsPayload: RaidActivityEffect = {
+    const effectsPayload: StartRaidActivityEffect = {
       kind: 'SEARCH',
       activityId: outcomeActivityId,
     }
@@ -761,7 +781,7 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
     // Handle extraction outcome activity completion — when an outcome activity completes,
     // transition from RAIDING to HUB.
     const outcomeActivityIds = new Set(['extraction_success_bonus', 'extraction_high_difficulty', 'extraction_complication_close_call'])
-    const completedOutcome = !currentState.raid.activeRaidActivity && activityEmitted.some(evt => {
+    const completedOutcome = !currentState.raid.activeRaidActivity && activityEmitted.some(() => {
       const lastActivityId = state.raid.activeRaidActivity?.id
       return lastActivityId && outcomeActivityIds.has(lastActivityId)
     })
