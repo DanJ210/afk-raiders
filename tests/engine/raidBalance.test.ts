@@ -217,6 +217,7 @@ describe('raid balance', () => {
       'extractionCoinBonus',
       'level',
       'resilienceReductionPercent',
+      'revivalSignalCostReduction',
       'titleBandIndex',
     ])
     expect(maxLevelBenefits.resilienceReductionPercent).toBeLessThanOrEqual(1.6)
