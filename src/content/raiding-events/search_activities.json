@@ -1,0 +1,669 @@
+[
+    {
+        "id": "activity_search_001_humming_crate",
+        "name": "Humming Crate Search",
+        "kind": "SEARCH",
+        "ticks": 3,
+        "blocking": false,
+        "requires": {
+            "phase": "RAIDING",
+            "zoneCondition": "humming_crate_migration",
+            "minGreed": 15
+        },
+        "lootTableId": "valuables",
+        "text": {
+            "started": "A humming crate sits in the open, vibrating with the promise of something valuable or very loud.",
+            "progress": [
+                "Crate search: listening to the hum and prying the seam. {ticks_remaining} ticks remaining.",
+                "Crate search: a small mechanism clicks; fingers are involved. {ticks_remaining} ticks remaining.",
+                "Crate search: the crate yields a suspiciously smug smaller box. {ticks_remaining} ticks remaining."
+            ],
+            "completed": "Humming crate search completed. Packed {loot_name} and a lingering sense of poor decisions.",
+            "failed": "Humming crate search failed. The crate kept its secrets and its smugness."
+        },
+        "parameters": {
+            "weight": 80
+        },
+        "tags": [
+            "search",
+            "loot",
+            "zone"
+        ]
+    },
+    {
+        "id": "activity_search_002_soggy_tower_top_floor",
+        "name": "Soggy Tower Top-Floor Search",
+        "kind": "SEARCH",
+        "ticks": 4,
+        "blocking": false,
+        "requires": {
+            "phase": "RAIDING",
+            "minGreed": 20,
+            "dangerLevel": [
+                "Medium",
+                "High"
+            ]
+        },
+        "lootTableId": "scrap_components",
+        "text": {
+            "started": "Climbing soggy stairs to the top floor in search of a crate that smells like opportunity and mildew.",
+            "progress": [
+                "Top-floor search: wading through soggy carpet and regret. {ticks_remaining} ticks remaining.",
+                "Top-floor search: prying a waterlogged locker open. {ticks_remaining} ticks remaining.",
+                "Top-floor search: found something wrapped in plastic and optimism. {ticks_remaining} ticks remaining."
+            ],
+            "completed": "Top-floor search completed. Packed {loot_name} and a damp sense of triumph.",
+            "failed": "Top-floor search failed. The water had better ideas."
+        },
+        "parameters": {
+            "weight": 90
+        },
+        "tags": [
+            "search",
+            "loot",
+            "zone"
+        ]
+    },
+    {
+        "id": "activity_search_003_staycation_locker",
+        "name": "Staycation Locker Search",
+        "kind": "SEARCH",
+        "ticks": 2,
+        "blocking": false,
+        "requires": {
+            "phase": "RAIDING",
+            "minGreed": 10
+        },
+        "lootTableId": "personal_junk",
+        "text": {
+            "started": "A locker labeled STAYCATION hums with the faint scent of someone who planned to relax and then didn't.",
+            "progress": [
+                "Locker search: rattling shelves and a suspiciously philosophical note. {ticks_remaining} ticks remaining.",
+                "Locker search: found a small stash and a pamphlet about patience. {ticks_remaining} ticks remaining."
+            ],
+            "completed": "Locker search completed. Packed {loot_name} and a questionable life lesson.",
+            "failed": "Locker search failed. The locker kept its secrets and its smug pamphlet."
+        },
+        "parameters": {
+            "weight": 60
+        },
+        "tags": [
+            "search",
+            "loot",
+            "social"
+        ]
+    },
+    {
+        "id": "activity_search_004_emergency_snack_shrine",
+        "name": "Emergency Snack Shrine Search",
+        "kind": "SEARCH",
+        "ticks": 1,
+        "blocking": false,
+        "requires": {
+            "phase": "RAIDING",
+            "minGreed": 5
+        },
+        "lootTableId": "consumables",
+        "text": {
+            "started": "A tiny shrine of emergency snacks sits under a warning label. It looks like someone left a very specific offering.",
+            "progress": [
+                "Shrine search: pocketing trial mix and leaving a bolt as tribute. {ticks_remaining} ticks remaining."
+            ],
+            "completed": "Shrine search completed. Took the snack and left a small offering.",
+            "failed": "Shrine search failed. The shrine judged you and kept its offerings."
+        },
+        "parameters": {
+            "weight": 50
+        },
+        "tags": [
+            "search",
+            "loot",
+            "ambient"
+        ]
+    },
+    {
+        "id": "activity_search_005_launch_manifest_clipboard",
+        "name": "Launch Manifest Clipboard Search",
+        "kind": "SEARCH",
+        "ticks": 2,
+        "blocking": false,
+        "requires": {
+            "phase": "RAIDING",
+            "minGreed": 10
+        },
+        "lootTableId": "personal_junk",
+        "text": {
+            "started": "A clipboard with a launch manifest peeks from under rubble. Someone's plans are either delayed or dramatic.",
+            "progress": [
+                "Clipboard search: flipping through crossed-out names and a hopeful WAITLIST. {ticks_remaining} ticks remaining.",
+                "Clipboard search: found a small token tucked in the pages. {ticks_remaining} ticks remaining."
+            ],
+            "completed": "Clipboard search completed. Packed {loot_name} and a bureaucratic souvenir.",
+            "failed": "Clipboard search failed. The manifest remained stubbornly bureaucratic."
+        },
+        "parameters": {
+            "weight": 55
+        },
+        "tags": [
+            "search",
+            "loot",
+            "ambient"
+        ]
+    },
+    {
+        "id": "activity_search_006_warning_sign_museum",
+        "name": "Warning Sign Museum Search",
+        "kind": "SEARCH",
+        "ticks": 2,
+        "blocking": false,
+        "requires": {
+            "phase": "RAIDING",
+            "minGreed": 8
+        },
+        "lootTableId": "personal_junk",
+        "text": {
+            "started": "A small museum of warning signs begs to be catalogued. Every sign says DO NOT. You take the smallest one.",
+            "progress": [
+                "Museum search: peeling a label and finding a trinket behind it. {ticks_remaining} ticks remaining.",
+                "Museum search: the smallest sign hides a tiny compartment. {ticks_remaining} ticks remaining."
+            ],
+            "completed": "Museum search completed. Packed {loot_name} and a tiny victory.",
+            "failed": "Museum search failed. The signs remained stubbornly prohibitive."
+        },
+        "parameters": {
+            "weight": 45
+        },
+        "tags": [
+            "search",
+            "loot",
+            "zone"
+        ]
+    },
+    {
+        "id": "activity_search_007_decoy_crate",
+        "name": "Decoy Crate Search",
+        "kind": "SEARCH",
+        "ticks": 3,
+        "blocking": false,
+        "requires": {
+            "phase": "RAIDING",
+            "minGreed": 12
+        },
+        "lootTableId": "personal_junk",
+        "text": {
+            "started": "A crate opens to reveal a smaller crate inside. The smaller crate looks smug and possibly trapped.",
+            "progress": [
+                "Decoy search: prying nested crates and checking for surprises. {ticks_remaining} ticks remaining.",
+                "Decoy search: the inner crate hums faintly. {ticks_remaining} ticks remaining.",
+                "Decoy search: found a tiny compartment and a note that says 'sorry'. {ticks_remaining} ticks remaining."
+            ],
+            "completed": "Decoy crate search completed. Packed {loot_name} and a sense of being toyed with.",
+            "failed": "Decoy crate search failed. The crates kept their secrets."
+        },
+        "parameters": {
+            "weight": 85
+        },
+        "tags": [
+            "search",
+            "loot",
+            "bait"
+        ]
+    },
+    {
+        "id": "activity_search_008_turnkey_without_door",
+        "name": "Turnkey Search",
+        "kind": "SEARCH",
+        "ticks": 1,
+        "blocking": false,
+        "requires": {
+            "phase": "RAIDING",
+            "minGreed": 8
+        },
+        "lootTableId": "scrap_components",
+        "text": {
+            "started": "A key labeled TURNKEY sits on a shelf with no door in sight. Destiny loves clutter.",
+            "progress": [
+                "Key search: pocketing the key and wondering what it opens. {ticks_remaining} ticks remaining."
+            ],
+            "completed": "Turnkey search completed. Packed {loot_name} and a mystery.",
+            "failed": "Turnkey search failed. The key remained unclaimed."
+        },
+        "parameters": {
+            "weight": 40
+        },
+        "tags": [
+            "search",
+            "loot",
+            "ambient"
+        ]
+    },
+    {
+        "id": "activity_search_009_supply_drop_puddle",
+        "name": "Supply Drop Puddle Search",
+        "kind": "SEARCH",
+        "ticks": 2,
+        "blocking": false,
+        "requires": {
+            "phase": "RAIDING",
+            "dangerLevel": "Low"
+        },
+        "lootTableId": "consumables",
+        "text": {
+            "started": "A supply drop landed in a puddle with perfect comedic timing. The crate is wet but promising.",
+            "progress": [
+                "Puddle search: fishing out soggy packages and drying them with optimism. {ticks_remaining} ticks remaining.",
+                "Puddle search: found a surprisingly intact item wrapped in plastic. {ticks_remaining} ticks remaining."
+            ],
+            "completed": "Puddle search completed. Packed {loot_name} and a damp grin.",
+            "failed": "Puddle search failed. The water had better ideas."
+        },
+        "parameters": {
+            "weight": 70
+        },
+        "tags": [
+            "search",
+            "loot",
+            "zone"
+        ]
+    },
+    {
+        "id": "activity_search_010_questionable_field_cache",
+        "name": "Questionable Field Cache Search",
+        "kind": "SEARCH",
+        "ticks": 3,
+        "blocking": false,
+        "requires": {
+            "phase": "RAIDING",
+            "minGreed": 15
+        },
+        "lootTableId": "cursed_weird_items",
+        "text": {
+            "started": "A field cache looks almost too generous. You check for traps, curses, and paperwork.",
+            "progress": [
+                "Cache search: sifting through batteries, receipts, and suspicious generosity. {ticks_remaining} ticks remaining.",
+                "Cache search: found a high-value item tucked under a receipt. {ticks_remaining} ticks remaining.",
+                "Cache search: the cache hums like a deal with fine print. {ticks_remaining} ticks remaining."
+            ],
+            "completed": "Field cache search completed. Packed {loot_name} and a small ethical dilemma.",
+            "failed": "Field cache search failed. The generosity was a mirage."
+        },
+        "parameters": {
+            "weight": 95
+        },
+        "tags": [
+            "search",
+            "loot",
+            "greed"
+        ]
+    },
+    {
+        "id": "activity_search_011_black_box_variant",
+        "name": "Black-Box Cache Variant Search",
+        "kind": "SEARCH",
+        "ticks": 4,
+        "blocking": false,
+        "requires": {
+            "phase": "RAIDING",
+            "dangerLevel": [
+                "Medium",
+                "High"
+            ],
+            "minGreed": 18
+        },
+        "lootTableId": "arc_tech",
+        "text": {
+            "started": "A humming black-box cache hides behind a panel. It smells like value and questionable warranties.",
+            "progress": [
+                "Black-box search: delicate prying and a lot of holding your breath. {ticks_remaining} ticks remaining.",
+                "Black-box search: a mechanism resists; you cajole it with tools and threats. {ticks_remaining} ticks remaining.",
+                "Black-box search: found a compact, valuable module. {ticks_remaining} ticks remaining.",
+                "Black-box search: final checks and a small victory dance. {ticks_remaining} ticks remaining."
+            ],
+            "completed": "Black-box search completed. Packed {loot_name} and a sense of professional smugness.",
+            "failed": "Black-box search failed. The cache remained stubbornly sealed."
+        },
+        "parameters": {
+            "weight": 110
+        },
+        "tags": [
+            "search",
+            "loot",
+            "zone"
+        ]
+    },
+    {
+        "id": "activity_search_012_quick_misc_grab",
+        "name": "Quick Miscellaneous Grab",
+        "kind": "SEARCH",
+        "ticks": 1,
+        "blocking": false,
+        "lootTableId": "personal_junk",
+        "text": {
+            "started": "A quick sweep for small useful things: batteries, pens, and the kind of item that makes you feel slightly richer.",
+            "progress": [
+                "Quick grab: pocketing small items with the speed of someone who values time. {ticks_remaining} ticks remaining."
+            ],
+            "completed": "Quick grab completed. Packed {loot_name}.",
+            "failed": "Quick grab failed. The small things were not in the mood to be found."
+        },
+        "parameters": {
+            "weight": 40
+        },
+        "tags": [
+            "search",
+            "loot",
+            "quick"
+        ]
+    },
+    {
+        "id": "search_quick_value_1",
+        "name": "Quick Value Search (1)",
+        "kind": "SEARCH",
+        "ticks": 1,
+        "blocking": false,
+        "lootTableId": "personal_junk",
+        "text": {
+            "started": "A tiny something gleams from the corner. Worth investigating.",
+            "progress": [
+                "Quick grab: snatching a small valuable before moving on. {ticks_remaining} ticks remaining."
+            ],
+            "completed": "Found a small trinket worth pocketing.",
+            "failed": "The trinket slipped away. Happens."
+        },
+        "parameters": {
+            "weight": 100
+        },
+        "tags": [
+            "search",
+            "loot",
+            "quick",
+            "value"
+        ]
+    },
+    {
+        "id": "search_quick_value_2",
+        "name": "Quick Value Search (2)",
+        "kind": "SEARCH",
+        "ticks": 1,
+        "blocking": false,
+        "lootTableId": "personal_junk",
+        "text": {
+            "started": "A small cache sits partially exposed. Time is limited.",
+            "progress": [
+                "Quick grab: pocketing items and moving on. {ticks_remaining} ticks remaining."
+            ],
+            "completed": "Grabbed a few small valuables. Classic raid optimization.",
+            "failed": "Items scattered before grab could complete."
+        },
+        "parameters": {
+            "weight": 100
+        },
+        "tags": [
+            "search",
+            "loot",
+            "quick",
+            "value"
+        ]
+    },
+    {
+        "id": "search_quick_value_3",
+        "name": "Quick Value Search (3)",
+        "kind": "SEARCH",
+        "ticks": 2,
+        "blocking": false,
+        "lootTableId": "scrap_components",
+        "text": {
+            "started": "A small stash becomes apparent. The search begins.",
+            "progress": [
+                "Searching: prying and collecting. {ticks_remaining} ticks remaining.",
+                "Final grab: squeezing in the last item. {ticks_remaining} ticks remaining."
+            ],
+            "completed": "Collected a small but worthwhile haul.",
+            "failed": "The stash proved less cooperative than hoped."
+        },
+        "parameters": {
+            "weight": 100
+        },
+        "tags": [
+            "search",
+            "loot",
+            "value"
+        ]
+    },
+    {
+        "id": "search_quick_value_4",
+        "name": "Quick Value Search (4)",
+        "kind": "SEARCH",
+        "ticks": 2,
+        "blocking": false,
+        "lootTableId": "scrap_components",
+        "text": {
+            "started": "A small compartment reveals itself. Investigation warranted.",
+            "progress": [
+                "Searching: opening drawers and prying panels. {ticks_remaining} ticks remaining.",
+                "Final collection: packing the goods. {ticks_remaining} ticks remaining."
+            ],
+            "completed": "Found a respectable collection of small items.",
+            "failed": "The compartment jammed. A modest setback."
+        },
+        "parameters": {
+            "weight": 100
+        },
+        "tags": [
+            "search",
+            "loot",
+            "value"
+        ]
+    },
+    {
+        "id": "search_quick_value_6",
+        "name": "Quick Value Search (6)",
+        "kind": "SEARCH",
+        "ticks": 2,
+        "blocking": false,
+        "lootTableId": "valuables",
+        "text": {
+            "started": "A promising corner drawer sits within reach. Worth the effort.",
+            "progress": [
+                "Searching: careful extraction of items. {ticks_remaining} ticks remaining.",
+                "Packing: nothing gets left behind. {ticks_remaining} ticks remaining."
+            ],
+            "completed": "Secured a solid collection of valuables.",
+            "failed": "The drawer's lock proved stubbornly reliable."
+        },
+        "parameters": {
+            "weight": 100
+        },
+        "tags": [
+            "search",
+            "loot",
+            "value"
+        ]
+    },
+    {
+        "id": "search_quick_value_7",
+        "name": "Quick Value Search (7)",
+        "kind": "SEARCH",
+        "ticks": 2,
+        "blocking": false,
+        "lootTableId": "valuables",
+        "text": {
+            "started": "A locked cabinet has caught your eye. The key situation is... optimistic.",
+            "progress": [
+                "Searching: picking and negotiating with locks. {ticks_remaining} ticks remaining.",
+                "Final sweep: grabbing everything portable. {ticks_remaining} ticks remaining."
+            ],
+            "completed": "Collected a decent stash of valuable items.",
+            "failed": "The lock held. Disappointing. Predictable."
+        },
+        "parameters": {
+            "weight": 100
+        },
+        "tags": [
+            "search",
+            "loot",
+            "value"
+        ]
+    },
+    {
+        "id": "search_quick_value_10",
+        "name": "Quick Value Search (10)",
+        "kind": "SEARCH",
+        "ticks": 3,
+        "blocking": false,
+        "lootTableId": "arc_tech",
+        "text": {
+            "started": "A comprehensive collection area presents itself. This will take effort but payoff looks promising.",
+            "progress": [
+                "Searching: cataloguing and extracting high-value items. {ticks_remaining} ticks remaining.",
+                "Organizing: fitting everything into backpack geometry. {ticks_remaining} ticks remaining.",
+                "Final check: nothing valuable left behind. {ticks_remaining} ticks remaining."
+            ],
+            "completed": "Scored a substantial haul of valuable items. Backpack is now very happy and concerned.",
+            "failed": "The location proved too complex to fully exploit in time."
+        },
+        "parameters": {
+            "weight": 100
+        },
+        "tags": [
+            "search",
+            "loot",
+            "value"
+        ]
+    },
+    {
+        "id": "search_black_box_cache",
+        "name": "Black-Box Cache Search",
+        "weight": 100,
+        "kind": "SEARCH",
+        "ticks": 3,
+        "blocking": false,
+        "lootTableId": "scrap_components",
+        "text": {
+            "started": "Searching a black-box cache labeled VALUE ADJACENT. Raider is using both hands and neither lesson.",
+            "progress": [
+                "Cache search: drawer opened, pride closed. {ticks_remaining} ticks remaining.",
+                "Cache search: something clicked in a way that suggests either loot or paperwork. {ticks_remaining} ticks remaining.",
+                "Cache search: Raider found wires, dust, and a very confident warning label. {ticks_remaining} ticks remaining."
+            ],
+            "completed": "Cache search completed. Packed {loot_name} and called it expertise.",
+            "failed": "Cache search failed. The cache contained only silence and a judgmental hinge."
+        }
+    },
+    {
+        "id": "search_water_bottle_stash",
+        "name": "Water Bottle Search",
+        "weight": 100,
+        "kind": "SEARCH",
+        "ticks": 2,
+        "blocking": false,
+        "requires": {
+            "dangerLevel": [
+                "Low",
+                "Medium"
+            ],
+            "zone": [
+                "damp_battlegrounds",
+                "the_sunken_highrise"
+            ]
+        },
+        "lootTableId": "water_bottles",
+        "text": {
+            "started": "Searching for water bottles with the intensity of someone building a museum nobody asked for.",
+            "progress": [
+                "Water search: checking under a crate, inside a crate, and emotionally near a crate. {ticks_remaining} ticks remaining.",
+                "Water search: Raider shook something plastic and declared it promising. {ticks_remaining} ticks remaining."
+            ],
+            "completed": "Water search completed. Packed {loot_name}. Hydration empire expands.",
+            "failed": "Water search failed. Found only a bottle-shaped shadow and a personal flaw."
+        }
+    },
+    {
+        "id": "search_medical_pouch",
+        "name": "Medical Pouch Search",
+        "weight": 100,
+        "kind": "SEARCH",
+        "ticks": 2,
+        "blocking": false,
+        "healingItem": true,
+        "text": {
+            "started": "Searching medical supplies labeled PROBABLY CLEAN. Raider has accepted the legal risk.",
+            "progress": [
+                "Medical search: checking every pouch with more optimism than gloves. {ticks_remaining} ticks remaining.",
+                "Medical search: found gauze, lint, and a tiny printed liability waiver. {ticks_remaining} ticks remaining."
+            ],
+            "completed": "Medical search completed. Tucked {healing_item} into the current-raid med pocket.",
+            "failed": "Medical search failed. The pouch contained only crumbs and one very judgmental cotton swab."
+        }
+    },
+    {
+        "id": "search_shield_recharger_crate",
+        "name": "Shield Recharger Search",
+        "weight": 100,
+        "kind": "SEARCH",
+        "ticks": 2,
+        "blocking": false,
+        "shieldRecharger": true,
+        "text": {
+            "started": "Searching a crate labeled ELECTRICAL MAYBE. Raider is pretending that is a safety rating.",
+            "progress": [
+                "Shield-recharger search: wires inspected, confidence not inspected. {ticks_remaining} ticks remaining.",
+                "Shield-recharger search: something inside snapped bravely. {ticks_remaining} ticks remaining."
+            ],
+            "completed": "Shield-recharger search completed. Packed {shield_recharger} for a future confidence emergency.",
+            "failed": "Shield-recharger search failed. The crate contained one spark and a smell called consequences."
+        }
+    },
+    {
+        "id": "extraction_hazard_damage",
+        "name": "Extraction Hazard",
+        "weight": 100,
+        "kind": "EXTRACTION",
+        "ticks": 1,
+        "blocking": true,
+        "text": {
+            "started": "Extraction hazard started. The LZ has opinions.",
+            "progress": [
+                "Extraction hazard in progress. {damage_summary}"
+            ],
+            "completed": "Extraction hazard resolved. {damage_summary}",
+            "failed": "Extraction hazard fizzled. The LZ looked disappointed."
+        }
+    },
+    {
+        "id": "extraction_countdown",
+        "name": "Extraction Thread",
+        "weight": 100,
+        "kind": "EXTRACTION",
+        "ticks": 4,
+        "blocking": true,
+        "text": {
+            "started": "Extraction thread opened. LZ timer: {ticks_remaining} ticks.",
+            "progress": [
+                "Extraction thread: {ticks_remaining} ticks remaining. Raider is negotiating with flares and panic.",
+                "Extraction thread: {ticks_remaining} ticks left. Backpack is making aircraft-weight arguments.",
+                "Extraction thread: {ticks_remaining} ticks to go. Shuttle pilot is using the patient voice."
+            ],
+            "completed": "Extraction thread closed. Raider made it back with the bag and several legal questions.",
+            "failed": "Extraction thread failed. LZ rejected the vibes; raid continues."
+        }
+    },
+    {
+        "id": "downed_countdown",
+        "name": "Downed Thread",
+        "weight": 100,
+        "kind": "DOWNED",
+        "ticks": 2,
+        "blocking": true,
+        "text": {
+            "started": "Downed thread opened. {tick_count} before the zone writes the ending.",
+            "progress": [
+                "Downed thread: {tick_count} left for a miracle or medically questionable idea.",
+                "Downed thread: {tick_count} until recovery paperwork becomes extremely relevant.",
+                "Downed thread: {tick_count} before gravity wins the argument."
+            ],
+            "completed": "Downed thread closed. Raider is upright and loudly disputing gravity.",
+            "failed": "Downed thread failed. Recovery team is preparing the apology clipboard."
+        }
+    }
+]

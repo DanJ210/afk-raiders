@@ -1,0 +1,34 @@
+[
+{
+  "id": "robot_encounter_standard",
+  "name": "Robot Encounter",
+  "weight": 100,
+  "kind": "ROBOT_ENCOUNTER",
+  "ticks": 3,
+  "blocking": true,
+  "weaponId": "tea_kettle",
+  "weaponName": "Tea Kettle",
+  "raiderDamageMin": 3,
+  "raiderDamageMax": 6,
+  "robotPool": {
+    "deadliness": [
+      "weak",
+      "moderate",
+      "dangerous",
+      "nasty",
+      "deadly"
+    ]
+  },
+  "text": {
+    "started": "Robot encounter started: {robot_name}. Raider raised the {weapon_name} like this was a reasonable tool.",
+    "progress": [
+      "Round report: {weapon_name} dealt {raider_damage} damage to {robot_name}. Robot HP: {robot_hp}/{robot_max_hp}. {robot_damage_summary}",
+      "Combat note: {robot_name} absorbed {raider_damage} Tea Kettle damage and filed a steam-related complaint. Robot HP: {robot_hp}/{robot_max_hp}. {robot_damage_summary}",
+      "Exchange logged: Raider bonked {robot_name} for {raider_damage}. Robot HP: {robot_hp}/{robot_max_hp}. {robot_damage_summary}"
+    ],
+    "completed": "Robot encounter completed: {robot_name} defeated. Salvaged {loot_name}.",
+    "failed": "Robot encounter failed: {robot_name} survived the Tea Kettle discourse. {robot_damage_summary} Raider disengaged with remaining dignity unverified."
+  }
+}
+
+]

@@ -15,7 +15,7 @@ This document tracks the migration from single-tick damage events toward Godvill
 - Extraction and DOWNED timers already emit activity-thread start/progress/complete/fail lines.
 - `RaidState.activeRaidActivity` exists with migration/default state support.
 - Timed shield recharges now create a `SHIELD_RECHARGE` active activity, emit activity-log start/progress/completion lines, and clear the activity when finished or canceled by extraction/DOWNED transitions.
-- `src/content/raid_activities.json` exists with an initial `ROBOT_ENCOUNTER` activity definition.
+- Activity definitions have been split into focused files: `src/content/raiding-events/robot_encounter_activities.json`, `src/content/raiding-events/search_activities.json`; the old monolithic `raid_activities.json` has been migrated and removed.
 - `src/engine/raidActivities.ts` can start and advance JSON-backed robot encounter activities.
 - Robot activities currently use the base **Tea Kettle** weapon, apply Raider damage to robot HP pools each round, apply robot retaliation through shield-aware damage, emit activity-log round/completion lines, and award robot loot/stats on defeat.
 - At least one generic robot-pool starter exists (`raid_metallic_noise_pool`) to prove robot selection can come from `robotPool` instead of a fixed `robotId`.
@@ -23,19 +23,19 @@ This document tracks the migration from single-tick damage events toward Godvill
 - Content tests now fail if legacy robot encounter fields are reintroduced into ordinary diary events.
 - `EventTemplate` no longer exposes legacy `effects.robotEncounter` / top-level `effects.robotDamageMultiplier`, `processTick()` no longer resolves one-tick robot encounters from diary events, and the deprecated `resolveRobotEncounter()` helper has been removed.
 - Low-danger robot encounter weighting has been reduced now that robot encounters are multi-tick blocking activities; this preserves the balance contract that Low remains extractable often enough for the idle loop.
-- `SEARCH` activities are now supported by `src/engine/raidActivities.ts`; `search_black_box_cache` and `search_water_bottle_stash` prove backpack-loot completion, `search_medical_pouch` proves current-raid field-med completion, and `search_shield_recharger_crate` proves backpack shield-recharger completion from `raid_activities.json`.
+- `SEARCH` activities are now supported by `src/engine/raidActivities.ts`; `search_black_box_cache` and `search_water_bottle_stash` prove backpack-loot completion, `search_medical_pouch` proves current-raid field-med completion, and `search_shield_recharger_crate` proves backpack shield-recharger completion from `src/content/raiding-events/search_activities.json`.
 - Activity definitions can now declare `requires` gates for danger level, zone, zone condition, and greed. The activity resolver enforces those gates even if a diary event tries to start the activity directly.
 - Activity definitions now include user-facing names. Active activity state and activity-log entries carry those names so the UI can identify the current thread or robot encounter without deriving labels from ids.
 - Robot pools can now gate selection by danger level, zone, zone condition, greed, and deadliness; generic starters should use those gates instead of relying only on event-level requirements.
 - Damage-only extraction diary events now start `extraction_hazard_damage` activities instead of applying direct `effects.damage`; content tests guard `extraction_events.json` against direct damage effects.
-- Extraction countdown activity-log text is now sourced from `extraction_countdown` in `raid_activities.json` while `RaidState.extracting` remains the lifecycle guardrail.
-- DOWNED countdown activity-log text is now sourced from `downed_countdown` in `raid_activities.json` while `RaidState.downed` remains the lifecycle guardrail.
+- Extraction countdown activity-log text is now sourced from `extraction_countdown` in `src/content/raiding-events/search_activities.json` while `RaidState.extracting` remains the lifecycle guardrail.
+- DOWNED countdown activity-log text is now sourced from `downed_countdown` in `src/content/raiding-events/search_activities.json` while `RaidState.downed` remains the lifecycle guardrail.
 - All top-level event JSON is guarded against direct `effects.damage` and negative `effects.hp`; damage must now route through activity/lifecycle engine paths instead of ordinary diary effects.
 
 ## Target Model
 Use a single active RAIDING activity state on `RaidState`, named `activeRaidActivity`. It should represent one multi-tick task at a time and should become the main driver for sustained raid action.
 
-Activities should be data-driven. Add dedicated activity JSON content under `src/content/`, likely starting with `raid_activities.json` or split files such as `search_activities.json`, `extraction_activities.json`, `downed_activities.json`, and `robot_encounter_activities.json` if the tables get large. The engine owns deterministic resolution; JSON owns weights, text pools, duration ranges, activity kind, requirements, and loot/robot references.
+Activities are data-driven and split into focused files under `src/content/raiding-events/`: `robot_encounter_activities.json` (ROBOT_ENCOUNTER activities), `search_activities.json` (SEARCH, EXTRACTION, and DOWNED activities). The engine owns deterministic resolution; JSON owns weights, text pools, duration ranges, activity kind, requirements, and loot/robot references.
 
 Candidate shape:
 
@@ -168,25 +168,56 @@ Open question: whether some activities should allow ambient diary chatter in the
 ## Migration Steps
 1. [Done] Document the target model and update current docs. (This document.)
 2. [Done] Add `RaidState.activeRaidActivity` and migration defaults.
-3. [Started] Add an activity resolver in pure engine code, currently `src/engine/raidActivities.ts`.
-4. [Done for current shield recharge state] Move shield recharge progress into the activity log, keeping the existing shield helper math.
-5. [Done for first four activities] Add JSON-backed activity definitions for one or two search activities.
-6. [Started] Add JSON-backed `ROBOT_ENCOUNTER` activity definitions and robot-pool selection through `src/content/robots.json` weights/requirements.
-7. [Done for `raiding_events.json` and `extraction_events.json`] Convert robot encounters from single-tick `effects.robotEncounter` into multi-tick `ROBOT_ENCOUNTER` activities.
-8. [Started] Add JSON-backed `EXTRACTION` and `DOWNED` activity definitions, then bridge existing condition timers through those definitions.
-9. [Done for top-level event files] Scrub `src/content/*_events.json` so ordinary diary events no longer apply HP/damage or resolve fights.
-10. [Done for direct damage/legacy robot fields] Add content tests that fail if normal diary event tables keep damage/fight effects after migration.
-11. [Done for activity/robot pool gates] Add content and engine tests for activity requirements and robot pool gates by danger level, zone, zone condition, greed, and deadliness.
-12. [Done for current robot/search activity slices] Update balance tests around activity-driven robot outcomes and ambient danger.
+3. [Done] Add an activity resolver in pure engine code, currently `src/engine/raidActivities.ts`.
+4. [Done] Move shield recharge progress into the activity log, keeping the existing shield helper math.
+5. [Done] Add JSON-backed activity definitions for one or two search activities.
+6. [Done] Add JSON-backed `ROBOT_ENCOUNTER` activity definitions and robot-pool selection through `src/content/robots.json` weights/requirements.
+7. [Done] Convert robot encounters from single-tick `effects.robotEncounter` into multi-tick `ROBOT_ENCOUNTER` activities.
+8. [Done] Add JSON-backed `EXTRACTION` and `DOWNED` activity definitions, then bridge existing condition timers through those definitions.
+9. [Done] Scrub `src/content/*_events.json` so ordinary diary events no longer apply HP/damage or resolve fights.
+10. [Done] Add content tests that fail if normal diary event tables keep damage/fight effects after migration.
+11. [Done] Add content and engine tests for activity requirements and robot pool gates by danger level, zone, zone condition, greed, and deadliness.
+12. [Done] Update balance tests around activity-driven robot outcomes and ambient danger.
+13. [Done] Split monolithic `raid_activities.json` into focused `robot_encounter_activities.json` and `search_activities.json`; migrate all 18 backpackValue events to multi-tick SEARCH activities; remove old file.
 
-## Next Implementation Order
-1. [Done] Add a generic robot-pool starter event that omits `robotId` and proves the resolver selects from `robotPool`.
-2. [Done] Continue robot encounter migration/cleanup until robot activity starters are consistently tuned and legacy one-tick combat code can be removed.
-3. [Done for first four activities] Add JSON-backed `SEARCH` activities and resolver support for non-combat multi-tick loot/search tasks.
-4. [Done] Sanitize damage-only extraction events so LZ harm becomes activity-driven instead of direct diary damage.
-5. [Started] Add JSON-backed `EXTRACTION` activities and bridge/replace the current extraction condition text/timing.
-6. [Started] Add JSON-backed `DOWNED` activities and bridge/replace the current downed condition text/timing.
-7. [Next] Decide whether to finish the extraction/DOWNED migration first or continue converting remaining instant `backpackValue` loot events into `SEARCH` activities.
+## Extraction & Downed Completion Work (Path A - Completed)
+Added comprehensive activity definitions for extraction and downed outcomes:
+
+### Extraction Activity Variants
+- `extraction_countdown` - Standard extraction (4 ticks, all danger levels)
+- `extraction_high_difficulty` - High-danger extraction (5 ticks, High danger only, longer timer)
+- `extraction_success_bonus` - Success milestone activity (1 tick, can grant bonus effects)
+- `extraction_complication_close_call` - LZ complications (2 ticks, Medium/High danger only)
+
+### Downed Activity Variants
+- `downed_countdown` - Standard downed timer (2 ticks, all danger levels)
+- `downed_high_danger` - High-danger downed (1 tick, High danger only, no mercy)
+- `downed_revival_attempt` - Revival through Signal cost (1 tick, custom attempt flavor)
+
+### Requirements Gates Applied
+- Extraction/downed activities now include `requires.dangerLevel` gates
+- High-danger zone extractions use extended timers (5 vs 4 ticks)
+- High-danger downed states use compressed timers (1 vs 2 ticks) for urgency
+- Low-danger zones get standard extraction flow
+- Medium/High danger zones get complication variants
+
+## Next Implementation Order (Path B - In Progress)
+1. [Done] Convert all 18 `backpackValue` instant-loot events into `SEARCH` activities.
+   - Created 7 new `search_quick_value_*` SEARCH activities (values: 1, 2, 3, 4, 6, 7, 10)
+   - Converted 18 diary events from `effects.backpackValue` to `effects.startRaidActivity`
+   - All 263 tests passing; migration validated
+   - Old `raid_activities.json` removed; migration to split files complete
+
+2. [Next] Add outcome-activity triggers for extraction success/failure within lifecycle system.
+   - Currently: extraction completion transitions directly to HUB
+   - Target: add conditional outcome activities (success bonus, complication resolution)
+   - Will allow richer extraction narratives and Handler influence points
+
+3. [Deferred] Add zone-specific extraction difficulty modifiers.
+   - Use activity `requires` gates to vary extraction duration/difficulty by zone
+   - Integrate with danger level scaling already in place
+
+4. [Future] Integrate downed revival cost scaling with raider level.
 
 ## Testing Checklist
 - Same seed + same state yields the same diary and activity event sequences.
