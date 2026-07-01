@@ -335,7 +335,8 @@ function searchLootRollCount(activity: ActiveRaidActivity, definition: RaidActiv
   const configuredRolls = activity.lootRolls ?? definition.lootRolls
   if (configuredRolls !== undefined) return Math.max(1, Math.min(MAX_SEARCH_LOOT_ROLLS, Math.floor(configuredRolls)))
 
-  if (activity.totalTicks >= 4) return 3
+  if (activity.totalTicks >= 4) return 4
+  if (activity.totalTicks >= 3) return 3
   if (activity.totalTicks >= 2) return 2
   return 1
 }

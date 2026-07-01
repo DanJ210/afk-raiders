@@ -91,11 +91,11 @@ function mergeLootTables(items: LootItem[]): LootItem[] {
 const robotLoot = robots.flatMap(robot => robot.lootTable.map(item => toLootItem(item, robot)))
 const loot = mergeLootTables([...baseLoot, ...robotLoot])
 const RAID_ACTIVITY_SEARCH_SHARE_BY_DANGER: Record<DangerLevel, number> = {
-  Low: 0.8,
-  Medium: 0.6,
-  High: 0.5,
+  Low: 0.85,
+  Medium: 0.72,
+  High: 0.62,
 }
-const RAIDING_ACTIVITY_STARTER_SHARE = 0.67
+const RAIDING_ACTIVITY_STARTER_SHARE = 0.75
 const ACTIVITY_AMBIENT_COMMS_CHANCE = 0.35
 
 function healingMoodGain(item: HealingItemStack): number {

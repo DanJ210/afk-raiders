@@ -112,15 +112,15 @@ function sampleRaidSelectionMix(dangerLevel: DangerLevel): { activityStarterShar
 
 describe('resolveEvent — RAIDING activity mix', () => {
   it('keeps activity starters as a distinct first-stage roll from ambient comms', () => {
-    expect(sampleRaidSelectionMix('Low').activityStarterShare).toBeCloseTo(0.67, 1)
-    expect(sampleRaidSelectionMix('Medium').activityStarterShare).toBeCloseTo(0.67, 1)
-    expect(sampleRaidSelectionMix('High').activityStarterShare).toBeCloseTo(0.67, 1)
+    expect(sampleRaidSelectionMix('Low').activityStarterShare).toBeCloseTo(0.75, 1)
+    expect(sampleRaidSelectionMix('Medium').activityStarterShare).toBeCloseTo(0.75, 1)
+    expect(sampleRaidSelectionMix('High').activityStarterShare).toBeCloseTo(0.75, 1)
   })
 
   it('shifts SEARCH and ROBOT_ENCOUNTER starter share by danger level', () => {
-    expect(sampleRaidSelectionMix('Low').activitySearchShare).toBeCloseTo(0.8, 1)
-    expect(sampleRaidSelectionMix('Medium').activitySearchShare).toBeCloseTo(0.6, 1)
-    expect(sampleRaidSelectionMix('High').activitySearchShare).toBeCloseTo(0.5, 1)
+    expect(sampleRaidSelectionMix('Low').activitySearchShare).toBeCloseTo(0.85, 1)
+    expect(sampleRaidSelectionMix('Medium').activitySearchShare).toBeCloseTo(0.72, 1)
+    expect(sampleRaidSelectionMix('High').activitySearchShare).toBeCloseTo(0.62, 1)
   })
 })
 

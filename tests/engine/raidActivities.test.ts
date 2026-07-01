@@ -447,7 +447,7 @@ describe('raid activities', () => {
       expect.objectContaining({
         itemId: 'scrap_metal_basic',
         name: 'Basic Scrap Metal',
-        quantity: 2,
+        quantity: 3,
       }),
     ])
     expect(completed.activityEvents).toEqual([

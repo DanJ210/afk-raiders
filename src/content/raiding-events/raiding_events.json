@@ -44,7 +44,7 @@
     },
     {
         "id": "loot_bandage",
-        "weight": 100,
+        "weight": 28,
         "text": "Spotted medical supplies in a pouch labeled PROBABLY CLEAN.",
         "requires": {
             "phase": "RAIDING"
@@ -60,7 +60,7 @@
     },
     {
         "id": "loot_shield_recharger",
-        "weight": 100,
+        "weight": 22,
         "text": "Found a shield recharger in a crate labeled ELECTRICAL MAYBE. That's either useful or a personality test.",
         "requires": {
             "phase": "RAIDING"
@@ -71,6 +71,89 @@
                 "activityId": "search_shield_recharger_crate",
                 "kind": "SEARCH",
                 "shieldRecharger": true
+            }
+        }
+    },
+    {
+        "id": "loot_apparel_duffel",
+        "weight": 26,
+        "text": "Found a half-zipped apparel duffel making pocket promises it may not be legally able to keep.",
+        "requires": {
+            "phase": "RAIDING"
+        },
+        "effects": {
+            "mood": 1,
+            "startRaidActivity": {
+                "activityId": "search_apparel_duffel",
+                "kind": "SEARCH"
+            }
+        }
+    },
+    {
+        "id": "loot_mixed_lost_and_found",
+        "weight": 28,
+        "text": "Found a lost-and-found shelf. Everything here has technically been abandoned by either owner, law, or hope.",
+        "requires": {
+            "phase": "RAIDING"
+        },
+        "effects": {
+            "greedLevel": 1,
+            "startRaidActivity": {
+                "activityId": "search_mixed_lost_and_found",
+                "kind": "SEARCH"
+            }
+        }
+    },
+    {
+        "id": "loot_quick_misc_grab",
+        "weight": 24,
+        "text": "A quick sweep found small useful things: batteries, pens, and one object with resale energy.",
+        "requires": {
+            "phase": "RAIDING"
+        },
+        "effects": {
+            "mood": 1,
+            "startRaidActivity": {
+                "activityId": "activity_search_012_quick_misc_grab",
+                "kind": "SEARCH"
+            }
+        }
+    },
+    {
+        "id": "loot_questionable_field_cache",
+        "weight": 18,
+        "text": "Found a field cache that looks generous in the way contracts look generous before reading them.",
+        "requires": {
+            "phase": "RAIDING",
+            "minGreed": 15
+        },
+        "effects": {
+            "greedLevel": 3,
+            "mood": 1,
+            "startRaidActivity": {
+                "activityId": "activity_search_010_questionable_field_cache",
+                "kind": "SEARCH"
+            }
+        }
+    },
+    {
+        "id": "loot_arc_tech_black_box",
+        "weight": 16,
+        "text": "Found a black-box cache humming like it knows market value and several shortcuts through warranty law.",
+        "requires": {
+            "phase": "RAIDING",
+            "dangerLevel": [
+                "Medium",
+                "High"
+            ],
+            "minGreed": 18
+        },
+        "effects": {
+            "greedLevel": 4,
+            "mood": 1,
+            "startRaidActivity": {
+                "activityId": "activity_search_011_black_box_variant",
+                "kind": "SEARCH"
             }
         }
     },
