@@ -16,8 +16,23 @@ const props = withDefaults(defineProps<{
 
 const store = useGameStore()
 const entries = computed(() => [...store.log].reverse())
-const activityEntries = computed(() => [...store.activityLog].reverse())
-const currentActivityName = computed(() => store.raid.activeRaidActivity?.name ?? activityEntries.value[0]?.activityName ?? null)
+const latestActivityEntry = computed(() => {
+  const latestIndex = store.activityLog.length - 1
+  return latestIndex >= 0 ? store.activityLog[latestIndex] : null
+})
+const activeActivity = computed(() => store.raid.activeRaidActivity)
+const currentActivityTitle = computed(() => store.raid.activeRaidActivity?.name ?? latestActivityEntry.value?.activityName ?? 'No active thread')
+const showRobotHpBar = computed(() => {
+  const activity = activeActivity.value
+  return activity?.kind === 'ROBOT_ENCOUNTER' && (activity.robotMaxHp ?? 0) > 0 && activity.robotHp !== undefined
+})
+const robotHpMax = computed(() => Math.max(0, activeActivity.value?.robotMaxHp ?? 0))
+const robotHpCurrent = computed(() => Math.max(0, Math.min(activeActivity.value?.robotHp ?? 0, robotHpMax.value)))
+const robotHpPercent = computed(() => {
+  if (robotHpMax.value <= 0) return 0
+  return Math.max(0, Math.min(100, (robotHpCurrent.value / robotHpMax.value) * 100))
+})
+const robotHpText = computed(() => `${robotHpCurrent.value}/${robotHpMax.value}`)
 const logEntryCount = computed(() => store.log.length)
 const raidShield = computed(() => store.raid.shield)
 const raidShieldRecharge = computed(() => store.raid.activeShieldRecharge)
@@ -236,21 +251,34 @@ function activityBadge(entry: ActivityLogEvent): string {
       ></div>
     </div>
     <section class="comms-log__activity" aria-label="Activity Log">
-      <header class="comms-log__activity-header">
-        <span>ACTIVE ACTIVITY</span>
-        <span v-if="currentActivityName" class="comms-log__activity-current">{{ currentActivityName }}</span>
+      <header class="comms-log__activity-header" :class="{ 'comms-log__activity-header--robot': showRobotHpBar }">
+        <span class="comms-log__activity-title">{{ currentActivityTitle }}</span>
+        <div
+          v-if="showRobotHpBar"
+          class="comms-log__robot-hp"
+          role="progressbar"
+          aria-label="Robot HP"
+          :aria-valuenow="robotHpCurrent"
+          :aria-valuemin="0"
+          :aria-valuemax="robotHpMax"
+        >
+          <div class="comms-log__robot-hp-track">
+            <div class="comms-log__robot-hp-fill" :style="{ width: `${robotHpPercent}%` }"></div>
+          </div>
+          <span class="comms-log__robot-hp-text">HP {{ robotHpText }}</span>
+        </div>
       </header>
       <div class="comms-log__activity-list" role="log" aria-live="polite" aria-relevant="additions">
-        <p v-if="activityEntries.length === 0" class="comms-log__activity-empty">
-          No active thread.
+        <p v-if="!latestActivityEntry" class="comms-log__activity-empty">
+          Standing by.
         </p>
         <div
-          v-for="entry in activityEntries"
-          :key="`${entry.tick}-${entry.id}-${entry.timestamp}`"
+          v-else
+          :key="`${latestActivityEntry.tick}-${latestActivityEntry.id}-${latestActivityEntry.timestamp}`"
           class="comms-log__activity-entry"
         >
-          <span class="comms-log__activity-time">{{ activityBadge(entry) }} {{ formatTime(entry.timestamp) }}</span>
-          <span class="comms-log__activity-text">{{ entry.text }}</span>
+          <span class="comms-log__activity-time">{{ activityBadge(latestActivityEntry) }} {{ formatTime(latestActivityEntry.timestamp) }}</span>
+          <span class="comms-log__activity-text">{{ latestActivityEntry.text }}</span>
         </div>
       </div>
     </section>
@@ -294,41 +322,71 @@ function activityBadge(entry: ActivityLogEvent): string {
 
 <style scoped>
 .comms-log__activity {
+  flex: 0 0 auto;
   margin: 0.55rem 0.75rem 0;
   overflow: hidden;
   border: 1px solid var(--color-border);
   border-radius: 0.45rem;
   background: color-mix(in srgb, var(--color-surface-raised) 80%, var(--color-bg));
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-accent-secondary) 10%, transparent);
-  min-height: 10.5rem;
+  min-height: 5.25rem;
 }
 
 .comms-log__activity-header {
   display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.4rem 0.875rem 0.2rem;
-  color: var(--color-accent-secondary);
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.35rem;
+  padding: 0.45rem 0.875rem 0.25rem;
   font-family: var(--font-mono);
-  font-size: 0.68rem;
+  font-size: 0.78rem;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0;
 }
 
-.comms-log__activity-current {
+.comms-log__activity-header--robot {
+  padding-bottom: 0.5rem;
+}
+
+.comms-log__activity-title {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  color: var(--color-text);
-  font-size: 0.72rem;
-  letter-spacing: 0;
-  text-transform: none;
+  color: var(--color-accent-secondary);
+}
+
+.comms-log__robot-hp {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.comms-log__robot-hp-track {
+  height: 0.42rem;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--color-danger) 45%, var(--color-border));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-danger) 12%, var(--color-bg));
+}
+
+.comms-log__robot-hp-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--color-danger), var(--color-warning));
+  transition: width 0.24s ease;
+}
+
+.comms-log__robot-hp-text {
+  color: var(--color-muted);
+  font-size: 0.68rem;
+  font-weight: 700;
+  white-space: nowrap;
 }
 
 .comms-log__activity-list {
-  max-height: 7.5rem;
-  overflow-y: auto;
+  overflow: visible;
   padding: 0.15rem 0 0.45rem;
 }
 
