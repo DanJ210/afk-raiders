@@ -118,11 +118,11 @@ function extractionActivityEvent(status: ActivityStatus, tick: number, now: numb
     timestamp: now,
     text,
     phase: status === 'completed' ? 'HUB' : 'RAIDING',
-    conditions: status === 'completed' ? undefined : ['EXTRACTING'],
+    conditions: status === 'started' || status === 'progress' ? ['EXTRACTING'] : undefined,
   })
 }
 
-function downedActivityEvent(status: ActivityStatus, tick: number, now: number, ticksRemaining = 0): ActivityLogEvent {
+export function downedActivityEvent(status: ActivityStatus, tick: number, now: number, ticksRemaining = 0): ActivityLogEvent {
   const definition = raidActivities.find(activity => activity.id === 'downed_countdown')
   const textTemplate = status === 'progress'
     ? definition?.text.progress[0]
@@ -145,7 +145,7 @@ function downedActivityEvent(status: ActivityStatus, tick: number, now: number, 
     timestamp: now,
     text,
     phase: status === 'failed' ? 'KNOCKED_OUT' : 'RAIDING',
-    conditions: status === 'failed' ? undefined : ['DOWNED'],
+    conditions: status === 'started' || status === 'progress' ? ['DOWNED'] : undefined,
   })
 }
 

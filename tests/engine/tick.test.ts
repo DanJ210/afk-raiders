@@ -6,7 +6,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { createRNG } from '../../src/engine/rng'
 import type { RNG } from '../../src/engine/rng'
-import { maybeAwardLootBonusConsumables, processTick } from '../../src/engine/tick'
+import { downedActivityEvent, maybeAwardLootBonusConsumables, processTick } from '../../src/engine/tick'
 import { createInitialState } from '../../src/engine/initialState'
 import { getRaiderLevelFromXp, xpRequiredForLevel } from '../../src/engine/raiderLevel'
 import { skillDefinitionById } from '../../src/engine/skills'
@@ -672,6 +672,34 @@ describe('deterministic snapshot', () => {
     expect(result.activityEvents.map(event => event.activityId)).not.toContain('extraction_complication_close_call')
   })
 
+  it('does not tag failed extraction activity entries as still extracting', () => {
+    const initial = createInitialState(0)
+    const state = {
+      ...initial,
+      raid: {
+        ...initial.raid,
+        phase: 'RAIDING' as const,
+        phaseTicksRemaining: 30,
+        extracting: { ticksRemaining: 3 },
+      },
+    }
+    const failExtractionRng = {
+      next: vi.fn<() => number>().mockReturnValue(0.99),
+      weightedPick: <T extends { id?: string }>(items: readonly T[]) => items.find(item => item.id === 'extract_beacon_jammed') ?? items[0],
+      pick: <T,>(items: readonly T[]) => items[0],
+      int: (_min: number, max: number) => max,
+      clone: () => failExtractionRng as unknown as RNG,
+      getSeed: () => 0,
+    } as unknown as RNG
+
+    const result = processTick(state, failExtractionRng, 0)
+    const failedExtraction = result.activityEvents.find(event => event.activityId === 'current_extraction' && event.status === 'failed')
+
+    expect(result.state.raid.extracting).toBeNull()
+    expect(failedExtraction).toBeDefined()
+    expect(failedExtraction?.conditions).toBeUndefined()
+  })
+
   it('uses distinct activity log ids for lifecycle extraction and extraction hazard activities', () => {
     const rng = createRNG(FIXED_SEED)
     const initial = createInitialState(0)
@@ -799,6 +827,13 @@ describe('deterministic snapshot', () => {
 
     expect(result.state.raid.phase).toBe('KNOCKED_OUT')
     expect(result.activityEvents.find(event => event.activityId === 'downed_recovery' && event.status === 'failed')?.text).toBe('Downed thread failed. Recovery team is preparing the apology clipboard.')
+  })
+
+  it('only tags active DOWNED activity statuses with the DOWNED condition', () => {
+    expect(downedActivityEvent('started', 0, 0, 2).conditions).toEqual(['DOWNED'])
+    expect(downedActivityEvent('progress', 0, 0, 1).conditions).toEqual(['DOWNED'])
+    expect(downedActivityEvent('completed', 0, 0).conditions).toBeUndefined()
+    expect(downedActivityEvent('failed', 0, 0).conditions).toBeUndefined()
   })
 
   it('stacks extracted quantities into existing stash entries', () => {
