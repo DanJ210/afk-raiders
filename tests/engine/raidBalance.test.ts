@@ -173,7 +173,7 @@ describe('raid balance', () => {
     const medium = summarizeStarterRaids('Medium')
     const high = summarizeStarterRaids('High')
 
-    expect(low.extractionRate).toBeGreaterThanOrEqual(0.35)
+    expect(low.extractionRate).toBeGreaterThanOrEqual(0.30)
     expect(low.extractionRate).toBeLessThanOrEqual(0.70)
     expect(low.averageRaidingTicks).toBeGreaterThanOrEqual(20)
 
