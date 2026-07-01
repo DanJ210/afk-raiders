@@ -145,34 +145,6 @@ function downedActivityEvent(status: ActivityStatus, tick: number, now: number, 
   })
 }
 
-function shieldRechargeActivityEvent(
-  status: ActivityStatus,
-  tick: number,
-  now: number,
-  params: { itemId?: string; name?: string; ticksRemaining?: number; chargeApplied?: number } = {},
-): ActivityLogEvent {
-  const name = params.name ?? 'Shield recharger'
-  const ticksRemaining = params.ticksRemaining ?? 0
-  const textByStatus: Record<ActivityStatus, string> = {
-    started: `${name} thread opened. Shield recharge is pretending this is a careful medical procedure.`,
-    progress: `${name} thread: restored ${params.chargeApplied ?? 0} shield charge; ${formatTickCount(ticksRemaining)} remaining.`,
-    completed: `${name} thread completed. Confidence field humming again.`,
-    failed: `${name} thread failed. The shield made a tiny disappointed noise.`,
-  }
-
-  return activityEvent({
-    id: `activity_shield_recharge_${status}`,
-    activityId: `shield_recharge_${params.itemId ?? 'active'}`,
-    activityName: `${name} Recharge`,
-    activity: 'SHIELD_RECHARGE',
-    status,
-    tick,
-    timestamp: now,
-    text: textByStatus[status],
-    phase: 'RAIDING',
-  })
-}
-
 /**
  * Determine extraction duration based on zone difficulty.
  * Zones have inherent difficulty that affects extraction timer length.
@@ -743,29 +715,10 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
       ...currentState,
       raid: {
         ...shieldRechargeResult.raid,
-        activeRaidActivity: shieldRechargeResult.completed && shieldRechargeBefore
+        activeRaidActivity: shieldRechargeResult.raid.activeRaidActivity?.kind === 'SHIELD_RECHARGE'
           ? null
-          : shieldRechargeResult.raid.activeRaidActivity?.kind === 'SHIELD_RECHARGE'
-            ? {
-                ...shieldRechargeResult.raid.activeRaidActivity,
-                ticksRemaining: shieldRechargeResult.raid.activeShieldRecharge?.ticksRemaining ?? 0,
-              }
-            : shieldRechargeResult.raid.activeRaidActivity,
+          : shieldRechargeResult.raid.activeRaidActivity,
       },
-    }
-    if (shieldRechargeBefore && shieldRechargeResult.chargeApplied > 0) {
-      activityEmitted.push(shieldRechargeActivityEvent(
-        shieldRechargeResult.completed ? 'completed' : 'progress',
-        state.tick,
-        now,
-        {
-          itemId: shieldRechargeBefore.itemId,
-          name: shieldRechargeBefore.name,
-          ticksRemaining: currentState.raid.activeShieldRecharge?.ticksRemaining ?? 0,
-          chargeApplied: shieldRechargeResult.chargeApplied,
-        },
-      ))
-      advancedActivityThisTick = true
     }
     if (shieldRechargeResult.completed && shieldRechargeResult.chargeApplied > 0) {
       emitted.push({

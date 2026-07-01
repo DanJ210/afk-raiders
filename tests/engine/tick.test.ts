@@ -763,7 +763,7 @@ describe('deterministic snapshot', () => {
     ])
   })
 
-  it('writes shield recharge progress and completion to the activity log', () => {
+  it('advances shield recharge as ambient state without activity-log entries', () => {
     const rng = createRNG(FIXED_SEED)
     const initial = createInitialState(0)
     const state = {
@@ -797,35 +797,19 @@ describe('deterministic snapshot', () => {
     const progress = processTick(state, rng, 0)
 
     expect(progress.state.raid.activeShieldRecharge).not.toBeNull()
-    expect(progress.state.raid.activeRaidActivity).toMatchObject({
-      id: 'shield_recharge_fizz_cell',
-      ticksRemaining: 1,
-    })
-    expect(progress.activityEvents).toEqual([
-      expect.objectContaining({
-        id: 'activity_shield_recharge_progress',
-        activityId: 'shield_recharge_fizz_cell',
-        activity: 'SHIELD_RECHARGE',
-        status: 'progress',
-      }),
-    ])
+    expect(progress.state.raid.activeRaidActivity).toBeNull()
+    expect(progress.activityEvents.some(event => event.activity === 'SHIELD_RECHARGE')).toBe(false)
 
     const completed = processTick(progress.state, rng, 5000)
 
     expect(completed.state.raid.activeShieldRecharge).toBeNull()
-    expect(completed.state.raid.activeRaidActivity).toBeNull()
-    expect(completed.activityEvents).toEqual([
+    expect(completed.activityEvents.some(event => event.activity === 'SHIELD_RECHARGE')).toBe(false)
+    expect(completed.events).toEqual(expect.arrayContaining([
       expect.objectContaining({
-        id: 'activity_shield_recharge_completed',
-        activityId: 'shield_recharge_fizz_cell',
-        activity: 'SHIELD_RECHARGE',
-        status: 'completed',
+        id: 'shield_recharger_fizz_cell_completed',
       }),
-    ])
-    expect(completed.state.activityLog.at(-1)).toMatchObject({
-      id: 'activity_shield_recharge_completed',
-      activityId: 'shield_recharge_fizz_cell',
-    })
+    ]))
+    expect(completed.state.activityLog.some(event => event.activity === 'SHIELD_RECHARGE')).toBe(false)
   })
 
   it('advances active robot encounter activities through processTick', () => {

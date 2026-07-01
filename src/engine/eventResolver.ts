@@ -11,12 +11,11 @@
  *   6. {count}         → random plausible water-bottle count (for flavor)
  */
 
-import type { ActivityLogEvent, EventTemplate, GameState, HealingItem, HealingItemStack, LogEvent, LootItem, Phase, RobotEntry, RobotLootItem, ShieldRechargerItem } from './types.js'
+import type { EventTemplate, GameState, HealingItem, HealingItemStack, LogEvent, LootItem, Phase, RobotEntry, RobotLootItem, ShieldRechargerItem } from './types.js'
 import type { RNG } from './rng.js'
 import hubEventsData from '../content/hub_events.json'
 import deploymentEventsData from '../content/deployment_events.json'
-import raidingEventsData from '../content/raiding-events/raiding_events_new.json'
-//import raidingEventsData from '../content/raiding_events.json'
+import raidingEventsData from '../content/raiding-events/raiding_events.json'
 import extractionEventsData from '../content/raiding-events/extraction_events.json'
 import downedEventsData from '../content/downed_events.json'
 import knockedOutEventsData from '../content/knocked_out_events.json'
@@ -411,7 +410,6 @@ export interface HealingItemResult {
 export interface BackpackConsumableResult {
   state: GameState
   event: LogEvent
-  activityEvent?: ActivityLogEvent
 }
 
 /** Finds one bandage for this raid only. It is not backpack loot and never extracts home. */
@@ -540,15 +538,6 @@ export function consumeShieldRecharger(
 
   const baseRaid = {
     ...removeBackpackItem(start.raid, item.itemId),
-    activeRaidActivity: start.completedImmediately
-      ? null
-      : {
-          id: `shield_recharge_${item.itemId}`,
-          name: `${item.name} Recharge`,
-          kind: 'SHIELD_RECHARGE' as const,
-          ticksRemaining: start.raid.activeShieldRecharge!.ticksRemaining,
-          totalTicks: start.raid.activeShieldRecharge!.totalTicks,
-        },
     backpackValue: Math.max(0, state.raid.backpackValue - item.value),
   }
 
@@ -571,20 +560,6 @@ export function consumeShieldRecharger(
       phase: state.raid.phase,
       conditions: logConditionsForRaid(state.raid),
     },
-    activityEvent: start.completedImmediately
-      ? undefined
-      : {
-          id: 'activity_shield_recharge_started',
-          activityId: `shield_recharge_${item.itemId}`,
-          activityName: `${item.name} Recharge`,
-          activity: 'SHIELD_RECHARGE',
-          status: 'started',
-          tick: state.tick,
-          timestamp: now,
-          text: `${item.name} thread opened. Shield recharge is pretending this is a careful medical procedure.`,
-          phase: state.raid.phase,
-          conditions: logConditionsForRaid(state.raid),
-        },
   }
 }
 

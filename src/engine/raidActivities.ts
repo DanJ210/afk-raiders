@@ -1,4 +1,3 @@
-//import raidActivitiesBase from '../content/raid_activities.json'
 import raidActivitiesEncounters from '../content/raiding-events/robot_encounter_activities.json'
 import raidActivitiesSearches from '../content/raiding-events/search_activities.json'
 import healingItemsData from '../content/healing_items.json'

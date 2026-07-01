@@ -14,7 +14,7 @@ This document tracks the migration from single-tick damage events toward Godvill
 - `CommsLog.vue` renders a compact active-thread feed above the normal diary feed.
 - Extraction and DOWNED timers already emit activity-thread start/progress/complete/fail lines.
 - `RaidState.activeRaidActivity` exists with migration/default state support.
-- Timed shield recharges now create a `SHIELD_RECHARGE` active activity, emit activity-log start/progress/completion lines, and clear the activity when finished or canceled by extraction/DOWNED transitions.
+- Timed shield recharges run as a side condition on `RaidState.activeShieldRecharge`; use/start/completion messages belong to the ambient comms log, not the active-thread feed.
 - Activity definitions have been split into focused files: `src/content/raiding-events/robot_encounter_activities.json`, `src/content/raiding-events/search_activities.json`; the old monolithic `raid_activities.json` has been migrated and removed.
 - `src/engine/raidActivities.ts` can start and advance JSON-backed robot encounter activities.
 - Robot activities currently use the base **Tea Kettle** weapon, apply Raider damage to robot HP pools each round, apply robot retaliation through shield-aware damage, emit activity-log round/completion lines, and award robot loot/stats on defeat.
@@ -31,6 +31,7 @@ This document tracks the migration from single-tick damage events toward Godvill
 - Extraction countdown activity-log text is now sourced from `extraction_countdown` in `src/content/raiding-events/search_activities.json` while `RaidState.extracting` remains the lifecycle guardrail.
 - DOWNED countdown activity-log text is now sourced from `downed_countdown` in `src/content/raiding-events/search_activities.json` while `RaidState.downed` remains the lifecycle guardrail.
 - All top-level event JSON is guarded against direct `effects.damage` and negative `effects.hp`; damage must now route through activity/lifecycle engine paths instead of ordinary diary effects.
+- The old top-level `src/content/raiding_events.json` has been removed; RAIDING diary events now load from `src/content/raiding-events/raiding_events.json`.
 
 ## Target Model
 Use a single active RAIDING activity state on `RaidState`, named `activeRaidActivity`. It should represent one multi-tick task at a time and should become the main driver for sustained raid action.
@@ -40,7 +41,7 @@ Activities are data-driven and split into focused files under `src/content/raidi
 Candidate shape:
 
 ```ts
-type RaidActivityKind = 'SEARCH' | 'ROBOT_ENCOUNTER' | 'EXTRACTION' | 'DOWNED' | 'SHIELD_RECHARGE'
+type RaidActivityKind = 'SEARCH' | 'ROBOT_ENCOUNTER' | 'EXTRACTION' | 'DOWNED'
 
 interface ActiveRaidActivity {
   id: string
@@ -67,7 +68,8 @@ Decision: robot encounters should be `ROBOT_ENCOUNTER` activities. A diary event
 
 ## Log Ownership Contract
 - `GameState.log` is the diary/comms feed. It narrates ambient events, phase transitions, Handler feedback, loot flavor, mood/greed shifts, and other broad story beats.
-- `GameState.activityLog` is the active-thread feed. It narrates multi-tick progress, combat rounds, damage, shield splits, revive/extraction timers, and task completion/failure.
+- Healing item use and shield recharger use/start/completion are Handler/ambient beats and belong in `GameState.log`.
+- `GameState.activityLog` is the active-thread feed. It narrates multi-tick progress, combat rounds, damage, shield splits caused by active hazards/combat, revive/extraction timers, and task completion/failure.
 - Activity-log entries should carry `activityName` when the source has a user-facing name, and robot encounters should include the selected robot in that name.
 - Ordinary diary events must not directly modify HP, apply shield-aware damage, or resolve robot combat once this migration is complete.
 - Damage text must still be visible, but it belongs in `activityLog` alongside the activity that caused it.
@@ -169,7 +171,7 @@ Open question: whether some activities should allow ambient diary chatter in the
 1. [Done] Document the target model and update current docs. (This document.)
 2. [Done] Add `RaidState.activeRaidActivity` and migration defaults.
 3. [Done] Add an activity resolver in pure engine code, currently `src/engine/raidActivities.ts`.
-4. [Done] Move shield recharge progress into the activity log, keeping the existing shield helper math.
+4. [Done/Revised] Keep shield recharge math in `RaidState.activeShieldRecharge`, but route shield recharger use/start/completion through the ambient log instead of the activity log.
 5. [Done] Add JSON-backed activity definitions for one or two search activities.
 6. [Done] Add JSON-backed `ROBOT_ENCOUNTER` activity definitions and robot-pool selection through `src/content/robots.json` weights/requirements.
 7. [Done] Convert robot encounters from single-tick `effects.robotEncounter` into multi-tick `ROBOT_ENCOUNTER` activities.

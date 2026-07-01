@@ -14,7 +14,7 @@ import { advanceSignal, refillSignalWithAmplifier, spendSignal, SIGNAL_CAP } fro
 import { tickPhase } from '../engine/raidStateMachine.js'
 import { sellItemFromHomeStash } from '../engine/homeStash.js'
 import { consumeHealingItem, consumeShieldRecharger } from '../engine/eventResolver.js'
-import { appendActivityLogEntries, appendLogEntries } from '../engine/log.js'
+import { appendLogEntries } from '../engine/log.js'
 import { recordHealingItemUse } from '../engine/stats.js'
 import { createInitialState } from '../engine/initialState.js'
 import { applyRaiderXpGain, rollRaiderXp, getRevivalSignalCost, type RaiderLevelUp } from '../engine/raiderLevel.js'
@@ -306,13 +306,9 @@ export function useHandlerActions(
     if (!rechargeUse) return
 
     const log = appendLogEntries(stateRef.value.log, [rechargeUse.event])
-    const activityLog = rechargeUse.activityEvent
-      ? appendActivityLogEntries(stateRef.value.activityLog, [rechargeUse.activityEvent])
-      : stateRef.value.activityLog
     stateRef.value = {
       ...rechargeUse.state,
       log,
-      activityLog,
     }
     publishEvents?.([rechargeUse.event])
     persistCallback(stateRef.value, rngRef.current.getSeed(), lastTickAtRef.value)

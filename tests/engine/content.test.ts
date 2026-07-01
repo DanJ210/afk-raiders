@@ -98,7 +98,7 @@ const progressionConfig = progressionConfigData as {
   skillXpThresholdProfiles: Record<string, number[]>
 }
 const raiderLevels = raiderLevelsData as RaiderLevelContent
-const VALID_RAID_ACTIVITY_KINDS = new Set<RaidActivityDefinition['kind']>(['SEARCH', 'ROBOT_ENCOUNTER', 'EXTRACTION', 'DOWNED', 'SHIELD_RECHARGE'])
+const VALID_RAID_ACTIVITY_KINDS = new Set<RaidActivityDefinition['kind']>(['SEARCH', 'ROBOT_ENCOUNTER', 'EXTRACTION', 'DOWNED'])
 const VALID_ROBOT_DEADLINESS = new Set(robots.map(robot => robot.deadliness))
 const VALID_SEARCH_LOOT_TABLE_IDS = new Set([
   'scrap_components',
@@ -446,8 +446,7 @@ describe('content validation', () => {
     })
   })
 
-  // TODO Update test to match new structure in content/raiding-events
-  describe('raid_activities.json', () => {
+  describe('raid activity definitions', () => {
     it('all activity weights, durations, and IDs are valid', () => {
       const ids = raidActivities.map(activity => activity.id)
       expect(new Set(ids).size, 'raid activity IDs must be unique').toBe(ids.length)

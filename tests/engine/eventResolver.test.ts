@@ -567,18 +567,7 @@ describe('applyEffects — backpack item behavior', () => {
       totalTicks: 5,
       ticksRemaining: 5,
     })
-    expect(result!.state.raid.activeRaidActivity).toMatchObject({
-      id: 'shield_recharge_panic_capacitor',
-      kind: 'SHIELD_RECHARGE',
-      ticksRemaining: 5,
-      totalTicks: 5,
-    })
-    expect(result!.activityEvent).toMatchObject({
-      id: 'activity_shield_recharge_started',
-      activityId: 'shield_recharge_panic_capacitor',
-      activity: 'SHIELD_RECHARGE',
-      status: 'started',
-    })
+    expect(result!.state.raid.activeRaidActivity).toBeNull()
   })
 
   it('supports future instant shield rechargers', () => {
@@ -616,7 +605,6 @@ describe('applyEffects — backpack item behavior', () => {
     expect(result!.state.raid.shield?.charge).toBe(40)
     expect(result!.state.raid.activeShieldRecharge).toBeNull()
     expect(result!.state.raid.activeRaidActivity).toBeNull()
-    expect(result!.activityEvent).toBeUndefined()
     expect(result!.state.raid.backpack).toEqual([])
     expect(result!.state.raid.backpackValue).toBe(0)
   })

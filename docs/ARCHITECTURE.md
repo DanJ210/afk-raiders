@@ -59,8 +59,11 @@ afk-raiders/
 │   ├── content/                 # The comedy lives here, as data
 │   │   ├── hub_events.json      # Desperanza rest & prep (≤5 min)
 │   │   ├── deployment_events.json # One-person tunnel pod ride (2 min)
-│   │   ├── raiding_events.json  # Looting, robots, greed (≤30 min + nuke risk)
-│   │   ├── extraction_events.json # RAIDING extraction-condition drama (moved to raiding-events/)
+│   │   ├── raiding-events/      # RAIDING diary events plus activity definitions
+│   │   │   ├── raiding_events.json # Ambient RAIDING diary starters
+│   │   │   ├── extraction_events.json # EXTRACTING-condition comms/outcomes
+│   │   │   ├── robot_encounter_activities.json # Robot active-thread definitions
+│   │   │   └── search_activities.json # Search, extraction, and downed active-thread definitions
 │   │   ├── knocked_out_events.json # Recovery reset quips
 │   │   ├── loot.json            # Many varieties of original comedy/parody loot items
 │   │   ├── healing_items.json   # Current-raid-only field meds
