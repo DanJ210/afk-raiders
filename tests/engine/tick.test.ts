@@ -6,10 +6,11 @@
 import { describe, it, expect, vi } from 'vitest'
 import { createRNG } from '../../src/engine/rng'
 import type { RNG } from '../../src/engine/rng'
-import { maybeAwardLootBonusConsumables, processTick } from '../../src/engine/tick'
+import { downedActivityEvent, maybeAwardLootBonusConsumables, processTick } from '../../src/engine/tick'
 import { createInitialState } from '../../src/engine/initialState'
 import { getRaiderLevelFromXp, xpRequiredForLevel } from '../../src/engine/raiderLevel'
 import { skillDefinitionById } from '../../src/engine/skills'
+import { startRaidActivity } from '../../src/engine/raidActivities'
 
 const FIXED_SEED = 42
 
@@ -201,9 +202,11 @@ describe('deterministic snapshot', () => {
     expect(result.state.stats.extracts.total).toBe(1)
     expect(result.state.stats.extracts.byZone.damp_battlegrounds).toBe(1)
     expect(result.state.stats.extracts.byZoneAndDanger['damp_battlegrounds__Medium']).toBe(1)
-    expect(result.state.activityLog.some(event => event.id === 'activity_extraction_completed')).toBe(true)
-    expect(result.state.activityLog.find(event => event.id === 'activity_extraction_completed')?.activityName).toBe('Extraction Thread')
-    expect(result.state.activityLog.find(event => event.id === 'activity_extraction_completed')?.text).toBe('Extraction thread closed. Raider made it back with the bag and several legal questions.')
+    const extractionCompleted = result.state.activityLog.find(event => event.activityId === 'current_extraction' && event.status === 'completed')
+    expect(extractionCompleted).toBeDefined()
+    expect(extractionCompleted?.id).toBe('activity_extraction_current_extraction_completed')
+    expect(extractionCompleted?.activityName).toBe('Extraction Thread')
+    expect(extractionCompleted?.text).toBe('Extraction thread closed. Raider made it back with the bag and several legal questions.')
   })
 
   it('awards autonomous skill practice and level-up comms on extraction', () => {
@@ -477,8 +480,9 @@ describe('deterministic snapshot', () => {
     expect(result.state.raider.hp).toBe(0)
     expect(result.events.some(e => e.id === 'condition_downed_started')).toBe(true)
     expect(result.events.find(e => e.id === 'condition_downed_started')?.conditions).toEqual(['DOWNED'])
-    expect(result.activityEvents.find(event => event.id === 'activity_downed_started')?.activityName).toBe('Downed Thread')
-    expect(result.activityEvents.find(event => event.id === 'activity_downed_started')?.text).toBe('Downed thread opened. 2 ticks before the zone writes the ending.')
+    const downedStarted = result.activityEvents.find(event => event.activityId === 'downed_recovery' && event.status === 'started')
+    expect(downedStarted?.activityName).toBe('Downed Thread')
+    expect(downedStarted?.text).toBe('Downed thread opened. 2 ticks before the zone writes the ending.')
   })
 
   it('logs why the raider was downed when robot combat causes it', () => {
@@ -521,7 +525,7 @@ describe('deterministic snapshot', () => {
       robotName: 'Roomba Prime',
     })
     expect(downedEvent?.text).toContain('Roomba Prime downed the Raider')
-    expect(result.activityEvents.find(event => event.id === 'activity_downed_started')).toBeDefined()
+    expect(result.activityEvents.find(event => event.activityId === 'downed_recovery' && event.status === 'started')).toBeDefined()
   })
 
   it('honors Call Extract when the raid timer expires on the next tick', () => {
@@ -546,7 +550,29 @@ describe('deterministic snapshot', () => {
     expect(eventIds).not.toContain('condition_downed_started')
     expect(result.state.raid.extracting).not.toBeNull()
     expect(result.events.find(event => event.id === 'condition_extracting_started')?.conditions).toEqual(['EXTRACTING'])
-    expect(result.activityEvents.find(event => event.id === 'activity_extraction_started')?.text).toBe('Extraction thread opened. LZ timer: 4 ticks.')
+    expect(result.activityEvents.find(event => event.activityId === 'current_extraction' && event.status === 'started')?.text).toBe('Extraction thread opened. LZ timer: 4 ticks.')
+  })
+
+  it('starts extraction with zone duration from extraction activity content', () => {
+    function extractionTicksForZone(zone: string): number | undefined {
+      const initial = createInitialState(0)
+      const result = processTick({
+        ...initial,
+        raid: {
+          ...initial.raid,
+          phase: 'RAIDING' as const,
+          phaseTicksRemaining: 30,
+          zone,
+          forceExtract: true,
+          greedLevel: 0,
+        },
+      }, createRNG(FIXED_SEED), 0)
+
+      return result.state.raid.extracting?.ticksRemaining
+    }
+
+    expect(extractionTicksForZone('forgotten_fields')).toBe(3)
+    expect(extractionTicksForZone('the_breach')).toBe(6)
   })
 
   it('lets extraction completion beat an expiring DOWNED timer', () => {
@@ -593,6 +619,125 @@ describe('deterministic snapshot', () => {
     ])
     expect(eventIds).toContain('phase_RAIDING_to_HUB')
     expect(eventIds).not.toContain('phase_RAIDING_to_KNOCKED_OUT')
+  })
+
+  it('completes extraction to HUB even when outcome odds would have selected a complication', () => {
+    const initial = createInitialState(0)
+    const state = {
+      ...initial,
+      raid: {
+        ...initial.raid,
+        zone: 'the_breach',
+        dangerLevel: 'High' as const,
+        phase: 'RAIDING' as const,
+        phaseTicksRemaining: 30,
+        extracting: { ticksRemaining: 1 },
+        backpack: [
+          {
+            itemId: 'scrap_metal_basic',
+            name: 'Basic Scrap Metal',
+            value: 8,
+            rarity: 1,
+            quantity: 2,
+          },
+        ],
+        backpackValue: 16,
+      },
+    }
+    const outcomeSelectingRng = {
+      next: vi.fn<() => number>().mockReturnValue(0),
+      weightedPick: <T,>(items: readonly T[]) => items[0],
+      pick: <T,>(items: readonly T[]) => items[0],
+      int: (_min: number, max: number) => max,
+      clone: () => outcomeSelectingRng as unknown as RNG,
+      getSeed: () => 0,
+    } as unknown as RNG
+
+    const result = processTick(state, outcomeSelectingRng, 0)
+
+    expect(result.state.raid.phase).toBe('HUB')
+    expect(result.state.raid.extracting).toBeNull()
+    expect(result.state.raid.activeRaidActivity).toBeNull()
+    expect(result.state.raid.backpack).toEqual([])
+    expect(result.state.homeStash).toEqual([
+      {
+        itemId: 'scrap_metal_basic',
+        name: 'Basic Scrap Metal',
+        value: 8,
+        rarity: 1,
+        quantity: 2,
+      },
+    ])
+    expect(result.events.map(event => event.id)).toContain('phase_RAIDING_to_HUB')
+    expect(result.activityEvents.map(event => event.activityId)).not.toContain('extraction_complication_close_call')
+  })
+
+  it('does not tag failed extraction activity entries as still extracting', () => {
+    const initial = createInitialState(0)
+    const state = {
+      ...initial,
+      raid: {
+        ...initial.raid,
+        phase: 'RAIDING' as const,
+        phaseTicksRemaining: 30,
+        extracting: { ticksRemaining: 3 },
+      },
+    }
+    const failExtractionRng = {
+      next: vi.fn<() => number>().mockReturnValue(0.99),
+      weightedPick: <T extends { id?: string }>(items: readonly T[]) => items.find(item => item.id === 'extract_beacon_jammed') ?? items[0],
+      pick: <T,>(items: readonly T[]) => items[0],
+      int: (_min: number, max: number) => max,
+      clone: () => failExtractionRng as unknown as RNG,
+      getSeed: () => 0,
+    } as unknown as RNG
+
+    const result = processTick(state, failExtractionRng, 0)
+    const failedExtraction = result.activityEvents.find(event => event.activityId === 'current_extraction' && event.status === 'failed')
+
+    expect(result.state.raid.extracting).toBeNull()
+    expect(failedExtraction).toBeDefined()
+    expect(failedExtraction?.conditions).toBeUndefined()
+  })
+
+  it('uses distinct activity log ids for lifecycle extraction and extraction hazard activities', () => {
+    const rng = createRNG(FIXED_SEED)
+    const initial = createInitialState(0)
+    const hazard = startRaidActivity(
+      {
+        ...initial,
+        raid: {
+          ...initial.raid,
+          phase: 'RAIDING' as const,
+          extracting: { ticksRemaining: 2 },
+        },
+      },
+      { activityId: 'extraction_hazard_damage', kind: 'EXTRACTION', hazardDamage: 10 },
+      rng,
+      0,
+    )
+    expect(hazard).not.toBeNull()
+
+    const state = {
+      ...initial,
+      raid: {
+        ...initial.raid,
+        phase: 'RAIDING' as const,
+        extracting: { ticksRemaining: 1 },
+      },
+    }
+
+    const result = processTick(state, rng, 0)
+    const extractionEventIds = [
+      hazard!.activityEvent.id,
+      ...result.activityEvents
+        .filter(event => event.activity === 'EXTRACTION' && event.status === 'completed')
+        .map(event => event.id),
+    ]
+
+    expect(extractionEventIds).toContain('activity_extraction_current_extraction_completed')
+    expect(extractionEventIds).toContain('activity_extraction_extraction_hazard_damage_completed')
+    expect(new Set(extractionEventIds).size).toBe(extractionEventIds.length)
   })
 
   it('includes both log conditions while extraction and DOWNED overlap', () => {
@@ -661,7 +806,7 @@ describe('deterministic snapshot', () => {
     expect(result.state.raid.phase).toBe('RAIDING')
     expect(result.state.raid.downed?.ticksRemaining).toBe(1)
     expect(result.state.raider.hp).toBe(0)
-    expect(result.activityEvents.find(event => event.id === 'activity_downed_progress')?.text).toBe('Downed thread: 1 tick left for a miracle or medically questionable idea.')
+    expect(result.activityEvents.find(event => event.activityId === 'downed_recovery' && event.status === 'progress')?.text).toBe('Downed thread: 1 tick left for a miracle or medically questionable idea.')
   })
 
   it('uses JSON-backed DOWNED failure activity text when the downed timer expires', () => {
@@ -681,7 +826,14 @@ describe('deterministic snapshot', () => {
     const result = processTick(state, rng, 0)
 
     expect(result.state.raid.phase).toBe('KNOCKED_OUT')
-    expect(result.activityEvents.find(event => event.id === 'activity_downed_failed')?.text).toBe('Downed thread failed. Recovery team is preparing the apology clipboard.')
+    expect(result.activityEvents.find(event => event.activityId === 'downed_recovery' && event.status === 'failed')?.text).toBe('Downed thread failed. Recovery team is preparing the apology clipboard.')
+  })
+
+  it('only tags active DOWNED activity statuses with the DOWNED condition', () => {
+    expect(downedActivityEvent('started', 0, 0, 2).conditions).toEqual(['DOWNED'])
+    expect(downedActivityEvent('progress', 0, 0, 1).conditions).toEqual(['DOWNED'])
+    expect(downedActivityEvent('completed', 0, 0).conditions).toBeUndefined()
+    expect(downedActivityEvent('failed', 0, 0).conditions).toBeUndefined()
   })
 
   it('stacks extracted quantities into existing stash entries', () => {
@@ -894,13 +1046,13 @@ describe('deterministic snapshot', () => {
     expect(result.state.stats.robotDefeats.anxietick).toBe(1)
     expect(result.activityEvents).toEqual([
       expect.objectContaining({
-        id: 'activity_robot_encounter_completed',
+        activityId: 'robot_encounter_standard_anxietick',
         activity: 'ROBOT_ENCOUNTER',
         status: 'completed',
       }),
     ])
     expect(result.state.activityLog.at(-1)).toMatchObject({
-      id: 'activity_robot_encounter_completed',
+      id: 'activity_robot_encounter_robot_encounter_standard_anxietick_completed',
       activityId: 'robot_encounter_standard_anxietick',
     })
   })
@@ -930,8 +1082,9 @@ describe('deterministic snapshot', () => {
 
     expect(result.activityEvents).toEqual([
       expect.objectContaining({
-        id: 'activity_search_progress',
+        activityId: 'search_black_box_cache',
         activity: 'SEARCH',
+        status: 'progress',
       }),
     ])
     expect(result.events.length).toBeGreaterThan(0)

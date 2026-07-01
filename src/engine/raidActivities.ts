@@ -261,9 +261,10 @@ function activityLogEvent(
   now: number,
   text: string,
 ): ActivityLogEvent {
+  const activityId = activity.robotId ? `${activity.id}_${activity.robotId}` : activity.id
   return {
-    id: `activity_${activity.kind.toLowerCase()}_${status}`,
-    activityId: activity.robotId ? `${activity.id}_${activity.robotId}` : activity.id,
+    id: `activity_${activity.kind.toLowerCase()}_${activityId}_${status}`,
+    activityId,
     activityName: activity.name,
     activity: activity.kind,
     status,
