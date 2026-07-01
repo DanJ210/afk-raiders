@@ -11,7 +11,7 @@
  *   6. {count}         → random plausible water-bottle count (for flavor)
  */
 
-import type { EventTemplate, GameState, HealingItem, HealingItemStack, LogEvent, LootItem, Phase, RobotEntry, RobotLootItem, ShieldRechargerItem } from './types.js'
+import type { DangerLevel, EventTemplate, GameState, HealingItem, HealingItemStack, LogEvent, LootItem, Phase, RobotEntry, RobotLootItem, ShieldRechargerItem } from './types.js'
 import type { RNG } from './rng.js'
 import hubEventsData from '../content/hub_events.json'
 import deploymentEventsData from '../content/deployment_events.json'
@@ -90,6 +90,12 @@ function mergeLootTables(items: LootItem[]): LootItem[] {
 
 const robotLoot = robots.flatMap(robot => robot.lootTable.map(item => toLootItem(item, robot)))
 const loot = mergeLootTables([...baseLoot, ...robotLoot])
+const RAID_ACTIVITY_SEARCH_SHARE_BY_DANGER: Record<DangerLevel, number> = {
+  Low: 0.75,
+  Medium: 0.6,
+  High: 0.5,
+}
+const RAIDING_ACTIVITY_STARTER_SHARE = 0.67
 
 function healingMoodGain(item: HealingItemStack): number {
   return item.moodGain ?? Math.max(1, Math.min(4, item.rarity))
@@ -229,6 +235,59 @@ function adjustedEventWeight(template: EventTemplate, state: GameState): number 
   }
 
   return Math.max(0.001, weight)
+}
+
+function raidActivityStarterKind(template: EventTemplate): 'SEARCH' | 'ROBOT_ENCOUNTER' | null {
+  const kind = template.effects?.startRaidActivity?.kind
+  return kind === 'SEARCH' || kind === 'ROBOT_ENCOUNTER' ? kind : null
+}
+
+function targetRaidActivitySearchShare(state: GameState): number {
+  const baseSearchShare = state.raid.dangerLevel
+    ? RAID_ACTIVITY_SEARCH_SHARE_BY_DANGER[state.raid.dangerLevel]
+    : RAID_ACTIVITY_SEARCH_SHARE_BY_DANGER.Low
+  const baseRobotShare = 1 - baseSearchShare
+  const robotOdds = baseRobotShare * getGreedDangerEventWeightMultiplier(state.raid.greedLevel)
+
+  return baseSearchShare / (baseSearchShare + robotOdds)
+}
+
+function hasRaidActivityStarter(template: EventTemplate): boolean {
+  return template.effects?.startRaidActivity !== undefined
+}
+
+function totalEventWeight(templates: EventTemplate[]): number {
+  return templates.reduce((total, template) => total + template.weight, 0)
+}
+
+function pickRaidActivityStarter(templates: EventTemplate[], state: GameState, rng: RNG): EventTemplate {
+  const searches = templates.filter(template => raidActivityStarterKind(template) === 'SEARCH')
+  const robots = templates.filter(template => raidActivityStarterKind(template) === 'ROBOT_ENCOUNTER')
+  const otherActivityStarters = templates.filter(template => raidActivityStarterKind(template) === null)
+  const searchRobotWeight = totalEventWeight(searches) + totalEventWeight(robots)
+  const otherWeight = totalEventWeight(otherActivityStarters)
+
+  if (otherActivityStarters.length > 0 && (searchRobotWeight <= 0 || rng.next() >= searchRobotWeight / (searchRobotWeight + otherWeight))) {
+    return rng.weightedPick(otherActivityStarters)
+  }
+
+  if (searches.length === 0) return rng.weightedPick(robots.length > 0 ? robots : otherActivityStarters)
+  if (robots.length === 0) return rng.weightedPick(searches)
+
+  return rng.weightedPick(rng.next() < targetRaidActivitySearchShare(state) ? searches : robots)
+}
+
+function pickRaidingEventTemplate(eligible: EventTemplate[], state: GameState, rng: RNG): EventTemplate {
+  if (state.raid.phase !== 'RAIDING' || state.raid.extracting || state.raid.downed) return rng.weightedPick(eligible)
+
+  const activityStarters = eligible.filter(hasRaidActivityStarter)
+  const ambientEvents = eligible.filter(template => !hasRaidActivityStarter(template))
+  if (activityStarters.length === 0) return rng.weightedPick(ambientEvents)
+  if (ambientEvents.length === 0) return pickRaidActivityStarter(activityStarters, state, rng)
+
+  return rng.next() < RAIDING_ACTIVITY_STARTER_SHARE
+    ? pickRaidActivityStarter(activityStarters, state, rng)
+    : rng.weightedPick(ambientEvents)
 }
 
 /** Fill {slot} placeholders in a template string */
@@ -576,7 +635,7 @@ export function resolveEvent(
     ...template,
     weight: adjustedEventWeight(template, state),
   }))
-  const template = rng.weightedPick(weightedEligible)
+  const template = pickRaidingEventTemplate(weightedEligible, state, rng)
   const text = fillSlots(template.text, rng)
 
   return {

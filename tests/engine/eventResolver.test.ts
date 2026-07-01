@@ -12,7 +12,7 @@ import { describe, it, expect } from 'vitest'
 import { createRNG } from '../../src/engine/rng'
 import { applyEffects, consumeHealingItem, consumeShieldRecharger, eligibleEvents, events as allEvents, resolveEvent, resolveHealingItemFind, resolveShieldRechargerFind } from '../../src/engine/eventResolver'
 import { createInitialState } from '../../src/engine/initialState'
-import type { EventTemplate, HealingItemStack } from '../../src/engine/types'
+import type { DangerLevel, EventTemplate, HealingItemStack } from '../../src/engine/types'
 import zoneConditionsData from '../../src/content/zones/zone_conditions.json'
 
 // backpackValue=450 maps exclusively to Snack Mix (Chaos Blend),
@@ -60,6 +60,10 @@ const GREED_EFFECT_TEMPLATE: EventTemplate = {
 }
 
 const robotEventIds = new Set(allEvents.filter(event => event.effects?.startRaidActivity?.kind === 'ROBOT_ENCOUNTER').map(event => event.id))
+const activityStarterKindByEventId = new Map(allEvents.flatMap(event => {
+  const kind = event.effects?.startRaidActivity?.kind
+  return kind === 'SEARCH' || kind === 'ROBOT_ENCOUNTER' ? [[event.id, kind]] : []
+}))
 
 function makeBandage(overrides: Partial<HealingItemStack> = {}): HealingItemStack {
   return {
@@ -72,6 +76,53 @@ function makeBandage(overrides: Partial<HealingItemStack> = {}): HealingItemStac
     ...overrides,
   }
 }
+
+function sampleRaidSelectionMix(dangerLevel: DangerLevel): { activityStarterShare: number; activitySearchShare: number } {
+  const initial = createInitialState(0)
+  const state = {
+    ...initial,
+    raid: {
+      ...initial.raid,
+      phase: 'RAIDING' as const,
+      phaseTicksRemaining: 30,
+      dangerLevel,
+      zone: 'damp_battlegrounds',
+      zoneCondition: zoneConditionsData.minor_conditions[0],
+      greedLevel: 0,
+    },
+  }
+  const totals = { ambient: 0, search: 0, robot: 0 }
+
+  for (let seed = 0; seed < 6000; seed += 1) {
+    const event = resolveEvent(state, createRNG(seed), seed)
+    const kind = event ? activityStarterKindByEventId.get(event.id) : null
+    if (kind === 'SEARCH') totals.search += 1
+    else if (kind === 'ROBOT_ENCOUNTER') totals.robot += 1
+    else totals.ambient += 1
+  }
+
+  const activityTotal = totals.search + totals.robot
+  expect(activityTotal).toBeGreaterThan(1000)
+
+  return {
+    activityStarterShare: activityTotal / (totals.ambient + activityTotal),
+    activitySearchShare: totals.search / activityTotal,
+  }
+}
+
+describe('resolveEvent — RAIDING activity mix', () => {
+  it('keeps activity starters as a distinct first-stage roll from ambient comms', () => {
+    expect(sampleRaidSelectionMix('Low').activityStarterShare).toBeCloseTo(0.67, 1)
+    expect(sampleRaidSelectionMix('Medium').activityStarterShare).toBeCloseTo(0.67, 1)
+    expect(sampleRaidSelectionMix('High').activityStarterShare).toBeCloseTo(0.67, 1)
+  })
+
+  it('shifts SEARCH and ROBOT_ENCOUNTER starter share by danger level', () => {
+    expect(sampleRaidSelectionMix('Low').activitySearchShare).toBeCloseTo(0.75, 1)
+    expect(sampleRaidSelectionMix('Medium').activitySearchShare).toBeCloseTo(0.6, 1)
+    expect(sampleRaidSelectionMix('High').activitySearchShare).toBeCloseTo(0.5, 1)
+  })
+})
 
 describe('applyEffects — backpack item behavior', () => {
   it('adds a new BackpackItem when a loot effect is applied', () => {

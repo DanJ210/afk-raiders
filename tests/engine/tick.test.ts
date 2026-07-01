@@ -797,10 +797,16 @@ describe('deterministic snapshot', () => {
     const progress = processTick(state, rng, 0)
 
     expect(progress.state.raid.activeShieldRecharge).not.toBeNull()
-    expect(progress.state.raid.activeRaidActivity).toBeNull()
+  expect(progress.state.raid.activeRaidActivity?.kind).not.toBe('SHIELD_RECHARGE')
     expect(progress.activityEvents.some(event => event.activity === 'SHIELD_RECHARGE')).toBe(false)
 
-    const completed = processTick(progress.state, rng, 5000)
+    const completed = processTick({
+      ...progress.state,
+      raid: {
+        ...progress.state.raid,
+        activeRaidActivity: null,
+      },
+    }, rng, 5000)
 
     expect(completed.state.raid.activeShieldRecharge).toBeNull()
     expect(completed.activityEvents.some(event => event.activity === 'SHIELD_RECHARGE')).toBe(false)
