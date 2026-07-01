@@ -22,6 +22,18 @@ const latestActivityEntry = computed(() => {
 })
 const activeActivity = computed(() => store.raid.activeRaidActivity)
 const currentActivityTitle = computed(() => store.raid.activeRaidActivity?.name ?? latestActivityEntry.value?.activityName ?? 'No active thread')
+const activityProgressTotal = computed(() => Math.max(0, activeActivity.value?.totalTicks ?? 0))
+const activityProgressRemaining = computed(() => Math.max(0, Math.min(activeActivity.value?.ticksRemaining ?? 0, activityProgressTotal.value)))
+const activityProgressCompleted = computed(() => Math.max(0, activityProgressTotal.value - activityProgressRemaining.value))
+const activityProgressPercent = computed(() => {
+  if (activityProgressTotal.value <= 0) return 0
+  return Math.max(0, Math.min(100, (activityProgressCompleted.value / activityProgressTotal.value) * 100))
+})
+const showActivityProgressBar = computed(() => {
+  const activity = activeActivity.value
+  return Boolean(activity && activity.kind !== 'ROBOT_ENCOUNTER' && activityProgressTotal.value > 0)
+})
+const activityProgressText = computed(() => `${activityProgressCompleted.value}/${activityProgressTotal.value}`)
 const showRobotHpBar = computed(() => {
   const activity = activeActivity.value
   return activity?.kind === 'ROBOT_ENCOUNTER' && (activity.robotMaxHp ?? 0) > 0 && activity.robotHp !== undefined
@@ -251,8 +263,22 @@ function activityBadge(entry: ActivityLogEvent): string {
       ></div>
     </div>
     <section class="comms-log__activity" aria-label="Activity Log">
-      <header class="comms-log__activity-header" :class="{ 'comms-log__activity-header--robot': showRobotHpBar }">
+      <header class="comms-log__activity-header" :class="{ 'comms-log__activity-header--meter': showRobotHpBar || showActivityProgressBar }">
         <span class="comms-log__activity-title">{{ currentActivityTitle }}</span>
+        <div
+          v-if="showActivityProgressBar"
+          class="comms-log__activity-progress"
+          role="progressbar"
+          aria-label="Activity progress"
+          :aria-valuenow="activityProgressCompleted"
+          :aria-valuemin="0"
+          :aria-valuemax="activityProgressTotal"
+        >
+          <div class="comms-log__activity-progress-track">
+            <div class="comms-log__activity-progress-fill" :style="{ width: `${activityProgressPercent}%` }"></div>
+          </div>
+          <span class="comms-log__activity-progress-text">{{ activityProgressText }}</span>
+        </div>
         <div
           v-if="showRobotHpBar"
           class="comms-log__robot-hp"
@@ -344,7 +370,7 @@ function activityBadge(entry: ActivityLogEvent): string {
   letter-spacing: 0;
 }
 
-.comms-log__activity-header--robot {
+.comms-log__activity-header--meter {
   padding-bottom: 0.5rem;
 }
 
@@ -356,29 +382,48 @@ function activityBadge(entry: ActivityLogEvent): string {
   color: var(--color-accent-secondary);
 }
 
-.comms-log__robot-hp {
+.comms-log__robot-hp,
+.comms-log__activity-progress {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: 0.55rem;
 }
 
-.comms-log__robot-hp-track {
+.comms-log__robot-hp-track,
+.comms-log__activity-progress-track {
   height: 0.42rem;
   overflow: hidden;
-  border: 1px solid color-mix(in srgb, var(--color-danger) 45%, var(--color-border));
   border-radius: 999px;
+}
+
+.comms-log__robot-hp-track {
+  border: 1px solid color-mix(in srgb, var(--color-danger) 45%, var(--color-border));
   background: color-mix(in srgb, var(--color-danger) 12%, var(--color-bg));
 }
 
-.comms-log__robot-hp-fill {
+.comms-log__activity-progress-track {
+  border: 1px solid color-mix(in srgb, var(--color-accent) 45%, var(--color-border));
+  background: color-mix(in srgb, var(--color-accent) 12%, var(--color-bg));
+}
+
+.comms-log__robot-hp-fill,
+.comms-log__activity-progress-fill {
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, var(--color-danger), var(--color-warning));
   transition: width 0.24s ease;
 }
 
-.comms-log__robot-hp-text {
+.comms-log__robot-hp-fill {
+  background: linear-gradient(90deg, var(--color-danger), var(--color-warning));
+}
+
+.comms-log__activity-progress-fill {
+  background: linear-gradient(90deg, var(--color-accent), var(--color-success));
+}
+
+.comms-log__robot-hp-text,
+.comms-log__activity-progress-text {
   color: var(--color-muted);
   font-size: 0.68rem;
   font-weight: 700;
