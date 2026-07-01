@@ -14,7 +14,7 @@
  *   6. Increment tick counter, append events to log.
  */
 
-import type { ActivityLogEvent, ActivityStatus, BackpackItem, DownedReason, GameState, HiddenPocketItem, LogCondition, LogEvent, StartRaidActivityEffect, RaidState, TickResult } from './types.js'
+import type { ActivityLogEvent, ActivityStatus, BackpackItem, DownedReason, GameState, HiddenPocketItem, LogCondition, LogEvent, TickResult } from './types.js'
 import type { RNG } from './rng.js'
 import { DOWNED_TICKS, EXTRACTING_TICKS, tickPhase, transitionText, type PhaseTransition } from './raidStateMachine.js'
 import { runGreedCheck } from './greedCheck.js'
@@ -91,6 +91,10 @@ function activityEvent(
   return params
 }
 
+function activityEventId(activity: ActivityLogEvent['activity'], activityId: string, status: ActivityStatus): string {
+  return `activity_${activity.toLowerCase()}_${activityId}_${status}`
+}
+
 function extractionActivityEvent(status: ActivityStatus, tick: number, now: number, ticksRemaining = 0): ActivityLogEvent {
   const definition = raidActivities.find(activity => activity.id === 'extraction_countdown')
   const textTemplate = status === 'progress'
@@ -105,7 +109,7 @@ function extractionActivityEvent(status: ActivityStatus, tick: number, now: numb
   const text = fillTimedActivityText(textTemplate ?? fallbackTextByStatus[status], ticksRemaining)
 
   return activityEvent({
-    id: `activity_extraction_${status}`,
+    id: activityEventId('EXTRACTION', 'current_extraction', status),
     activityId: 'current_extraction',
     activityName: definition?.name ?? 'Extraction Thread',
     activity: 'EXTRACTION',
@@ -132,7 +136,7 @@ function downedActivityEvent(status: ActivityStatus, tick: number, now: number, 
   const text = fillTimedActivityText(textTemplate ?? fallbackTextByStatus[status], ticksRemaining)
 
   return activityEvent({
-    id: `activity_downed_${status}`,
+    id: activityEventId('DOWNED', 'downed_recovery', status),
     activityId: 'downed_recovery',
     activityName: definition?.name ?? 'Downed Thread',
     activity: 'DOWNED',
@@ -145,21 +149,23 @@ function downedActivityEvent(status: ActivityStatus, tick: number, now: number, 
   })
 }
 
-/**
- * Determine extraction duration based on zone difficulty.
- * Zones have inherent difficulty that affects extraction timer length.
- * - Friendly zones: 3 ticks (quick escape)
- * - Standard zones: 4 ticks (normal extraction)
- * - Hostile zones: 6 ticks (extended danger)
- */
-function getExtractionDurationForZone(zone: string | null): number {
-  if (!zone) return 4 // Default to standard if no zone
-  const friendlyZones = new Set(['forgotten_fields', 'stella'])
-  const hostileZones = new Set(['the_breach', 'arc_ruins'])
+function matchesZoneRequirement(zoneRequirement: string | string[] | undefined, zone: string): boolean {
+  if (zoneRequirement === undefined) return false
+  return Array.isArray(zoneRequirement) ? zoneRequirement.includes(zone) : zoneRequirement === zone
+}
 
-  if (friendlyZones.has(zone)) return 3
-  if (hostileZones.has(zone)) return 6
-  return 4 // Standard zones: damp_battlegrounds, buried_city, the_sunken_highrise
+function getExtractionDurationForZone(zone: string | null): number {
+  const defaultExtraction = raidActivities.find(activity => activity.id === 'extraction_countdown')
+  if (!zone) return defaultExtraction?.ticks ?? EXTRACTING_TICKS
+
+  const zoneExtraction = raidActivities.find(activity => (
+    activity.kind === 'EXTRACTION'
+    && activity.id.startsWith('extraction_')
+    && activity.id.endsWith('_zone')
+    && matchesZoneRequirement(activity.requires?.zone, zone)
+  ))
+
+  return zoneExtraction?.ticks ?? defaultExtraction?.ticks ?? EXTRACTING_TICKS
 }
 
 function startExtractionCondition(state: GameState, tick: number, now: number): { state: GameState; event: LogEvent | null } {
@@ -392,57 +398,6 @@ function queueDeathRecoveryRaiderXp(queue: RaiderXpTrigger[], dangerLevel: GameS
   queue.push({ reason: 'death_recovered', minXp: 3 + dangerBonus, maxXp: 6 + dangerBonus })
 }
 
-/**
- * Determine if an extraction outcome activity should fire after extraction completes.
- * Outcome activities provide narrative flourishes before transitioning to HUB.
- * Returns the activity ID if one should fire, or null for immediate HUB transition.
- * 
- * Zone personality affects complication and success bonus probabilities:
- * - Hostile zones (breach, ruins): higher complication chance
- * - Friendly zones (fields, staycation): higher success bonus chance
- * - Standard zones: balanced outcome chances
- */
-function determineExtractionOutcome(
-  raid: RaidState,
-  raider: { hp: number; maxHp: number },
-  rng: RNG,
-): string | null {
-  // Zone personality: classify zones for outcome tuning
-  const friendlyZones = new Set(['forgotten_fields', 'stella'])
-  const hostileZones = new Set(['the_breach', 'arc_ruins'])
-  
-  const isHostile = raid.zone ? hostileZones.has(raid.zone) : false
-  const isFriendly = raid.zone ? friendlyZones.has(raid.zone) : false
-  
-  // High-danger zones get complication outcomes (closer call required)
-  if (raid.dangerLevel === 'High') {
-    const complicationChance = isHostile ? 0.5 : 0.4
-    if (rng.next() < complicationChance) {
-      return 'extraction_complication_close_call'
-    }
-  }
-  
-  // Medium-danger zones have moderate complication chance (higher in hostile zones)
-  if (raid.dangerLevel === 'Medium') {
-    const complicationChance = isHostile ? 0.35 : 0.25
-    if (rng.next() < complicationChance) {
-      return 'extraction_complication_close_call'
-    }
-  }
-  
-  // Successful extractions with decent health can trigger bonus outcomes
-  // (slightly more likely in friendly zones)
-  const bonusChance = isFriendly ? 0.4 : 0.3
-  if (raider.hp >= raider.maxHp * 0.6 && rng.next() < bonusChance) {
-    return 'extraction_success_bonus'
-  }
-  
-  // No outcome activity — transition to HUB immediately
-  return null
-}
-
-
-
 function completeExtractionCondition(
   state: GameState,
   skillPracticeTriggers: SkillPracticeTrigger[],
@@ -450,7 +405,6 @@ function completeExtractionCondition(
   emitted: LogEvent[],
   tick: number,
   now: number,
-  rng: RNG,
 ): GameState {
   const extractedRaid = state.raid
   let currentState: GameState = state
@@ -485,23 +439,6 @@ function completeExtractionCondition(
     emitted.push(stashSaleEvent(extraction.soldItemCount, extraction.coinsGained, tick, now))
   }
 
-  // Check if an extraction outcome activity should fire before transitioning to HUB
-  const outcomeActivityId = determineExtractionOutcome(extractedRaid, state.raider, rng)
-  if (outcomeActivityId) {
-    // Start the outcome activity and stay in RAIDING phase
-    const effectsPayload: StartRaidActivityEffect = {
-      kind: 'SEARCH',
-      activityId: outcomeActivityId,
-    }
-    const startActivity = startRaidActivity(currentState, effectsPayload, rng, now)
-    if (startActivity) {
-      // Outcome activity started successfully — stay in RAIDING, don't transition to HUB yet
-      return startActivity.state
-    }
-  }
-
-
-  // No outcome activity or failed to start — proceed with normal HUB transition
   const { raid: hubRaid, transition } = tickPhase(currentState.raid, 'HUB')
   currentState = { ...currentState, raid: hubRaid }
 
@@ -660,7 +597,7 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
   currentState = conditionAdvance.state
   if (conditionAdvance.extractionCompleted) {
     activityEmitted.push(extractionActivityEvent('completed', state.tick, now))
-    currentState = completeExtractionCondition(currentState, skillPracticeTriggers, raiderXpTriggers, emitted, state.tick, now, rng)
+    currentState = completeExtractionCondition(currentState, skillPracticeTriggers, raiderXpTriggers, emitted, state.tick, now)
   } else if (conditionAdvance.downedExpired) {
     activityEmitted.push(downedActivityEvent('failed', state.tick, now))
     currentState = enterKnockedOutRecovery(currentState, emitted, state.tick, now)
@@ -752,21 +689,6 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
         phase: currentState.raid.phase,
         conditions: logConditionsForRaid(currentState.raid),
       })
-    }
-
-    // Handle extraction outcome activity completion — when an outcome activity completes,
-    // transition from RAIDING to HUB.
-    const outcomeActivityIds = new Set(['extraction_success_bonus', 'extraction_high_difficulty', 'extraction_complication_close_call'])
-    const completedOutcome = !currentState.raid.activeRaidActivity && activityEmitted.some(() => {
-      const lastActivityId = state.raid.activeRaidActivity?.id
-      return lastActivityId && outcomeActivityIds.has(lastActivityId)
-    })
-    if (completedOutcome && currentState.raid.phase === 'RAIDING') {
-      const { raid: hubRaid, transition } = tickPhase(currentState.raid, 'HUB')
-      currentState = { ...currentState, raid: hubRaid }
-      if (transition) {
-        emitted.push(phaseTransitionEvent(transition, state.tick, now))
-      }
     }
 
     const raidForGreedCheck = currentState.pendingCalm
@@ -933,7 +855,7 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
 
       if (template.effects?.completeExtraction) {
         activityEmitted.push(extractionActivityEvent('completed', state.tick, now))
-        currentState = completeExtractionCondition(currentState, skillPracticeTriggers, raiderXpTriggers, emitted, state.tick, now, rng)
+        currentState = completeExtractionCondition(currentState, skillPracticeTriggers, raiderXpTriggers, emitted, state.tick, now)
       }
     }
   }

@@ -97,7 +97,7 @@ function advanceRobotRounds(robotId: string, state: GameState, rounds = 1): { st
   }
 
   expect(activityEvents.at(-1), `robot ${robotId} should emit a round activity event`).toMatchObject({
-    id: 'activity_robot_encounter_progress',
+    activityId: `robot_encounter_standard_${robotId}`,
     status: 'progress',
   })
   return { state: currentState, activityEvents }

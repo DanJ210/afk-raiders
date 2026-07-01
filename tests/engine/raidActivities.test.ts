@@ -93,7 +93,8 @@ describe('raid activities', () => {
       raiderDamageMax: DEFAULT_RAIDER_WEAPON.damageMax,
     })
     expect(result!.activityEvent).toMatchObject({
-      id: 'activity_robot_encounter_started',
+      id: 'activity_robot_encounter_robot_encounter_standard_anxietick_started',
+      activityId: 'robot_encounter_standard_anxietick',
       activityName: 'Robot Encounter: Anxietick',
       activity: 'ROBOT_ENCOUNTER',
       status: 'started',
@@ -197,7 +198,8 @@ describe('raid activities', () => {
       raiderAction: 'searching',
     })
     expect(result!.activityEvent).toMatchObject({
-      id: 'activity_search_started',
+      id: 'activity_search_search_black_box_cache_started',
+      activityId: 'search_black_box_cache',
       activity: 'SEARCH',
       status: 'started',
     })
@@ -237,7 +239,7 @@ describe('raid activities', () => {
     ])
     expect(completed.activityEvents).toEqual([
       expect.objectContaining({
-        id: 'activity_search_completed',
+        activityId: 'search_medical_pouch',
         activity: 'SEARCH',
         status: 'completed',
       }),
@@ -279,7 +281,7 @@ describe('raid activities', () => {
     ])
     expect(completed.activityEvents).toEqual([
       expect.objectContaining({
-        id: 'activity_search_completed',
+        activityId: 'search_shield_recharger_crate',
         activity: 'SEARCH',
         status: 'completed',
       }),
@@ -320,7 +322,7 @@ describe('raid activities', () => {
     ])
     expect(completed.activityEvents).toEqual([
       expect.objectContaining({
-        id: 'activity_search_completed',
+        activityId: 'search_water_bottle_stash',
         activity: 'SEARCH',
         status: 'completed',
       }),
@@ -395,7 +397,8 @@ describe('raid activities', () => {
     expect(result!.state.raid.shield?.charge).toBe(30)
     expect(result!.state.raid.activeRaidActivity).toBeNull()
     expect(result!.activityEvent).toMatchObject({
-      id: 'activity_extraction_completed',
+      id: 'activity_extraction_extraction_hazard_damage_completed',
+      activityId: 'extraction_hazard_damage',
       activity: 'EXTRACTION',
       status: 'completed',
     })
@@ -429,7 +432,7 @@ describe('raid activities', () => {
     })
     expect(progress.activityEvents).toEqual([
       expect.objectContaining({
-        id: 'activity_search_progress',
+        activityId: 'search_black_box_cache',
         activity: 'SEARCH',
         status: 'progress',
       }),
@@ -449,7 +452,7 @@ describe('raid activities', () => {
     ])
     expect(completed.activityEvents).toEqual([
       expect.objectContaining({
-        id: 'activity_search_completed',
+        activityId: 'search_black_box_cache',
         activity: 'SEARCH',
         status: 'completed',
       }),
@@ -551,7 +554,7 @@ describe('raid activities', () => {
     })
     expect(progress.activityEvents).toEqual([
       expect.objectContaining({
-        id: 'activity_robot_encounter_progress',
+        activityId: 'robot_encounter_standard_anxietick',
         activity: 'ROBOT_ENCOUNTER',
         status: 'progress',
       }),
@@ -572,7 +575,7 @@ describe('raid activities', () => {
     ])
     expect(completed.activityEvents).toEqual([
       expect.objectContaining({
-        id: 'activity_robot_encounter_completed',
+        activityId: 'robot_encounter_standard_anxietick',
         activity: 'ROBOT_ENCOUNTER',
         status: 'completed',
       }),

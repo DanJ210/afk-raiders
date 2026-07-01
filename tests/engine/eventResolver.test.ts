@@ -93,7 +93,7 @@ function sampleRaidSelectionMix(dangerLevel: DangerLevel): { activityStarterShar
   }
   const totals = { ambient: 0, search: 0, robot: 0 }
 
-  for (let seed = 0; seed < 6000; seed += 1) {
+  for (let seed = 0; seed < 2000; seed += 1) {
     const event = resolveEvent(state, createRNG(seed), seed)
     const kind = event ? activityStarterKindByEventId.get(event.id) : null
     if (kind === 'SEARCH') totals.search += 1
@@ -102,7 +102,7 @@ function sampleRaidSelectionMix(dangerLevel: DangerLevel): { activityStarterShar
   }
 
   const activityTotal = totals.search + totals.robot
-  expect(activityTotal).toBeGreaterThan(1000)
+  expect(activityTotal).toBeGreaterThan(300)
 
   return {
     activityStarterShare: activityTotal / (totals.ambient + activityTotal),

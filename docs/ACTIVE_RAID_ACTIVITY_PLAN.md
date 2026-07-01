@@ -74,6 +74,7 @@ Decision: robot encounters should be `ROBOT_ENCOUNTER` activities. A diary event
 - Healing item use and shield recharger use/start/completion are Handler/ambient beats and belong in `GameState.log`.
 - `GameState.activityLog` is the active-thread feed. It narrates multi-tick progress, combat rounds, damage, shield splits caused by active hazards/combat, revive/extraction timers, and task completion/failure.
 - Activity-log entries should carry `activityName` when the source has a user-facing name, and robot encounters should include the selected robot in that name.
+- Activity-log entry `id` values must include the concrete `activityId` plus status so different activity definitions cannot collide on generic ids such as `activity_extraction_completed`. Code that needs to find a logical activity event should prefer `activityId + status` over parsing `id`.
 - Ordinary diary events must not directly modify HP, apply shield-aware damage, or resolve robot combat once this migration is complete.
 - Damage text must still be visible, but it belongs in `activityLog` alongside the activity that caused it.
 - If a diary event starts danger, it should start an activity rather than resolving the danger itself.
@@ -217,25 +218,16 @@ Added comprehensive activity definitions for extraction and downed outcomes:
    - All 263 tests passing; migration validated
    - Old `raid_activities.json` removed; migration to split files complete
 
-2. [Done] Add outcome-activity triggers for extraction success/failure within lifecycle system.
+2. [Done/Revised] Keep successful extraction lifecycle completion synchronous.
    - ✅ Added 5 new outcome activity definitions to `search_activities.json`:
      - `extraction_success_bonus` (1 tick, non-blocking, High/Medium/Low danger)
      - `extraction_high_difficulty` (5 ticks, blocking, High danger only)
      - `extraction_complication_close_call` (2 ticks, blocking, Medium/High danger only)
      - `downed_high_danger` (1 tick, blocking, High danger only)
      - `downed_revival_attempt` (1 tick, blocking, all danger levels)
-   - ✅ Implemented `determineExtractionOutcome()` to probabilistically select outcome activities based on:
-     - High-danger zones: 40% complication chance
-     - Medium-danger zones: 25% complication chance
-     - Healthy raider extractions: 30% success bonus chance
-   - ✅ Modified `completeExtractionCondition()` to:
-     - Apply extraction bookkeeping immediately (transfer loot, heal raider, etc.)
-     - Conditionally start outcome activities before HUB transition
-     - Stay in RAIDING phase if outcome activity starts (no phase transition yet)
-   - ✅ Added outcome activity completion detection:
-     - Detects when outcome activities complete in the raid loop
-     - Triggers HUB transition after outcome completes
-   - ✅ All 263 tests passing; comprehensive testing validates outcome logic
+   - ✅ `completeExtractionCondition()` applies extraction bookkeeping and always completes the `RAIDING -> HUB` lifecycle transition in the same call.
+   - ✅ Outcome activity definitions remain content-side prototypes, but they are not started by successful extraction until multi-tick `EXTRACTION` activities can own lifecycle completion and emit their started/progress/completed activity events safely.
+   - ✅ Regression coverage verifies extraction cannot strand the raid in `RAIDING` with `extracting` cleared and backpack state half-reset.
 
 3. [Completed] Add zone-specific extraction difficulty modifiers.
    - ✅ **Zone Classification**: Created three difficulty tiers:
@@ -250,10 +242,7 @@ Added comprehensive activity definitions for extraction and downed outcomes:
      - Added `getExtractionDurationForZone()` helper to map zones to durations
      - Extraction timer now initialized with zone-specific duration instead of hardcoded constant
      - Friendly zones extract faster (safer); hostile zones take longer (more dangerous)
-   - ✅ **Zone-Aware Outcome Selection**: Enhanced `determineExtractionOutcome()` with zone personality effects:
-     - Friendly zones: +10% success bonus chance
-     - Hostile zones: +10% complication chance in High/Medium danger
-     - Standard zones: baseline outcome probabilities
+   - ✅ **Deferred Zone-Aware Outcome Selection**: Zone personality can still inform future extraction outcome activities, but it must be reintroduced only after those activities are true lifecycle owners rather than instant side effects.
    - ✅ **All Tests Passing**: 263/263 tests validate zone extraction system
    - **Implementation Notes**:
      - Zone extraction activities are defined but primarily affect outcome probabilities

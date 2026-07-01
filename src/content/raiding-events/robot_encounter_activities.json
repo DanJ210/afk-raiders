@@ -8,8 +8,6 @@
   "blocking": true,
   "weaponId": "tea_kettle",
   "weaponName": "Tea Kettle",
-  "raiderDamageMin": 3,
-  "raiderDamageMax": 6,
   "robotPool": {
     "deadliness": [
       "weak",
