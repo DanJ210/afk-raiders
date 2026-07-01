@@ -19,7 +19,7 @@ import type { RNG } from './rng.js'
 import { DOWNED_TICKS, EXTRACTING_TICKS, tickPhase, transitionText, type PhaseTransition } from './raidStateMachine.js'
 import { runGreedCheck } from './greedCheck.js'
 import { advanceSignal, applyCalmGreedReduction, applyPressureGreedIncrease } from './signal.js'
-import { describeShieldDamage, resolveEvent, resolveFlavorKey, applyEffects, resolveHealingItemFind, resolveShieldRechargerFind, events as allEvents } from './eventResolver.js'
+import { describeShieldDamage, resolveAmbientActivityEvent, resolveEvent, resolveFlavorKey, applyEffects, resolveHealingItemFind, resolveShieldRechargerFind, events as allEvents } from './eventResolver.js'
 import { transferBackpackToHomeStash, HOME_STASH_ITEM_LIMIT } from './homeStash.js'
 import { appendActivityLogEntries, appendLogEntries, logConditionsForRaid } from './log.js'
 import { recordOutcome, recordRobotDefeat } from './stats.js'
@@ -904,6 +904,11 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
         currentState = completeExtractionCondition(currentState, skillPracticeTriggers, raiderXpTriggers, emitted, state.tick, now, rng)
       }
     }
+  }
+
+  const ambientActivityEvent = resolveAmbientActivityEvent(currentState, rng, now)
+  if (ambientActivityEvent) {
+    emitted.push(ambientActivityEvent)
   }
 
   // ------------------------------------------------------------------

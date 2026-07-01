@@ -10,7 +10,7 @@
 
 import { describe, it, expect } from 'vitest'
 import { createRNG } from '../../src/engine/rng'
-import { applyEffects, consumeHealingItem, consumeShieldRecharger, eligibleEvents, events as allEvents, resolveEvent, resolveHealingItemFind, resolveShieldRechargerFind } from '../../src/engine/eventResolver'
+import { applyEffects, consumeHealingItem, consumeShieldRecharger, eligibleEvents, events as allEvents, resolveAmbientActivityEvent, resolveEvent, resolveHealingItemFind, resolveShieldRechargerFind } from '../../src/engine/eventResolver'
 import { createInitialState } from '../../src/engine/initialState'
 import type { DangerLevel, EventTemplate, HealingItemStack } from '../../src/engine/types'
 import zoneConditionsData from '../../src/content/zones/zone_conditions.json'
@@ -121,6 +121,46 @@ describe('resolveEvent — RAIDING activity mix', () => {
     expect(sampleRaidSelectionMix('Low').activitySearchShare).toBeCloseTo(0.75, 1)
     expect(sampleRaidSelectionMix('Medium').activitySearchShare).toBeCloseTo(0.6, 1)
     expect(sampleRaidSelectionMix('High').activitySearchShare).toBeCloseTo(0.5, 1)
+  })
+})
+
+describe('resolveAmbientActivityEvent', () => {
+  it('emits ambient-only comms scoped to the current activity', () => {
+    const initial = createInitialState(0)
+    const state = {
+      ...initial,
+      raid: {
+        ...initial.raid,
+        phase: 'RAIDING' as const,
+        activeRaidActivity: {
+          id: 'robot_encounter_standard',
+          name: 'Robot Encounter: Tattletale drone',
+          kind: 'ROBOT_ENCOUNTER' as const,
+          ticksRemaining: 4,
+          totalTicks: 6,
+          robotId: 'tattletale',
+        },
+      },
+    }
+
+    const event = resolveAmbientActivityEvent(state, createRNG(0), 1234)
+
+    expect(event).not.toBeNull()
+    expect(event!.id).toBe('ambient_robot_confidence_problem')
+    expect(event!.phase).toBe('RAIDING')
+  })
+
+  it('does not emit ambient activity comms without an activity context', () => {
+    const initial = createInitialState(0)
+    const state = {
+      ...initial,
+      raid: {
+        ...initial.raid,
+        phase: 'RAIDING' as const,
+      },
+    }
+
+    expect(resolveAmbientActivityEvent(state, createRNG(1), 1234)).toBeNull()
   })
 })
 

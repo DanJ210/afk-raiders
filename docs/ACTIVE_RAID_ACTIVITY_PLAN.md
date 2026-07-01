@@ -28,6 +28,7 @@ This document tracks the migration from single-tick damage events toward Godvill
 - Activity definitions now include user-facing names. Active activity state and activity-log entries carry those names so the UI can identify the current thread or robot encounter without deriving labels from ids.
 - Robot pools can now gate selection by danger level, zone, zone condition, greed, and deadliness; generic starters should use those gates instead of relying only on event-level requirements.
 - Normal RAIDING diary selection uses a two-stage roll: first ambient comms vs activity starter, then eligible `SEARCH` vs `ROBOT_ENCOUNTER` starters by danger level. Activity starters target about 67% of normal RAIDING diary rolls; within those activity starters, Low targets about 75% search / 25% robots, Medium about 60% / 40%, and High about 50% / 50%.
+- Activity-scoped ambient comms can also fire during active activities/conditions. They go to `GameState.log`, require `activeActivityKind`/`activeActivityId`/`activeRobotId`, and must be ambient-only content with no effects so they never mutate state or pollute `GameState.activityLog`.
 - Damage-only extraction diary events now start `extraction_hazard_damage` activities instead of applying direct `effects.damage`; content tests guard `src/content/raiding-events/extraction_events.json` against direct damage effects.
 - Extraction countdown activity-log text is now sourced from `extraction_countdown` in `src/content/raiding-events/search_activities.json` while `RaidState.extracting` remains the lifecycle guardrail.
 - DOWNED countdown activity-log text is now sourced from `downed_countdown` in `src/content/raiding-events/search_activities.json` while `RaidState.downed` remains the lifecycle guardrail.
@@ -135,11 +136,12 @@ Example robot activity starter:
    - robot attack/defense round
    - shield-aware damage through `src/engine/shields.ts`
    - activity completion/failure
-4. If no blocking activity exists, run Greed Check and choose/resolve an ambient diary event.
+4. If no blocking activity exists, run Greed Check and choose/resolve a normal ambient diary event.
 5. Apply Handler pending actions and progression rewards.
-6. Append diary events to `log` and activity events to `activityLog`.
+6. Optionally resolve activity-scoped ambient overlay comms for the current activity/condition.
+7. Append diary/ambient overlay events to `log` and activity events to `activityLog`.
 
-Open question: whether some activities should allow ambient diary chatter in the same tick. Default should be yes for harmless searches, no for DOWNED/combat/extraction moments where clarity matters.
+Activity-scoped ambient overlay events are implemented as no-effect diary content gated by `requires.activeActivityKind`, `requires.activeActivityId`, or `requires.activeRobotId`. They can fire during searches, robot encounters, extraction, or DOWNED conditions without replacing the active-thread progress/combat/timer line for that tick.
 
 ## Robot Encounter Target
 - A robot encounter starts as an activity with robot id, robot HP, raider intent, and duration/escape rules.

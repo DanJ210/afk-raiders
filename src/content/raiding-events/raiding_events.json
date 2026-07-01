@@ -1704,5 +1704,43 @@
             "mood": -1,
             "ratRating": 2
         }
+    },
+    {
+        "id": "ambient_search_backpack_argument",
+        "weight": 10,
+        "text": "Raider is arguing with the backpack zipper like it has legal standing.",
+        "requires": {
+            "phase": "RAIDING",
+            "activeActivityKind": "SEARCH"
+        }
+    },
+    {
+        "id": "ambient_robot_confidence_problem",
+        "weight": 10,
+        "text": "Raider reports the robot is vulnerable to confidence. The robot is not reacting like a stakeholder.",
+        "requires": {
+            "phase": "RAIDING",
+            "activeActivityKind": "ROBOT_ENCOUNTER"
+        }
+    },
+    {
+        "id": "ambient_extraction_lz_small_talk",
+        "weight": 10,
+        "text": "Raider is making small talk with the extraction timer. The timer remains professionally distant.",
+        "requires": {
+            "phase": "RAIDING",
+            "extracting": true,
+            "activeActivityKind": "EXTRACTION"
+        }
+    },
+    {
+        "id": "ambient_downed_floor_report",
+        "weight": 10,
+        "text": "Raider has filed a floor report. Initial findings: cold, dusty, judgmental.",
+        "requires": {
+            "phase": "RAIDING",
+            "downed": true,
+            "activeActivityKind": "DOWNED"
+        }
     }
 ]

@@ -19,6 +19,9 @@ export interface EventTemplate extends ContentEntry {
     dangerLevel?: DangerLevel | DangerLevel[]
     zone?: string | string[]
     zoneCondition?: string | string[]
+    activeActivityKind?: RaidActivityKind | RaidActivityKind[]
+    activeActivityId?: string | string[]
+    activeRobotId?: string | string[]
     minGreed?: number
     maxGreed?: number
     minHp?: number

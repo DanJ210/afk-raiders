@@ -11,7 +11,7 @@
  *   6. {count}         → random plausible water-bottle count (for flavor)
  */
 
-import type { DangerLevel, EventTemplate, GameState, HealingItem, HealingItemStack, LogEvent, LootItem, Phase, RobotEntry, RobotLootItem, ShieldRechargerItem } from './types.js'
+import type { DangerLevel, EventTemplate, GameState, HealingItem, HealingItemStack, LogEvent, LootItem, Phase, RaidActivityKind, RobotEntry, RobotLootItem, ShieldRechargerItem } from './types.js'
 import type { RNG } from './rng.js'
 import hubEventsData from '../content/hub_events.json'
 import deploymentEventsData from '../content/deployment_events.json'
@@ -96,6 +96,7 @@ const RAID_ACTIVITY_SEARCH_SHARE_BY_DANGER: Record<DangerLevel, number> = {
   High: 0.5,
 }
 const RAIDING_ACTIVITY_STARTER_SHARE = 0.67
+const ACTIVITY_AMBIENT_COMMS_CHANCE = 0.35
 
 function healingMoodGain(item: HealingItemStack): number {
   return item.moodGain ?? Math.max(1, Math.min(4, item.rarity))
@@ -138,6 +139,25 @@ export function describeShieldDamage(damage: ShieldDamageResult): string {
   return `${incomingText}${preShieldText}Shield lost ${damage.shieldChargeLost} charge${shieldMitigationText}; ${damage.hpDamage} HP damage landed.${nonlethalFloorText}`
 }
 
+function normalizeArray<T>(value: T | T[] | undefined): T[] {
+  if (value === undefined) return []
+  return Array.isArray(value) ? value : [value]
+}
+
+function currentAmbientActivityContext(state: GameState): { kind: RaidActivityKind; id?: string; robotId?: string } | null {
+  if (state.raid.downed) return { kind: 'DOWNED', id: state.raid.activeRaidActivity?.id ?? 'downed_countdown' }
+  if (state.raid.extracting) return { kind: 'EXTRACTION', id: state.raid.activeRaidActivity?.id ?? 'extraction_countdown' }
+  if (state.raid.activeRaidActivity) {
+    return {
+      kind: state.raid.activeRaidActivity.kind,
+      id: state.raid.activeRaidActivity.id,
+      robotId: state.raid.activeRaidActivity.robotId,
+    }
+  }
+
+  return null
+}
+
 /** Filter events valid for the current game context */
 export function eligibleEvents(state: GameState): EventTemplate[] {
   const { raid } = state
@@ -172,6 +192,19 @@ export function eligibleEvents(state: GameState): EventTemplate[] {
       if (!raid.zoneCondition) return false
       const conditionIds = Array.isArray(r.zoneCondition) ? r.zoneCondition : [r.zoneCondition]
       if (!conditionIds.includes(raid.zoneCondition.id)) return false
+    }
+    if (r.activeActivityKind || r.activeActivityId || r.activeRobotId) {
+      const context = currentAmbientActivityContext(state)
+      if (!context) return false
+
+      const activityKinds = normalizeArray(r.activeActivityKind)
+      if (activityKinds.length > 0 && !activityKinds.includes(context.kind)) return false
+
+      const activityIds = normalizeArray(r.activeActivityId)
+      if (activityIds.length > 0 && (!context.id || !activityIds.includes(context.id))) return false
+
+      const robotIds = normalizeArray(r.activeRobotId)
+      if (robotIds.length > 0 && (!context.robotId || !robotIds.includes(context.robotId))) return false
     }
     if (r.minGreed !== undefined && raid.greedLevel < r.minGreed) return false
     if (r.maxGreed !== undefined && raid.greedLevel > r.maxGreed) return false
@@ -254,6 +287,16 @@ function targetRaidActivitySearchShare(state: GameState): number {
 
 function hasRaidActivityStarter(template: EventTemplate): boolean {
   return template.effects?.startRaidActivity !== undefined
+}
+
+function hasAmbientActivityRequirement(template: EventTemplate): boolean {
+  return template.requires?.activeActivityKind !== undefined ||
+    template.requires?.activeActivityId !== undefined ||
+    template.requires?.activeRobotId !== undefined
+}
+
+function isAmbientOnlyEvent(template: EventTemplate): boolean {
+  return !template.effects || Object.keys(template.effects).length === 0
 }
 
 function totalEventWeight(templates: EventTemplate[]): number {
@@ -643,6 +686,32 @@ export function resolveEvent(
     tick: state.tick,
     timestamp: now,
     text,
+    phase: state.raid.phase,
+    conditions: logConditionsForRaid(state.raid),
+  }
+}
+
+/** Pick an ambient-only comms line scoped to the current activity/condition. */
+export function resolveAmbientActivityEvent(
+  state: GameState,
+  rng: RNG,
+  now: number,
+): LogEvent | null {
+  if (state.raid.phase !== 'RAIDING') return null
+  if (!currentAmbientActivityContext(state)) return null
+  if (rng.next() >= ACTIVITY_AMBIENT_COMMS_CHANCE) return null
+
+  const eligible = eligibleEvents(state).filter(template => (
+    hasAmbientActivityRequirement(template) && isAmbientOnlyEvent(template)
+  ))
+  if (eligible.length === 0) return null
+
+  const template = rng.weightedPick(eligible)
+  return {
+    id: template.id,
+    tick: state.tick,
+    timestamp: now,
+    text: fillSlots(template.text, rng),
     phase: state.raid.phase,
     conditions: logConditionsForRaid(state.raid),
   }

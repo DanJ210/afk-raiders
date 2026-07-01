@@ -10,7 +10,7 @@
 
 import { describe, it, expect } from 'vitest'
 import { events, flavor, healingItems, loot, robots, shieldRechargers } from '../../src/engine/eventResolver'
-import type { Phase, DangerLevel } from '../../src/engine/types'
+import type { Phase, DangerLevel, RaidActivityKind } from '../../src/engine/types'
 import apparelAccessoriesData from '../../src/content/loot-tables/apparel_accessories.json'
 import arcTechData from '../../src/content/loot-tables/arc_tech.json'
 import consumablesData from '../../src/content/loot-tables/consumables.json'
@@ -69,6 +69,7 @@ const BUILT_IN_SLOTS = new Set(['mundane_item', 'water_item', 'healing_item', 'c
 const VALID_PHASES = new Set<Phase>(['HUB', 'DEPLOYING', 'RAIDING', 'KNOCKED_OUT'])
 const VALID_DANGER_LEVELS = new Set<DangerLevel>(['Low', 'Medium', 'High'])
 const VALID_SKILL_IDS = new Set<SkillTrackId>(['cardio', 'hoarding', 'hiding_in_lockers', 'signal_handling'])
+const VALID_RAID_ACTIVITY_KINDS = new Set<RaidActivityKind>(['SEARCH', 'ROBOT_ENCOUNTER', 'EXTRACTION', 'DOWNED'])
 const VALID_ZONE_CONDITION_IDS = new Set([
   ...zoneConditionsData.minor_conditions,
   ...zoneConditionsData.major_conditions,
@@ -98,7 +99,6 @@ const progressionConfig = progressionConfigData as {
   skillXpThresholdProfiles: Record<string, number[]>
 }
 const raiderLevels = raiderLevelsData as RaiderLevelContent
-const VALID_RAID_ACTIVITY_KINDS = new Set<RaidActivityDefinition['kind']>(['SEARCH', 'ROBOT_ENCOUNTER', 'EXTRACTION', 'DOWNED'])
 const VALID_ROBOT_DEADLINESS = new Set(robots.map(robot => robot.deadliness))
 const VALID_SEARCH_LOOT_TABLE_IDS = new Set([
   'scrap_components',
@@ -204,6 +204,9 @@ describe('content validation', () => {
     })
 
     it('all phase, danger-level, zone, and zone-condition requirements are valid', () => {
+      const activityIds = new Set([...raidActivities.map(activity => activity.id), 'extraction_countdown', 'downed_countdown'])
+      const robotIds = new Set(robots.map(robot => robot.id))
+
       for (const event of events) {
         const phases = event.requires?.phase === undefined
           ? []
@@ -217,6 +220,15 @@ describe('content validation', () => {
         const zoneConditions = event.requires?.zoneCondition === undefined
           ? []
           : Array.isArray(event.requires.zoneCondition) ? event.requires.zoneCondition : [event.requires.zoneCondition]
+        const activeActivityKinds = event.requires?.activeActivityKind === undefined
+          ? []
+          : Array.isArray(event.requires.activeActivityKind) ? event.requires.activeActivityKind : [event.requires.activeActivityKind]
+        const activeActivityIds = event.requires?.activeActivityId === undefined
+          ? []
+          : Array.isArray(event.requires.activeActivityId) ? event.requires.activeActivityId : [event.requires.activeActivityId]
+        const activeRobotIds = event.requires?.activeRobotId === undefined
+          ? []
+          : Array.isArray(event.requires.activeRobotId) ? event.requires.activeRobotId : [event.requires.activeRobotId]
 
         for (const phase of phases) {
           expect(VALID_PHASES.has(phase), `event "${event.id}" has invalid phase "${phase}"`).toBe(true)
@@ -230,7 +242,28 @@ describe('content validation', () => {
         for (const zoneCondition of zoneConditions) {
           expect(VALID_ZONE_CONDITION_IDS.has(zoneCondition), `event "${event.id}" has invalid zoneCondition "${zoneCondition}"`).toBe(true)
         }
+        for (const activeActivityKind of activeActivityKinds) {
+          expect(VALID_RAID_ACTIVITY_KINDS.has(activeActivityKind), `event "${event.id}" has invalid activeActivityKind "${activeActivityKind}"`).toBe(true)
+        }
+        for (const activeActivityId of activeActivityIds) {
+          expect(activityIds.has(activeActivityId), `event "${event.id}" has invalid activeActivityId "${activeActivityId}"`).toBe(true)
+        }
+        for (const activeRobotId of activeRobotIds) {
+          expect(robotIds.has(activeRobotId), `event "${event.id}" has invalid activeRobotId "${activeRobotId}"`).toBe(true)
+        }
       }
+    })
+
+    it('activity-scoped ambient events do not carry effects', () => {
+      const stateChanging = events
+        .filter(event => (
+          event.requires?.activeActivityKind !== undefined ||
+          event.requires?.activeActivityId !== undefined ||
+          event.requires?.activeRobotId !== undefined
+        ) && event.effects !== undefined)
+        .map(event => event.id)
+
+      expect(stateChanging).toEqual([])
     })
 
     it('all {slot} placeholders resolve to a known source', () => {
