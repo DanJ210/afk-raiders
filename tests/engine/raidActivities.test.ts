@@ -315,7 +315,7 @@ describe('raid activities', () => {
       expect.objectContaining({
         itemId: 'water_bottle_classic',
         name: 'Water Bottle (Classic)',
-        quantity: 1,
+        quantity: 2,
       }),
     ])
     expect(completed.activityEvents).toEqual([
@@ -444,7 +444,7 @@ describe('raid activities', () => {
       expect.objectContaining({
         itemId: 'scrap_metal_basic',
         name: 'Basic Scrap Metal',
-        quantity: 1,
+        quantity: 2,
       }),
     ])
     expect(completed.activityEvents).toEqual([
@@ -454,6 +454,73 @@ describe('raid activities', () => {
         status: 'completed',
       }),
     ])
+  })
+
+  it('completes newly mapped apparel searches with bundled loot', () => {
+    const initial = createInitialState(0)
+    const started = startRaidActivity(
+      {
+        ...initial,
+        raid: {
+          ...initial.raid,
+          phase: 'RAIDING' as const,
+        },
+      },
+      { activityId: 'search_apparel_duffel', kind: 'SEARCH' },
+      fixedRng(),
+      0,
+    )
+
+    expect(started).not.toBeNull()
+
+    const progress = advanceRaidActivity(started!.state, fixedRng(), 30_000)
+    const completed = advanceRaidActivity(progress.state, fixedRng(), 60_000)
+
+    expect(completed.state.raid.activeRaidActivity).toBeNull()
+    expect(completed.state.raid.backpack).toEqual([
+      expect.objectContaining({
+        itemId: 'left_boot',
+        name: 'Left Boot',
+        quantity: 2,
+      }),
+    ])
+    expect(completed.activityEvents[0].text).toContain('2x Left Boot')
+  })
+
+  it('keeps robot encounters active past old tick counters while robot HP remains', () => {
+    const result = advanceRaidActivity(createActiveRobotState({
+      robotId: 'anxietick',
+      robotHp: 50,
+      raiderDamage: 1,
+      ticksRemaining: 1,
+    }), fixedRng(), 0)
+
+    expect(result.state.raid.activeRaidActivity).toMatchObject({
+      kind: 'ROBOT_ENCOUNTER',
+      robotId: 'anxietick',
+      robotHp: 49,
+      ticksRemaining: 0,
+    })
+    expect(result.robotSurvivedId).toBeUndefined()
+  })
+
+  it('returns a robot downed reason when robot combat incapacitates the Raider', () => {
+    const result = advanceRaidActivity(createActiveRobotState({
+      robotId: 'roomba_prime',
+      dangerLevel: 'High',
+      hp: 40,
+      shielded: false,
+      robotDamageMultiplier: 50,
+    }), fixedRng(), 0)
+
+    expect(result.state.raider.hp).toBe(0)
+    expect(result.state.raid.activeRaidActivity).toBeNull()
+    expect(result.downedReason).toMatchObject({
+      kind: 'robot',
+      robotId: 'roomba_prime',
+      robotName: 'Roomba Prime',
+    })
+    expect(result.downedReason?.text).toContain('Roomba Prime downed the Raider')
   })
 
   it('advances robot HP by Tea Kettle damage and completes with robot loot', () => {

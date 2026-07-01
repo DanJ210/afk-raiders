@@ -86,26 +86,25 @@ function createRobotActivityState(robotId: string, state: GameState): GameState 
   }
 }
 
-function resolveFailedRobot(robotId: string, state: GameState): { state: GameState; activityEvents: ActivityLogEvent[] } {
+function advanceRobotRounds(robotId: string, state: GameState, rounds = 1): { state: GameState; activityEvents: ActivityLogEvent[] } {
   let currentState = createRobotActivityState(robotId, state)
   const activityEvents: ActivityLogEvent[] = []
 
-  for (let tick = 0; tick < 5 && currentState.raid.activeRaidActivity; tick += 1) {
+  for (let tick = 0; tick < rounds && currentState.raid.activeRaidActivity && currentState.raider.hp > 0; tick += 1) {
     const result = advanceRaidActivity(currentState, createFailingCombatRng(), tick)
     currentState = result.state
     activityEvents.push(...result.activityEvents)
   }
 
-  expect(currentState.raid.activeRaidActivity, `robot ${robotId} activity should resolve`).toBeNull()
-  expect(activityEvents.at(-1), `robot ${robotId} should emit a final activity event`).toMatchObject({
-    id: 'activity_robot_encounter_failed',
-    status: 'failed',
+  expect(activityEvents.at(-1), `robot ${robotId} should emit a round activity event`).toMatchObject({
+    id: 'activity_robot_encounter_progress',
+    status: 'progress',
   })
   return { state: currentState, activityEvents }
 }
 
-function failedRobotHpDamage(robotId: string, state: GameState): number {
-  return state.raider.hp - resolveFailedRobot(robotId, state).state.raider.hp
+function robotRoundHpDamage(robotId: string, state: GameState, rounds = 1): number {
+  return state.raider.hp - advanceRobotRounds(robotId, state, rounds).state.raider.hp
 }
 
 describe('robot balance guardrails', () => {
@@ -114,7 +113,7 @@ describe('robot balance guardrails', () => {
     const maxDamageByDeadliness = DEADLINESS_ORDER.map(deadliness => {
       const tierRobots = robots.filter(robot => robot.deadliness === deadliness)
       expect(tierRobots.length, `${deadliness} tier should have robots`).toBeGreaterThan(0)
-      return Math.max(...tierRobots.map(robot => failedRobotHpDamage(robot.id, state)))
+      return Math.max(...tierRobots.map(robot => robotRoundHpDamage(robot.id, state)))
     })
 
     for (let index = 1; index < maxDamageByDeadliness.length; index += 1) {
@@ -126,7 +125,7 @@ describe('robot balance guardrails', () => {
     const woundedStarter = createRobotState({ dangerLevel: 'High', hp: 25, shielded: false })
 
     for (const robot of robots) {
-      const result = resolveFailedRobot(robot.id, woundedStarter)
+      const result = advanceRobotRounds(robot.id, woundedStarter, 5)
       if (LETHAL_DEADLINESS.has(robot.deadliness)) {
         expect(result.state.raider.hp, `${robot.id} should be lethal when the starter raider is wounded`).toBe(0)
       }
@@ -140,11 +139,11 @@ describe('robot balance guardrails', () => {
     const starter = createRobotState({ dangerLevel: 'High', shielded: false, levelXp: 0 })
     const maxLevel = createRobotState({ dangerLevel: 'High', shielded: false, levelXp: xpRequiredForLevel(75) })
     const mediumStarter = createRobotState({ dangerLevel: 'Medium', shielded: false, levelXp: 0 })
-    const starterDamage = failedRobotHpDamage('tank_overcompensation', starter)
-    const maxLevelDamage = failedRobotHpDamage('tank_overcompensation', maxLevel)
+    const starterDamage = robotRoundHpDamage('tank_overcompensation', starter)
+    const maxLevelDamage = robotRoundHpDamage('tank_overcompensation', maxLevel)
 
     expect(maxLevelDamage).toBeLessThan(starterDamage)
-    expect(maxLevelDamage).toBeGreaterThan(failedRobotHpDamage('tank_overcompensation', mediumStarter))
+    expect(maxLevelDamage).toBeGreaterThan(robotRoundHpDamage('tank_overcompensation', mediumStarter))
     expect(starterDamage - maxLevelDamage).toBeLessThanOrEqual(3)
   })
 
@@ -156,9 +155,9 @@ describe('robot balance guardrails', () => {
       raider: { ...highNeutral.raider, mood: 5 },
     }
 
-    const mediumDamage = failedRobotHpDamage('tank_overcompensation', mediumNeutral)
-    const highDamage = failedRobotHpDamage('tank_overcompensation', highNeutral)
-    const highMoodDamage = failedRobotHpDamage('tank_overcompensation', highMood)
+    const mediumDamage = robotRoundHpDamage('tank_overcompensation', mediumNeutral)
+    const highDamage = robotRoundHpDamage('tank_overcompensation', highNeutral)
+    const highMoodDamage = robotRoundHpDamage('tank_overcompensation', highMood)
 
     expect(highMoodDamage).toBeLessThan(highDamage)
     expect(highMoodDamage).toBeGreaterThan(mediumDamage)
@@ -172,11 +171,11 @@ describe('robot balance guardrails', () => {
       skills: skillsWithMaxHiding(),
     })
 
-    const mediumDamage = failedRobotHpDamage('tank_overcompensation', mediumStarter)
-    const highSkilledResult = resolveFailedRobot('tank_overcompensation', highSkilled)
+    const mediumDamage = robotRoundHpDamage('tank_overcompensation', mediumStarter)
+    const highSkilledResult = advanceRobotRounds('tank_overcompensation', highSkilled)
     const highSkilledDamage = highSkilled.raider.hp - highSkilledResult.state.raider.hp
 
-    expect(highSkilledDamage).toBeLessThan(failedRobotHpDamage('tank_overcompensation', createRobotState({ dangerLevel: 'High', shielded: false })))
+    expect(highSkilledDamage).toBeLessThan(robotRoundHpDamage('tank_overcompensation', createRobotState({ dangerLevel: 'High', shielded: false })))
     expect(highSkilledDamage).toBeGreaterThan(mediumDamage)
     expect(highSkilledResult.activityEvents.at(-1)?.text).toContain('Hiding in Lockers ducked')
   })

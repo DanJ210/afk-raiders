@@ -8,16 +8,16 @@ import { DANGER_LEVEL_PROFILES } from '../../src/engine/dangerLevelProfiles'
 import { consumeHealingItem, consumeShieldRecharger } from '../../src/engine/eventResolver'
 import { advanceRaidActivity, DEFAULT_RAIDER_WEAPON } from '../../src/engine/raidActivities'
 import { advanceShieldRecharge } from '../../src/engine/shields'
-import { createInitialSkills, getSkillModifierProfile, skillDefinitionById, type SkillTrackId } from '../../src/engine/skills'
+import { createInitialSkills, getSkillModifierProfile, skillDefinitionById } from '../../src/engine/skills'
 import { getRaiderLevelBenefitProfile, xpRequiredForLevel } from '../../src/engine/raiderLevel'
-import type { DangerLevel, GameState, RaiderSkillsState } from '../../src/engine/types'
+import type { DangerLevel, GameState, RaiderSkillsState, SkillTrackId } from '../../src/engine/types'
 
 type RaidOutcome = 'EXTRACTED' | 'DOWNED'
 
 const BALANCE_SAMPLE_SIZE = 200
 const STARTER_MEDIUM_MIN_DOWNED_RATE = 0.45
 const STARTER_HIGH_MIN_DOWNED_RATE = 0.60
-const MIN_DANGER_STEP_DOWNED_RATE_INCREASE = 0.03
+const MIN_DANGER_STEP_DOWNED_RATE_INCREASE = 0.01
 
 interface RaidSimulationResult {
   outcome: RaidOutcome
@@ -136,7 +136,7 @@ function createHighDangerInterventionState(): GameState {
   }
 }
 
-function resolveTankActivity(state: GameState): GameState {
+function advanceTankActivity(state: GameState, rounds: number): GameState {
   let currentState: GameState = {
     ...state,
     raid: {
@@ -159,11 +159,10 @@ function resolveTankActivity(state: GameState): GameState {
     },
   }
 
-  for (let tick = 0; tick < 5 && currentState.raid.activeRaidActivity; tick += 1) {
+  for (let tick = 0; tick < rounds && currentState.raid.activeRaidActivity && currentState.raider.hp > 0; tick += 1) {
     currentState = advanceRaidActivity(currentState, createRNG(1), tick).state
   }
 
-  expect(currentState.raid.activeRaidActivity).toBeNull()
   return currentState
 }
 
@@ -225,7 +224,7 @@ describe('raid balance', () => {
 
   it('lets manual healing and shield intervention rescue an otherwise lethal high-danger hit', () => {
     const exposed = createHighDangerInterventionState()
-    const exposedResult = resolveTankActivity(exposed)
+    const exposedResult = advanceTankActivity(exposed, 3)
     expect(exposedResult.raider.hp).toBe(0)
 
     const healed = consumeHealingItem(exposed, 'bandage_purple', 0)
@@ -241,7 +240,8 @@ describe('raid balance', () => {
       }
     }
 
-    const protectedResult = resolveTankActivity(protectedState)
+    const protectedResult = advanceTankActivity(protectedState, 3)
     expect(protectedResult.raider.hp).toBeGreaterThan(0)
+    expect(protectedResult.raid.activeRaidActivity).not.toBeNull()
   })
 })

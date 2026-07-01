@@ -14,7 +14,7 @@
  *   6. Increment tick counter, append events to log.
  */
 
-import type { ActivityLogEvent, ActivityStatus, BackpackItem, GameState, HiddenPocketItem, LogCondition, LogEvent, StartRaidActivityEffect, RaidState, TickResult } from './types.js'
+import type { ActivityLogEvent, ActivityStatus, BackpackItem, DownedReason, GameState, HiddenPocketItem, LogCondition, LogEvent, StartRaidActivityEffect, RaidState, TickResult } from './types.js'
 import type { RNG } from './rng.js'
 import { DOWNED_TICKS, EXTRACTING_TICKS, tickPhase, transitionText, type PhaseTransition } from './raidStateMachine.js'
 import { runGreedCheck } from './greedCheck.js'
@@ -203,7 +203,14 @@ function failExtractionCondition(state: GameState, tick: number, now: number): {
   }
 }
 
-function startDownedCondition(state: GameState, tick: number, now: number, text = transitionText('RAIDING_to_DOWNED')): { state: GameState; event: LogEvent | null } {
+function defaultDownedReason(): DownedReason {
+  return {
+    kind: 'unknown',
+    text: transitionText('RAIDING_to_DOWNED'),
+  }
+}
+
+function startDownedCondition(state: GameState, tick: number, now: number, reason: DownedReason = defaultDownedReason()): { state: GameState; event: LogEvent | null } {
   if (state.raid.phase !== 'RAIDING' || state.raid.downed) return { state: enforceIncapacitatedHp(state), event: null }
 
   const nextState = enforceIncapacitatedHp({
@@ -212,13 +219,13 @@ function startDownedCondition(state: GameState, tick: number, now: number, text 
       ...state.raid,
       activeShieldRecharge: null,
       activeRaidActivity: null,
-      downed: { ticksRemaining: DOWNED_TICKS },
+      downed: { ticksRemaining: DOWNED_TICKS, reason },
     },
   })
 
   return {
     state: nextState,
-    event: conditionEvent('condition_downed_started', text, tick, now, logConditionsForRaid(nextState.raid) ?? ['DOWNED']),
+    event: conditionEvent('condition_downed_started', reason.text, tick, now, logConditionsForRaid(nextState.raid) ?? ['DOWNED']),
   }
 }
 
@@ -671,7 +678,10 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
     currentState.raid.phase === 'RAIDING' &&
     !currentState.raid.downed
   ) {
-    const downed = startDownedCondition(currentState, state.tick, now)
+    const downed = startDownedCondition(currentState, state.tick, now, {
+      kind: 'damage',
+      text: 'Raider is down: HP was already gone when the next tick checked the clipboard.',
+    })
     currentState = downed.state
     if (downed.event) {
       emitted.push(downed.event)
@@ -696,6 +706,19 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
     activityEmitted.push(...activityResult.activityEvents)
     advancedBlockingActivity = activityResult.blocking
     advancedActivityThisTick = activityResult.activityEvents.length > 0 && activityResult.blocking
+    if (
+      activityResult.downedReason &&
+      currentState.raider.hp <= 0 &&
+      currentState.raid.phase === 'RAIDING' &&
+      !currentState.raid.downed
+    ) {
+      const downed = startDownedCondition(currentState, state.tick, now, activityResult.downedReason)
+      currentState = downed.state
+      if (downed.event) {
+        emitted.push(downed.event)
+        activityEmitted.push(downedActivityEvent('started', state.tick, now, currentState.raid.downed?.ticksRemaining ?? DOWNED_TICKS))
+      }
+    }
     if (activityResult.robotDefeatedId) {
       currentState = {
         ...currentState,
@@ -786,7 +809,10 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
         activityEmitted.push(extractionActivityEvent('started', state.tick, now, currentState.raid.extracting?.ticksRemaining ?? EXTRACTING_TICKS))
       }
     } else if (greedResult.outcome === 'DOWNED') {
-      const downed = startDownedCondition(currentState, state.tick, now)
+      const downed = startDownedCondition(currentState, state.tick, now, {
+        kind: 'ambient_pressure',
+        text: 'Raider is down: the zone pressure finally cashed the check. No single villain, just accumulated bad decisions.',
+      })
       currentState = downed.state
       if (downed.event) {
         emitted.push(downed.event)
@@ -806,7 +832,10 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
       currentState,
       state.tick,
       now,
-      'Raid timer hit zero. Zone nuke confirmed. Raider is down but the extraction clock may still matter.',
+      {
+        kind: 'raid_timeout',
+        text: 'Raid timer hit zero. Zone nuke confirmed. Raider is down but the extraction clock may still matter.',
+      },
     )
     currentState = downed.state
     if (downed.event) {
@@ -880,7 +909,10 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
       }
 
       if (template.effects?.startDowned) {
-        const downed = startDownedCondition(currentState, state.tick, now, transitionText('EXTRACTING_to_DOWNED'))
+        const downed = startDownedCondition(currentState, state.tick, now, {
+          kind: 'extraction',
+          text: transitionText('EXTRACTING_to_DOWNED'),
+        })
         currentState = downed.state
         if (downed.event) {
           emitted.push(downed.event)
@@ -920,7 +952,12 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
     currentState.raid.phase === 'RAIDING' &&
     !currentState.raid.downed
   ) {
-    const downed = startDownedCondition(currentState, state.tick, now)
+    const downed = startDownedCondition(currentState, state.tick, now, {
+      kind: 'damage',
+      text: currentState.raid.extracting
+        ? 'Raider is down: damage hit zero during extraction chaos, and the shuttle timer suddenly matters a lot.'
+        : 'Raider is down: damage hit zero before the Handler could turn concern into policy.',
+    })
     currentState = downed.state
     if (downed.event) {
       emitted.push(downed.event)

@@ -118,7 +118,7 @@ describe('resolveEvent — RAIDING activity mix', () => {
   })
 
   it('shifts SEARCH and ROBOT_ENCOUNTER starter share by danger level', () => {
-    expect(sampleRaidSelectionMix('Low').activitySearchShare).toBeCloseTo(0.75, 1)
+    expect(sampleRaidSelectionMix('Low').activitySearchShare).toBeCloseTo(0.8, 1)
     expect(sampleRaidSelectionMix('Medium').activitySearchShare).toBeCloseTo(0.6, 1)
     expect(sampleRaidSelectionMix('High').activitySearchShare).toBeCloseTo(0.5, 1)
   })

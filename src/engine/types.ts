@@ -73,10 +73,12 @@ export interface StartRaidActivityEffect {
   hazardDamage?: number
   healingItem?: boolean
   lootTableId?: string
+  lootRolls?: number
   shieldRecharger?: boolean
   robotId?: string
   robotPool?: RobotActivityPool
   robotDamageMultiplier?: number
+  robotDamageTakenMultiplier?: number
 }
 
 export interface RaidActivityTextSet {
@@ -96,6 +98,7 @@ export interface RaidActivityDefinition extends ContentEntry {
   hazardDamage?: number
   healingItem?: boolean
   lootTableId?: string
+  lootRolls?: number
   shieldRecharger?: boolean
   robotId?: string
   robotPool?: RobotActivityPool
@@ -103,6 +106,7 @@ export interface RaidActivityDefinition extends ContentEntry {
   weaponName?: string
   raiderDamageMin?: number
   raiderDamageMax?: number
+  robotDamageTakenMultiplier?: number
 }
 
 export interface LootItem extends ContentEntry {
@@ -265,6 +269,7 @@ export interface ActiveRaidActivity {
   locationId?: string
   healingItem?: boolean
   lootTableId?: string
+  lootRolls?: number
   shieldRecharger?: boolean
   robotId?: string
   robotHp?: number
@@ -273,12 +278,25 @@ export interface ActiveRaidActivity {
   weaponName?: string
   raiderDamageMin?: number
   raiderDamageMax?: number
+  robotDamageTakenMultiplier?: number
   robotDamageMultiplier?: number
   raiderAction?: 'fighting' | 'hiding' | 'fleeing' | 'searching'
 }
 
+export type DownedReasonKind = 'robot' | 'ambient_pressure' | 'extraction' | 'raid_timeout' | 'damage' | 'unknown'
+
+export interface DownedReason {
+  kind: DownedReasonKind
+  text: string
+  robotId?: string
+  robotName?: string
+  activityId?: string
+  damageSummary?: string
+}
+
 export interface DownedState {
   ticksRemaining: number
+  reason?: DownedReason
 }
 
 export interface ExtractingState {

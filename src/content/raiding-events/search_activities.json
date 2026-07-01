@@ -532,6 +532,93 @@
         ]
     },
     {
+        "id": "search_apparel_duffel",
+        "name": "Apparel Duffel Search",
+        "kind": "SEARCH",
+        "ticks": 2,
+        "blocking": false,
+        "lootTableId": "apparel_accessories",
+        "lootRolls": 2,
+        "text": {
+            "started": "A half-zipped apparel duffel is making promises about fit, function, and questionable stains.",
+            "progress": [
+                "Duffel search: sorting straps, gloves, and fabric with tactical opinions. {ticks_remaining} ticks remaining.",
+                "Duffel search: one pocket led to three more pockets and a zipper with ambition. {ticks_remaining} ticks remaining."
+            ],
+            "completed": "Apparel duffel search completed. Packed {loot_name} and called it wardrobe strategy.",
+            "failed": "Apparel duffel search failed. The zipper won on points."
+        },
+        "parameters": {
+            "weight": 75
+        },
+        "tags": [
+            "search",
+            "loot",
+            "apparel"
+        ]
+    },
+    {
+        "id": "search_weapon_parts_bin",
+        "name": "Weapon Parts Bin Search",
+        "kind": "SEARCH",
+        "ticks": 3,
+        "blocking": false,
+        "requires": {
+            "phase": "RAIDING",
+            "dangerLevel": [
+                "Medium",
+                "High"
+            ],
+            "minGreed": 12
+        },
+        "lootTableId": "weapons_parts",
+        "lootRolls": 3,
+        "text": {
+            "started": "A weapon-parts bin sits under a sign reading SORTED. The sign is lying with confidence.",
+            "progress": [
+                "Parts-bin search: separating useful metal from metal with attitude. {ticks_remaining} ticks remaining.",
+                "Parts-bin search: found something spring-loaded and chose optimism. {ticks_remaining} ticks remaining.",
+                "Parts-bin search: final sweep before the bin develops a personality. {ticks_remaining} ticks remaining."
+            ],
+            "completed": "Weapon parts search completed. Packed {loot_name}; future mechanics are already sighing.",
+            "failed": "Weapon parts search failed. The bin remained a hostile filing cabinet."
+        },
+        "parameters": {
+            "weight": 80
+        },
+        "tags": [
+            "search",
+            "loot",
+            "weapon_parts"
+        ]
+    },
+    {
+        "id": "search_mixed_lost_and_found",
+        "name": "Mixed Lost-and-Found Search",
+        "kind": "SEARCH",
+        "ticks": 2,
+        "blocking": false,
+        "lootTableId": "loot",
+        "lootRolls": 2,
+        "text": {
+            "started": "A lost-and-found shelf contains general objects and one object that feels personally offended.",
+            "progress": [
+                "Lost-and-found search: checking labels, pockets, and emotional residue. {ticks_remaining} ticks remaining.",
+                "Lost-and-found search: Raider found something portable and declared custody. {ticks_remaining} ticks remaining."
+            ],
+            "completed": "Lost-and-found search completed. Packed {loot_name} and avoided eye contact with ownership ethics.",
+            "failed": "Lost-and-found search failed. The shelf found nothing to like about this arrangement."
+        },
+        "parameters": {
+            "weight": 70
+        },
+        "tags": [
+            "search",
+            "loot",
+            "mixed"
+        ]
+    },
+    {
         "id": "search_black_box_cache",
         "name": "Black-Box Cache Search",
         "weight": 100,

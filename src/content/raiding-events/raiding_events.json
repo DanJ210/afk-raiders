@@ -1706,6 +1706,59 @@
         }
     },
     {
+        "id": "raid_apparel_duffel_half_zipped",
+        "weight": 8,
+        "text": "Found a half-zipped apparel duffel making bold claims about pockets. Investigating for science and pockets.",
+        "requires": {
+            "phase": "RAIDING",
+            "minGreed": 6
+        },
+        "effects": {
+            "greedLevel": 2,
+            "mood": 1,
+            "startRaidActivity": {
+                "kind": "SEARCH",
+                "activityId": "search_apparel_duffel"
+            }
+        }
+    },
+    {
+        "id": "raid_weapon_parts_bin_unsorted",
+        "weight": 7,
+        "text": "Found a weapon-parts bin labeled SORTED. The contents are conducting a metallic group argument.",
+        "requires": {
+            "phase": "RAIDING",
+            "dangerLevel": [
+                "Medium",
+                "High"
+            ],
+            "minGreed": 12
+        },
+        "effects": {
+            "greedLevel": 4,
+            "ratRating": 1,
+            "startRaidActivity": {
+                "kind": "SEARCH",
+                "activityId": "search_weapon_parts_bin"
+            }
+        }
+    },
+    {
+        "id": "raid_mixed_lost_and_found_shelf",
+        "weight": 8,
+        "text": "Found a lost-and-found shelf. Nothing has names on it anymore, which feels like permission wearing a fake mustache.",
+        "requires": {
+            "phase": "RAIDING"
+        },
+        "effects": {
+            "greedLevel": 2,
+            "startRaidActivity": {
+                "kind": "SEARCH",
+                "activityId": "search_mixed_lost_and_found"
+            }
+        }
+    },
+    {
         "id": "ambient_search_backpack_argument",
         "weight": 10,
         "text": "Raider is arguing with the backpack zipper like it has legal standing.",

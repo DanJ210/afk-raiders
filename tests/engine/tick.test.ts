@@ -481,6 +481,49 @@ describe('deterministic snapshot', () => {
     expect(result.activityEvents.find(event => event.id === 'activity_downed_started')?.text).toBe('Downed thread opened. 2 ticks before the zone writes the ending.')
   })
 
+  it('logs why the raider was downed when robot combat causes it', () => {
+    const rng = createRNG(FIXED_SEED)
+    const initial = createInitialState(0)
+    const state = {
+      ...initial,
+      raider: { ...initial.raider, hp: 40 },
+      raid: {
+        ...initial.raid,
+        phase: 'RAIDING' as const,
+        phaseTicksRemaining: 30,
+        dangerLevel: 'High' as const,
+        shield: null,
+        activeRaidActivity: {
+          id: 'robot_encounter_standard',
+          name: 'Robot Encounter: Roomba Prime',
+          kind: 'ROBOT_ENCOUNTER' as const,
+          ticksRemaining: 1,
+          totalTicks: 1,
+          robotId: 'roomba_prime',
+          robotHp: 999,
+          robotMaxHp: 999,
+          weaponId: 'tea_kettle',
+          weaponName: 'Tea Kettle',
+          raiderDamageMin: 0,
+          raiderDamageMax: 0,
+          robotDamageMultiplier: 50,
+          raiderAction: 'fighting' as const,
+        },
+      },
+    }
+
+    const result = processTick(state, rng, 0)
+    const downedEvent = result.events.find(event => event.id === 'condition_downed_started')
+
+    expect(result.state.raid.downed?.reason).toMatchObject({
+      kind: 'robot',
+      robotId: 'roomba_prime',
+      robotName: 'Roomba Prime',
+    })
+    expect(downedEvent?.text).toContain('Roomba Prime downed the Raider')
+    expect(result.activityEvents.find(event => event.id === 'activity_downed_started')).toBeDefined()
+  })
+
   it('honors Call Extract when the raid timer expires on the next tick', () => {
     const rng = createRNG(FIXED_SEED)
     const initial = createInitialState(0)

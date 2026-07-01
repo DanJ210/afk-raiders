@@ -91,7 +91,7 @@ function mergeLootTables(items: LootItem[]): LootItem[] {
 const robotLoot = robots.flatMap(robot => robot.lootTable.map(item => toLootItem(item, robot)))
 const loot = mergeLootTables([...baseLoot, ...robotLoot])
 const RAID_ACTIVITY_SEARCH_SHARE_BY_DANGER: Record<DangerLevel, number> = {
-  Low: 0.75,
+  Low: 0.8,
   Medium: 0.6,
   High: 0.5,
 }

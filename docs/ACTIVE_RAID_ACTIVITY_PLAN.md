@@ -17,13 +17,14 @@ This document tracks the migration from single-tick damage events toward Godvill
 - Timed shield recharges run as a side condition on `RaidState.activeShieldRecharge`; use/start/completion messages belong to the ambient comms log, not the active-thread feed.
 - Activity definitions have been split into focused files: `src/content/raiding-events/robot_encounter_activities.json`, `src/content/raiding-events/search_activities.json`; the old monolithic `raid_activities.json` has been migrated and removed.
 - `src/engine/raidActivities.ts` can start and advance JSON-backed robot encounter activities.
-- Robot activities currently use the base **Tea Kettle** weapon, apply Raider damage to robot HP pools each round, apply robot retaliation through shield-aware damage, emit activity-log round/completion lines, and award robot loot/stats on defeat.
+- Robot activities currently use the base **Tea Kettle** weapon, apply Raider damage to robot HP pools each round, apply robot retaliation through shield-aware damage, emit activity-log round/completion lines, and award robot loot/stats on defeat. Encounters are HP-driven: old tick counters no longer fail a robot fight while robot HP remains.
 - At least one generic robot-pool starter exists (`raid_metallic_noise_pool`) to prove robot selection can come from `robotPool` instead of a fixed `robotId`.
 - Raiding event files have been sanitized so robot-triggering diary entries now use `effects.startRaidActivity` instead of legacy `effects.robotEncounter` / top-level `effects.robotDamageMultiplier`.
 - Content tests now fail if legacy robot encounter fields are reintroduced into ordinary diary events.
 - `EventTemplate` no longer exposes legacy `effects.robotEncounter` / top-level `effects.robotDamageMultiplier`, `processTick()` no longer resolves one-tick robot encounters from diary events, and the deprecated `resolveRobotEncounter()` helper has been removed.
 - Low-danger robot encounter weighting has been reduced now that robot encounters are multi-tick blocking activities; this preserves the balance contract that Low remains extractable often enough for the idle loop.
 - `SEARCH` activities are now supported by `src/engine/raidActivities.ts`; `search_black_box_cache` and `search_water_bottle_stash` prove backpack-loot completion, `search_medical_pouch` proves current-raid field-med completion, and `search_shield_recharger_crate` proves backpack shield-recharger completion from `src/content/raiding-events/search_activities.json`.
+- Search activities can draw from every runtime loot table under `src/content/loot-tables/`, plus the derived `water_bottles` pool, and normal loot searches can return small multi-item bundles.
 - Activity definitions can now declare `requires` gates for danger level, zone, zone condition, and greed. The activity resolver enforces those gates even if a diary event tries to start the activity directly.
 - Activity definitions now include user-facing names. Active activity state and activity-log entries carry those names so the UI can identify the current thread or robot encounter without deriving labels from ids.
 - Robot pools can now gate selection by danger level, zone, zone condition, greed, and deadliness; generic starters should use those gates instead of relying only on event-level requirements.
@@ -144,11 +145,12 @@ Example robot activity starter:
 Activity-scoped ambient overlay events are implemented as no-effect diary content gated by `requires.activeActivityKind`, `requires.activeActivityId`, or `requires.activeRobotId`. They can fire during searches, robot encounters, extraction, or DOWNED conditions without replacing the active-thread progress/combat/timer line for that tick.
 
 ## Robot Encounter Target
-- A robot encounter starts as an activity with robot id, robot HP, raider intent, and duration/escape rules.
+- A robot encounter starts as an activity with robot id, robot HP, and raider intent. Robot HP and Raider HP are the normal endpoints; tick counters are legacy metadata for robot encounters and should not fail a fight while robot HP remains.
 - Robot encounter activity definitions live in activity JSON, while robot identity/tuning continues to live in `src/content/robots.json`.
 - Robot selection should support either a fixed `robotId` or weighted selection from robot data using requirements such as danger level, greed, zone, zone condition, and deadliness.
 - Each tick resolves one round using seeded RNG.
 - The Raider deals damage to the robot HP pool each round. Damage is adjusted by the currently equipped weapon.
+- Future weapon/buff systems can also alter outgoing damage through activity damage range and robot-damage-taken multiplier fields.
 - Weapons are a later progression stage. Until that system exists, all raiders use the default base weapon: **Tea Kettle**.
 - Tea Kettle damage should be deterministic and modest, defined in engine/content constants first and moved into weapon content later. The activity resolver should already pass through `weaponId`, `weaponName`, and damage range fields so the later weapon system can replace the default without rewriting robot combat.
 - Damage is routed through `applyShieldedDamage()` and narrated in `activityLog`.
@@ -168,6 +170,8 @@ Activity-scoped ambient overlay events are implemented as no-effect diary conten
 - Search activities provide the Godville-style "Searching Medical for Anything" thread.
 - Each tick can emit progress flavor into `activityLog`.
 - Completion can award loot, healing items, shield rechargers, greed/mood changes, or nothing.
+- Loot searches can award bundles. Default roll count scales gently with activity length, and individual activities can set `lootRolls` for more specific reward tuning.
+- Search loot tables should use the canonical table IDs from `src/content/loot-tables/` (`apparel_accessories`, `arc_tech`, `consumables`, `cursed_weird_items`, `loot`, `personal_junk`, `scrap_components`, `valuables`, `weapons_parts`) or the derived `water_bottles` pool.
 - The diary can continue ambient lines while searching unless the activity is marked blocking.
 
 ## Migration Steps
@@ -257,6 +261,23 @@ Added comprehensive activity definitions for extraction and downed outcomes:
      - Both systems work together: duration from zone, outcomes influenced by zone personality
 
 4. [Future] Integrate downed revival cost scaling with raider level.
+
+## Enemy Encounter & Loot Improvements (Path C - Completed)
+1. [Done] Add DOWNED reason context to ambient comms.
+  - Store an optional structured reason on `RaidState.downed` so saves and UI/debugging can inspect why the Raider is incapacitated.
+  - Pass reason context through every `startDownedCondition()` call site: robot combat, ambient danger pressure, extraction complications, raid timer expiry, and fallback HP-zero checks.
+  - Keep the active DOWNED thread focused on timer/progress text; put the causal explanation in `GameState.log`.
+
+2. [Done] Make robot encounters HP-driven instead of tick-timeout-driven.
+  - Keep robot HP and Raider weapon damage as the source of encounter length.
+  - End robot encounters when robot HP reaches 0 or the Raider becomes DOWNED; do not fail a fight only because an activity tick counter expired.
+  - Keep Tea Kettle as the default weapon for now, but preserve `weaponId`, `weaponName`, damage range, and multiplier fields so future weapons and buffs can shorten or reshape encounters without rewriting combat.
+
+3. [Done] Expand search loot output and loot-table coverage.
+  - Map all runtime loot tables from `src/content/loot-tables/` into the search activity resolver instead of only `scrap_components` and `water_bottles`.
+  - Add content validation so every search `lootTableId` resolves to a known table.
+  - Add multi-roll search rewards so longer/riskier searches can return small bundles instead of a single item.
+  - Add new search activities for underused pools such as apparel/accessories, weapon parts, valuables, arc tech, cursed weird items, and consumables.
 
 
 ## Testing Checklist
