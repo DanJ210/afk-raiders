@@ -156,11 +156,11 @@ export function getRaiderLevelBenefitProfile(rawXp: unknown): RaiderLevelBenefit
 /**
  * Calculate the adjusted revival signal cost based on raider level benefits.
  * Base cost is 5 signal; scales down as raider level increases.
- * - Level 1-9: 5 signal (no reduction)
- * - Level 10-19: 4 signal (1 reduction)
- * - Level 20-29: 3 signal (2 reduction)
- * - Level 30-39: 2 signal (3 reduction)
- * - Level 40+: 1 signal (4 reduction, capped)
+ * - Level 1-18: 5 signal (no reduction)
+ * - Level 19-36: 4 signal (1 reduction)
+ * - Level 37-54: 3 signal (2 reduction)
+ * - Level 55-72: 2 signal (3 reduction)
+ * - Level 73+: 1 signal (4 reduction, capped)
  */
 export function getRevivalSignalCost(raiderLevelXp: unknown): number {
   const benefits = getRaiderLevelBenefitProfile(raiderLevelXp)
