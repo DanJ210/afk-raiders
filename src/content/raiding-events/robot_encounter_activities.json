@@ -4,12 +4,12 @@
   "name": "Robot Encounter",
   "weight": 100,
   "kind": "ROBOT_ENCOUNTER",
-  "ticks": 3,
+  "ticks": 6,
   "blocking": true,
   "weaponId": "tea_kettle",
   "weaponName": "Tea Kettle",
   "raiderDamageMin": 3,
-  "raiderDamageMax": 6,
+  "raiderDamageMax": 30,
   "robotPool": {
     "deadliness": [
       "weak",

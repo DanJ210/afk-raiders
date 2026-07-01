@@ -39,8 +39,6 @@ const downedTimerMs = computed(() => {
 const downedTimerText = computed(() => formatDuration(downedTimerMs.value))
 const showPhaseTimer = computed(() => showMobileRaiderStatus.value && phaseTimerMs.value > 0)
 
-const activeActivity = computed(() => store.raid.activeRaidActivity)
-
 // Re-key the tick bar on every new tick AND whenever the tab becomes visible,
 // so the animation restarts from the correct elapsed offset instead of 0.
 const visibility = useDocumentVisibility()
@@ -252,10 +250,7 @@ function activityBadge(entry: ActivityLogEvent): string {
           class="comms-log__activity-entry"
         >
           <span class="comms-log__activity-time">{{ activityBadge(entry) }} {{ formatTime(entry.timestamp) }}</span>
-          <span class="comms-log__activity-text">
-            <span v-if="entry.activityName" class="comms-log__activity-name">{{ entry.activityName }}</span>
-            {{ entry.text }}
-          </span>
+          <span class="comms-log__activity-text">{{ entry.text }}</span>
         </div>
       </div>
     </section>
@@ -391,17 +386,6 @@ function activityBadge(entry: ActivityLogEvent): string {
 .comms-log__activity-text {
   min-width: 0;
   color: var(--color-text);
-}
-
-.comms-log__activity-name {
-  color: var(--color-accent-secondary);
-  font-weight: 700;
-}
-
-.comms-log__activity-name::after {
-  content: ': ';
-  color: var(--color-text);
-  font-weight: 400;
 }
 
 .comms-log__entry {
