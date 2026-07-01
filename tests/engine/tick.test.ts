@@ -201,6 +201,9 @@ describe('deterministic snapshot', () => {
     expect(result.state.stats.extracts.total).toBe(1)
     expect(result.state.stats.extracts.byZone.damp_battlegrounds).toBe(1)
     expect(result.state.stats.extracts.byZoneAndDanger['damp_battlegrounds__Medium']).toBe(1)
+    expect(result.state.activityLog.some(event => event.id === 'activity_extraction_completed')).toBe(true)
+    expect(result.state.activityLog.find(event => event.id === 'activity_extraction_completed')?.activityName).toBe('Extraction Thread')
+    expect(result.state.activityLog.find(event => event.id === 'activity_extraction_completed')?.text).toBe('Extraction thread closed. Raider made it back with the bag and several legal questions.')
   })
 
   it('awards autonomous skill practice and level-up comms on extraction', () => {
@@ -474,6 +477,51 @@ describe('deterministic snapshot', () => {
     expect(result.state.raider.hp).toBe(0)
     expect(result.events.some(e => e.id === 'condition_downed_started')).toBe(true)
     expect(result.events.find(e => e.id === 'condition_downed_started')?.conditions).toEqual(['DOWNED'])
+    expect(result.activityEvents.find(event => event.id === 'activity_downed_started')?.activityName).toBe('Downed Thread')
+    expect(result.activityEvents.find(event => event.id === 'activity_downed_started')?.text).toBe('Downed thread opened. 2 ticks before the zone writes the ending.')
+  })
+
+  it('logs why the raider was downed when robot combat causes it', () => {
+    const rng = createRNG(FIXED_SEED)
+    const initial = createInitialState(0)
+    const state = {
+      ...initial,
+      raider: { ...initial.raider, hp: 40 },
+      raid: {
+        ...initial.raid,
+        phase: 'RAIDING' as const,
+        phaseTicksRemaining: 30,
+        dangerLevel: 'High' as const,
+        shield: null,
+        activeRaidActivity: {
+          id: 'robot_encounter_standard',
+          name: 'Robot Encounter: Roomba Prime',
+          kind: 'ROBOT_ENCOUNTER' as const,
+          ticksRemaining: 1,
+          totalTicks: 1,
+          robotId: 'roomba_prime',
+          robotHp: 999,
+          robotMaxHp: 999,
+          weaponId: 'tea_kettle',
+          weaponName: 'Tea Kettle',
+          raiderDamageMin: 0,
+          raiderDamageMax: 0,
+          robotDamageMultiplier: 50,
+          raiderAction: 'fighting' as const,
+        },
+      },
+    }
+
+    const result = processTick(state, rng, 0)
+    const downedEvent = result.events.find(event => event.id === 'condition_downed_started')
+
+    expect(result.state.raid.downed?.reason).toMatchObject({
+      kind: 'robot',
+      robotId: 'roomba_prime',
+      robotName: 'Roomba Prime',
+    })
+    expect(downedEvent?.text).toContain('Roomba Prime downed the Raider')
+    expect(result.activityEvents.find(event => event.id === 'activity_downed_started')).toBeDefined()
   })
 
   it('honors Call Extract when the raid timer expires on the next tick', () => {
@@ -498,6 +546,7 @@ describe('deterministic snapshot', () => {
     expect(eventIds).not.toContain('condition_downed_started')
     expect(result.state.raid.extracting).not.toBeNull()
     expect(result.events.find(event => event.id === 'condition_extracting_started')?.conditions).toEqual(['EXTRACTING'])
+    expect(result.activityEvents.find(event => event.id === 'activity_extraction_started')?.text).toBe('Extraction thread opened. LZ timer: 4 ticks.')
   })
 
   it('lets extraction completion beat an expiring DOWNED timer', () => {
@@ -612,6 +661,27 @@ describe('deterministic snapshot', () => {
     expect(result.state.raid.phase).toBe('RAIDING')
     expect(result.state.raid.downed?.ticksRemaining).toBe(1)
     expect(result.state.raider.hp).toBe(0)
+    expect(result.activityEvents.find(event => event.id === 'activity_downed_progress')?.text).toBe('Downed thread: 1 tick left for a miracle or medically questionable idea.')
+  })
+
+  it('uses JSON-backed DOWNED failure activity text when the downed timer expires', () => {
+    const rng = createRNG(FIXED_SEED)
+    const initial = createInitialState(0)
+    const state = {
+      ...initial,
+      raider: { ...initial.raider, hp: 0 },
+      raid: {
+        ...initial.raid,
+        phase: 'RAIDING' as const,
+        phaseTicksRemaining: 30,
+        downed: { ticksRemaining: 1 },
+      },
+    }
+
+    const result = processTick(state, rng, 0)
+
+    expect(result.state.raid.phase).toBe('KNOCKED_OUT')
+    expect(result.activityEvents.find(event => event.id === 'activity_downed_failed')?.text).toBe('Downed thread failed. Recovery team is preparing the apology clipboard.')
   })
 
   it('stacks extracted quantities into existing stash entries', () => {
@@ -734,5 +804,140 @@ describe('deterministic snapshot', () => {
         shieldChargeAmount: 20,
       },
     ])
+  })
+
+  it('advances shield recharge as ambient state without activity-log entries', () => {
+    const rng = createRNG(FIXED_SEED)
+    const initial = createInitialState(0)
+    const state = {
+      ...initial,
+      raid: {
+        ...initial.raid,
+        phase: 'RAIDING' as const,
+        phaseTicksRemaining: 30,
+        shield: {
+          ...initial.raid.shield!,
+          charge: 10,
+          durability: 80,
+        },
+        activeShieldRecharge: {
+          itemId: 'fizz_cell',
+          name: 'Fizz Cell',
+          totalCharge: 30,
+          chargeRemaining: 30,
+          totalTicks: 2,
+          ticksRemaining: 2,
+        },
+        activeRaidActivity: {
+          id: 'shield_recharge_fizz_cell',
+          kind: 'SHIELD_RECHARGE' as const,
+          ticksRemaining: 2,
+          totalTicks: 2,
+        },
+      },
+    }
+
+    const progress = processTick(state, rng, 0)
+
+    expect(progress.state.raid.activeShieldRecharge).not.toBeNull()
+  expect(progress.state.raid.activeRaidActivity?.kind).not.toBe('SHIELD_RECHARGE')
+    expect(progress.activityEvents.some(event => event.activity === 'SHIELD_RECHARGE')).toBe(false)
+
+    const completed = processTick({
+      ...progress.state,
+      raid: {
+        ...progress.state.raid,
+        activeRaidActivity: null,
+      },
+    }, rng, 5000)
+
+    expect(completed.state.raid.activeShieldRecharge).toBeNull()
+    expect(completed.activityEvents.some(event => event.activity === 'SHIELD_RECHARGE')).toBe(false)
+    expect(completed.events).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        id: 'shield_recharger_fizz_cell_completed',
+      }),
+    ]))
+    expect(completed.state.activityLog.some(event => event.activity === 'SHIELD_RECHARGE')).toBe(false)
+  })
+
+  it('advances active robot encounter activities through processTick', () => {
+    const rng = createRNG(FIXED_SEED)
+    const initial = createInitialState(0)
+    const state = {
+      ...initial,
+      raid: {
+        ...initial.raid,
+        phase: 'RAIDING' as const,
+        phaseTicksRemaining: 30,
+        dangerLevel: 'Low' as const,
+        activeRaidActivity: {
+          id: 'robot_encounter_standard',
+          kind: 'ROBOT_ENCOUNTER' as const,
+          ticksRemaining: 6,
+          totalTicks: 6,
+          robotId: 'anxietick',
+          robotHp: 1,
+          robotMaxHp: 12,
+          weaponId: 'tea_kettle',
+          weaponName: 'Tea Kettle',
+          raiderDamageMin: 3,
+          raiderDamageMax: 6,
+          raiderAction: 'fighting' as const,
+        },
+      },
+    }
+
+    const result = processTick(state, rng, 0)
+
+    expect(result.state.raid.activeRaidActivity).toBeNull()
+    expect(result.state.stats.robotDefeats.anxietick).toBe(1)
+    expect(result.activityEvents).toEqual([
+      expect.objectContaining({
+        id: 'activity_robot_encounter_completed',
+        activity: 'ROBOT_ENCOUNTER',
+        status: 'completed',
+      }),
+    ])
+    expect(result.state.activityLog.at(-1)).toMatchObject({
+      id: 'activity_robot_encounter_completed',
+      activityId: 'robot_encounter_standard_anxietick',
+    })
+  })
+
+  it('advances non-blocking search activities while still allowing diary events', () => {
+    const rng = createRNG(FIXED_SEED)
+    const initial = createInitialState(0)
+    const state = {
+      ...initial,
+      raid: {
+        ...initial.raid,
+        phase: 'RAIDING' as const,
+        phaseTicksRemaining: 30,
+        dangerLevel: 'Low' as const,
+        activeRaidActivity: {
+          id: 'search_black_box_cache',
+          kind: 'SEARCH' as const,
+          ticksRemaining: 2,
+          totalTicks: 3,
+          lootTableId: 'scrap_components',
+          raiderAction: 'searching' as const,
+        },
+      },
+    }
+
+    const result = processTick(state, rng, 0)
+
+    expect(result.activityEvents).toEqual([
+      expect.objectContaining({
+        id: 'activity_search_progress',
+        activity: 'SEARCH',
+      }),
+    ])
+    expect(result.events.length).toBeGreaterThan(0)
+    expect(result.state.raid.activeRaidActivity).toMatchObject({
+      id: 'search_black_box_cache',
+      ticksRemaining: 1,
+    })
   })
 })

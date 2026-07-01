@@ -2,6 +2,7 @@
 import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { useGameStore } from '../stores/gameStore'
 import { advanceSignal, SIGNAL_COSTS, SIGNAL_CAP, SIGNAL_REGEN_MS } from '../engine/signal'
+import { getRevivalSignalCost } from '../engine/raiderLevel'
 
 const store = useGameStore()
 const nowMs = ref(Date.now())
@@ -24,7 +25,8 @@ const canCalm = computed(() => currentSignal.value >= SIGNAL_COSTS.CALM)
 const canReadyUp = computed(() => currentSignal.value >= SIGNAL_COSTS.READY_UP)
 const canPressure = computed(() => currentSignal.value >= SIGNAL_COSTS.PRESSURE)
 const canCallExtract = computed(() => currentSignal.value >= SIGNAL_COSTS.CALL_EXTRACT)
-const canRevive = computed(() => currentSignal.value >= SIGNAL_COSTS.REVIVE)
+const revivalCost = computed(() => getRevivalSignalCost(store.state.raider.levelXp))
+const canRevive = computed(() => currentSignal.value >= revivalCost.value)
 const canUseSignalAmplifier = computed(() => signalAmplifiers.value > 0 && currentSignal.value < SIGNAL_CAP)
 const isActionLocked = computed(() => store.hasPendingHandlerAction)
 const isRaidConditionLocked = computed(() => store.raid.extracting !== null || store.raid.downed !== null)
@@ -120,7 +122,7 @@ const regenTimerDisplay = computed(() => {
       >
         <span class="text-[1rem]">🚑</span>
         <span class="flex-1 font-semibold">Revive</span>
-        <span class="text-[0.75rem] max-[600px]:text-raider-tiny">{{ SIGNAL_COSTS.REVIVE }}📶</span>
+        <span class="text-[0.75rem] max-[600px]:text-raider-tiny">{{ revivalCost }}📶</span>
       </button>
     </div>
   </section>

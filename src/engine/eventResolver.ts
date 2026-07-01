@@ -11,12 +11,12 @@
  *   6. {count}         → random plausible water-bottle count (for flavor)
  */
 
-import type { EventTemplate, GameState, HealingItem, HealingItemStack, LogEvent, LootItem, Phase, RobotEntry, RobotLootItem, ShieldRechargerItem } from './types.js'
+import type { DangerLevel, EventTemplate, GameState, HealingItem, HealingItemStack, LogEvent, LootItem, Phase, RaidActivityKind, RobotEntry, RobotLootItem, ShieldRechargerItem } from './types.js'
 import type { RNG } from './rng.js'
 import hubEventsData from '../content/hub_events.json'
 import deploymentEventsData from '../content/deployment_events.json'
-import raidingEventsData from '../content/raiding_events.json'
-import extractionEventsData from '../content/extraction_events.json'
+import raidingEventsData from '../content/raiding-events/raiding_events.json'
+import extractionEventsData from '../content/raiding-events/extraction_events.json'
 import downedEventsData from '../content/downed_events.json'
 import knockedOutEventsData from '../content/knocked_out_events.json'
 import healingItemsData from '../content/healing_items.json'
@@ -33,10 +33,9 @@ import scrapComponentsData from '../content/loot-tables/scrap_components.json'
 import valuablesData from '../content/loot-tables/valuables.json'
 import weaponsPartsData from '../content/loot-tables/weapons_parts.json'
 import { getDangerLevelProfile, rarityWeight, type DangerLevelProfile } from './dangerLevelProfiles.js'
-import { clampMood, getMoodRarityWeightMultiplier, getMoodResilienceReductionPercent } from './mood.js'
+import { clampMood, getMoodRarityWeightMultiplier } from './mood.js'
 import { applyShieldedDamage, startShieldRecharge, type ShieldDamageResult } from './shields.js'
 import { getSkillModifierProfile } from './skills.js'
-import { getRaiderLevelBenefitProfile } from './raiderLevel.js'
 import { clampGreedLevel, getGreedDangerEventWeightMultiplier, getGreedRarityWeightMultiplier } from './greed.js'
 import { logConditionsForRaid } from './log.js'
 
@@ -91,11 +90,14 @@ function mergeLootTables(items: LootItem[]): LootItem[] {
 
 const robotLoot = robots.flatMap(robot => robot.lootTable.map(item => toLootItem(item, robot)))
 const loot = mergeLootTables([...baseLoot, ...robotLoot])
+const RAID_ACTIVITY_SEARCH_SHARE_BY_DANGER: Record<DangerLevel, number> = {
+  Low: 0.8,
+  Medium: 0.6,
+  High: 0.5,
+}
+const RAIDING_ACTIVITY_STARTER_SHARE = 0.67
+const ACTIVITY_AMBIENT_COMMS_CHANCE = 0.35
 
-const ROBOT_LETHAL_HP_RATIO = 0.5
-const ROBOT_NONLETHAL_MIN_HP_RATIO = 0.25
-const ROBOT_DAMAGE_PER_MENACE = 2
-const LETHAL_ROBOT_DEADLINESS: ReadonlySet<RobotEntry['deadliness']> = new Set(['nasty', 'deadly'])
 function healingMoodGain(item: HealingItemStack): number {
   return item.moodGain ?? Math.max(1, Math.min(4, item.rarity))
 }
@@ -137,6 +139,25 @@ export function describeShieldDamage(damage: ShieldDamageResult): string {
   return `${incomingText}${preShieldText}Shield lost ${damage.shieldChargeLost} charge${shieldMitigationText}; ${damage.hpDamage} HP damage landed.${nonlethalFloorText}`
 }
 
+function normalizeArray<T>(value: T | T[] | undefined): T[] {
+  if (value === undefined) return []
+  return Array.isArray(value) ? value : [value]
+}
+
+function currentAmbientActivityContext(state: GameState): { kind: RaidActivityKind; id?: string; robotId?: string } | null {
+  if (state.raid.downed) return { kind: 'DOWNED', id: state.raid.activeRaidActivity?.id ?? 'downed_countdown' }
+  if (state.raid.extracting) return { kind: 'EXTRACTION', id: state.raid.activeRaidActivity?.id ?? 'extraction_countdown' }
+  if (state.raid.activeRaidActivity) {
+    return {
+      kind: state.raid.activeRaidActivity.kind,
+      id: state.raid.activeRaidActivity.id,
+      robotId: state.raid.activeRaidActivity.robotId,
+    }
+  }
+
+  return null
+}
+
 /** Filter events valid for the current game context */
 export function eligibleEvents(state: GameState): EventTemplate[] {
   const { raid } = state
@@ -162,10 +183,28 @@ export function eligibleEvents(state: GameState): EventTemplate[] {
       const levels = Array.isArray(r.dangerLevel) ? r.dangerLevel : [r.dangerLevel]
       if (!levels.includes(raid.dangerLevel)) return false
     }
+    if (r.zone) {
+      if (!raid.zone) return false
+      const zones = Array.isArray(r.zone) ? r.zone : [r.zone]
+      if (!zones.includes(raid.zone)) return false
+    }
     if (r.zoneCondition) {
       if (!raid.zoneCondition) return false
       const conditionIds = Array.isArray(r.zoneCondition) ? r.zoneCondition : [r.zoneCondition]
       if (!conditionIds.includes(raid.zoneCondition.id)) return false
+    }
+    if (r.activeActivityKind || r.activeActivityId || r.activeRobotId) {
+      const context = currentAmbientActivityContext(state)
+      if (!context) return false
+
+      const activityKinds = normalizeArray(r.activeActivityKind)
+      if (activityKinds.length > 0 && !activityKinds.includes(context.kind)) return false
+
+      const activityIds = normalizeArray(r.activeActivityId)
+      if (activityIds.length > 0 && (!context.id || !activityIds.includes(context.id))) return false
+
+      const robotIds = normalizeArray(r.activeRobotId)
+      if (robotIds.length > 0 && (!context.robotId || !robotIds.includes(context.robotId))) return false
     }
     if (r.minGreed !== undefined && raid.greedLevel < r.minGreed) return false
     if (r.maxGreed !== undefined && raid.greedLevel > r.maxGreed) return false
@@ -201,7 +240,7 @@ function isRiskyExtractionEvent(template: EventTemplate): boolean {
   if (!effects) return false
   return effects.failExtraction === true ||
     effects.startDowned === true ||
-    effects.robotEncounter !== undefined ||
+    effects.startRaidActivity?.kind === 'ROBOT_ENCOUNTER' ||
     isPositiveDamageEffect(effects.damage) ||
     isNegativeHpEffect(effects.hp)
 }
@@ -216,7 +255,7 @@ function adjustedEventWeight(template: EventTemplate, state: GameState): number 
   const profile = getDangerLevelProfile(state.raid.dangerLevel)
   let weight = template.weight
 
-  if (template.effects?.robotEncounter) {
+  if (template.effects?.startRaidActivity?.kind === 'ROBOT_ENCOUNTER') {
     weight *= profile.robotEncounterWeightMultiplier * getGreedDangerEventWeightMultiplier(state.raid.greedLevel)
   }
 
@@ -229,6 +268,69 @@ function adjustedEventWeight(template: EventTemplate, state: GameState): number 
   }
 
   return Math.max(0.001, weight)
+}
+
+function raidActivityStarterKind(template: EventTemplate): 'SEARCH' | 'ROBOT_ENCOUNTER' | null {
+  const kind = template.effects?.startRaidActivity?.kind
+  return kind === 'SEARCH' || kind === 'ROBOT_ENCOUNTER' ? kind : null
+}
+
+function targetRaidActivitySearchShare(state: GameState): number {
+  const baseSearchShare = state.raid.dangerLevel
+    ? RAID_ACTIVITY_SEARCH_SHARE_BY_DANGER[state.raid.dangerLevel]
+    : RAID_ACTIVITY_SEARCH_SHARE_BY_DANGER.Low
+  const baseRobotShare = 1 - baseSearchShare
+  const robotOdds = baseRobotShare * getGreedDangerEventWeightMultiplier(state.raid.greedLevel)
+
+  return baseSearchShare / (baseSearchShare + robotOdds)
+}
+
+function hasRaidActivityStarter(template: EventTemplate): boolean {
+  return template.effects?.startRaidActivity !== undefined
+}
+
+function hasAmbientActivityRequirement(template: EventTemplate): boolean {
+  return template.requires?.activeActivityKind !== undefined ||
+    template.requires?.activeActivityId !== undefined ||
+    template.requires?.activeRobotId !== undefined
+}
+
+function isAmbientOnlyEvent(template: EventTemplate): boolean {
+  return !template.effects || Object.keys(template.effects).length === 0
+}
+
+function totalEventWeight(templates: EventTemplate[]): number {
+  return templates.reduce((total, template) => total + template.weight, 0)
+}
+
+function pickRaidActivityStarter(templates: EventTemplate[], state: GameState, rng: RNG): EventTemplate {
+  const searches = templates.filter(template => raidActivityStarterKind(template) === 'SEARCH')
+  const robots = templates.filter(template => raidActivityStarterKind(template) === 'ROBOT_ENCOUNTER')
+  const otherActivityStarters = templates.filter(template => raidActivityStarterKind(template) === null)
+  const searchRobotWeight = totalEventWeight(searches) + totalEventWeight(robots)
+  const otherWeight = totalEventWeight(otherActivityStarters)
+
+  if (otherActivityStarters.length > 0 && (searchRobotWeight <= 0 || rng.next() >= searchRobotWeight / (searchRobotWeight + otherWeight))) {
+    return rng.weightedPick(otherActivityStarters)
+  }
+
+  if (searches.length === 0) return rng.weightedPick(robots.length > 0 ? robots : otherActivityStarters)
+  if (robots.length === 0) return rng.weightedPick(searches)
+
+  return rng.weightedPick(rng.next() < targetRaidActivitySearchShare(state) ? searches : robots)
+}
+
+function pickRaidingEventTemplate(eligible: EventTemplate[], state: GameState, rng: RNG): EventTemplate {
+  if (state.raid.phase !== 'RAIDING' || state.raid.extracting || state.raid.downed) return rng.weightedPick(eligible)
+
+  const activityStarters = eligible.filter(hasRaidActivityStarter)
+  const ambientEvents = eligible.filter(template => !hasRaidActivityStarter(template))
+  if (activityStarters.length === 0) return rng.weightedPick(ambientEvents)
+  if (ambientEvents.length === 0) return pickRaidActivityStarter(activityStarters, state, rng)
+
+  return rng.next() < RAIDING_ACTIVITY_STARTER_SHARE
+    ? pickRaidActivityStarter(activityStarters, state, rng)
+    : rng.weightedPick(ambientEvents)
 }
 
 /** Fill {slot} placeholders in a template string */
@@ -563,161 +665,6 @@ export function consumeShieldRecharger(
   }
 }
 
-function pickRobotLoot(robot: RobotEntry, rng: RNG): LootItem {
-  const item = rng.weightedPick(robot.lootTable)
-  return toLootItem(item, robot)
-}
-
-function canRobotEncounterBeLethal(state: GameState, robot: RobotEntry): boolean {
-  if (!LETHAL_ROBOT_DEADLINESS.has(robot.deadliness)) return false
-  if (state.raider.maxHp <= 0) return false
-  return state.raider.hp / state.raider.maxHp <= ROBOT_LETHAL_HP_RATIO
-}
-
-function applyRobotDamage(
-  state: GameState,
-  robot: RobotEntry,
-  incomingDamage: number,
-  skillDamageReduced: number = 0,
-): { raider: GameState['raider']; raid: GameState['raid']; damage: number; shieldDamage: ShieldDamageResult } {
-  const deliveredDamage = Math.max(0, Math.ceil(incomingDamage))
-  const skillReduction = Math.max(0, Math.min(deliveredDamage, Math.floor(skillDamageReduced)))
-  const damageAfterSkills = Math.max(0, deliveredDamage - skillReduction)
-  const moodResilienceReductionPercent = getMoodResilienceReductionPercent(state.raider.mood)
-  const levelResilienceReductionPercent = getRaiderLevelBenefitProfile(state.raider.levelXp).resilienceReductionPercent
-  const resilienceReductionPercent = moodResilienceReductionPercent + levelResilienceReductionPercent
-  const damageAfterResilience = resilienceReductionPercent > 0 && damageAfterSkills > 0
-    ? Math.max(1, Math.floor(damageAfterSkills * (1 - (resilienceReductionPercent / 100))))
-    : damageAfterSkills
-  const resilienceDamageReduced = Math.max(0, damageAfterSkills - damageAfterResilience)
-  const preShieldDamage = damageAfterResilience
-  const preShieldDamageReduced = Math.max(0, deliveredDamage - preShieldDamage)
-
-  if (state.raider.hp <= 0) {
-    return {
-      raider: state.raider,
-      raid: state.raid,
-      damage: 0,
-      shieldDamage: {
-        raider: state.raider,
-        raid: state.raid,
-        incomingDamage: deliveredDamage,
-        preShieldDamage,
-        preShieldDamageReduced,
-        hpDamage: 0,
-        shieldChargeLost: 0,
-        shieldDurabilityLost: 0,
-        shieldDamageReduced: 0,
-        mitigated: false,
-        resilienceDamageReduced: resilienceDamageReduced > 0 ? resilienceDamageReduced : undefined,
-        skillDamageReduced: skillReduction > 0 ? skillReduction : undefined,
-      },
-    }
-  }
-
-  const shielded = applyShieldedDamage(state.raider, state.raid, preShieldDamage)
-  const shieldDamage = {
-    ...shielded,
-    incomingDamage: deliveredDamage,
-    preShieldDamage,
-    preShieldDamageReduced,
-    resilienceDamageReduced: resilienceDamageReduced > 0 ? resilienceDamageReduced : undefined,
-    skillDamageReduced: skillReduction > 0 ? skillReduction : undefined,
-  }
-
-  if (state.raider.maxHp <= 0) {
-    return {
-      raider: shielded.raider,
-      raid: shielded.raid,
-      damage: state.raider.hp - shielded.raider.hp,
-      shieldDamage,
-    }
-  }
-
-  const hpAfterShield = shielded.raider.hp
-  let hp = hpAfterShield
-  if (!canRobotEncounterBeLethal(state, robot)) {
-    const nonlethalFloor = state.raider.hp / state.raider.maxHp > ROBOT_LETHAL_HP_RATIO
-      ? Math.ceil(state.raider.maxHp * ROBOT_NONLETHAL_MIN_HP_RATIO)
-      : 1
-    hp = Math.max(nonlethalFloor, hp)
-  }
-  const nonlethalFloorDamagePrevented = Math.max(0, hp - hpAfterShield)
-
-  return {
-    raider: { ...shielded.raider, hp },
-    raid: shielded.raid,
-    damage: state.raider.hp - hp,
-    shieldDamage: {
-      ...shieldDamage,
-      raider: { ...shielded.raider, hp },
-      hpDamage: state.raider.hp - hp,
-      nonlethalFloorDamagePrevented: nonlethalFloorDamagePrevented > 0 ? nonlethalFloorDamagePrevented : undefined,
-    },
-  }
-}
-
-export interface RobotEncounterResult {
-  state: GameState
-  event: LogEvent
-}
-
-/**
- * Placeholder robot combat: roll 1-10, beat menace to win. Future weapons can
- * replace the roll/modifier here without changing event content.
- */
-export function resolveRobotEncounter(
-  state: GameState,
-  robotId: string,
-  rng: RNG,
-  now: number,
-  opts: { damageMultiplier?: number } = {},
-): RobotEncounterResult | null {
-  const robot = robots.find(entry => entry.id === robotId)
-  if (!robot) return null
-
-  const roll = rng.int(1, 10)
-  if (roll > robot.menace) {
-    const item = pickRobotLoot(robot, rng)
-    const raid = addBackpackItem(state.raid, item)
-    const successText = rng.pick(robot.successText)
-    return {
-      state: { ...state, raid },
-      event: {
-        id: `robot_${robot.id}_defeated`,
-        tick: state.tick,
-        timestamp: now,
-        text: `${successText} Salvaged ${item.name}.`,
-        phase: state.raid.phase,
-        conditions: logConditionsForRaid(state.raid),
-      },
-    }
-  }
-
-  const profile = getDangerLevelProfile(state.raid.dangerLevel)
-  const skillModifiers = getSkillModifierProfile(state.raider.skills)
-  const damageMultiplier = Math.max(0, (opts.damageMultiplier ?? 1) * profile.robotFailureDamageMultiplier)
-  const rawDamageBeforeSkills = Math.ceil(robot.menace * ROBOT_DAMAGE_PER_MENACE * damageMultiplier)
-  const rawDamage = Math.ceil(rawDamageBeforeSkills * skillModifiers.robotFailureDamageMultiplier)
-  const skillDamageReduced = Math.max(0, rawDamageBeforeSkills - rawDamage)
-  const damageResult = applyRobotDamage(state, robot, rawDamageBeforeSkills, skillDamageReduced)
-  return {
-    state: {
-      ...state,
-      raider: damageResult.raider,
-      raid: damageResult.raid,
-    },
-    event: {
-      id: `robot_${robot.id}_escaped`,
-      tick: state.tick,
-      timestamp: now,
-      text: `${robot.name} won that exchange. ${describeShieldDamage(damageResult.shieldDamage)} Ran away with the tactical urgency of someone who just learned a lesson.`,
-      phase: state.raid.phase,
-      conditions: logConditionsForRaid(state.raid),
-    },
-  }
-}
-
 /** Pick a random eligible event and return a filled LogEvent */
 export function resolveEvent(
   state: GameState,
@@ -731,7 +678,7 @@ export function resolveEvent(
     ...template,
     weight: adjustedEventWeight(template, state),
   }))
-  const template = rng.weightedPick(weightedEligible)
+  const template = pickRaidingEventTemplate(weightedEligible, state, rng)
   const text = fillSlots(template.text, rng)
 
   return {
@@ -739,6 +686,32 @@ export function resolveEvent(
     tick: state.tick,
     timestamp: now,
     text,
+    phase: state.raid.phase,
+    conditions: logConditionsForRaid(state.raid),
+  }
+}
+
+/** Pick an ambient-only comms line scoped to the current activity/condition. */
+export function resolveAmbientActivityEvent(
+  state: GameState,
+  rng: RNG,
+  now: number,
+): LogEvent | null {
+  if (state.raid.phase !== 'RAIDING') return null
+  if (!currentAmbientActivityContext(state)) return null
+  if (rng.next() >= ACTIVITY_AMBIENT_COMMS_CHANCE) return null
+
+  const eligible = eligibleEvents(state).filter(template => (
+    hasAmbientActivityRequirement(template) && isAmbientOnlyEvent(template)
+  ))
+  if (eligible.length === 0) return null
+
+  const template = rng.weightedPick(eligible)
+  return {
+    id: template.id,
+    tick: state.tick,
+    timestamp: now,
+    text: fillSlots(template.text, rng),
     phase: state.raid.phase,
     conditions: logConditionsForRaid(state.raid),
   }

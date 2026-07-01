@@ -87,6 +87,7 @@ function normalizeRaidState(raid: GameState['raid']): GameState['raid'] {
     ...raid,
     shield: raid.shield ?? createStarterShieldState(),
     activeShieldRecharge: raid.activeShieldRecharge ?? null,
+    activeRaidActivity: raid.activeRaidActivity ?? null,
     hiddenPocket: raid.hiddenPocket ?? null,
     healingItems: raid.healingItems ?? [],
     dangerLevel: raid.dangerLevel ?? null,
@@ -220,6 +221,7 @@ export function useGamePersistence(): GamePersistenceReturn {
       // was not enforced may exceed it — sell the overflow rather than delete it.
       const { pendingReadyUp: _pendingReadyUp, ...loadedState } = data.state as GameState & { pendingReadyUp?: boolean }
       const loadedRaider = loadedState.raider as LegacyRaiderStats
+      const legacyActivityLog = (loadedState as GameState & { activityLog?: unknown }).activityLog
       const sale = sellStashOverflow(loadedState.homeStash)
       data.state = {
         ...loadedState,
@@ -234,6 +236,7 @@ export function useGamePersistence(): GamePersistenceReturn {
         signalAmplifiers: loadedState.signalAmplifiers ?? 0,
         pendingCalm: (loadedState as any).pendingCalm ?? (loadedState as any).pendingEncourage ?? false,
         pendingPressure: (loadedState as any).pendingPressure ?? (loadedState as any).pendingScold ?? false,
+        activityLog: Array.isArray(legacyActivityLog) ? legacyActivityLog as GameState['activityLog'] : [],
         homeStash: sale.homeStash,
         coins: (loadedState.coins ?? 0) + sale.coinsGained,
         stats: normalizeLifetimeStats(loadedState),

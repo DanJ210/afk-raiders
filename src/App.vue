@@ -21,11 +21,11 @@ const isMobile = useMediaQuery('(max-width: 600px)')
 type MobileTabId = 'comms' | 'stash' | 'raider' | 'raid' | 'stats'
 
 const mobileTabs: Array<{ id: MobileTabId; label: string; icon: string }> = [
-  { id: 'comms', label: 'Comms', icon: '📻' },
-  { id: 'raid', label: 'Raid', icon: '🎒' },
-  { id: 'raider', label: 'Raider', icon: '🧍' },
   { id: 'stash', label: 'Stash', icon: '🏠' },
-  { id: 'stats', label: 'Stats', icon: '📊' },
+  { id: 'raid', label: 'Raid', icon: '🎒' },
+  { id: 'comms', label: 'Comms', icon: '📻' },
+  { id: 'raider', label: 'Raider', icon: '🧍' },
+  { id: 'stats', label: 'Stats', icon: '📊' }
 ]
 
 const activeMobileTab = ref<MobileTabId>('comms')
@@ -121,8 +121,8 @@ const phaseTimeText = computed(() => {
         :condition-description="currentConditionDescription"
       />
 
-      <section v-if="activeMobileTab === 'comms'" class="app__mobile-fill app__mobile-comms min-h-0 flex-1 flex flex-col gap-2.5 overflow-y-auto">
-        <CommsLog />
+      <section v-show="activeMobileTab === 'comms'" class="app__mobile-fill app__mobile-comms min-h-0 flex-1 flex flex-col gap-2.5 overflow-y-auto">
+        <CommsLog :is-active="activeMobileTab === 'comms'" />
       </section>
 
       <section v-if="activeMobileTab === 'raid'" class="app__mobile-fill min-h-0 flex-1 flex flex-col gap-2.5 overflow-y-auto">

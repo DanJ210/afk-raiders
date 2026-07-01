@@ -17,7 +17,7 @@ import { consumeHealingItem, consumeShieldRecharger } from '../engine/eventResol
 import { appendLogEntries } from '../engine/log.js'
 import { recordHealingItemUse } from '../engine/stats.js'
 import { createInitialState } from '../engine/initialState.js'
-import { applyRaiderXpGain, rollRaiderXp, type RaiderLevelUp } from '../engine/raiderLevel.js'
+import { applyRaiderXpGain, rollRaiderXp, getRevivalSignalCost, type RaiderLevelUp } from '../engine/raiderLevel.js'
 import { applySkillPractice, rollSkillPractice, type SkillLevelUp } from '../engine/skills.js'
 import type { BackpackItem } from '../engine/types.js'
 
@@ -229,14 +229,24 @@ export function useHandlerActions(
     if (stateRef.value.raid.phase !== 'RAIDING') return
     if (!stateRef.value.raid.downed) return
     const actionNow = Date.now()
-    const updated = spendSignal(syncSignalProgress(actionNow), 'REVIVE')
-    if (!updated) return
+    const signalState = syncSignalProgress(actionNow)
+    const revivalCost = getRevivalSignalCost(stateRef.value.raider.levelXp)
 
+    // Manually check and spend signal (instead of spendSignal which uses hardcoded REVIVE: 5)
+    if (signalState.current < revivalCost) return
+
+    const updated: typeof signalState = {
+      ...signalState,
+      current: signalState.current - revivalCost,
+      lastRegenAt: signalState.lastRegenAt,
+    }
+
+    const costText = revivalCost < 5 ? ` (Raider Level discount: ${5 - revivalCost}📶)` : ''
     const reviveEvent: LogEvent = {
       id: 'handler_revive_used',
       tick: stateRef.value.tick,
       timestamp: actionNow,
-      text: 'Revive signal punched through. Raider is upright, offended, and technically alive.',
+      text: `Revive signal punched through. Raider is upright, offended, and technically alive.${costText}`,
       phase: stateRef.value.raid.phase,
     }
 
@@ -253,7 +263,7 @@ export function useHandlerActions(
       },
       log: appendLogEntries(stateRef.value.log, [reviveEvent]),
     }
-    const signalUseEvents = awardSignalUseSkill(actionNow, 5)
+    const signalUseEvents = awardSignalUseSkill(actionNow, revivalCost)
     publishEvents?.([reviveEvent, ...signalUseEvents])
     persistCallback(stateRef.value, rngRef.current.getSeed(), lastTickAtRef.value)
   }

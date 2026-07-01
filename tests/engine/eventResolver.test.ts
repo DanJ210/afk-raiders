@@ -10,10 +10,9 @@
 
 import { describe, it, expect } from 'vitest'
 import { createRNG } from '../../src/engine/rng'
-import { applyEffects, consumeHealingItem, consumeShieldRecharger, eligibleEvents, events as allEvents, resolveEvent, resolveHealingItemFind, resolveRobotEncounter, resolveShieldRechargerFind } from '../../src/engine/eventResolver'
+import { applyEffects, consumeHealingItem, consumeShieldRecharger, eligibleEvents, events as allEvents, resolveAmbientActivityEvent, resolveEvent, resolveHealingItemFind, resolveShieldRechargerFind } from '../../src/engine/eventResolver'
 import { createInitialState } from '../../src/engine/initialState'
-import { xpRequiredForLevel } from '../../src/engine/raiderLevel'
-import type { EventTemplate, HealingItemStack } from '../../src/engine/types'
+import type { DangerLevel, EventTemplate, HealingItemStack } from '../../src/engine/types'
 import zoneConditionsData from '../../src/content/zones/zone_conditions.json'
 
 // backpackValue=450 maps exclusively to Snack Mix (Chaos Blend),
@@ -60,7 +59,11 @@ const GREED_EFFECT_TEMPLATE: EventTemplate = {
   effects: { greedLevel: 5 },
 }
 
-const robotEventIds = new Set(allEvents.filter(event => event.effects?.robotEncounter).map(event => event.id))
+const robotEventIds = new Set(allEvents.filter(event => event.effects?.startRaidActivity?.kind === 'ROBOT_ENCOUNTER').map(event => event.id))
+const activityStarterKindByEventId = new Map(allEvents.flatMap(event => {
+  const kind = event.effects?.startRaidActivity?.kind
+  return kind === 'SEARCH' || kind === 'ROBOT_ENCOUNTER' ? [[event.id, kind]] : []
+}))
 
 function makeBandage(overrides: Partial<HealingItemStack> = {}): HealingItemStack {
   return {
@@ -73,6 +76,93 @@ function makeBandage(overrides: Partial<HealingItemStack> = {}): HealingItemStac
     ...overrides,
   }
 }
+
+function sampleRaidSelectionMix(dangerLevel: DangerLevel): { activityStarterShare: number; activitySearchShare: number } {
+  const initial = createInitialState(0)
+  const state = {
+    ...initial,
+    raid: {
+      ...initial.raid,
+      phase: 'RAIDING' as const,
+      phaseTicksRemaining: 30,
+      dangerLevel,
+      zone: 'damp_battlegrounds',
+      zoneCondition: zoneConditionsData.minor_conditions[0],
+      greedLevel: 0,
+    },
+  }
+  const totals = { ambient: 0, search: 0, robot: 0 }
+
+  for (let seed = 0; seed < 6000; seed += 1) {
+    const event = resolveEvent(state, createRNG(seed), seed)
+    const kind = event ? activityStarterKindByEventId.get(event.id) : null
+    if (kind === 'SEARCH') totals.search += 1
+    else if (kind === 'ROBOT_ENCOUNTER') totals.robot += 1
+    else totals.ambient += 1
+  }
+
+  const activityTotal = totals.search + totals.robot
+  expect(activityTotal).toBeGreaterThan(1000)
+
+  return {
+    activityStarterShare: activityTotal / (totals.ambient + activityTotal),
+    activitySearchShare: totals.search / activityTotal,
+  }
+}
+
+describe('resolveEvent — RAIDING activity mix', () => {
+  it('keeps activity starters as a distinct first-stage roll from ambient comms', () => {
+    expect(sampleRaidSelectionMix('Low').activityStarterShare).toBeCloseTo(0.67, 1)
+    expect(sampleRaidSelectionMix('Medium').activityStarterShare).toBeCloseTo(0.67, 1)
+    expect(sampleRaidSelectionMix('High').activityStarterShare).toBeCloseTo(0.67, 1)
+  })
+
+  it('shifts SEARCH and ROBOT_ENCOUNTER starter share by danger level', () => {
+    expect(sampleRaidSelectionMix('Low').activitySearchShare).toBeCloseTo(0.8, 1)
+    expect(sampleRaidSelectionMix('Medium').activitySearchShare).toBeCloseTo(0.6, 1)
+    expect(sampleRaidSelectionMix('High').activitySearchShare).toBeCloseTo(0.5, 1)
+  })
+})
+
+describe('resolveAmbientActivityEvent', () => {
+  it('emits ambient-only comms scoped to the current activity', () => {
+    const initial = createInitialState(0)
+    const state = {
+      ...initial,
+      raid: {
+        ...initial.raid,
+        phase: 'RAIDING' as const,
+        activeRaidActivity: {
+          id: 'robot_encounter_standard',
+          name: 'Robot Encounter: Tattletale drone',
+          kind: 'ROBOT_ENCOUNTER' as const,
+          ticksRemaining: 4,
+          totalTicks: 6,
+          robotId: 'tattletale',
+        },
+      },
+    }
+
+    const event = resolveAmbientActivityEvent(state, createRNG(0), 1234)
+
+    expect(event).not.toBeNull()
+    expect(event!.id).toBe('ambient_robot_confidence_problem')
+    expect(event!.phase).toBe('RAIDING')
+  })
+
+  it('does not emit ambient activity comms without an activity context', () => {
+    const initial = createInitialState(0)
+    const state = {
+      ...initial,
+      raid: {
+        ...initial.raid,
+        phase: 'RAIDING' as const,
+      },
+    }
+
+    expect(resolveAmbientActivityEvent(state, createRNG(1), 1234)).toBeNull()
+  })
+})
 
 describe('applyEffects — backpack item behavior', () => {
   it('adds a new BackpackItem when a loot effect is applied', () => {
@@ -464,113 +554,6 @@ describe('applyEffects — backpack item behavior', () => {
     expect(result.state.raid.shield?.durability).toBe(82.25)
   })
 
-  it('defeats a robot when the combat roll beats menace and awards robot loot', () => {
-    const state = createInitialState(0)
-    const result = resolveRobotEncounter(state, 'anxietick', createRNG(1), 0)
-
-    expect(result).not.toBeNull()
-    expect(result!.event.id).toBe('robot_anxietick_defeated')
-    expect(result!.event.text).toContain('files an emotional noise complaint')
-    expect(result!.state.raid.backpack).toHaveLength(1)
-    expect(['anxietick_gear', 'robot_alloy']).toContain(result!.state.raid.backpack[0].itemId)
-    expect(result!.state.raider.hp).toBe(state.raider.hp)
-  })
-
-  it('damages the raider when the combat roll does not beat menace', () => {
-    const state = createInitialState(0)
-    const result = resolveRobotEncounter(state, 'roomba_prime', createRNG(1), 0)
-
-    expect(result).not.toBeNull()
-    expect(result!.event.id).toBe('robot_roomba_prime_escaped')
-    expect(result!.event.text).toContain('Shield lost 16 charge')
-    expect(result!.event.text).toContain('10 HP damage landed')
-    expect(result!.state.raider.hp).toBe(90)
-    expect(result!.state.raid.shield?.charge).toBe(24)
-    expect(result!.state.raid.backpack).toHaveLength(0)
-  })
-
-  it('reduces robot damage when mood is positive but leaves raw robot damage unchanged', () => {
-    const neutral = {
-      ...createInitialState(0),
-      raider: { ...createInitialState(0).raider, mood: 0 },
-    }
-    const upbeat = {
-      ...createInitialState(0),
-      raider: { ...createInitialState(0).raider, mood: 5 },
-    }
-
-    const neutralResult = resolveRobotEncounter(neutral, 'roomba_prime', createRNG(1), 0)
-    const upbeatResult = resolveRobotEncounter(upbeat, 'roomba_prime', createRNG(1), 0)
-
-    expect(neutralResult).not.toBeNull()
-    expect(upbeatResult).not.toBeNull()
-    expect(neutralResult!.event.text).toContain('Shield lost 16 charge')
-    expect(neutralResult!.event.text).toContain('Shield lost 16 charge and mitigated 6 damage; 10 HP damage landed')
-    expect(upbeatResult!.event.text).toContain('Incoming 16 damage. Resilience mitigated 2 damage before shields. Shield lost 14 charge and mitigated 5 damage; 9 HP damage landed')
-    expect(upbeatResult!.state.raider.hp).toBeGreaterThan(neutralResult!.state.raider.hp)
-    expect(upbeatResult!.state.raid.shield?.charge).toBeGreaterThan(neutralResult!.state.raid.shield!.charge)
-    expect(upbeatResult!.state.raid.shield?.durability).toBeGreaterThan(neutralResult!.state.raid.shield!.durability)
-  })
-
-  it('shows the mood resilience callout even when no shield is active', () => {
-    const state = {
-      ...createInitialState(0),
-      raider: { ...createInitialState(0).raider, mood: 5 },
-      raid: { ...createInitialState(0).raid, shield: null },
-    }
-
-    const result = resolveRobotEncounter(state, 'roomba_prime', createRNG(1), 0)
-
-    expect(result).not.toBeNull()
-    expect(result!.event.text).toContain('Incoming 16 damage')
-    expect(result!.event.text).toContain('Resilience mitigated 2 damage before shields')
-    expect(result!.event.text).toContain('Took 14 damage')
-    expect(result!.state.raider.hp).toBe(86)
-  })
-
-  it('adds Raider Level title-band resilience to mood resilience', () => {
-    const base = createInitialState(0)
-    const lowLevel = {
-      ...base,
-      raider: { ...base.raider, mood: 5, levelXp: 0 },
-      raid: { ...base.raid, dangerLevel: 'High' as const, shield: null },
-    }
-    const maxLevel = {
-      ...base,
-      raider: { ...base.raider, mood: 5, levelXp: xpRequiredForLevel(75) },
-      raid: { ...base.raid, dangerLevel: 'High' as const, shield: null },
-    }
-
-    const lowLevelResult = resolveRobotEncounter(lowLevel, 'tank_overcompensation', createRNG(1), 0)
-    const maxLevelResult = resolveRobotEncounter(maxLevel, 'tank_overcompensation', createRNG(1), 0)
-
-    expect(lowLevelResult).not.toBeNull()
-    expect(maxLevelResult).not.toBeNull()
-    expect(maxLevelResult!.state.raider.hp).toBeGreaterThan(lowLevelResult!.state.raider.hp)
-    expect(maxLevelResult!.event.text).toContain('Resilience mitigated')
-  })
-
-  it('scales failed robot damage by danger-level profile', () => {
-    const initial = createInitialState(0)
-    const medium = resolveRobotEncounter(
-      { ...initial, raid: { ...initial.raid, dangerLevel: 'Medium' } },
-      'roomba_prime',
-      createRNG(1),
-      0,
-    )
-    const high = resolveRobotEncounter(
-      { ...initial, raid: { ...initial.raid, dangerLevel: 'High' } },
-      'roomba_prime',
-      createRNG(1),
-      0,
-    )
-
-    expect(medium).not.toBeNull()
-    expect(high).not.toBeNull()
-    expect(medium!.state.raider.hp).toBe(85)
-    expect(high!.state.raider.hp).toBe(80)
-  })
-
   it('falls back to the baseline profile when danger level data is invalid', () => {
     const state = {
       ...createInitialState(0),
@@ -581,68 +564,6 @@ describe('applyEffects — backpack item behavior', () => {
 
     expect(result).not.toBeNull()
     expect(result!.phase).toBe('HUB')
-  })
-
-  it('applies encounter-specific damage multipliers only on failed robot encounters', () => {
-    const state = createInitialState(0)
-    const failed = resolveRobotEncounter(state, 'tattletale', createRNG(7), 0, { damageMultiplier: 7 })
-    const defeated = resolveRobotEncounter(state, 'anxietick', createRNG(1), 0, { damageMultiplier: 10 })
-
-    expect(failed).not.toBeNull()
-    expect(failed!.event.id).toBe('robot_tattletale_escaped')
-    expect(failed!.event.text).toContain('Shield lost 40 charge')
-    expect(failed!.event.text).toContain('26 HP damage landed')
-    expect(failed!.state.raider.hp).toBe(74)
-
-    expect(defeated).not.toBeNull()
-    expect(defeated!.event.id).toBe('robot_anxietick_defeated')
-    expect(defeated!.state.raider.hp).toBe(100)
-  })
-
-  it('does not let a failed robot encounter down a full-health raider', () => {
-    const state = createInitialState(0)
-    const result = resolveRobotEncounter(state, 'roomba_prime', createRNG(1), 0, { damageMultiplier: 3 })
-
-    expect(result).not.toBeNull()
-    expect(result!.event.id).toBe('robot_roomba_prime_escaped')
-    expect(result!.event.text).toContain('Shield lost 40 charge')
-    expect(result!.event.text).toContain('29 HP damage landed')
-    expect(result!.state.raider.hp).toBe(71)
-  })
-
-  it('calls out damage prevented by the nonlethal robot floor', () => {
-    const initial = createInitialState(0)
-    const state = {
-      ...initial,
-      raid: { ...initial.raid, shield: null },
-    }
-    const result = resolveRobotEncounter(state, 'tattletale', createRNG(7), 0, { damageMultiplier: 14 })
-
-    expect(result).not.toBeNull()
-    expect(result!.event.id).toBe('robot_tattletale_escaped')
-    expect(result!.event.text).toContain('Incoming 84 damage')
-    expect(result!.event.text).toContain('Took 75 damage')
-    expect(result!.event.text).toContain('Nonlethal floor prevented 9 damage')
-    expect(result!.state.raider.hp).toBe(25)
-  })
-
-  it('only lets nasty and deadly robots down already-wounded raiders', () => {
-    const initial = createInitialState(0)
-    const wounded = {
-      ...initial,
-      raider: { ...initial.raider, hp: 40 },
-    }
-    const deadly = resolveRobotEncounter(wounded, 'roomba_prime', createRNG(1), 0, { damageMultiplier: 3 })
-    const moderate = resolveRobotEncounter(wounded, 'tattletale', createRNG(7), 0, { damageMultiplier: 7 })
-
-    expect(deadly).not.toBeNull()
-    expect(deadly!.event.id).toBe('robot_roomba_prime_escaped')
-    expect(deadly!.event.text).toContain('Shield lost 40 charge')
-    expect(deadly!.state.raider.hp).toBe(11)
-
-    expect(moderate).not.toBeNull()
-    expect(moderate!.event.id).toBe('robot_tattletale_escaped')
-    expect(moderate!.state.raider.hp).toBe(14)
   })
 
   it('finds a current-raid healing item without adding stash loot', () => {
@@ -737,6 +658,7 @@ describe('applyEffects — backpack item behavior', () => {
       totalTicks: 5,
       ticksRemaining: 5,
     })
+    expect(result!.state.raid.activeRaidActivity).toBeNull()
   })
 
   it('supports future instant shield rechargers', () => {
@@ -773,6 +695,7 @@ describe('applyEffects — backpack item behavior', () => {
     expect(result!.event.id).toBe('shield_recharger_flash_cell_used')
     expect(result!.state.raid.shield?.charge).toBe(40)
     expect(result!.state.raid.activeShieldRecharge).toBeNull()
+    expect(result!.state.raid.activeRaidActivity).toBeNull()
     expect(result!.state.raid.backpack).toEqual([])
     expect(result!.state.raid.backpackValue).toBe(0)
   })

@@ -66,6 +66,7 @@ export const useGameStore = defineStore('game', () => {
     () => state.value.pendingCalm || state.value.pendingPressure || state.value.raid.forceExtract,
   )
   const log = computed(() => state.value.log)
+  const activityLog = computed(() => state.value.activityLog)
 
   // Initialize ticker (pause/resume, visibility, catch-up)
   const ticker = useGameTicker(
@@ -119,6 +120,7 @@ export const useGameStore = defineStore('game', () => {
     signal,
     hasPendingHandlerAction,
     log,
+    activityLog,
     newEvents,
     lastTickAt,
     awaySummary: ticker.awaySummary,

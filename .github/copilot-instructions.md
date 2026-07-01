@@ -88,7 +88,7 @@ During active RAIDING, only one Handler action can be pending at a time (`pendin
 - The first implementation targets DOWNED = 2 ticks, EXTRACTING = 4 ticks, KNOCKED_OUT = 2 ticks, and revive restoring 25 HP while preserving shield state exactly as-is. Keep KNOCKED_OUT duration behind a helper so skills can improve it later.
 
 ### Extraction Event Outcomes
-- `src/content/extraction_events.json` describes EXTRACTING-condition comms/outcomes and should be gated by `requires.phase: "RAIDING"` plus `requires.extracting: true` once extraction is represented as a condition.
+- `src/content/raiding-events/extraction_events.json` describes EXTRACTING-condition comms/outcomes and should be gated by `requires.phase: "RAIDING"` plus `requires.extracting: true` once extraction is represented as a condition.
 - Avoid using `effects.forcePhase` for condition-only outcomes. Use condition effects/events for extraction failure, extraction success, and downed-at-LZ outcomes; reserve phase transitions for lifecycle moves (`RAIDING -> HUB`, `RAIDING -> KNOCKED_OUT`, `KNOCKED_OUT -> HUB`).
 - Failed extraction clears `RaidState.extracting` and continues the original RAIDING timer instead of refreshing it. If no raid time remains, the DOWNED/KNOCKED_OUT loss path should win unless extraction completed first.
 
@@ -108,7 +108,7 @@ On save migration for older profiles that predate `state.stats`, initialize miss
 Version 6 migration normalizes saved lifetime stats into this current shape and drops stale removed stat fields rather than preserving unknown keys from older saves.
 
 ### Robot Encounters
-Robot encounter events in `src/content/raiding_events.json` use `effects.robotEncounter` to reference a robot ID from `src/content/robots.json`. Robots have a `deadliness` label (`weak`, `moderate`, `dangerous`, `nasty`, `deadly`) that must match their menace, abundance, and encounter tuning. Valid deadliness tiers in ascending order:
+Robot encounter diary events in `src/content/raiding-events/raiding_events.json` and `src/content/raiding-events/extraction_events.json` start multi-tick activities with `effects.startRaidActivity`, not legacy one-tick `effects.robotEncounter`. Named diary lines should pass `startRaidActivity.robotId`; generic diary lines should pass `startRaidActivity.robotPool` and let the activity resolver choose from `src/content/robots.json` using robot weights plus filters such as danger level, greed, zone, zone condition, and deadliness. Activity definitions can also declare `requires` gates for danger level, zone, zone condition, and greed; keep event `requires` aligned so diary text does not announce an activity that the resolver refuses to start. Robots have a `deadliness` label (`weak`, `moderate`, `dangerous`, `nasty`, `deadly`) that must match their menace, abundance, and encounter tuning. Valid deadliness tiers in ascending order:
 
 | Tier | Label | Robots |
 |------|-------|--------|
@@ -118,11 +118,11 @@ Robot encounter events in `src/content/raiding_events.json` use `effects.robotEn
 | 4 | `nasty` | Bomber Who Misreads the Room (menace 7) |
 | 5 (deadliest) | `deadly` | Roomba Prime (menace 8), Crusher of Dreams (menace 8), Sniper of Poor Decisions (menace 9), Tank of Overcompensation (menace 10) |
 
-Only `nasty` and `deadly` robots can down the raider (downing encounters trigger only at ≤ 50% HP). `weak`, `moderate`, and `dangerous` robots are non-lethal: damage is capped so HP cannot drop to 0. High-tier robot encounter events (`nasty` and above) must include `"minGreed": 20` in their `requires` clause so they only appear after the raider has pushed deeper.
+Only `nasty` and `deadly` robots can down the raider (downing encounters trigger only at ≤ 50% HP). `weak`, `moderate`, and `dangerous` robots are non-lethal: damage is capped so HP cannot drop to 0. High-tier robot starter events (`nasty` and above) must include `"minGreed": 20` in their `requires` clause so they only appear after the raider has pushed deeper.
 
-`resolveRobotEncounter()` rolls 1-10 with the seeded RNG; if the roll is greater than the robot's `menace`, the raider defeats it, emits a `successText` line, and wins an item from that robot's `lootTable`. On failure, the raider takes damage based on menace and runs away. Rare event variants can set `effects.robotDamageMultiplier` to make failed encounters more dangerous or lethal; this multiplier only applies on failure, never when the robot is defeated. Robot loot is also included in the regular loot resolver pool alongside the base loot tables.
+Robot combat is resolved by `src/engine/raidActivities.ts` as a `ROBOT_ENCOUNTER` activity. Each round the Raider damages the robot HP pool with the current weapon. Until the weapon system exists, all raiders use the default **Tea Kettle** weapon. Robot retaliation routes through `src/engine/shields.ts`, and round/completion text is emitted to `GameState.activityLog`. Activity starters can set `startRaidActivity.robotDamageMultiplier` to make a variant more dangerous. Robot-specific loot is awarded from the robot's `lootTable` when the activity resolves in the Raider's favor. Robot loot is also included in the regular loot resolver pool alongside the base loot tables.
 
-Positive mood grants a small resilience bonus before shield mitigation on failed robot encounters only. This trims the damage handed to shields and HP, does not alter robot raw damage, and should remain a small modifier. When resilience mitigates damage, the comms damage narration must explicitly include the reduced amount (for example `Resilience mitigated 2 damage before shields.`).
+Positive mood grants a small resilience bonus before shield mitigation during robot activity retaliation only. This trims the damage handed to shields and HP, does not alter robot raw damage, and should remain a small modifier. When resilience mitigates damage, the activity-log damage narration must explicitly include the reduced amount (for example `Resilience mitigated 2 damage before shields.`).
 
 Do not add passive Raider Level damage resistance. Robot survivability should remain easy to reason about: robot deadliness/menace plus danger profile define threat; positive mood provides the soft pre-shield resilience trim; Hiding in Lockers provides a tiny explicit pre-shield skill mitigation; shields, consumables, and Handler actions are the meaningful survival levers.
 

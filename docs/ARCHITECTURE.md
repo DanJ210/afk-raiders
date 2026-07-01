@@ -32,9 +32,10 @@ Meta tags in [index.html](../index.html) enable iOS and desktop browser detectio
 The simulation engine is **pure TypeScript with zero framework imports**. Vue renders state and dispatches the rare Handler action. The engine must run identically in Node (tests) and the browser.
 
 ## Core engine contracts
-- Determinism: the same seed + state must produce the same outcomes and comms sequence.
+- Determinism: the same seed + state must produce the same outcomes, diary sequence, and activity-thread sequence.
 - Single damage pipeline: all incoming HP damage must flow through shared shield-aware helpers (no ad hoc HP subtraction).
-- Damage narration guarantee: whenever damage is processed by the engine (shielded, unshielded, mitigated to zero HP damage, or lethal), a readable damage flavor line must be emitted to the comms feed in that tick.
+- Damage ownership: ordinary diary/comms events are ambient narration. Damage, shield splits, and fighting belong to the active raid activity path and must be narrated in `GameState.activityLog`.
+- Damage narration guarantee: whenever damage is processed by the engine (shielded, unshielded, mitigated to zero HP damage, or lethal), a readable damage flavor line must be emitted to the activity log in that tick.
 
 ## Folder structure
 ```
@@ -42,10 +43,10 @@ afk-raiders/
 ├── src/
 │   ├── engine/                  # Pure TS, no framework imports
 │   │   ├── rng.ts               # Seeded RNG (mulberry32) — determinism
-│   │   ├── tick.ts              # processTick(state, rng) → { state, events }
+│   │   ├── tick.ts              # processTick(state, rng) → { state, events, activityEvents }
 │   │   ├── raidStateMachine.ts  # HUB → DEPLOYING → RAIDING → KNOCKED_OUT/HUB
 │   │   ├── greedCheck.ts        # The signature mechanic
-│   │   ├── eventResolver.ts     # Weighted event tables by context
+│   │   ├── eventResolver.ts     # Weighted ambient/diary event tables by context
 │   │   ├── dangerLevelProfiles.ts # Low/Medium/High risk/reward tuning
 │   │   ├── signal.ts            # Signal regen + spend rules
 │   │   ├── shields.ts           # Shared shield damage + recharge rules
@@ -53,13 +54,16 @@ afk-raiders/
 │   │   ├── raiderLevel.ts       # Raider Level 1-75 XP curve, titles, and level-up text
 │   │   ├── homeStash.ts         # Stash transfer and overflow auto-sell
 │   │   ├── stats.ts             # Lifetime stat aggregation helpers
-│   │   ├── log.ts               # Centralized log append/capping
+│   │   ├── log.ts               # Centralized diary/activity log append/capping
 │   │   └── catchUp.ts           # Fast-forward elapsed ticks on app open
 │   ├── content/                 # The comedy lives here, as data
 │   │   ├── hub_events.json      # Desperanza rest & prep (≤5 min)
 │   │   ├── deployment_events.json # One-person tunnel pod ride (2 min)
-│   │   ├── raiding_events.json  # Looting, robots, greed (≤30 min + nuke risk)
-│   │   ├── extraction_events.json # RAIDING extraction-condition drama
+│   │   ├── raiding-events/      # RAIDING diary events plus activity definitions
+│   │   │   ├── raiding_events.json # Ambient RAIDING diary starters
+│   │   │   ├── extraction_events.json # EXTRACTING-condition comms/outcomes
+│   │   │   ├── robot_encounter_activities.json # Robot active-thread definitions
+│   │   │   └── search_activities.json # Search, extraction, and downed active-thread definitions
 │   │   ├── knocked_out_events.json # Recovery reset quips
 │   │   ├── loot.json            # Many varieties of original comedy/parody loot items
 │   │   ├── healing_items.json   # Current-raid-only field meds
@@ -74,7 +78,7 @@ afk-raiders/
 │   │   ├── gameStore.ts         # Engine state + tick driver
 │   │   └── settingsStore.ts
 │   ├── components/
-│   │   ├── CommsLog.vue         # THE star — autoscrolling feed
+│   │   ├── CommsLog.vue         # THE star — diary feed plus active-thread feed
 │   │   ├── RaiderCard.vue       # Stats, mood, Raider Level, Rat Rating
 │   │   ├── BackpackPanel.vue
 │   │   ├── HomeStash.vue        # Persistent stash — extracted loot, ×N stacking
@@ -106,6 +110,8 @@ Events are picked by context (zone, greed level, mood, HP) and fill `{slot}` pla
 ```
 Writing jokes never touches engine code — and this is the future community-content pipeline. Phase-transition comms are also content-managed in `src/content/phase_transitions.json`, keyed by transition pairs such as `HUB_to_DEPLOYING`.
 
+AFK Raiders now uses two text streams, tracked in [ACTIVE_RAID_ACTIVITY_PLAN.md](ACTIVE_RAID_ACTIVITY_PLAN.md): `GameState.log` is the diary/comms feed for ambient narration, while `GameState.activityLog` is the active-thread feed for multi-tick tasks. Content events in the diary should start or flavor activity, not directly process combat damage. Activity-scoped ambient overlay events can fire during an active activity/condition, but they must be no-effect content and still append to `GameState.log`. The migration target is to scrub ordinary event tables of HP/damage/fight resolution effects and route those outcomes through `RaidState.activeRaidActivity` or existing timed conditions mirrored into `activityLog`.
+
 The versioned lore wiki in [docs/lore](lore/) defines parody canon, legal guardrails, tone, and backlog ideas. It is planning/reference material, not runtime data. Source-wiki material should be reduced to general tropes and then rewritten as AFK-original canon there before any game-facing text is added to `src/content/`.
 
 Static balance configuration that must affect deterministic engine behavior also lives under `src/content/`. Use this for build-time tuning switches such as the skill XP threshold profile in `src/content/progression_config.json`. Runtime player preferences belong in `src/stores/settingsStore.ts` and can persist through localStorage; they should not alter deterministic simulation rules unless the setting is explicitly saved as part of game state.
@@ -132,7 +138,7 @@ Events may also use condition requirements for RAIDING overlays. Extraction is r
 }
 ```
 
-Normal RAIDING events must not fire while `downed` or `extracting` is active unless they explicitly require the matching condition. `extraction_events.json` remains the home for extraction-condition comms and outcomes. DOWNED condition comms may live in `raiding_events.json` or a dedicated condition file as long as they require `downed: true`. Use phase transitions only for lifecycle changes (`RAIDING -> HUB`, `RAIDING -> KNOCKED_OUT`, `KNOCKED_OUT -> HUB`); use condition events/effects for starting, failing, completing, or expiring `downed` and `extracting`.
+Normal RAIDING events must not fire while `downed` or `extracting` is active unless they explicitly require the matching condition. `src/content/raiding-events/extraction_events.json` remains the home for extraction-condition comms and outcomes while extraction is represented as a timed condition. DOWNED condition comms may live in `raiding_events.json` or a dedicated condition file as long as they require `downed: true`. Ambient overlay lines that should play during an existing activity/condition must also require `activeActivityKind`, `activeActivityId`, or `activeRobotId`, and content tests enforce that those activity-scoped ambient lines do not carry effects. Use phase transitions only for lifecycle changes (`RAIDING -> HUB`, `RAIDING -> KNOCKED_OUT`, `KNOCKED_OUT -> HUB`); use condition/activity events for starting, failing, completing, or expiring `downed`, `extracting`, and future `activeRaidActivity` threads.
 
 Events may also gate themselves by `requires.dangerLevel` (`Low`, `Medium`, or `High`). The danger level is determined by a seeded combination of zone selection and zone condition selection (from `src/content/zones/zone_conditions.json`). Zone conditions are split into minor and major pools; carried-over greed from successful previous raids nudges the seeded pool roll toward major conditions, then the selected condition sets danger level. KNOCKED_OUT recovery outcomes reset greed to 0 before the next deployment. The engine applies the matching danger-level profile in `src/engine/dangerLevelProfiles.ts`: Low has lower loot value and rarity bias, Medium raises loot upside and ambient/robot/extraction pressure, and High has the highest loot ceiling with the harshest ambient pressure, robot pressure, and LZ risk. These profiles are the economy guardrail for risk/reward tuning.
 
@@ -140,7 +146,7 @@ Loot rarity selection also applies small mood and greed biases in `eventResolver
 
 When an event awards backpack loot (`effects.backpackValue` producing a positive loot add), `processTick()` performs two additional independent consumable bonus rolls: one for a healing item and one for a shield recharger. This allows a single loot event to grant normal loot plus either or both consumable types.
 
-When a shield mitigates damage, the comms feed should include a follow-up line that shows the split between shield charge lost and HP damage landed. That keeps the log readable while still reflecting the shield math.
+When a shield mitigates damage, the activity log should include a follow-up line that shows the split between shield charge lost and HP damage landed. That keeps the active thread readable while still reflecting the shield math.
 
 ### Home stash transfer
 On every successful extraction (`RAIDING -> HUB` caused by `RaidState.extracting` completion or extraction-condition success), `processTick` merges the backpack into `state.homeStash` before the backpack resets. Duplicate item IDs stack quantities.
@@ -150,18 +156,18 @@ The stash has an enforced item cap (`HOME_STASH_ITEM_LIMIT`). Overflow items are
 `RaidState` also includes an optional manual `hiddenPocket` selection (the parody safe pocket). The UI (`BackpackPanel.vue`) explicitly sets/changes/clears this slot from current backpack items. On backpack-loss failures (`KNOCKED_OUT -> HUB`), the engine transfers exactly one unit of the selected pocket item into home stash before normal reset bookkeeping.
 
 ### Shield layer
-`RaidState.shield` stores the current shield snapshot for the active raid. Shield damage rules live in `src/engine/shields.ts` so all incoming damage uses one deterministic calculation path. Negative HP event effects and failed robot encounters both route through the same helper.
+`RaidState.shield` stores the current shield snapshot for the active raid. Shield damage rules live in `src/engine/shields.ts` so all incoming damage uses one deterministic calculation path. The target model is that active raid activities, not ordinary diary events, are the source of HP damage and robot combat damage.
 
 Positive raider mood adds a small derived resilience bonus in `eventResolver.ts` for failed robot encounters only. It does not change robot raw damage; it slightly reduces the damage handed to shields and HP when mood is above zero.
-The resulting shield-damage log line reports incoming damage, pre-shield mitigation, shield mitigation, and final HP loss so the effect stays visible in the comms UI.
+The resulting shield-damage activity line reports incoming damage, pre-shield mitigation, shield mitigation, and final HP loss so the effect stays visible in the active-thread UI.
 
 Shield rechargers are intentionally different from field meds:
 - Field meds live in `RaidState.healingItems` and never extract. Bandages heal the living; Panic Paddles revive a DOWNED Raider.
 - Shield rechargers live in `RaidState.backpack` with backpack-item metadata, are manual-use only, and extract if unused.
 - HUB currently restores the equipped shield to full charge and 100% durability; loadout/store systems are the future hook for persisted shield state.
 - `src/content/healing_items.json` and `src/content/shield_rechargers.json` are still required: they define weighted type selection for consumables awarded by both dedicated event effects and loot-bonus rolls.
-- Damage events should remain source-first: the event text announces the encounter, then a shield summary line can explain how much shield charge was lost and how much HP damage landed.
-- This is a contract, not a style preference: every processed damage instance must produce a comms damage line, even if the same tick later starts the DOWNED condition or transitions the raid toward KNOCKED_OUT.
+- Damage activity events should remain source-first: the activity text announces the encounter round, then a shield summary line can explain how much shield charge was lost and how much HP damage landed.
+- This is a contract, not a style preference: every processed damage instance must produce an activity-log damage line, even if the same tick later starts the DOWNED condition or transitions the raid toward KNOCKED_OUT.
 
 ### 3. Signal as the only real input
 Signal regenerates (~1 per 10 min, capped at 5). Ready Up (2 Signal) starts DEPLOYING from HUB. Calm (1 Signal, internal action ID `CALM`) reduces current greed before the next greed check, cooling rare-loot appetite, risky-event pressure, and future major-condition momentum. Pressure (1 Signal, internal action ID `PRESSURE`) increases current greed before the next check, raising rare-loot appetite, risky-event pressure, and future major-condition momentum. CALL EXTRACT (3 Signal) starts or forces the EXTRACTING condition during RAIDING. Revive (5 Signal, internal action ID `REVIVE`) is available only during RAIDING while DOWNED, clears the DOWNED condition, and restores 25 HP while preserving shield state. Greed itself does not lower extraction chance. Natural extraction is disabled until the raider has spent the configured minimum RAIDING ticks in-zone (`DEFAULT_MIN_NATURAL_EXTRACTION_RAIDING_TICKS`, currently 30 ticks / 15 minutes); CALL EXTRACT bypasses this guard, including the final RAIDING tick before timer expiry. When the Raider is low on HP and has no current-raid bandages, the Greed Check adds a survival-instinct extraction bonus after that guard, dampened by danger level so Medium and High conditions still punish unattended raids. During active RAIDING only one action may be queued at a time, so action buttons lock until the next tick applies and clears the pending action. While DOWNED, normal Handler raid actions are disabled; Revive is the downed-only exception. On successful HUB returns, raid pressure state cools down (greed decays, extracting clears); KNOCKED_OUT recovery resets greed to 0.

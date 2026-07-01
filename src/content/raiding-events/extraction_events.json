@@ -20,7 +20,11 @@
       "extracting": true
     },
     "effects": {
-      "damage": 3
+      "startRaidActivity": {
+        "activityId": "extraction_hazard_damage",
+        "kind": "EXTRACTION",
+        "hazardDamage": 3
+      }
     }
   },
   {
@@ -57,8 +61,12 @@
       "extracting": true
     },
     "effects": {
-      "damage": 8,
-      "mood": -2
+      "mood": -2,
+      "startRaidActivity": {
+        "activityId": "extraction_hazard_damage",
+        "kind": "EXTRACTION",
+        "hazardDamage": 8
+      }
     }
   },
   {
@@ -96,9 +104,13 @@
       "extracting": true
     },
     "effects": {
-      "damage": 15,
       "mood": -2,
-      "ratRating": 1
+      "ratRating": 1,
+      "startRaidActivity": {
+        "activityId": "extraction_hazard_damage",
+        "kind": "EXTRACTION",
+        "hazardDamage": 15
+      }
     }
   },
   {
@@ -111,9 +123,13 @@
       "extracting": true
     },
     "effects": {
-      "damage": 50,
       "mood": -3,
-      "startDowned": true
+      "startDowned": true,
+      "startRaidActivity": {
+        "activityId": "extraction_hazard_damage",
+        "kind": "EXTRACTION",
+        "hazardDamage": 50
+      }
     }
   },
   {
@@ -149,8 +165,12 @@
       "extracting": true
     },
     "effects": {
-      "damage": 5,
-      "mood": -1
+      "mood": -1,
+      "startRaidActivity": {
+        "activityId": "extraction_hazard_damage",
+        "kind": "EXTRACTION",
+        "hazardDamage": 5
+      }
     }
   },
   {
@@ -189,7 +209,11 @@
     },
     "effects": {
       "mood": -1,
-      "robotEncounter": "anxietick"
+      "startRaidActivity": {
+        "activityId": "robot_encounter_standard",
+        "kind": "ROBOT_ENCOUNTER",
+        "robotId": "anxietick"
+      }
     }
   },
   {
@@ -214,7 +238,11 @@
     },
     "effects": {
       "mood": -3,
-      "robotEncounter": "tattletale"
+      "startRaidActivity": {
+        "activityId": "robot_encounter_standard",
+        "kind": "ROBOT_ENCOUNTER",
+        "robotId": "tattletale"
+      }
     }
   },
   {
@@ -242,8 +270,12 @@
     },
     "effects": {
       "mood": -4,
-      "robotEncounter": "roomba_prime",
-      "robotDamageMultiplier": 2
+      "startRaidActivity": {
+        "activityId": "robot_encounter_standard",
+        "kind": "ROBOT_ENCOUNTER",
+        "robotId": "roomba_prime",
+        "robotDamageMultiplier": 3
+      }
     }
   },
   {
@@ -269,8 +301,12 @@
     },
     "effects": {
       "mood": -3,
-      "robotEncounter": "bomber_misread",
-      "robotDamageMultiplier": 2.5
+      "startRaidActivity": {
+        "activityId": "robot_encounter_standard",
+        "kind": "ROBOT_ENCOUNTER",
+        "robotId": "bomber_misread",
+        "robotDamageMultiplier": 2.5
+      }
     }
   },
   {
@@ -308,7 +344,11 @@
     },
     "effects": {
       "mood": -1,
-      "robotEncounter": "anxietick"
+      "startRaidActivity": {
+        "activityId": "robot_encounter_standard",
+        "kind": "ROBOT_ENCOUNTER",
+        "robotId": "anxietick"
+      }
     }
   },
   {
@@ -333,7 +373,11 @@
     },
     "effects": {
       "mood": -2,
-      "robotEncounter": "tattletale"
+      "startRaidActivity": {
+        "activityId": "robot_encounter_standard",
+        "kind": "ROBOT_ENCOUNTER",
+        "robotId": "tattletale"
+      }
     }
   },
   {
@@ -360,7 +404,11 @@
     },
     "effects": {
       "mood": -4,
-      "robotEncounter": "roomba_prime"
+      "startRaidActivity": {
+        "activityId": "robot_encounter_standard",
+        "kind": "ROBOT_ENCOUNTER",
+        "robotId": "roomba_prime"
+      }
     }
   },
   {
@@ -385,7 +433,11 @@
     },
     "effects": {
       "mood": -3,
-      "robotEncounter": "walker_texas_malfunction"
+      "startRaidActivity": {
+        "activityId": "robot_encounter_standard",
+        "kind": "ROBOT_ENCOUNTER",
+        "robotId": "walker_texas_malfunction"
+      }
     }
   },
   {
@@ -424,7 +476,11 @@
     },
     "effects": {
       "mood": 1,
-      "robotEncounter": "anxietick"
+      "startRaidActivity": {
+        "activityId": "robot_encounter_standard",
+        "kind": "ROBOT_ENCOUNTER",
+        "robotId": "anxietick"
+      }
     }
   },
   {
@@ -437,7 +493,11 @@
     },
     "effects": {
       "mood": -3,
-      "robotEncounter": "tattletale"
+      "startRaidActivity": {
+        "activityId": "robot_encounter_standard",
+        "kind": "ROBOT_ENCOUNTER",
+        "robotId": "tattletale"
+      }
     }
   },
   {
@@ -451,7 +511,11 @@
     },
     "effects": {
       "mood": -4,
-      "robotEncounter": "roomba_prime"
+      "startRaidActivity": {
+        "activityId": "robot_encounter_standard",
+        "kind": "ROBOT_ENCOUNTER",
+        "robotId": "roomba_prime"
+      }
     }
   },
   {
@@ -465,7 +529,11 @@
     },
     "effects": {
       "mood": -3,
-      "robotEncounter": "bomber_misread"
+      "startRaidActivity": {
+        "activityId": "robot_encounter_standard",
+        "kind": "ROBOT_ENCOUNTER",
+        "robotId": "bomber_misread"
+      }
     }
   },
   {
@@ -503,7 +571,11 @@
     },
     "effects": {
       "mood": -1,
-      "robotEncounter": "anxietick"
+      "startRaidActivity": {
+        "activityId": "robot_encounter_standard",
+        "kind": "ROBOT_ENCOUNTER",
+        "robotId": "anxietick"
+      }
     }
   },
   {
@@ -516,7 +588,11 @@
     },
     "effects": {
       "mood": -3,
-      "robotEncounter": "tattletale"
+      "startRaidActivity": {
+        "activityId": "robot_encounter_standard",
+        "kind": "ROBOT_ENCOUNTER",
+        "robotId": "tattletale"
+      }
     }
   },
   {
@@ -530,7 +606,11 @@
     },
     "effects": {
       "mood": -4,
-      "robotEncounter": "roomba_prime"
+      "startRaidActivity": {
+        "activityId": "robot_encounter_standard",
+        "kind": "ROBOT_ENCOUNTER",
+        "robotId": "roomba_prime"
+      }
     }
   },
   {
@@ -544,7 +624,11 @@
     },
     "effects": {
       "mood": -2,
-      "robotEncounter": "crusher_of_dreams"
+      "startRaidActivity": {
+        "activityId": "robot_encounter_standard",
+        "kind": "ROBOT_ENCOUNTER",
+        "robotId": "crusher_of_dreams"
+      }
     }
   },
   {
@@ -583,7 +667,11 @@
     },
     "effects": {
       "mood": -1,
-      "robotEncounter": "anxietick"
+      "startRaidActivity": {
+        "activityId": "robot_encounter_standard",
+        "kind": "ROBOT_ENCOUNTER",
+        "robotId": "anxietick"
+      }
     }
   },
   {
@@ -596,7 +684,11 @@
     },
     "effects": {
       "mood": -3,
-      "robotEncounter": "tattletale"
+      "startRaidActivity": {
+        "activityId": "robot_encounter_standard",
+        "kind": "ROBOT_ENCOUNTER",
+        "robotId": "tattletale"
+      }
     }
   },
   {
@@ -610,7 +702,11 @@
     },
     "effects": {
       "mood": -4,
-      "robotEncounter": "roomba_prime"
+      "startRaidActivity": {
+        "activityId": "robot_encounter_standard",
+        "kind": "ROBOT_ENCOUNTER",
+        "robotId": "roomba_prime"
+      }
     }
   },
   {
@@ -623,7 +719,11 @@
     },
     "effects": {
       "mood": -3,
-      "robotEncounter": "walker_texas_malfunction"
+      "startRaidActivity": {
+        "activityId": "robot_encounter_standard",
+        "kind": "ROBOT_ENCOUNTER",
+        "robotId": "walker_texas_malfunction"
+      }
     }
   },
   {
@@ -662,7 +762,11 @@
     },
     "effects": {
       "mood": 1,
-      "robotEncounter": "anxietick"
+      "startRaidActivity": {
+        "activityId": "robot_encounter_standard",
+        "kind": "ROBOT_ENCOUNTER",
+        "robotId": "anxietick"
+      }
     }
   },
   {
@@ -675,7 +779,11 @@
     },
     "effects": {
       "mood": -3,
-      "robotEncounter": "tattletale"
+      "startRaidActivity": {
+        "activityId": "robot_encounter_standard",
+        "kind": "ROBOT_ENCOUNTER",
+        "robotId": "tattletale"
+      }
     }
   },
   {
@@ -701,9 +809,12 @@
       "extracting": true
     },
     "effects": {
-      "damage": 8,
       "mood": -2,
-      "robotEncounter": "tattletale"
+      "startRaidActivity": {
+        "activityId": "robot_encounter_standard",
+        "kind": "ROBOT_ENCOUNTER",
+        "robotId": "tattletale"
+      }
     }
   },
   {
@@ -717,10 +828,13 @@
       "extracting": true
     },
     "effects": {
-      "damage": 15,
       "mood": -4,
-      "robotEncounter": "roomba_prime",
-      "robotDamageMultiplier": 1.5
+      "startRaidActivity": {
+        "activityId": "robot_encounter_standard",
+        "kind": "ROBOT_ENCOUNTER",
+        "robotId": "roomba_prime",
+        "robotDamageMultiplier": 1.5
+      }
     }
   },
   {
@@ -863,8 +977,12 @@
       "extracting": true
     },
     "effects": {
-      "damage": 4,
-      "mood": -1
+      "mood": -1,
+      "startRaidActivity": {
+        "activityId": "extraction_hazard_damage",
+        "kind": "EXTRACTION",
+        "hazardDamage": 4
+      }
     }
   },
   {
@@ -893,10 +1011,13 @@
       "extracting": true
     },
     "effects": {
-      "damage": 10,
       "mood": -3,
-      "robotEncounter": "sniper_poor_decisions",
-      "robotDamageMultiplier": 1.5
+      "startRaidActivity": {
+        "activityId": "robot_encounter_standard",
+        "kind": "ROBOT_ENCOUNTER",
+        "robotId": "sniper_poor_decisions",
+        "robotDamageMultiplier": 1.5
+      }
     }
   },
   {
@@ -922,8 +1043,12 @@
       "extracting": true
     },
     "effects": {
-      "damage": 5,
-      "mood": -2
+      "mood": -2,
+      "startRaidActivity": {
+        "activityId": "extraction_hazard_damage",
+        "kind": "EXTRACTION",
+        "hazardDamage": 5
+      }
     }
   },
   {
@@ -977,9 +1102,13 @@
       "extracting": true
     },
     "effects": {
-      "damage": 6,
       "mood": -2,
-      "ratRating": 2
+      "ratRating": 2,
+      "startRaidActivity": {
+        "activityId": "extraction_hazard_damage",
+        "kind": "EXTRACTION",
+        "hazardDamage": 6
+      }
     }
   },
   {

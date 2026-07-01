@@ -5,6 +5,7 @@ import { SIGNAL_CAP } from '../../src/engine/signal'
 import { skillDefinitionById } from '../../src/engine/skills'
 import { MAX_LOG_SIZE } from '../../src/engine/log'
 import { processTick } from '../../src/engine/tick'
+import { xpRequiredForLevel, getRevivalSignalCost } from '../../src/engine/raiderLevel'
 import type { GameState } from '../../src/engine/types'
 import { useHandlerActions } from '../../src/composables/useHandlerActions'
 
@@ -265,5 +266,177 @@ describe('useHandlerActions Signal Handling skill', () => {
     expect(stateRef.value.raider.hp).toBe(initial.raider.hp)
     expect(publishEvents).not.toHaveBeenCalled()
     expect(persistCallback).not.toHaveBeenCalled()
+  })
+
+  it('revive cost scales down with raider level progression', () => {
+    expect(getRevivalSignalCost(0)).toBe(5) // Levels 1-9 (titleBandIndex 0): no reduction
+    expect(getRevivalSignalCost(xpRequiredForLevel(10))).toBe(5) // Levels 10-18 (titleBandIndex 1): no reduction
+    expect(getRevivalSignalCost(xpRequiredForLevel(19))).toBe(4) // Levels 19-27 (titleBandIndex 2): 1 reduction
+    expect(getRevivalSignalCost(xpRequiredForLevel(28))).toBe(4) // Levels 28-36 (titleBandIndex 3): 1 reduction
+    expect(getRevivalSignalCost(xpRequiredForLevel(37))).toBe(3) // Levels 37-45 (titleBandIndex 4): 2 reduction
+    expect(getRevivalSignalCost(xpRequiredForLevel(75))).toBeLessThanOrEqual(1) // Max level: reduced to 1
+  })
+
+  it('revive cost never goes below 1 Signal', () => {
+    const maxLevelXp = xpRequiredForLevel(75)
+    const reviveCost = getRevivalSignalCost(maxLevelXp)
+    expect(reviveCost).toBeGreaterThanOrEqual(1)
+  })
+
+  it('spends correct signal amount based on raider level when reviving', () => {
+    const initial = createInitialState(0)
+    const now = Date.now()
+    const level20Xp = xpRequiredForLevel(20)
+
+    const { actions, stateRef, persistCallback, publishEvents } = createHarness({
+      ...initial,
+      raider: {
+        ...initial.raider,
+        hp: 0,
+        levelXp: level20Xp, // Level 20 (titleBandIndex 2) = 4 signal cost
+      },
+      raid: {
+        ...initial.raid,
+        phase: 'RAIDING',
+        downed: { ticksRemaining: 2 },
+      },
+      signal: {
+        ...initial.signal,
+        current: SIGNAL_CAP,
+        lastRegenAt: now,
+      },
+    })
+
+    actions.revive()
+
+    const expectedCost = getRevivalSignalCost(level20Xp)
+    expect(expectedCost).toBe(4)
+    expect(stateRef.value.signal.current).toBe(SIGNAL_CAP - 4)
+    expect(stateRef.value.raider.hp).toBe(25)
+    expect(stateRef.value.raid.downed).toBeNull()
+    expect(persistCallback).toHaveBeenCalledOnce()
+  })
+
+  it('spends 1 Signal for max level raider revival (cost capped)', () => {
+    const initial = createInitialState(0)
+    const now = Date.now()
+    const maxLevelXp = xpRequiredForLevel(75)
+
+    const { actions, stateRef, persistCallback } = createHarness({
+      ...initial,
+      raider: {
+        ...initial.raider,
+        hp: 0,
+        levelXp: maxLevelXp, // Level 75 = 1 signal cost (capped)
+      },
+      raid: {
+        ...initial.raid,
+        phase: 'RAIDING',
+        downed: { ticksRemaining: 2 },
+      },
+      signal: {
+        ...initial.signal,
+        current: SIGNAL_CAP,
+        lastRegenAt: now,
+      },
+    })
+
+    actions.revive()
+
+    expect(stateRef.value.signal.current).toBe(SIGNAL_CAP - 1)
+    expect(stateRef.value.raider.hp).toBe(25)
+    expect(persistCallback).toHaveBeenCalledOnce()
+  })
+
+  it('awards skill XP equal to actual revival cost spent', () => {
+    const initial = createInitialState(0)
+    const now = Date.now()
+    const level37Xp = xpRequiredForLevel(37)
+
+    const { actions, stateRef } = createHarness({
+      ...initial,
+      raider: {
+        ...initial.raider,
+        hp: 0,
+        levelXp: level37Xp, // Level 37 (titleBandIndex 4) = 3 signal cost
+      },
+      raid: {
+        ...initial.raid,
+        phase: 'RAIDING',
+        downed: { ticksRemaining: 2 },
+      },
+      signal: {
+        ...initial.signal,
+        current: SIGNAL_CAP,
+        lastRegenAt: now,
+      },
+    })
+
+    const initialSkillXp = stateRef.value.raider.skills.signal_handling.xp
+    actions.revive()
+
+    const expectedCost = getRevivalSignalCost(level37Xp)
+    expect(expectedCost).toBe(3)
+    expect(stateRef.value.raider.skills.signal_handling.xp).toBeGreaterThan(initialSkillXp)
+  })
+
+  it('includes level discount in revive comms when cost is reduced', () => {
+    const initial = createInitialState(0)
+    const now = Date.now()
+    const level19Xp = xpRequiredForLevel(19)
+
+    const { actions, stateRef } = createHarness({
+      ...initial,
+      raider: {
+        ...initial.raider,
+        hp: 0,
+        levelXp: level19Xp, // Level 19 (titleBandIndex 2) = 4 signal cost (discount of 1)
+      },
+      raid: {
+        ...initial.raid,
+        phase: 'RAIDING',
+        downed: { ticksRemaining: 2 },
+      },
+      signal: {
+        ...initial.signal,
+        current: SIGNAL_CAP,
+        lastRegenAt: now,
+      },
+    })
+
+    actions.revive()
+
+    const reviveLog = stateRef.value.log.find(entry => entry.id === 'handler_revive_used')
+    expect(reviveLog?.text).toContain('Raider Level discount: 1📶')
+  })
+
+  it('does not include discount text when reviving at level 1', () => {
+    const initial = createInitialState(0)
+    const now = Date.now()
+
+    const { actions, stateRef } = createHarness({
+      ...initial,
+      raider: {
+        ...initial.raider,
+        hp: 0,
+        levelXp: 0, // Level 1 = no discount
+      },
+      raid: {
+        ...initial.raid,
+        phase: 'RAIDING',
+        downed: { ticksRemaining: 2 },
+      },
+      signal: {
+        ...initial.signal,
+        current: SIGNAL_CAP,
+        lastRegenAt: now,
+      },
+    })
+
+    actions.revive()
+
+    const reviveLog = stateRef.value.log.find(entry => entry.id === 'handler_revive_used')
+    expect(reviveLog?.text).not.toContain('discount')
+    expect(reviveLog?.text).toBe('Revive signal punched through. Raider is upright, offended, and technically alive.')
   })
 })
