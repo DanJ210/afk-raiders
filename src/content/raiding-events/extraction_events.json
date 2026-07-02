@@ -1220,5 +1220,76 @@
       "mood": -2,
       "ratRating": 2
     }
+  },
+  {
+    "id": "extract_receipt_printer_checkpoint",
+    "weight": 8,
+    "text": "A Receipt Printer of Doom set up an extraction checkpoint and cited your backpack for excessive optimism.",
+    "requires": {
+      "phase": "RAIDING",
+      "dangerLevel": [
+        "Medium",
+        "High"
+      ],
+      "extracting": true
+    },
+    "effects": {
+      "mood": -2,
+      "ratRating": 1,
+      "startRaidActivity": {
+        "activityId": "robot_encounter_standard",
+        "kind": "ROBOT_ENCOUNTER",
+        "robotId": "receipt_printer_doom"
+      }
+    }
+  },
+  {
+    "id": "extract_apology_turret_lz_corridor",
+    "weight": 7,
+    "text": "An Apology Turret covered the LZ corridor and apologized in four languages before firing in all of them.",
+    "requires": {
+      "phase": "RAIDING",
+      "dangerLevel": [
+        "High"
+      ],
+      "minGreed": 20,
+      "extracting": true
+    },
+    "effects": {
+      "mood": -3,
+      "startRaidActivity": {
+        "activityId": "robot_encounter_standard",
+        "kind": "ROBOT_ENCOUNTER",
+        "robotId": "apology_turret",
+        "robotDamageMultiplier": 2
+      }
+    }
+  },
+  {
+    "id": "extract_drama_queen_curtain_call",
+    "weight": 2,
+    "text": "The Drama Queen arrived at the LZ for curtain call and rejected your extraction timing as narratively weak.",
+    "requires": {
+      "phase": "RAIDING",
+      "zone": [
+        "arc_ruins",
+        "the_breach"
+      ],
+      "dangerLevel": [
+        "High"
+      ],
+      "minGreed": 35,
+      "extracting": true
+    },
+    "effects": {
+      "mood": -5,
+      "ratRating": 3,
+      "startRaidActivity": {
+        "activityId": "robot_encounter_standard",
+        "kind": "ROBOT_ENCOUNTER",
+        "robotId": "drama_queen",
+        "robotDamageMultiplier": 2.5
+      }
+    }
   }
 ]

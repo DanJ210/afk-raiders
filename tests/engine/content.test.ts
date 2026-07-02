@@ -739,6 +739,7 @@ describe('content validation', () => {
         crusher_of_dreams: 'deadly',
         sniper_poor_decisions: 'deadly',
         tank_overcompensation: 'deadly',
+        drama_queen: 'deadly',
       })
     })
 

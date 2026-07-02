@@ -1199,6 +1199,148 @@
         }
     },
     {
+        "id": "encounter_receipt_printer_doom_late_fee",
+        "weight": 5,
+        "text": "A Receipt Printer of Doom added a late fee to your breathing schedule and opened fire for compliance.",
+        "requires": {
+            "phase": "RAIDING",
+            "dangerLevel": [
+                "Medium",
+                "High"
+            ],
+            "minGreed": 15
+        },
+        "effects": {
+            "mood": -3,
+            "ratRating": 2,
+            "startRaidActivity": {
+                "activityId": "robot_encounter_standard",
+                "kind": "ROBOT_ENCOUNTER",
+                "robotId": "receipt_printer_doom",
+                "robotDamageMultiplier": 1.75
+            }
+        }
+    },
+    {
+        "id": "encounter_receipt_printer_doom_triplicate",
+        "weight": 4,
+        "text": "A Receipt Printer of Doom requested signature in triplicate while advancing in a very persuasive straight line.",
+        "requires": {
+            "phase": "RAIDING",
+            "dangerLevel": [
+                "High"
+            ],
+            "minGreed": 20
+        },
+        "effects": {
+            "mood": -4,
+            "ratRating": 2,
+            "startRaidActivity": {
+                "activityId": "robot_encounter_standard",
+                "kind": "ROBOT_ENCOUNTER",
+                "robotId": "receipt_printer_doom",
+                "robotDamageMultiplier": 2
+            }
+        }
+    },
+    {
+        "id": "encounter_apology_turret_courtesy_burst",
+        "weight": 5,
+        "text": "An Apology Turret offered a courtesy burst at no extra charge, then apologized for the invoice anyway.",
+        "requires": {
+            "phase": "RAIDING",
+            "dangerLevel": [
+                "Medium",
+                "High"
+            ],
+            "minGreed": 18
+        },
+        "effects": {
+            "mood": -3,
+            "ratRating": 1,
+            "startRaidActivity": {
+                "activityId": "robot_encounter_standard",
+                "kind": "ROBOT_ENCOUNTER",
+                "robotId": "apology_turret",
+                "robotDamageMultiplier": 1.75
+            }
+        }
+    },
+    {
+        "id": "encounter_apology_turret_customer_care",
+        "weight": 3,
+        "text": "An Apology Turret escalated to customer care and resolved your complaint by making it louder.",
+        "requires": {
+            "phase": "RAIDING",
+            "dangerLevel": [
+                "High"
+            ],
+            "minGreed": 22
+        },
+        "effects": {
+            "mood": -4,
+            "ratRating": 2,
+            "startRaidActivity": {
+                "activityId": "robot_encounter_standard",
+                "kind": "ROBOT_ENCOUNTER",
+                "robotId": "apology_turret",
+                "robotDamageMultiplier": 2.25
+            }
+        }
+    },
+    {
+        "id": "encounter_drama_queen_opening_night",
+        "weight": 2,
+        "text": "The Drama Queen {robot_flavor_drama_queen}. It announced opening night and pointed every weapon at center stage.",
+        "requires": {
+            "phase": "RAIDING",
+            "dangerLevel": [
+                "High"
+            ],
+            "zone": [
+                "arc_ruins",
+                "the_breach"
+            ],
+            "minGreed": 30
+        },
+        "effects": {
+            "mood": -5,
+            "ratRating": 3,
+            "startRaidActivity": {
+                "activityId": "robot_encounter_standard",
+                "kind": "ROBOT_ENCOUNTER",
+                "robotId": "drama_queen",
+                "robotDamageMultiplier": 2.5
+            }
+        }
+    },
+    {
+        "id": "encounter_drama_queen_finale_charge",
+        "weight": 1,
+        "text": "The Drama Queen skipped rehearsal and went straight to the finale. Pyro budget appears unlimited.",
+        "requires": {
+            "phase": "RAIDING",
+            "dangerLevel": [
+                "High"
+            ],
+            "zone": [
+                "arc_ruins",
+                "the_breach"
+            ],
+            "minGreed": 40
+        },
+        "effects": {
+            "mood": -6,
+            "ratRating": 3,
+            "startRaidActivity": {
+                "activityId": "robot_encounter_standard",
+                "kind": "ROBOT_ENCOUNTER",
+                "robotId": "drama_queen",
+                "robotDamageMultiplier": 3
+            }
+        }
+    },
+    {
         "id": "encounter_sniper_poor_decisions",
         "weight": 5,
         "text": "A Sniper of Poor Decisions {robot_flavor_sniper_poor_decisions}. It waited until I stopped moving. Classic.",

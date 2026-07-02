@@ -6,7 +6,7 @@ This file holds AFK-original concepts that are approved as direction but not yet
 
 | Idea | Type | Notes |
 |---|---|---|
-| The Drama Queen | Parody Equivalent | Future giant boss machine that monologues before attacking. Keep rare and theatrical. |
+| The Drama Queen | Parody Equivalent | Runtime-started as a rare high-danger prototype in `robots.json`, raiding events, and extraction events. Keep rare and theatrical. |
 | Receipt Printer of Doom | Original AFK Creation | Runtime-started citation platform in `robots.json` and raiding events. |
 | Apology Turret | Original AFK Creation | Runtime-started dangerous citation platform in `robots.json` and raiding events. |
 

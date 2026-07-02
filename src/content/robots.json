@@ -793,5 +793,58 @@
         "flavor": "Standard metal."
       }
     ]
+  },
+  {
+    "id": "drama_queen",
+    "weight": 2,
+    "name": "The Drama Queen",
+    "deadliness": "deadly",
+    "menace": 10,
+    "flavorLines": [
+      "announces each attack like opening night at a dangerous theater",
+      "demands spotlight priority before firing",
+      "delivers a monologue while charging weapons",
+      "calls this encounter Act One and your panic Act Two"
+    ],
+    "successText": [
+      "You defeat The Drama Queen. It powers down mid-monologue and requests applause anyway."
+    ],
+    "lootTable": [
+      {
+        "id": "drama_queen_playbill",
+        "weight": 85,
+        "name": "Shrapnel Playbill",
+        "value": 125,
+        "flavor": "Tonight only: tragedy, panic, and one very expensive prop budget."
+      },
+      {
+        "id": "spotlight_servo",
+        "weight": 20,
+        "name": "Spotlight Servo",
+        "value": 90,
+        "flavor": "Still tracks movement like an overcommitted stage manager."
+      },
+      {
+        "id": "monologue_core",
+        "weight": 8,
+        "name": "Monologue Core",
+        "value": 160,
+        "flavor": "Contains 47 minutes of uninterrupted confidence."
+      },
+      {
+        "id": "finale_charge_pack",
+        "weight": 3,
+        "name": "Finale Charge Pack",
+        "value": 240,
+        "flavor": "Guaranteed to escalate any scene past workplace policy."
+      },
+      {
+        "id": "robot_alloy",
+        "weight": 1,
+        "name": "Robot Alloy",
+        "value": 20,
+        "flavor": "Standard metal."
+      }
+    ]
   }
 ]
