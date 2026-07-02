@@ -189,6 +189,11 @@ const ROBOT_ROUND_DAMAGE_PER_MENACE = 0.35
 const ROBOT_LETHAL_HP_RATIO = 0.5
 const ROBOT_NONLETHAL_MIN_HP_RATIO = 0.25
 const LETHAL_ROBOT_DEADLINESS: ReadonlySet<RobotEntry['deadliness']> = new Set(['nasty', 'deadly'])
+const DANGER_DAMAGE_SWING: Record<'Low' | 'Medium' | 'High', number> = {
+  Low: 1,
+  Medium: 2,
+  High: 3,
+}
 
 export interface StartRaidActivityResult {
   state: GameState
@@ -404,10 +409,17 @@ function canRobotEncounterBeLethal(state: GameState, robot: RobotEntry): boolean
   return state.raider.hp / state.raider.maxHp <= ROBOT_LETHAL_HP_RATIO
 }
 
-function applyRobotRoundDamage(state: GameState, robot: RobotEntry, activity: ActiveRaidActivity): ShieldDamageResult {
+function applyRobotRoundDamage(state: GameState, robot: RobotEntry, activity: ActiveRaidActivity, rng: RNG): ShieldDamageResult {
   const profile = getDangerLevelProfile(state.raid.dangerLevel)
   const multiplier = Math.max(0, (activity.robotDamageMultiplier ?? 1) * profile.robotFailureDamageMultiplier)
-  const incomingDamage = Math.max(1, Math.ceil(robot.menace * ROBOT_ROUND_DAMAGE_PER_MENACE * multiplier))
+  const expectedDamage = Math.max(1, Math.ceil(robot.menace * ROBOT_ROUND_DAMAGE_PER_MENACE * multiplier))
+  const dangerSwing = DANGER_DAMAGE_SWING[profile.dangerLevel] ?? DANGER_DAMAGE_SWING.Low
+  const enemySwing = Math.max(1, Math.floor(robot.menace / 3))
+  const totalSwing = dangerSwing + enemySwing
+  const minIncomingDamage = Math.max(1, expectedDamage - totalSwing)
+  const maxIncomingDamage = Math.max(minIncomingDamage, expectedDamage + totalSwing)
+  const rolledDamage = rng.int(minIncomingDamage, maxIncomingDamage)
+  const incomingDamage = Math.max(minIncomingDamage, Math.min(maxIncomingDamage, rolledDamage))
   const skillMultiplier = getSkillModifierProfile(state.raider.skills).robotFailureDamageMultiplier
   const damageAfterSkills = Math.max(0, Math.ceil(incomingDamage * skillMultiplier))
   const skillDamageReduced = Math.max(0, incomingDamage - damageAfterSkills)
@@ -594,7 +606,7 @@ export function advanceRaidActivity(state: GameState, rng: RNG, now: number): Ad
     }
   }
 
-  const shieldDamage = applyRobotRoundDamage(state, robot, activity)
+  const shieldDamage = applyRobotRoundDamage(state, robot, activity, rng)
   const nextActivity = {
     ...activity,
     robotHp: nextRobotHp,

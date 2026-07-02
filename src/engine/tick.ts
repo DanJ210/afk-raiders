@@ -95,6 +95,17 @@ function activityEventId(activity: ActivityLogEvent['activity'], activityId: str
   return `activity_${activity.toLowerCase()}_${activityId}_${status}`
 }
 
+function robotEncounterResolutionEvent(activity: ActivityLogEvent, tick: number, now: number, conditions?: LogCondition[]): LogEvent {
+  return {
+    id: `robot_encounter_${activity.activityId}_${activity.status}`,
+    tick,
+    timestamp: now,
+    text: `Robot encounter resolved: ${activity.text}`,
+    phase: 'RAIDING',
+    conditions,
+  }
+}
+
 function extractionActivityEvent(status: ActivityStatus, tick: number, now: number, ticksRemaining = 0): ActivityLogEvent {
   const definition = raidActivities.find(activity => activity.id === 'extraction_countdown')
   const textTemplate = status === 'progress'
@@ -641,6 +652,12 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
     const activityResult = advanceRaidActivity(currentState, rng, now)
     currentState = activityResult.state
     activityEmitted.push(...activityResult.activityEvents)
+    const completedRobotActivity = activityResult.activityEvents.find(
+      event => event.activity === 'ROBOT_ENCOUNTER' && event.status === 'completed',
+    )
+    if (completedRobotActivity) {
+      emitted.push(robotEncounterResolutionEvent(completedRobotActivity, state.tick, now, logConditionsForRaid(currentState.raid)))
+    }
     advancedBlockingActivity = activityResult.blocking
     advancedActivityThisTick = activityResult.activityEvents.length > 0 && activityResult.blocking
     if (

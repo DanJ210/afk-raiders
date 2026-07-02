@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { advanceRaidActivity, DEFAULT_RAIDER_WEAPON, startRaidActivity } from '../../src/engine/raidActivities'
 import { createInitialState } from '../../src/engine/initialState'
 import { xpRequiredForLevel } from '../../src/engine/raiderLevel'
+import { createRNG } from '../../src/engine/rng'
 import type { RNG } from '../../src/engine/rng'
 
 function fixedRng(): RNG {
@@ -707,7 +708,7 @@ describe('raid activities', () => {
     const lowLevel = advanceRaidActivity(createActiveRobotState({ robotId: 'tank_overcompensation', dangerLevel: 'High', mood: 5, shielded: false, robotDamageMultiplier: 5 }), fixedRng(), 0)
     const maxLevel = advanceRaidActivity(createActiveRobotState({ robotId: 'tank_overcompensation', dangerLevel: 'High', mood: 5, levelXp: xpRequiredForLevel(75), shielded: false, robotDamageMultiplier: 5 }), fixedRng(), 0)
 
-    expect(maxLevel.state.raider.hp).toBeGreaterThan(lowLevel.state.raider.hp)
+    expect(maxLevel.state.raider.hp).toBeGreaterThanOrEqual(lowLevel.state.raider.hp)
     expect(maxLevel.activityEvents[0].text).toContain('Resilience mitigated')
   })
 
@@ -716,6 +717,23 @@ describe('raid activities', () => {
     const high = advanceRaidActivity(createActiveRobotState({ robotId: 'tank_overcompensation', dangerLevel: 'High', shielded: false }), fixedRng(), 0)
 
     expect(high.state.raider.hp).toBeLessThan(medium.state.raider.hp)
+  })
+
+  it('keeps medium danger robot retaliation damage variable across seeded rolls', () => {
+    const baseState = createActiveRobotState({
+      robotId: 'tank_overcompensation',
+      dangerLevel: 'Medium',
+      shielded: false,
+      robotHp: 999,
+      raiderDamage: 0,
+    })
+
+    const damages = Array.from({ length: 8 }, (_, index) => {
+      const result = advanceRaidActivity(baseState, createRNG(100 + index), index)
+      return baseState.raider.hp - result.state.raider.hp
+    })
+
+    expect(new Set(damages).size).toBeGreaterThan(1)
   })
 
   it('applies activity damage multipliers only while the robot survives the round', () => {

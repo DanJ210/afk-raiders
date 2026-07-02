@@ -1055,6 +1055,14 @@ describe('deterministic snapshot', () => {
       id: 'activity_robot_encounter_robot_encounter_standard_anxietick_completed',
       activityId: 'robot_encounter_standard_anxietick',
     })
+    expect(result.events).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        id: 'robot_encounter_robot_encounter_standard_anxietick_completed',
+      }),
+    ]))
+    const resolutionEvent = result.events.find(event => event.id === 'robot_encounter_robot_encounter_standard_anxietick_completed')
+    expect(resolutionEvent).toBeDefined()
+    expect(resolutionEvent?.text).toContain(result.activityEvents[0].text)
   })
 
   it('advances non-blocking search activities while still allowing diary events', () => {
