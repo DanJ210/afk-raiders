@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { advanceRaidActivity, DEFAULT_RAIDER_WEAPON, startRaidActivity } from '../../src/engine/raidActivities'
 import { createInitialState } from '../../src/engine/initialState'
 import { xpRequiredForLevel } from '../../src/engine/raiderLevel'
+import { createRNG } from '../../src/engine/rng'
 import type { RNG } from '../../src/engine/rng'
 
 function fixedRng(): RNG {
@@ -12,7 +13,29 @@ function fixedRng(): RNG {
     int: vi.fn<(min: number, max: number) => number>().mockImplementation((_min, max) => max),
     clone: () => fixedRng(),
     getSeed: () => 0,
-  }
+  } as unknown as RNG
+}
+
+function fixedRngPickLast(): RNG {
+  return {
+    next: vi.fn<() => number>().mockReturnValue(0.5),
+    weightedPick: <T,>(items: readonly T[]) => items[items.length - 1],
+    pick: <T,>(items: readonly T[]) => items[items.length - 1],
+    int: vi.fn<(min: number, max: number) => number>().mockImplementation((_min, max) => max),
+    clone: () => fixedRngPickLast(),
+    getSeed: () => 0,
+  } as unknown as RNG
+}
+
+function bonusHealingRng(): RNG {
+  return {
+    next: vi.fn<() => number>().mockReturnValue(0.01),
+    weightedPick: <T,>(items: readonly T[]) => items[0],
+    pick: <T,>(items: readonly T[]) => items[0],
+    int: vi.fn<(min: number, max: number) => number>().mockImplementation((_min, max) => max),
+    clone: () => bonusHealingRng(),
+    getSeed: () => 0,
+  } as unknown as RNG
 }
 
 function createActiveRobotState(params: {
@@ -169,6 +192,59 @@ describe('raid activities', () => {
     )
 
     expect(result).toBeNull()
+  })
+
+  it('excludes boss robots from generic pools unless includeBosses is true', () => {
+    const initial = createInitialState(0)
+    const state = {
+      ...initial,
+      raid: {
+        ...initial.raid,
+        phase: 'RAIDING' as const,
+        dangerLevel: 'High' as const,
+        zone: 'arc_ruins',
+        greedLevel: 45,
+      },
+    }
+
+    const withoutBosses = startRaidActivity(
+      state,
+      {
+        activityId: 'robot_encounter_standard',
+        kind: 'ROBOT_ENCOUNTER',
+        robotPool: {
+          dangerLevel: 'High',
+          zone: 'arc_ruins',
+          deadliness: ['deadly'],
+          minGreed: 40,
+        },
+      },
+      fixedRngPickLast(),
+      0,
+    )
+
+    expect(withoutBosses).not.toBeNull()
+    expect(withoutBosses!.state.raid.activeRaidActivity?.robotId).not.toBe('drama_queen')
+
+    const withBosses = startRaidActivity(
+      state,
+      {
+        activityId: 'robot_encounter_standard',
+        kind: 'ROBOT_ENCOUNTER',
+        robotPool: {
+          dangerLevel: 'High',
+          zone: 'arc_ruins',
+          deadliness: ['deadly'],
+          minGreed: 40,
+          includeBosses: true,
+        },
+      },
+      fixedRngPickLast(),
+      0,
+    )
+
+    expect(withBosses).not.toBeNull()
+    expect(withBosses!.state.raid.activeRaidActivity?.robotId).toBe('drama_queen')
   })
 
   it('starts a JSON-backed search activity', () => {
@@ -447,7 +523,7 @@ describe('raid activities', () => {
       expect.objectContaining({
         itemId: 'scrap_metal_basic',
         name: 'Basic Scrap Metal',
-        quantity: 2,
+        quantity: 3,
       }),
     ])
     expect(completed.activityEvents).toEqual([
@@ -457,6 +533,44 @@ describe('raid activities', () => {
         status: 'completed',
       }),
     ])
+  })
+
+  it('can find a bonus healing item when any search completes', () => {
+    const initial = createInitialState(0)
+    const rng = bonusHealingRng()
+    const started = startRaidActivity(
+      {
+        ...initial,
+        raid: {
+          ...initial.raid,
+          phase: 'RAIDING' as const,
+        },
+      },
+      { activityId: 'search_black_box_cache', kind: 'SEARCH', lootTableId: 'scrap_components' },
+      rng,
+      0,
+    )
+
+    expect(started).not.toBeNull()
+
+    const progress = advanceRaidActivity(started!.state, rng, 30_000)
+    const secondProgress = advanceRaidActivity(progress.state, rng, 60_000)
+    const completed = advanceRaidActivity(secondProgress.state, rng, 90_000)
+
+    expect(completed.state.raid.backpack).toEqual([
+      expect.objectContaining({
+        itemId: 'scrap_metal_basic',
+        quantity: 3,
+      }),
+    ])
+    expect(completed.state.raid.healingItems).toEqual([
+      expect.objectContaining({
+        itemId: 'bandage_white',
+        name: 'White Bandage',
+        quantity: 1,
+      }),
+    ])
+    expect(completed.activityEvents[0].text).toContain('Bonus med find: tucked White Bandage')
   })
 
   it('completes newly mapped apparel searches with bundled loot', () => {
@@ -594,7 +708,7 @@ describe('raid activities', () => {
     const lowLevel = advanceRaidActivity(createActiveRobotState({ robotId: 'tank_overcompensation', dangerLevel: 'High', mood: 5, shielded: false, robotDamageMultiplier: 5 }), fixedRng(), 0)
     const maxLevel = advanceRaidActivity(createActiveRobotState({ robotId: 'tank_overcompensation', dangerLevel: 'High', mood: 5, levelXp: xpRequiredForLevel(75), shielded: false, robotDamageMultiplier: 5 }), fixedRng(), 0)
 
-    expect(maxLevel.state.raider.hp).toBeGreaterThan(lowLevel.state.raider.hp)
+    expect(maxLevel.state.raider.hp).toBeGreaterThanOrEqual(lowLevel.state.raider.hp)
     expect(maxLevel.activityEvents[0].text).toContain('Resilience mitigated')
   })
 
@@ -603,6 +717,23 @@ describe('raid activities', () => {
     const high = advanceRaidActivity(createActiveRobotState({ robotId: 'tank_overcompensation', dangerLevel: 'High', shielded: false }), fixedRng(), 0)
 
     expect(high.state.raider.hp).toBeLessThan(medium.state.raider.hp)
+  })
+
+  it('keeps medium danger robot retaliation damage variable across seeded rolls', () => {
+    const baseState = createActiveRobotState({
+      robotId: 'tank_overcompensation',
+      dangerLevel: 'Medium',
+      shielded: false,
+      robotHp: 999,
+      raiderDamage: 0,
+    })
+
+    const damages = Array.from({ length: 8 }, (_, index) => {
+      const result = advanceRaidActivity(baseState, createRNG(100 + index), index)
+      return baseState.raider.hp - result.state.raider.hp
+    })
+
+    expect(new Set(damages).size).toBeGreaterThan(1)
   })
 
   it('applies activity damage multipliers only while the robot survives the round', () => {

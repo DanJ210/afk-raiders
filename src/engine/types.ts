@@ -12,6 +12,7 @@ export interface ContentEntry {
 export interface EventTemplate extends ContentEntry {
   text: string
   parameters?: Record<string, string | number>
+  commsPriority?: CommsPriority
   requires?: {
     phase?: Phase | Phase[]
     extracting?: boolean
@@ -26,6 +27,8 @@ export interface EventTemplate extends ContentEntry {
     maxGreed?: number
     minHp?: number
     maxHp?: number
+    minRaiderLevel?: number
+    maxRaiderLevel?: number
   }
   effects?: {
     backpackValue?: number | string // number or dice string like "+1d6"
@@ -57,6 +60,10 @@ export interface RobotActivityPool {
   deadliness?: RobotEntry['deadliness'] | RobotEntry['deadliness'][]
   minGreed?: number
   maxGreed?: number
+  minRaiderLevel?: number
+  maxRaiderLevel?: number
+  /** When true, includes boss robots in pooled selection. Defaults to false. */
+  includeBosses?: boolean
 }
 
 export interface RaidActivityRequires {
@@ -65,6 +72,8 @@ export interface RaidActivityRequires {
   zoneCondition?: string | string[]
   minGreed?: number
   maxGreed?: number
+  minRaiderLevel?: number
+  maxRaiderLevel?: number
 }
 
 export interface StartRaidActivityEffect {
@@ -92,6 +101,7 @@ export interface RaidActivityDefinition extends ContentEntry {
   name: string
   kind: RaidActivityKind
   ticks: number
+  commsPriority?: CommsPriority
   requires?: RaidActivityRequires
   text: RaidActivityTextSet
   blocking?: boolean
@@ -119,6 +129,8 @@ export interface LootItem extends ContentEntry {
 
 export interface RobotEntry extends ContentEntry {
   name: string
+  /** Boss robots are excluded from generic pools unless includeBosses is true. */
+  isBoss?: boolean
   deadliness: 'weak' | 'moderate' | 'dangerous' | 'nasty' | 'deadly'
   menace: number
   flavorLines: string[]
@@ -296,11 +308,13 @@ export interface DownedReason {
 
 export interface DownedState {
   ticksRemaining: number
+  totalTicks?: number
   reason?: DownedReason
 }
 
 export interface ExtractingState {
   ticksRemaining: number
+  totalTicks?: number
 }
 
 export interface ZoneCondition {
@@ -377,12 +391,21 @@ export interface SignalState {
 
 export type LogCondition = 'DOWNED' | 'EXTRACTING'
 
+export const CommsPriority = {
+  Ambient: 'ambient',
+  Priority: 'priority',
+  Activity: 'activity',
+} as const
+
+export type CommsPriority = typeof CommsPriority[keyof typeof CommsPriority]
+
 export interface LogEvent {
   id: string
   tick: number
   timestamp: number  // ms since epoch
   text: string
   phase: Phase
+  commsPriority: CommsPriority
   conditions?: LogCondition[]
 }
 

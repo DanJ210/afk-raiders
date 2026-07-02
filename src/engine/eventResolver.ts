@@ -11,7 +11,7 @@
  *   6. {count}         → random plausible water-bottle count (for flavor)
  */
 
-import type { DangerLevel, EventTemplate, GameState, HealingItem, HealingItemStack, LogEvent, LootItem, Phase, RaidActivityKind, RobotEntry, RobotLootItem, ShieldRechargerItem } from './types.js'
+import { CommsPriority, type DangerLevel, type EventTemplate, type GameState, type HealingItem, type HealingItemStack, type LogEvent, type LootItem, type Phase, type RaidActivityKind, type RobotEntry, type RobotLootItem, type ShieldRechargerItem } from './types.js'
 import type { RNG } from './rng.js'
 import hubEventsData from '../content/hub_events.json'
 import deploymentEventsData from '../content/deployment_events.json'
@@ -38,6 +38,7 @@ import { applyShieldedDamage, startShieldRecharge, type ShieldDamageResult } fro
 import { getSkillModifierProfile } from './skills.js'
 import { clampGreedLevel, getGreedDangerEventWeightMultiplier, getGreedRarityWeightMultiplier } from './greed.js'
 import { logConditionsForRaid } from './log.js'
+import { getRaiderLevelFromXp } from './raiderLevel.js'
 
 // Lifecycle phase events plus RAIDING condition events.
 const events = [
@@ -91,15 +92,39 @@ function mergeLootTables(items: LootItem[]): LootItem[] {
 const robotLoot = robots.flatMap(robot => robot.lootTable.map(item => toLootItem(item, robot)))
 const loot = mergeLootTables([...baseLoot, ...robotLoot])
 const RAID_ACTIVITY_SEARCH_SHARE_BY_DANGER: Record<DangerLevel, number> = {
-  Low: 0.8,
-  Medium: 0.6,
-  High: 0.5,
+  Low: 0.85,
+  Medium: 0.72,
+  High: 0.62,
 }
-const RAIDING_ACTIVITY_STARTER_SHARE = 0.67
+const RAIDING_ACTIVITY_STARTER_SHARE = 0.75
 const ACTIVITY_AMBIENT_COMMS_CHANCE = 0.35
 
 function healingMoodGain(item: HealingItemStack): number {
   return item.moodGain ?? Math.max(1, Math.min(4, item.rarity))
+}
+
+function commsPriorityForEventId(eventId: string): LogEvent['commsPriority'] {
+  return (
+    eventId.startsWith('phase_')
+    || eventId === 'condition_downed_started'
+    || eventId === 'condition_extracting_started'
+    || eventId === 'condition_extraction_failed'
+    || eventId.startsWith('skill_')
+    || eventId.startsWith('raider_level_')
+    || eventId === 'handler_calm'
+    || eventId === 'handler_pressure'
+    || eventId.startsWith('robot_encounter_')
+    || eventId.startsWith('shield_recharger_')
+    || eventId === 'hidden_pocket_saved'
+    || eventId === 'stash_overflow_sale'
+    || eventId === 'raider_level_extraction_stipend'
+  )
+    ? CommsPriority.Priority
+    : CommsPriority.Ambient
+}
+
+function resolveTemplateCommsPriority(template: EventTemplate): LogEvent['commsPriority'] {
+  return template.commsPriority ?? commsPriorityForEventId(template.id)
 }
 
 export function describeShieldDamage(damage: ShieldDamageResult): string {
@@ -161,6 +186,7 @@ function currentAmbientActivityContext(state: GameState): { kind: RaidActivityKi
 /** Filter events valid for the current game context */
 export function eligibleEvents(state: GameState): EventTemplate[] {
   const { raid } = state
+  const raiderLevel = getRaiderLevelFromXp(state.raider.levelXp)
   return events.filter(ev => {
     const r = ev.requires
     if (!r) return true
@@ -210,6 +236,8 @@ export function eligibleEvents(state: GameState): EventTemplate[] {
     if (r.maxGreed !== undefined && raid.greedLevel > r.maxGreed) return false
     if (r.minHp !== undefined && state.raider.hp < r.minHp) return false
     if (r.maxHp !== undefined && state.raider.hp > r.maxHp) return false
+    if (r.minRaiderLevel !== undefined && raiderLevel < r.minRaiderLevel) return false
+    if (r.maxRaiderLevel !== undefined && raiderLevel > r.maxRaiderLevel) return false
     return true
   })
 }
@@ -296,7 +324,7 @@ function hasAmbientActivityRequirement(template: EventTemplate): boolean {
 }
 
 function isAmbientOnlyEvent(template: EventTemplate): boolean {
-  return !template.effects || Object.keys(template.effects).length === 0
+  return (!template.effects || Object.keys(template.effects).length === 0) && resolveTemplateCommsPriority(template) === CommsPriority.Ambient
 }
 
 function totalEventWeight(templates: EventTemplate[]): number {
@@ -529,6 +557,7 @@ export function resolveHealingItemFind(
       timestamp: now,
       text: `Found ${item.name}. Tucked it into the current-raid med pocket.`,
       phase: state.raid.phase,
+      commsPriority: CommsPriority.Ambient,
       conditions: logConditionsForRaid(state.raid),
     },
   }
@@ -548,6 +577,7 @@ export function resolveShieldRechargerFind(
       timestamp: now,
       text: `Found ${item.name}. Into the backpack it goes for the next shield-confidence emergency.`,
       phase: state.raid.phase,
+      commsPriority: CommsPriority.Priority,
       conditions: logConditionsForRaid(state.raid),
     },
   }
@@ -586,6 +616,7 @@ export function consumeHealingItem(
         timestamp: now,
         text: `Used ${item.name}. Revived Raider with ${hp} HP and gained ${moodGain} mood. Medical dignity returned under protest.`,
         phase: state.raid.phase,
+        commsPriority: CommsPriority.Ambient,
         conditions: logConditionsForRaid(state.raid),
       },
     }
@@ -611,6 +642,7 @@ export function consumeHealingItem(
       timestamp: now,
       text: `Used ${item.name}. Restored ${healed} HP and gained ${moodGain} mood. Medical dignity restored to acceptable levels.`,
       phase: state.raid.phase,
+      commsPriority: CommsPriority.Ambient,
       conditions: logConditionsForRaid(state.raid),
     },
   }
@@ -660,6 +692,7 @@ export function consumeShieldRecharger(
       timestamp: now,
       text: eventText,
       phase: state.raid.phase,
+      commsPriority: CommsPriority.Priority,
       conditions: logConditionsForRaid(state.raid),
     },
   }
@@ -687,6 +720,7 @@ export function resolveEvent(
     timestamp: now,
     text,
     phase: state.raid.phase,
+    commsPriority: resolveTemplateCommsPriority(template),
     conditions: logConditionsForRaid(state.raid),
   }
 }
@@ -713,6 +747,7 @@ export function resolveAmbientActivityEvent(
     timestamp: now,
     text: fillSlots(template.text, rng),
     phase: state.raid.phase,
+    commsPriority: CommsPriority.Ambient,
     conditions: logConditionsForRaid(state.raid),
   }
 }

@@ -44,7 +44,7 @@
     },
     {
         "id": "loot_bandage",
-        "weight": 100,
+        "weight": 28,
         "text": "Spotted medical supplies in a pouch labeled PROBABLY CLEAN.",
         "requires": {
             "phase": "RAIDING"
@@ -60,7 +60,7 @@
     },
     {
         "id": "loot_shield_recharger",
-        "weight": 100,
+        "weight": 22,
         "text": "Found a shield recharger in a crate labeled ELECTRICAL MAYBE. That's either useful or a personality test.",
         "requires": {
             "phase": "RAIDING"
@@ -71,6 +71,89 @@
                 "activityId": "search_shield_recharger_crate",
                 "kind": "SEARCH",
                 "shieldRecharger": true
+            }
+        }
+    },
+    {
+        "id": "loot_apparel_duffel",
+        "weight": 26,
+        "text": "Found a half-zipped apparel duffel making pocket promises it may not be legally able to keep.",
+        "requires": {
+            "phase": "RAIDING"
+        },
+        "effects": {
+            "mood": 1,
+            "startRaidActivity": {
+                "activityId": "search_apparel_duffel",
+                "kind": "SEARCH"
+            }
+        }
+    },
+    {
+        "id": "loot_mixed_lost_and_found",
+        "weight": 28,
+        "text": "Found a lost-and-found shelf. Everything here has technically been abandoned by either owner, law, or hope.",
+        "requires": {
+            "phase": "RAIDING"
+        },
+        "effects": {
+            "greedLevel": 1,
+            "startRaidActivity": {
+                "activityId": "search_mixed_lost_and_found",
+                "kind": "SEARCH"
+            }
+        }
+    },
+    {
+        "id": "loot_quick_misc_grab",
+        "weight": 24,
+        "text": "A quick sweep found small useful things: batteries, pens, and one object with resale energy.",
+        "requires": {
+            "phase": "RAIDING"
+        },
+        "effects": {
+            "mood": 1,
+            "startRaidActivity": {
+                "activityId": "activity_search_012_quick_misc_grab",
+                "kind": "SEARCH"
+            }
+        }
+    },
+    {
+        "id": "loot_questionable_field_cache",
+        "weight": 18,
+        "text": "Found a field cache that looks generous in the way contracts look generous before reading them.",
+        "requires": {
+            "phase": "RAIDING",
+            "minGreed": 15
+        },
+        "effects": {
+            "greedLevel": 3,
+            "mood": 1,
+            "startRaidActivity": {
+                "activityId": "activity_search_010_questionable_field_cache",
+                "kind": "SEARCH"
+            }
+        }
+    },
+    {
+        "id": "loot_arc_tech_black_box",
+        "weight": 16,
+        "text": "Found a black-box cache humming like it knows market value and several shortcuts through warranty law.",
+        "requires": {
+            "phase": "RAIDING",
+            "dangerLevel": [
+                "Medium",
+                "High"
+            ],
+            "minGreed": 18
+        },
+        "effects": {
+            "greedLevel": 4,
+            "mood": 1,
+            "startRaidActivity": {
+                "activityId": "activity_search_011_black_box_variant",
+                "kind": "SEARCH"
             }
         }
     },
@@ -1116,6 +1199,150 @@
         }
     },
     {
+        "id": "encounter_receipt_printer_doom_late_fee",
+        "weight": 5,
+        "text": "A Receipt Printer of Doom added a late fee to your breathing schedule and opened fire for compliance.",
+        "requires": {
+            "phase": "RAIDING",
+            "dangerLevel": [
+                "Medium",
+                "High"
+            ],
+            "minGreed": 15
+        },
+        "effects": {
+            "mood": -3,
+            "ratRating": 2,
+            "startRaidActivity": {
+                "activityId": "robot_encounter_standard",
+                "kind": "ROBOT_ENCOUNTER",
+                "robotId": "receipt_printer_doom",
+                "robotDamageMultiplier": 1.75
+            }
+        }
+    },
+    {
+        "id": "encounter_receipt_printer_doom_triplicate",
+        "weight": 4,
+        "text": "A Receipt Printer of Doom requested signature in triplicate while advancing in a very persuasive straight line.",
+        "requires": {
+            "phase": "RAIDING",
+            "dangerLevel": [
+                "High"
+            ],
+            "minGreed": 20
+        },
+        "effects": {
+            "mood": -4,
+            "ratRating": 2,
+            "startRaidActivity": {
+                "activityId": "robot_encounter_standard",
+                "kind": "ROBOT_ENCOUNTER",
+                "robotId": "receipt_printer_doom",
+                "robotDamageMultiplier": 2
+            }
+        }
+    },
+    {
+        "id": "encounter_apology_turret_courtesy_burst",
+        "weight": 5,
+        "text": "An Apology Turret offered a courtesy burst at no extra charge, then apologized for the invoice anyway.",
+        "requires": {
+            "phase": "RAIDING",
+            "dangerLevel": [
+                "Medium",
+                "High"
+            ],
+            "minGreed": 18
+        },
+        "effects": {
+            "mood": -3,
+            "ratRating": 1,
+            "startRaidActivity": {
+                "activityId": "robot_encounter_standard",
+                "kind": "ROBOT_ENCOUNTER",
+                "robotId": "apology_turret",
+                "robotDamageMultiplier": 1.75
+            }
+        }
+    },
+    {
+        "id": "encounter_apology_turret_customer_care",
+        "weight": 3,
+        "text": "An Apology Turret escalated to customer care and resolved your complaint by making it louder.",
+        "requires": {
+            "phase": "RAIDING",
+            "dangerLevel": [
+                "High"
+            ],
+            "minGreed": 22
+        },
+        "effects": {
+            "mood": -4,
+            "ratRating": 2,
+            "startRaidActivity": {
+                "activityId": "robot_encounter_standard",
+                "kind": "ROBOT_ENCOUNTER",
+                "robotId": "apology_turret",
+                "robotDamageMultiplier": 2.25
+            }
+        }
+    },
+    {
+        "id": "encounter_drama_queen_opening_night",
+        "weight": 2,
+        "text": "The Drama Queen {robot_flavor_drama_queen}. It announced opening night and pointed every weapon at center stage.",
+        "requires": {
+            "phase": "RAIDING",
+            "dangerLevel": [
+                "High"
+            ],
+            "zone": [
+                "arc_ruins",
+                "the_breach"
+            ],
+            "minGreed": 30,
+            "minRaiderLevel": 19
+        },
+        "effects": {
+            "mood": -5,
+            "ratRating": 3,
+            "startRaidActivity": {
+                "activityId": "robot_encounter_standard",
+                "kind": "ROBOT_ENCOUNTER",
+                "robotId": "drama_queen",
+                "robotDamageMultiplier": 2.5
+            }
+        }
+    },
+    {
+        "id": "encounter_drama_queen_finale_charge",
+        "weight": 1,
+        "text": "The Drama Queen skipped rehearsal and went straight to the finale. Pyro budget appears unlimited.",
+        "requires": {
+            "phase": "RAIDING",
+            "dangerLevel": [
+                "High"
+            ],
+            "zone": [
+                "arc_ruins",
+                "the_breach"
+            ],
+            "minGreed": 40,
+            "minRaiderLevel": 28
+        },
+        "effects": {
+            "mood": -6,
+            "ratRating": 3,
+            "startRaidActivity": {
+                "activityId": "robot_encounter_standard",
+                "kind": "ROBOT_ENCOUNTER",
+                "robotId": "drama_queen",
+                "robotDamageMultiplier": 3
+            }
+        }
+    },
+    {
         "id": "encounter_sniper_poor_decisions",
         "weight": 5,
         "text": "A Sniper of Poor Decisions {robot_flavor_sniper_poor_decisions}. It waited until I stopped moving. Classic.",
@@ -1759,6 +1986,162 @@
         }
     },
     {
+        "id": "raid_coupon_baron_stash_arbitrage",
+        "weight": 8,
+        "text": "Found a Coupon Baron stash notebook with margin math and one line that read LOOT FIRST, RECONCILE LATER.",
+        "requires": {
+            "phase": "RAIDING",
+            "zone": "buried_city",
+            "minGreed": 12
+        },
+        "effects": {
+            "greedLevel": 2,
+            "mood": 1,
+            "startRaidActivity": {
+                "kind": "SEARCH",
+                "activityId": "search_quick_value_7"
+            }
+        }
+    },
+    {
+        "id": "raid_permit_choir_field_office_forms",
+        "weight": 7,
+        "text": "An abandoned Permit Choir field desk still had forms sorted by urgency, melody, and dramatic timing.",
+        "requires": {
+            "phase": "RAIDING",
+            "zone": [
+                "arc_ruins",
+                "the_breach"
+            ],
+            "minGreed": 8
+        },
+        "effects": {
+            "mood": -1,
+            "ratRating": 1,
+            "startRaidActivity": {
+                "kind": "SEARCH",
+                "activityId": "activity_search_005_launch_manifest_clipboard"
+            }
+        }
+    },
+    {
+        "id": "raid_gear_weirdo_prototype_bin",
+        "weight": 7,
+        "text": "Found a Gear Weirdo prototype bin labeled CALIBRATED ENOUGH. The parts looked confident, not stable.",
+        "requires": {
+            "phase": "RAIDING",
+            "zone": [
+                "forgotten_fields",
+                "the_sunken_highrise"
+            ],
+            "dangerLevel": [
+                "Medium",
+                "High"
+            ],
+            "minGreed": 15
+        },
+        "effects": {
+            "greedLevel": 3,
+            "mood": -1,
+            "startRaidActivity": {
+                "kind": "SEARCH",
+                "activityId": "search_weapon_parts_bin"
+            }
+        }
+    },
+    {
+        "id": "raid_damp_battlegrounds_bottle_rack",
+        "weight": 8,
+        "text": "Damp Battlegrounds offered a bottle rack half-submerged in heroic puddle water. Hydration met opportunism.",
+        "requires": {
+            "phase": "RAIDING",
+            "zone": "damp_battlegrounds"
+        },
+        "effects": {
+            "mood": 1,
+            "startRaidActivity": {
+                "kind": "SEARCH",
+                "activityId": "search_water_bottle_stash"
+            }
+        }
+    },
+    {
+        "id": "raid_buried_city_boutique_cache",
+        "weight": 7,
+        "text": "A buried boutique cache survived under three floors of rubble and one very fashionable caution sign.",
+        "requires": {
+            "phase": "RAIDING",
+            "zone": "buried_city",
+            "minGreed": 10
+        },
+        "effects": {
+            "greedLevel": 2,
+            "mood": 1,
+            "startRaidActivity": {
+                "kind": "SEARCH",
+                "activityId": "search_apparel_duffel"
+            }
+        }
+    },
+    {
+        "id": "raid_arc_ruins_service_bay_blackbox",
+        "weight": 7,
+        "text": "Arc Ruins service bay still had a black-box locker and a warning label that read DO NOT MONETIZE THIS.",
+        "requires": {
+            "phase": "RAIDING",
+            "zone": "arc_ruins",
+            "dangerLevel": [
+                "Medium",
+                "High"
+            ],
+            "minGreed": 18
+        },
+        "effects": {
+            "greedLevel": 4,
+            "mood": -1,
+            "startRaidActivity": {
+                "kind": "SEARCH",
+                "activityId": "activity_search_011_black_box_variant"
+            }
+        }
+    },
+    {
+        "id": "raid_sunken_highrise_penthouse_scrap",
+        "weight": 7,
+        "text": "Sunken Highrise penthouse still held a top-floor stash and a staircase that legally qualifies as a dare.",
+        "requires": {
+            "phase": "RAIDING",
+            "zone": "the_sunken_highrise",
+            "minGreed": 16
+        },
+        "effects": {
+            "greedLevel": 3,
+            "mood": -1,
+            "startRaidActivity": {
+                "kind": "SEARCH",
+                "activityId": "activity_search_002_soggy_tower_top_floor"
+            }
+        }
+    },
+    {
+        "id": "raid_stella_lost_locker_manifest",
+        "weight": 7,
+        "text": "Staycation locker manifest listed snacks, socks, and one spiritual emergency blanket. Opened anyway.",
+        "requires": {
+            "phase": "RAIDING",
+            "zone": "stella",
+            "minGreed": 10
+        },
+        "effects": {
+            "greedLevel": 2,
+            "mood": 1,
+            "startRaidActivity": {
+                "kind": "SEARCH",
+                "activityId": "activity_search_003_staycation_locker"
+            }
+        }
+    },
+    {
         "id": "ambient_search_backpack_argument",
         "weight": 10,
         "text": "Raider is arguing with the backpack zipper like it has legal standing.",
@@ -1790,6 +2173,82 @@
         "id": "ambient_downed_floor_report",
         "weight": 10,
         "text": "Raider has filed a floor report. Initial findings: cold, dusty, judgmental.",
+        "requires": {
+            "phase": "RAIDING",
+            "downed": true,
+            "activeActivityKind": "DOWNED"
+        }
+    },
+    {
+        "id": "ambient_search_clipboard_noise",
+        "weight": 9,
+        "text": "Clipboard Researchers can hear your rummaging from Desperanza and are taking biased notes.",
+        "requires": {
+            "phase": "RAIDING",
+            "activeActivityKind": "SEARCH"
+        }
+    },
+    {
+        "id": "ambient_search_zipper_prayer",
+        "weight": 9,
+        "text": "Raider whispered a quick prayer to the zipper gods before adding one more item.",
+        "requires": {
+            "phase": "RAIDING",
+            "activeActivityKind": "SEARCH"
+        }
+    },
+    {
+        "id": "ambient_robot_performance_review",
+        "weight": 9,
+        "text": "Robot has entered performance-review mode. Raider has entered strategic denial mode.",
+        "requires": {
+            "phase": "RAIDING",
+            "activeActivityKind": "ROBOT_ENCOUNTER"
+        }
+    },
+    {
+        "id": "ambient_robot_cover_argument",
+        "weight": 8,
+        "text": "Current cover is technically a crate and spiritually an opinion.",
+        "requires": {
+            "phase": "RAIDING",
+            "activeActivityKind": "ROBOT_ENCOUNTER"
+        }
+    },
+    {
+        "id": "ambient_extraction_hatch_authority_countdown",
+        "weight": 8,
+        "text": "Hatch Authority says the extraction countdown is on schedule and your panic is optional.",
+        "requires": {
+            "phase": "RAIDING",
+            "extracting": true,
+            "activeActivityKind": "EXTRACTION"
+        }
+    },
+    {
+        "id": "ambient_extraction_coupon_baron_upsell",
+        "weight": 7,
+        "text": "Coupon Baron offered premium boarding priority for a small fee and all remaining dignity.",
+        "requires": {
+            "phase": "RAIDING",
+            "extracting": true,
+            "activeActivityKind": "EXTRACTION"
+        }
+    },
+    {
+        "id": "ambient_downed_medbay_hold_music",
+        "weight": 8,
+        "text": "Medbay says help is on the way and puts you on hold with a flute cover of urgency.",
+        "requires": {
+            "phase": "RAIDING",
+            "downed": true,
+            "activeActivityKind": "DOWNED"
+        }
+    },
+    {
+        "id": "ambient_downed_signal_budget",
+        "weight": 7,
+        "text": "Signal budget review says this is a high-cost minute and a low-leverage posture.",
         "requires": {
             "phase": "RAIDING",
             "downed": true,

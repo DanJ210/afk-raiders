@@ -22,6 +22,41 @@ const latestActivityEntry = computed(() => {
 })
 const activeActivity = computed(() => store.raid.activeRaidActivity)
 const currentActivityTitle = computed(() => store.raid.activeRaidActivity?.name ?? latestActivityEntry.value?.activityName ?? 'No active thread')
+const activityProgressSource = computed(() => {
+  if (activeActivity.value && activeActivity.value.kind !== 'ROBOT_ENCOUNTER') {
+    return {
+      ticksRemaining: activeActivity.value.ticksRemaining,
+      totalTicks: activeActivity.value.totalTicks,
+    }
+  }
+
+  if (store.raid.downed) {
+    return {
+      ticksRemaining: store.raid.downed.ticksRemaining,
+      totalTicks: store.raid.downed.totalTicks ?? store.raid.downed.ticksRemaining,
+    }
+  }
+
+  if (store.raid.extracting) {
+    return {
+      ticksRemaining: store.raid.extracting.ticksRemaining,
+      totalTicks: store.raid.extracting.totalTicks ?? store.raid.extracting.ticksRemaining,
+    }
+  }
+
+  return null
+})
+const activityProgressTotal = computed(() => Math.max(0, activityProgressSource.value?.totalTicks ?? 0))
+const activityProgressRemaining = computed(() => Math.max(0, Math.min(activityProgressSource.value?.ticksRemaining ?? 0, activityProgressTotal.value)))
+const activityProgressCompleted = computed(() => Math.max(0, activityProgressTotal.value - activityProgressRemaining.value))
+const activityProgressPercent = computed(() => {
+  if (activityProgressTotal.value <= 0) return 0
+  return Math.max(0, Math.min(100, (activityProgressCompleted.value / activityProgressTotal.value) * 100))
+})
+const showActivityProgressBar = computed(() => {
+  return Boolean(activityProgressSource.value && activityProgressTotal.value > 0)
+})
+const activityProgressText = computed(() => `${activityProgressCompleted.value}/${activityProgressTotal.value}`)
 const showRobotHpBar = computed(() => {
   const activity = activeActivity.value
   return activity?.kind === 'ROBOT_ENCOUNTER' && (activity.robotMaxHp ?? 0) > 0 && activity.robotHp !== undefined
@@ -54,16 +89,16 @@ const downedTimerMs = computed(() => {
 const downedTimerText = computed(() => formatDuration(downedTimerMs.value))
 const showPhaseTimer = computed(() => showMobileRaiderStatus.value && phaseTimerMs.value > 0)
 
-// Re-key the tick bar on every new tick AND whenever the tab becomes visible,
-// so the animation restarts from the correct elapsed offset instead of 0.
+// Tick bar progress is width-driven for better mobile browser reliability.
 const visibility = useDocumentVisibility()
-const tickBarKey = computed(() => `${store.lastTickAt}-${visibility.value}-${props.isActive}`)
-const tickAnimationDelay = computed(() => {
-  // Include visibility/activity as dependencies so delay recomputes when the tab becomes visible.
+const tickProgressPercent = computed(() => {
+  // Include visibility/activity as dependencies so progress recomputes when the tab becomes visible.
   void visibility.value
   void props.isActive
+
+  if (!props.isActive) return 0
   const elapsed = Math.min(TICK_INTERVAL_MS, Math.max(0, Date.now() - store.lastTickAt))
-  return `-${elapsed}ms`
+  return Math.max(0, Math.min(100, (elapsed / TICK_INTERVAL_MS) * 100))
 })
 
 const pinnedTopLog = usePinnedTopLog(logEntryCount)
@@ -245,14 +280,28 @@ function activityBadge(entry: ActivityLogEvent): string {
     </div>
     <div class="h-comms-tick-bar bg-surface-raised border-b border-border overflow-hidden" aria-hidden="true">
       <div
-        :key="tickBarKey"
+        :key="store.lastTickAt"
         class="comms-log__tick-bar"
-        :style="{ animationDuration: `${TICK_INTERVAL_MS}ms`, animationDelay: tickAnimationDelay }"
+        :style="{ width: `${tickProgressPercent}%` }"
       ></div>
     </div>
     <section class="comms-log__activity" aria-label="Activity Log">
-      <header class="comms-log__activity-header" :class="{ 'comms-log__activity-header--robot': showRobotHpBar }">
+      <header class="comms-log__activity-header" :class="{ 'comms-log__activity-header--meter': showRobotHpBar || showActivityProgressBar }">
         <span class="comms-log__activity-title">{{ currentActivityTitle }}</span>
+        <div
+          v-if="showActivityProgressBar"
+          class="comms-log__activity-progress"
+          role="progressbar"
+          aria-label="Activity progress"
+          :aria-valuenow="activityProgressCompleted"
+          :aria-valuemin="0"
+          :aria-valuemax="activityProgressTotal"
+        >
+          <div class="comms-log__activity-progress-track">
+            <div class="comms-log__activity-progress-fill" :style="{ width: `${activityProgressPercent}%` }"></div>
+          </div>
+          <span class="comms-log__activity-progress-text">{{ activityProgressText }}</span>
+        </div>
         <div
           v-if="showRobotHpBar"
           class="comms-log__robot-hp"
@@ -344,7 +393,7 @@ function activityBadge(entry: ActivityLogEvent): string {
   letter-spacing: 0;
 }
 
-.comms-log__activity-header--robot {
+.comms-log__activity-header--meter {
   padding-bottom: 0.5rem;
 }
 
@@ -356,29 +405,48 @@ function activityBadge(entry: ActivityLogEvent): string {
   color: var(--color-accent-secondary);
 }
 
-.comms-log__robot-hp {
+.comms-log__robot-hp,
+.comms-log__activity-progress {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: 0.55rem;
 }
 
-.comms-log__robot-hp-track {
+.comms-log__robot-hp-track,
+.comms-log__activity-progress-track {
   height: 0.42rem;
   overflow: hidden;
-  border: 1px solid color-mix(in srgb, var(--color-danger) 45%, var(--color-border));
   border-radius: 999px;
+}
+
+.comms-log__robot-hp-track {
+  border: 1px solid color-mix(in srgb, var(--color-danger) 45%, var(--color-border));
   background: color-mix(in srgb, var(--color-danger) 12%, var(--color-bg));
 }
 
-.comms-log__robot-hp-fill {
+.comms-log__activity-progress-track {
+  border: 1px solid color-mix(in srgb, var(--color-accent) 45%, var(--color-border));
+  background: color-mix(in srgb, var(--color-accent) 12%, var(--color-bg));
+}
+
+.comms-log__robot-hp-fill,
+.comms-log__activity-progress-fill {
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, var(--color-danger), var(--color-warning));
   transition: width 0.24s ease;
 }
 
-.comms-log__robot-hp-text {
+.comms-log__robot-hp-fill {
+  background: linear-gradient(90deg, var(--color-danger), var(--color-warning));
+}
+
+.comms-log__activity-progress-fill {
+  background: linear-gradient(90deg, var(--color-accent), var(--color-success));
+}
+
+.comms-log__robot-hp-text,
+.comms-log__activity-progress-text {
   color: var(--color-muted);
   font-size: 0.68rem;
   font-weight: 700;
@@ -465,18 +533,12 @@ function activityBadge(entry: ActivityLogEvent): string {
   width: 0%;
   background: var(--color-accent);
   opacity: 0.7;
-  animation: tick-fill linear forwards;
+  transition: width 220ms linear;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .comms-log__tick-bar {
-    animation: none;
-    width: 100%;
+    transition: none;
   }
-}
-
-@keyframes tick-fill {
-  from { width: 0%; }
-  to   { width: 100%; }
 }
 </style>

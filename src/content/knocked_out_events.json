@@ -61,5 +61,54 @@
     "text": "Checked the Secret Hidden Pocket first. Priorities remain legally concerning but emotionally correct.",
     "requires": { "phase": "KNOCKED_OUT" },
     "effects": { "mood": 1 }
+  },
+  {
+    "id": "knocked_out_hatch_authority_exit_interview",
+    "weight": 11,
+    "text": "Hatch Authority scheduled an exit interview about your entrance decisions.",
+    "requires": { "phase": "KNOCKED_OUT" },
+    "effects": { "ratRating": 2 }
+  },
+  {
+    "id": "knocked_out_coupon_baron_billing",
+    "weight": 10,
+    "text": "Coupon Baron billed your recovery room at full price, then generously discounted your dignity.",
+    "requires": { "phase": "KNOCKED_OUT" },
+    "effects": { "mood": -1, "ratRating": 1 }
+  },
+  {
+    "id": "knocked_out_permit_choir_reentry_stamp",
+    "weight": 10,
+    "text": "Permit Choir approved your return to consciousness pending three signatures and one apology.",
+    "requires": { "phase": "KNOCKED_OUT" },
+    "effects": { "mood": 1 }
+  },
+  {
+    "id": "knocked_out_gear_weirdo_pitch",
+    "weight": 9,
+    "text": "Gear Weirdo visited medbay to suggest a premium helmet for your next avoidable incident.",
+    "requires": { "phase": "KNOCKED_OUT" },
+    "effects": { "ratRating": 1 }
+  },
+  {
+    "id": "knocked_out_clipboard_researchers_study",
+    "weight": 9,
+    "text": "Clipboard Researchers requested a brief study on impulse looting under stress. You are now Dataset A.",
+    "requires": { "phase": "KNOCKED_OUT" },
+    "effects": { "mood": -1 }
+  },
+  {
+    "id": "knocked_out_snack_shrine_recital",
+    "weight": 8,
+    "text": "Snack Shrine Custodians delivered trial mix and a warning hymn about greed. Crunchy but fair.",
+    "requires": { "phase": "KNOCKED_OUT" },
+    "effects": { "mood": 1, "ratRating": 1 }
+  },
+  {
+    "id": "knocked_out_water_ration_recommendation",
+    "weight": 8,
+    "text": "Water Ration Desk recommends hydration before heroics and after paperwork. Especially after paperwork.",
+    "requires": { "phase": "KNOCKED_OUT" },
+    "effects": { "mood": 1 }
   }
 ]

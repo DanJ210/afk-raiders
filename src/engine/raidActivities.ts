@@ -12,7 +12,7 @@ import personalJunkData from '../content/loot-tables/personal_junk.json'
 import scrapComponentsData from '../content/loot-tables/scrap_components.json'
 import valuablesData from '../content/loot-tables/valuables.json'
 import weaponsPartsData from '../content/loot-tables/weapons_parts.json'
-import type { ActivityLogEvent, ActiveRaidActivity, BackpackItem, DownedReason, GameState, HealingItem, LootItem, RaidActivityDefinition, RobotEntry, RobotLootItem, ShieldRechargerItem, StartRaidActivityEffect } from './types.js'
+import { CommsPriority, type ActivityLogEvent, type ActiveRaidActivity, type BackpackItem, type DownedReason, type GameState, type HealingItem, type LootItem, type RaidActivityDefinition, type RobotEntry, type RobotLootItem, type ShieldRechargerItem, type StartRaidActivityEffect } from './types.js'
 import type { RNG } from './rng.js'
 import { getDangerLevelProfile } from './dangerLevelProfiles.js'
 import { getMoodResilienceReductionPercent } from './mood.js'
@@ -181,12 +181,24 @@ const searchLootTables: Record<string, LootItem[]> = {
   weapons_parts: (weaponsPartsData as { items: LootItem[] }).items,
   water_bottles: (lootData as { items: LootItem[] }).items.filter(item => item.id.startsWith('water_bottle')),
 }
+const SEARCH_BONUS_HEALING_ITEM_CHANCE = 0.15
+const MEDICAL_SEARCH_HEALING_ITEM_CHANCE = 1
 const MAX_SEARCH_LOOT_ROLLS = 4
 const ROBOT_HP_PER_MENACE = 6
 const ROBOT_ROUND_DAMAGE_PER_MENACE = 0.35
 const ROBOT_LETHAL_HP_RATIO = 0.5
 const ROBOT_NONLETHAL_MIN_HP_RATIO = 0.25
 const LETHAL_ROBOT_DEADLINESS: ReadonlySet<RobotEntry['deadliness']> = new Set(['nasty', 'deadly'])
+const DANGER_DAMAGE_SWING_BASE: Record<'Low' | 'Medium' | 'High', number> = {
+  Low: 0,
+  Medium: 1,
+  High: 2,
+}
+const DANGER_DAMAGE_SWING_MULTIPLIER: Record<'Low' | 'Medium' | 'High', number> = {
+  Low: 0.5,
+  Medium: 1,
+  High: 1.5,
+}
 
 export interface StartRaidActivityResult {
   state: GameState
@@ -210,6 +222,8 @@ function normalizeArray<T>(value: T | T[] | undefined): T[] {
 function matchesActivityContext(state: GameState, requires: RaidActivityDefinition['requires'] | StartRaidActivityEffect['robotPool']): boolean {
   if (!requires) return true
 
+  const raiderLevel = getRaiderLevelBenefitProfile(state.raider.levelXp).level
+
   const dangerLevels = normalizeArray(requires.dangerLevel)
   if (dangerLevels.length > 0 && (!state.raid.dangerLevel || !dangerLevels.includes(state.raid.dangerLevel))) return false
 
@@ -221,12 +235,16 @@ function matchesActivityContext(state: GameState, requires: RaidActivityDefiniti
 
   if (requires.minGreed !== undefined && state.raid.greedLevel < requires.minGreed) return false
   if (requires.maxGreed !== undefined && state.raid.greedLevel > requires.maxGreed) return false
+  if (requires.minRaiderLevel !== undefined && raiderLevel < requires.minRaiderLevel) return false
+  if (requires.maxRaiderLevel !== undefined && raiderLevel > requires.maxRaiderLevel) return false
 
   return true
 }
 
 function robotMatchesPool(robot: RobotEntry, state: GameState, pool: StartRaidActivityEffect['robotPool']): boolean {
   if (!matchesActivityContext(state, pool)) return false
+
+  if (robot.isBoss && !pool?.includeBosses) return false
 
   if (!pool) return true
   const deadliness = normalizeArray(pool.deadliness)
@@ -272,6 +290,7 @@ function activityLogEvent(
     timestamp: now,
     text,
     phase: 'RAIDING',
+    commsPriority: CommsPriority.Activity,
   }
 }
 
@@ -335,7 +354,8 @@ function searchLootRollCount(activity: ActiveRaidActivity, definition: RaidActiv
   const configuredRolls = activity.lootRolls ?? definition.lootRolls
   if (configuredRolls !== undefined) return Math.max(1, Math.min(MAX_SEARCH_LOOT_ROLLS, Math.floor(configuredRolls)))
 
-  if (activity.totalTicks >= 4) return 3
+  if (activity.totalTicks >= 4) return 4
+  if (activity.totalTicks >= 3) return 3
   if (activity.totalTicks >= 2) return 2
   return 1
 }
@@ -373,16 +393,40 @@ function addHealingItem(raid: GameState['raid'], item: HealingItem): GameState['
   return { ...raid, healingItems: nextHealingItems }
 }
 
+function rollSearchHealingItem(raid: GameState['raid'], rng: RNG, chance: number): { raid: GameState['raid']; item: HealingItem | null } {
+  if (rng.next() >= chance) return { raid, item: null }
+
+  const item = rng.weightedPick(healingItems)
+  return {
+    raid: addHealingItem(raid, item),
+    item,
+  }
+}
+
+function appendSearchHealingText(text: string, item: HealingItem | null): string {
+  return item
+    ? `${text} Bonus med find: tucked ${item.name} into the current-raid med pocket.`
+    : text
+}
+
 function canRobotEncounterBeLethal(state: GameState, robot: RobotEntry): boolean {
   if (!LETHAL_ROBOT_DEADLINESS.has(robot.deadliness)) return false
   if (state.raider.maxHp <= 0) return false
   return state.raider.hp / state.raider.maxHp <= ROBOT_LETHAL_HP_RATIO
 }
 
-function applyRobotRoundDamage(state: GameState, robot: RobotEntry, activity: ActiveRaidActivity): ShieldDamageResult {
+function applyRobotRoundDamage(state: GameState, robot: RobotEntry, activity: ActiveRaidActivity, rng: RNG): ShieldDamageResult {
   const profile = getDangerLevelProfile(state.raid.dangerLevel)
   const multiplier = Math.max(0, (activity.robotDamageMultiplier ?? 1) * profile.robotFailureDamageMultiplier)
-  const incomingDamage = Math.max(1, Math.ceil(robot.menace * ROBOT_ROUND_DAMAGE_PER_MENACE * multiplier))
+  const expectedDamage = Math.max(1, Math.ceil(robot.menace * ROBOT_ROUND_DAMAGE_PER_MENACE * multiplier))
+  const baseSwing = DANGER_DAMAGE_SWING_BASE[profile.dangerLevel] ?? DANGER_DAMAGE_SWING_BASE.Low
+  const swingMultiplier = DANGER_DAMAGE_SWING_MULTIPLIER[profile.dangerLevel] ?? DANGER_DAMAGE_SWING_MULTIPLIER.Low
+  const enemySwing = Math.max(1, Math.ceil(robot.menace / 2))
+  const totalSwing = Math.max(1, baseSwing + Math.ceil(enemySwing * swingMultiplier))
+  const minIncomingDamage = Math.max(1, expectedDamage - totalSwing)
+  const maxIncomingDamage = Math.max(minIncomingDamage, expectedDamage + totalSwing)
+  const rolledDamage = rng.int(minIncomingDamage, maxIncomingDamage)
+  const incomingDamage = Math.max(minIncomingDamage, Math.min(maxIncomingDamage, rolledDamage))
   const skillMultiplier = getSkillModifierProfile(state.raider.skills).robotFailureDamageMultiplier
   const damageAfterSkills = Math.max(0, Math.ceil(incomingDamage * skillMultiplier))
   const skillDamageReduced = Math.max(0, incomingDamage - damageAfterSkills)
@@ -569,7 +613,7 @@ export function advanceRaidActivity(state: GameState, rng: RNG, now: number): Ad
     }
   }
 
-  const shieldDamage = applyRobotRoundDamage(state, robot, activity)
+  const shieldDamage = applyRobotRoundDamage(state, robot, activity, rng)
   const nextActivity = {
     ...activity,
     robotHp: nextRobotHp,
@@ -630,28 +674,28 @@ function advanceSearchActivity(
       const shieldRecharger = rng.weightedPick(shieldRechargers)
       const backpackItem = shieldRechargerToBackpackItem(shieldRecharger)
       const nextRaid = addBackpackItem({ ...state.raid, activeRaidActivity: null }, backpackItem)
-      const text = fillActivityText(definition.text.completed, {
+      const healingRoll = rollSearchHealingItem(nextRaid, rng, SEARCH_BONUS_HEALING_ITEM_CHANCE)
+      const text = appendSearchHealingText(fillActivityText(definition.text.completed, {
         shield_recharger: shieldRecharger.name,
         ticks_remaining: 0,
-      })
+      }), healingRoll.item)
 
       return {
-        state: { ...state, raid: nextRaid },
+        state: { ...state, raid: healingRoll.raid },
         activityEvents: [activityLogEvent(activity, 'completed', state.tick, now, text)],
         blocking,
       }
     }
 
     if (activity.healingItem ?? definition.healingItem) {
-      const healingItem = rng.weightedPick(healingItems)
-      const nextRaid = addHealingItem({ ...state.raid, activeRaidActivity: null }, healingItem)
+      const healingRoll = rollSearchHealingItem({ ...state.raid, activeRaidActivity: null }, rng, MEDICAL_SEARCH_HEALING_ITEM_CHANCE)
       const text = fillActivityText(definition.text.completed, {
-        healing_item: healingItem.name,
+        healing_item: healingRoll.item?.name ?? 'field meds',
         ticks_remaining: 0,
       })
 
       return {
-        state: { ...state, raid: nextRaid },
+        state: { ...state, raid: healingRoll.raid },
         activityEvents: [activityLogEvent(activity, 'completed', state.tick, now, text)],
         blocking,
       }
@@ -672,14 +716,15 @@ function advanceSearchActivity(
       (raid, loot) => addBackpackItem(raid, loot),
       { ...state.raid, activeRaidActivity: null },
     )
-    const text = fillActivityText(definition.text.completed, {
+    const healingRoll = rollSearchHealingItem(nextRaid, rng, SEARCH_BONUS_HEALING_ITEM_CHANCE)
+    const text = appendSearchHealingText(fillActivityText(definition.text.completed, {
       loot_name: formatLootList(lootItems),
       loot_count: lootItems.length,
       ticks_remaining: 0,
-    })
+    }), healingRoll.item)
 
     return {
-      state: { ...state, raid: nextRaid },
+      state: { ...state, raid: healingRoll.raid },
       activityEvents: [activityLogEvent(activity, 'completed', state.tick, now, text)],
       blocking,
     }

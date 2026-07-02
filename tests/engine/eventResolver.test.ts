@@ -13,6 +13,7 @@ import { createRNG } from '../../src/engine/rng'
 import { applyEffects, consumeHealingItem, consumeShieldRecharger, eligibleEvents, events as allEvents, resolveAmbientActivityEvent, resolveEvent, resolveHealingItemFind, resolveShieldRechargerFind } from '../../src/engine/eventResolver'
 import { createInitialState } from '../../src/engine/initialState'
 import type { DangerLevel, EventTemplate, HealingItemStack } from '../../src/engine/types'
+import { xpRequiredForLevel } from '../../src/engine/raiderLevel'
 import zoneConditionsData from '../../src/content/zones/zone_conditions.json'
 
 // backpackValue=450 maps exclusively to Snack Mix (Chaos Blend),
@@ -112,15 +113,15 @@ function sampleRaidSelectionMix(dangerLevel: DangerLevel): { activityStarterShar
 
 describe('resolveEvent — RAIDING activity mix', () => {
   it('keeps activity starters as a distinct first-stage roll from ambient comms', () => {
-    expect(sampleRaidSelectionMix('Low').activityStarterShare).toBeCloseTo(0.67, 1)
-    expect(sampleRaidSelectionMix('Medium').activityStarterShare).toBeCloseTo(0.67, 1)
-    expect(sampleRaidSelectionMix('High').activityStarterShare).toBeCloseTo(0.67, 1)
+    expect(sampleRaidSelectionMix('Low').activityStarterShare).toBeCloseTo(0.75, 1)
+    expect(sampleRaidSelectionMix('Medium').activityStarterShare).toBeCloseTo(0.75, 1)
+    expect(sampleRaidSelectionMix('High').activityStarterShare).toBeCloseTo(0.75, 1)
   })
 
   it('shifts SEARCH and ROBOT_ENCOUNTER starter share by danger level', () => {
-    expect(sampleRaidSelectionMix('Low').activitySearchShare).toBeCloseTo(0.8, 1)
-    expect(sampleRaidSelectionMix('Medium').activitySearchShare).toBeCloseTo(0.6, 1)
-    expect(sampleRaidSelectionMix('High').activitySearchShare).toBeCloseTo(0.5, 1)
+    expect(sampleRaidSelectionMix('Low').activitySearchShare).toBeCloseTo(0.85, 1)
+    expect(sampleRaidSelectionMix('Medium').activitySearchShare).toBeCloseTo(0.72, 1)
+    expect(sampleRaidSelectionMix('High').activitySearchShare).toBeCloseTo(0.62, 1)
   })
 })
 
@@ -417,6 +418,47 @@ describe('applyEffects — backpack item behavior', () => {
 
     expect(ids.has('raid_apology_weather_forecast')).toBe(true)
     expect(ids.has('raid_polite_glyphs_customer_service')).toBe(false)
+  })
+
+  it('filters Drama Queen events by minRaiderLevel requirements', () => {
+    const initial = createInitialState(0)
+    const lowLevelState = {
+      ...initial,
+      raider: {
+        ...initial.raider,
+        levelXp: xpRequiredForLevel(18),
+      },
+      raid: {
+        ...initial.raid,
+        phase: 'RAIDING' as const,
+        dangerLevel: 'High' as const,
+        zone: 'arc_ruins',
+        greedLevel: 60,
+      },
+    }
+
+    const unlockedState = {
+      ...initial,
+      raider: {
+        ...initial.raider,
+        levelXp: xpRequiredForLevel(45),
+      },
+      raid: {
+        ...initial.raid,
+        phase: 'RAIDING' as const,
+        dangerLevel: 'High' as const,
+        zone: 'arc_ruins',
+        greedLevel: 60,
+      },
+    }
+
+    const lowLevelIds = new Set(eligibleEvents(lowLevelState).map(event => event.id))
+    expect(lowLevelIds.has('encounter_drama_queen_opening_night')).toBe(false)
+    expect(lowLevelIds.has('encounter_drama_queen_finale_charge')).toBe(false)
+
+    const unlockedIds = new Set(eligibleEvents(unlockedState).map(event => event.id))
+    expect(unlockedIds.has('encounter_drama_queen_opening_night')).toBe(true)
+    expect(unlockedIds.has('encounter_drama_queen_finale_charge')).toBe(true)
   })
 
   it('routes negative HP effects through shield mitigation', () => {

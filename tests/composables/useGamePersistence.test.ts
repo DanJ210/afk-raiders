@@ -113,7 +113,7 @@ describe('useGamePersistence', () => {
 
     expect(loaded?.state.raid.phase).toBe('RAIDING')
     expect(loaded?.state.raid.phaseTicksRemaining).toBe(60)
-    expect(loaded?.state.raid.extracting).toEqual({ ticksRemaining: 3 })
+    expect(loaded?.state.raid.extracting).toEqual({ ticksRemaining: 3, totalTicks: 4 })
     expect(loaded?.state.raid.downed).toBeNull()
   })
 
@@ -177,7 +177,7 @@ describe('useGamePersistence', () => {
 
     const loaded = useGamePersistence().loadSave()
 
-    expect(loaded?.state.raid.downed).toEqual({ ticksRemaining: 2 })
-    expect(loaded?.state.raid.extracting).toEqual({ ticksRemaining: 1 })
+    expect(loaded?.state.raid.downed).toEqual({ ticksRemaining: 2, totalTicks: 2 })
+    expect(loaded?.state.raid.extracting).toEqual({ ticksRemaining: 1, totalTicks: 4 })
   })
 })

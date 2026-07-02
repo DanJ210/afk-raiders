@@ -33,6 +33,7 @@ Only `nasty` and `deadly` robots can kill the raider outright, and high-tier enc
 | Crusher of Dreams | `crusher_of_dreams` | `deadly` | 8 | Anti-optimism platform with crushing hardware. |
 | Sniper of Poor Decisions | `sniper_poor_decisions` | `deadly` | 9 | Punishes looting pauses and bad instincts. |
 | Tank of Overcompensation | `tank_overcompensation` | `deadly` | 10 | Maximum threat, maximum insecurity. |
+| The Drama Queen | `drama_queen` | `deadly` | 10 | Rare boss platform that monologues before dangerous set pieces. |
 
 ## Writing Hooks
 
@@ -61,3 +62,4 @@ Use these broad families when converting new machine ideas into AFK-original rob
 | Role family | Runtime robot IDs | First event hooks |
 |---|---|---|
 | Citation platforms | `receipt_printer_doom`, `apology_turret` | `encounter_receipt_printer_doom`, `encounter_receipt_printer_doom_paper_jam`, `encounter_apology_turret`, `encounter_apology_turret_hold_still` |
+| Boss platforms | `drama_queen` | `encounter_drama_queen_opening_night`, `encounter_drama_queen_finale_charge`, `extract_drama_queen_curtain_call` |

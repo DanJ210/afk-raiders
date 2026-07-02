@@ -74,10 +74,13 @@ function normalizeLegacyPhase(value: unknown): LegacyPhase {
   return 'HUB'
 }
 
-function normalizeTimedCondition(value: unknown, fallbackTicks: number): { ticksRemaining: number } | null {
+function normalizeTimedCondition(value: unknown, fallbackTicks: number): { ticksRemaining: number; totalTicks: number } | null {
   if (!isRecord(value)) return null
+  const ticksRemaining = Math.max(1, sanitizeTicksRemaining(value.ticksRemaining, fallbackTicks))
+  const totalTicks = Math.max(ticksRemaining, sanitizeTicksRemaining(value.totalTicks, fallbackTicks))
   return {
-    ticksRemaining: Math.max(1, sanitizeTicksRemaining(value.ticksRemaining, fallbackTicks)),
+    ticksRemaining,
+    totalTicks,
   }
 }
 
@@ -101,7 +104,10 @@ function normalizeRaidState(raid: GameState['raid']): GameState['raid'] {
       ...baseRaid,
       phase: 'RAIDING',
       phaseTicksRemaining: PHASE_DURATIONS.RAIDING,
-      extracting: { ticksRemaining: Math.max(1, sanitizeTicksRemaining(raid.phaseTicksRemaining, EXTRACTING_TICKS)) },
+      extracting: {
+        ticksRemaining: Math.max(1, sanitizeTicksRemaining(raid.phaseTicksRemaining, EXTRACTING_TICKS)),
+        totalTicks: EXTRACTING_TICKS,
+      },
       downed: null,
     }
   }

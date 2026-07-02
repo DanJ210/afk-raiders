@@ -351,6 +351,24 @@
             "value": 1200,
             "stackSize": 1,
             "flavor": "Too big to carry. You carry it anyway."
+        },
+        {
+            "id": "coupon_baron_arbitrage_ledger",
+            "weight": 7,
+            "rarity": 4,
+            "name": "Coupon Baron Arbitrage Ledger",
+            "value": 180,
+            "stackSize": 1,
+            "flavor": "Handwritten discount matrix proving math can become a religion."
+        },
+        {
+            "id": "coupon_baron_seal_token",
+            "weight": 11,
+            "rarity": 3,
+            "name": "Coupon Baron Seal Token",
+            "value": 70,
+            "stackSize": 3,
+            "flavor": "Stamped with AUTHORIZED SAVINGS and mild political ambition."
         }
     ]
 }

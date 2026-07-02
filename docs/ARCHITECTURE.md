@@ -37,6 +37,16 @@ The simulation engine is **pure TypeScript with zero framework imports**. Vue re
 - Damage ownership: ordinary diary/comms events are ambient narration. Damage, shield splits, and fighting belong to the active raid activity path and must be narrated in `GameState.activityLog`.
 - Damage narration guarantee: whenever damage is processed by the engine (shielded, unshielded, mitigated to zero HP damage, or lethal), a readable damage flavor line must be emitted to the activity log in that tick.
 
+## Raid narration contract
+`processTick()` keeps the diary/comms feed and active-thread feed separate on purpose:
+- `GameState.log` is for ambient narration, phase transitions, Handler feedback, and other broad story beats.
+- `GameState.activityLog` is for multi-tick tasks, combat rounds, shield splits, revive/extraction timers, and completion/failure text.
+- Lifecycle conditions such as `extracting` and `downed` are resolved before ambient narration so their progress and completion stay visible.
+- Active raid activities (`SEARCH`, `ROBOT_ENCOUNTER`, and future blocking threads) own the detailed combat/progress story.
+- Ambient chatter is intentionally sparse and should be suppressed when priority comms already exist in the same tick.
+- Priority comms include lifecycle, progression, and explicit Handler/system feedback lines that should always win over garnish text.
+- The current working implementation details for this contract live in [ACTIVE_RAID_ACTIVITY_PLAN.md](ACTIVE_RAID_ACTIVITY_PLAN.md); this section is the canonical reference.
+
 ## Folder structure
 ```
 afk-raiders/
@@ -110,7 +120,7 @@ Events are picked by context (zone, greed level, mood, HP) and fill `{slot}` pla
 ```
 Writing jokes never touches engine code — and this is the future community-content pipeline. Phase-transition comms are also content-managed in `src/content/phase_transitions.json`, keyed by transition pairs such as `HUB_to_DEPLOYING`.
 
-AFK Raiders now uses two text streams, tracked in [ACTIVE_RAID_ACTIVITY_PLAN.md](ACTIVE_RAID_ACTIVITY_PLAN.md): `GameState.log` is the diary/comms feed for ambient narration, while `GameState.activityLog` is the active-thread feed for multi-tick tasks. Content events in the diary should start or flavor activity, not directly process combat damage. Activity-scoped ambient overlay events can fire during an active activity/condition, but they must be no-effect content and still append to `GameState.log`. The migration target is to scrub ordinary event tables of HP/damage/fight resolution effects and route those outcomes through `RaidState.activeRaidActivity` or existing timed conditions mirrored into `activityLog`.
+AFK Raiders now uses two text streams, tracked in [ACTIVE_RAID_ACTIVITY_PLAN.md](ACTIVE_RAID_ACTIVITY_PLAN.md): `GameState.log` is the diary/comms feed for ambient narration, while `GameState.activityLog` is the active-thread feed for multi-tick tasks. Content events in the diary should start or flavor activity, not directly process combat damage. Activity-scoped ambient overlay events can fire during an active activity/condition, but they must be no-effect content and still append to `GameState.log`. The active-thread UI shows the latest activity line, timed progress from active activities or extraction/downed condition timers, and robot HP from `robotHp / robotMaxHp`. The migration target is to scrub ordinary event tables of HP/damage/fight resolution effects and route those outcomes through `RaidState.activeRaidActivity` or existing timed conditions mirrored into `activityLog`.
 
 The versioned lore wiki in [docs/lore](lore/) defines parody canon, legal guardrails, tone, and backlog ideas. It is planning/reference material, not runtime data. Source-wiki material should be reduced to general tropes and then rewritten as AFK-original canon there before any game-facing text is added to `src/content/`.
 
@@ -145,6 +155,8 @@ Events may also gate themselves by `requires.dangerLevel` (`Low`, `Medium`, or `
 Loot rarity selection also applies small mood and greed biases in `eventResolver.ts`: positive mood nudges weights toward higher rarity and negative mood nudges toward lower rarity, while higher greed nudges loot-appetite rolls toward higher rarity. Greed also mildly increases robot encounter and risky extraction event weights, making danger more likely without directly changing extraction odds. These effects are intentionally mild and always secondary to danger-level profile tuning.
 
 When an event awards backpack loot (`effects.backpackValue` producing a positive loot add), `processTick()` performs two additional independent consumable bonus rolls: one for a healing item and one for a shield recharger. This allows a single loot event to grant normal loot plus either or both consumable types.
+
+Completed `SEARCH` activities also roll for a bonus current-raid healing item. Dedicated medical searches use a higher healing-item chance than general searches.
 
 When a shield mitigates damage, the activity log should include a follow-up line that shows the split between shield charge lost and HP damage landed. That keeps the active thread readable while still reflecting the shield math.
 
@@ -238,7 +250,7 @@ Save migration upgrades older saves to version 6 by backfilling missing `levelXp
 - `HUB`: 20 ticks (10 minutes)
 - `DEPLOYING`: 4 ticks (2 minutes)
 - `RAIDING`: 60 ticks (30 minutes)
-- `RaidState.extracting`: 4 ticks (~2 minutes), active only during RAIDING
+- `RaidState.extracting`: zone-content-driven duration, active only during RAIDING. Current extraction activity definitions in `src/content/raiding-events/search_activities.json` set friendly zones to 3 ticks, standard zones to 4 ticks, and hostile zones to 6 ticks; unknown zones fall back to `extraction_countdown`.
 - `RaidState.downed`: 2 ticks (60 second revive window), active only during RAIDING
 - `KNOCKED_OUT`: 2 ticks before waking in HUB; keep this duration behind a helper so skills can improve it later.
 

@@ -369,6 +369,15 @@
             "value": 2000,
             "stackSize": 1,
             "flavor": "You feel unstoppable. Incorrectly."
+        },
+        {
+            "id": "gear_weirdo_aftermarket_calibrator",
+            "weight": 9,
+            "rarity": 3,
+            "name": "Gear Weirdo Aftermarket Calibrator",
+            "value": 85,
+            "stackSize": 1,
+            "flavor": "Refurbished tuning tool sold as field-certified by vibes."
         }
     ]
 }
