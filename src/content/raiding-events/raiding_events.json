@@ -1302,7 +1302,7 @@
                 "the_breach"
             ],
             "minGreed": 30,
-            "minRaiderLevel": 28
+            "minRaiderLevel": 19
         },
         "effects": {
             "mood": -5,
@@ -1329,7 +1329,7 @@
                 "the_breach"
             ],
             "minGreed": 40,
-            "minRaiderLevel": 36
+            "minRaiderLevel": 28
         },
         "effects": {
             "mood": -6,

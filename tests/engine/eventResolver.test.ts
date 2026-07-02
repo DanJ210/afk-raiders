@@ -426,7 +426,7 @@ describe('applyEffects — backpack item behavior', () => {
       ...initial,
       raider: {
         ...initial.raider,
-        levelXp: xpRequiredForLevel(20),
+        levelXp: xpRequiredForLevel(18),
       },
       raid: {
         ...initial.raid,

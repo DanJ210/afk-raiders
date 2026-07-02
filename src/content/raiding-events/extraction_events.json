@@ -1279,7 +1279,7 @@
         "High"
       ],
       "minGreed": 35,
-      "minRaiderLevel": 32,
+      "minRaiderLevel": 23,
       "extracting": true
     },
     "effects": {
