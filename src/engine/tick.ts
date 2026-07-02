@@ -177,7 +177,7 @@ function startExtractionCondition(state: GameState, tick: number, now: number): 
     ...state.raid,
     activeShieldRecharge: null,
     activeRaidActivity: null,
-    extracting: { ticksRemaining: extractionDuration },
+    extracting: { ticksRemaining: extractionDuration, totalTicks: extractionDuration },
     forceExtract: false,
   }
 
@@ -225,7 +225,7 @@ function startDownedCondition(state: GameState, tick: number, now: number, reaso
       ...state.raid,
       activeShieldRecharge: null,
       activeRaidActivity: null,
-      downed: { ticksRemaining: DOWNED_TICKS, reason },
+      downed: { ticksRemaining: DOWNED_TICKS, totalTicks: DOWNED_TICKS, reason },
     },
   })
 
@@ -241,10 +241,10 @@ function advanceRaidConditions(state: GameState): { state: GameState; extraction
   }
 
   const extracting = state.raid.extracting
-    ? { ticksRemaining: state.raid.extracting.ticksRemaining - 1 }
+    ? { ...state.raid.extracting, ticksRemaining: state.raid.extracting.ticksRemaining - 1 }
     : null
   const downed = state.raid.downed
-    ? { ticksRemaining: state.raid.downed.ticksRemaining - 1 }
+    ? { ...state.raid.downed, ticksRemaining: state.raid.downed.ticksRemaining - 1 }
     : null
   const extractionCompleted = extracting !== null && extracting.ticksRemaining <= 0
   const downedExpired = downed !== null && downed.ticksRemaining <= 0

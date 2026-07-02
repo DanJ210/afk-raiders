@@ -296,11 +296,13 @@ export interface DownedReason {
 
 export interface DownedState {
   ticksRemaining: number
+  totalTicks?: number
   reason?: DownedReason
 }
 
 export interface ExtractingState {
   ticksRemaining: number
+  totalTicks?: number
 }
 
 export interface ZoneCondition {

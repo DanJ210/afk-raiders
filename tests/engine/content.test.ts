@@ -527,6 +527,31 @@ describe('content validation', () => {
       expect(extractionCountdown?.text.progress.some(line => line.includes('{ticks_remaining}'))).toBe(true)
     })
 
+    it('maps every zone to exactly one zone-specific extraction activity', () => {
+      const zoneExtractionActivities = raidActivities.filter(activity => (
+        activity.kind === 'EXTRACTION' && activity.id.startsWith('extraction_') && activity.id.endsWith('_zone')
+      ))
+      const zoneOwners = new Map<string, string[]>()
+
+      for (const activity of zoneExtractionActivities) {
+        const zones = activity.requires?.zone === undefined
+          ? []
+          : Array.isArray(activity.requires.zone) ? activity.requires.zone : [activity.requires.zone]
+
+        expect(zones.length, `activity "${activity.id}" must declare zone requirements`).toBeGreaterThan(0)
+        for (const zone of zones) {
+          zoneOwners.set(zone, [...(zoneOwners.get(zone) ?? []), activity.id])
+        }
+      }
+
+      const coverageProblems = zonesData.flatMap(zone => {
+        const owners = zoneOwners.get(zone.id) ?? []
+        return owners.length === 1 ? [] : [`${zone.id}:${owners.join(',') || 'missing'}`]
+      })
+
+      expect(coverageProblems).toEqual([])
+    })
+
     it('has JSON-backed downed countdown activity text', () => {
       const downedCountdown = raidActivities.find(activity => activity.id === 'downed_countdown')
 

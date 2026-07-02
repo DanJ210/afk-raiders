@@ -22,16 +22,39 @@ const latestActivityEntry = computed(() => {
 })
 const activeActivity = computed(() => store.raid.activeRaidActivity)
 const currentActivityTitle = computed(() => store.raid.activeRaidActivity?.name ?? latestActivityEntry.value?.activityName ?? 'No active thread')
-const activityProgressTotal = computed(() => Math.max(0, activeActivity.value?.totalTicks ?? 0))
-const activityProgressRemaining = computed(() => Math.max(0, Math.min(activeActivity.value?.ticksRemaining ?? 0, activityProgressTotal.value)))
+const activityProgressSource = computed(() => {
+  if (activeActivity.value && activeActivity.value.kind !== 'ROBOT_ENCOUNTER') {
+    return {
+      ticksRemaining: activeActivity.value.ticksRemaining,
+      totalTicks: activeActivity.value.totalTicks,
+    }
+  }
+
+  if (store.raid.downed) {
+    return {
+      ticksRemaining: store.raid.downed.ticksRemaining,
+      totalTicks: store.raid.downed.totalTicks ?? store.raid.downed.ticksRemaining,
+    }
+  }
+
+  if (store.raid.extracting) {
+    return {
+      ticksRemaining: store.raid.extracting.ticksRemaining,
+      totalTicks: store.raid.extracting.totalTicks ?? store.raid.extracting.ticksRemaining,
+    }
+  }
+
+  return null
+})
+const activityProgressTotal = computed(() => Math.max(0, activityProgressSource.value?.totalTicks ?? 0))
+const activityProgressRemaining = computed(() => Math.max(0, Math.min(activityProgressSource.value?.ticksRemaining ?? 0, activityProgressTotal.value)))
 const activityProgressCompleted = computed(() => Math.max(0, activityProgressTotal.value - activityProgressRemaining.value))
 const activityProgressPercent = computed(() => {
   if (activityProgressTotal.value <= 0) return 0
   return Math.max(0, Math.min(100, (activityProgressCompleted.value / activityProgressTotal.value) * 100))
 })
 const showActivityProgressBar = computed(() => {
-  const activity = activeActivity.value
-  return Boolean(activity && activity.kind !== 'ROBOT_ENCOUNTER' && activityProgressTotal.value > 0)
+  return Boolean(activityProgressSource.value && activityProgressTotal.value > 0)
 })
 const activityProgressText = computed(() => `${activityProgressCompleted.value}/${activityProgressTotal.value}`)
 const showRobotHpBar = computed(() => {
