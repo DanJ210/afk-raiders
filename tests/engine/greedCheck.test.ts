@@ -1,6 +1,6 @@
 /**
  * Greed Check unit tests.
- * - Greed does not directly change extraction or downed probability
+ * - Greed suppresses extraction once natural extraction is unlocked
  * - CALL_EXTRACT forces extraction attempt
  * - forceExtract in raid state forces EXTRACT outcome
  */
@@ -108,11 +108,23 @@ describe('greedCheck', () => {
     expect(allowed.extract).toBeGreaterThan(0)
   })
 
-  it('greed level does not directly change extraction frequency', () => {
-    const lowGreed = countOutcomes(makeRaid({ greedLevel: 10 }))
-    const highGreed = countOutcomes(makeRaid({ greedLevel: 90 }))
+  it('higher greed reduces extraction frequency once extraction is allowed', () => {
+    const baseRaid = makeRaid({ phaseTicksRemaining: PHASE_DURATIONS.RAIDING - DEFAULT_MIN_NATURAL_EXTRACTION_RAIDING_TICKS })
+    const lowGreed = countOutcomes({ ...baseRaid, greedLevel: 10 }, 5000)
+    const highGreed = countOutcomes({ ...baseRaid, greedLevel: 90 }, 5000)
 
-    expect(highGreed).toEqual(lowGreed)
+    expect(highGreed.extract).toBeLessThan(lowGreed.extract)
+    expect(highGreed.pushDeeper).toBeGreaterThan(lowGreed.pushDeeper)
+  })
+
+  it('delays natural extraction longer on Medium and High danger', () => {
+    const lowDanger = countOutcomes(makeRaid({ dangerLevel: 'Low', phaseTicksRemaining: PHASE_DURATIONS.RAIDING - DEFAULT_MIN_NATURAL_EXTRACTION_RAIDING_TICKS }), 5000)
+    const mediumDanger = countOutcomes(makeRaid({ dangerLevel: 'Medium', phaseTicksRemaining: PHASE_DURATIONS.RAIDING - DEFAULT_MIN_NATURAL_EXTRACTION_RAIDING_TICKS }), 5000)
+    const highDanger = countOutcomes(makeRaid({ dangerLevel: 'High', phaseTicksRemaining: PHASE_DURATIONS.RAIDING - DEFAULT_MIN_NATURAL_EXTRACTION_RAIDING_TICKS }), 5000)
+
+    expect(lowDanger.extract).toBeGreaterThan(0)
+    expect(mediumDanger.extract).toBe(0)
+    expect(highDanger.extract).toBe(0)
   })
 
   it('very high greed does not create downed outcomes in Low danger by itself', () => {
