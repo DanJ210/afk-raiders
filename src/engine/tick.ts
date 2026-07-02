@@ -36,6 +36,32 @@ function isAmbientCommsEvent(eventId: string): boolean {
   return eventId.startsWith('ambient_')
 }
 
+function isPriorityCommsEvent(eventId: string): boolean {
+  return (
+    eventId.startsWith('phase_')
+    || eventId === 'condition_downed_started'
+    || eventId === 'condition_extracting_started'
+    || eventId === 'condition_extraction_failed'
+    || eventId.startsWith('skill_')
+    || eventId.startsWith('raider_level_')
+    || eventId === 'handler_calm'
+    || eventId === 'handler_pressure'
+    || eventId.startsWith('robot_encounter_')
+    || eventId.startsWith('shield_recharger_')
+    || eventId === 'hidden_pocket_saved'
+    || eventId === 'stash_overflow_sale'
+    || eventId === 'raider_level_extraction_stipend'
+  )
+}
+
+function hasPriorityCommsQueued(events: readonly LogEvent[]): boolean {
+  return events.some(event => isPriorityCommsEvent(event.id))
+}
+
+function hasAmbientCommsQueued(events: readonly LogEvent[]): boolean {
+  return events.some(event => isAmbientCommsEvent(event.id))
+}
+
 function enforceIncapacitatedHp(state: GameState): GameState {
   if ((!state.raid.downed && state.raid.phase !== 'KNOCKED_OUT') || state.raider.hp === 0) return state
   return {
@@ -820,7 +846,7 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
         }
       }
 
-      if (!(emitted.length > 0 && isAmbientCommsEvent(event.id))) {
+      if (!(hasPriorityCommsQueued(emitted) && isAmbientCommsEvent(event.id))) {
         emitted.push(event)
       }
 
@@ -883,9 +909,9 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
     }
   }
 
-  // Keep the comms feed readable: only add ambient activity flavor when this
-  // tick has not already emitted any handler comms events.
-  if (emitted.length === 0) {
+  // Keep ambient chatter sparse: allow one ambient line only when no
+  // allowlisted priority comms have already been queued this tick.
+  if (!hasPriorityCommsQueued(emitted) && !hasAmbientCommsQueued(emitted)) {
     const ambientActivityEvent = resolveAmbientActivityEvent(currentState, rng, now)
     if (ambientActivityEvent) {
       emitted.push(ambientActivityEvent)

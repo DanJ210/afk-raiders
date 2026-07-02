@@ -1119,6 +1119,35 @@ describe('deterministic snapshot', () => {
     expect(result.events.some(event => event.id.startsWith('ambient_'))).toBe(false)
   })
 
+  it('still allows one ambient comms line when only non-priority diary logs exist', () => {
+    const initial = createInitialState(0)
+    const state = {
+      ...initial,
+      raid: {
+        ...initial.raid,
+        phase: 'RAIDING' as const,
+        phaseTicksRemaining: 30,
+        dangerLevel: 'Medium' as const,
+        downed: {
+          ticksRemaining: 2,
+          totalTicks: 2,
+          reason: {
+            kind: 'damage' as const,
+            text: 'Downed context for non-priority + ambient mix.',
+          },
+        },
+      },
+    }
+
+    const result = processTick(state, alwaysAmbientRng(), 0)
+
+    const hasAmbient = result.events.some(event => event.id.startsWith('ambient_'))
+    const ambientCount = result.events.filter(event => event.id.startsWith('ambient_')).length
+    expect(hasAmbient).toBe(true)
+    expect(ambientCount).toBe(1)
+    expect(result.events.some(event => event.id === 'condition_downed_started')).toBe(false)
+  })
+
   it('advances non-blocking search activities while still allowing diary events', () => {
     const rng = createRNG(FIXED_SEED)
     const initial = createInitialState(0)
