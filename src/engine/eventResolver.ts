@@ -16,6 +16,7 @@ import type { RNG } from './rng.js'
 import hubEventsData from '../content/hub_events.json'
 import deploymentEventsData from '../content/deployment_events.json'
 import raidingEventsData from '../content/raiding-events/raiding_events.json'
+import ambientEventsData from '../content/raiding-events/ambient_events.json'
 import extractionEventsData from '../content/raiding-events/extraction_events.json'
 import downedEventsData from '../content/downed_events.json'
 import knockedOutEventsData from '../content/knocked_out_events.json'
@@ -45,6 +46,7 @@ const events = [
   ...hubEventsData,
   ...deploymentEventsData,
   ...raidingEventsData,
+  ...ambientEventsData,
   ...extractionEventsData,
   ...downedEventsData,
   ...knockedOutEventsData,
@@ -362,14 +364,22 @@ function pickRaidingEventTemplate(eligible: EventTemplate[], state: GameState, r
 }
 
 /** Fill {slot} placeholders in a template string */
-function fillSlots(text: string, rng: RNG): string {
+function fillSlots(text: string, rng: RNG, context: { activeRobot?: RobotEntry | null } = {}): string {
   return text.replace(/\{([^}]+)\}/g, (_match, slot: string) => {
     // Named flavor tables
     if (slot in flavor) {
       const table = flavor[slot]
       const entry = rng.weightedPick(table)
       // Recursively fill any nested slots in the chosen flavor text
-      return fillSlots(entry.text, rng)
+      return fillSlots(entry.text, rng, context)
+    }
+
+    // Context-aware robot slots — resolve from the current ROBOT_ENCOUNTER robot.
+    if (slot === 'robot_name' && context.activeRobot) {
+      return context.activeRobot.name
+    }
+    if (slot === 'robot_flavor' && context.activeRobot) {
+      return rng.pick(context.activeRobot.flavorLines)
     }
 
     // Robot flavor slots: {robot_flavor_<robotId>}
@@ -712,7 +722,7 @@ export function resolveEvent(
     weight: adjustedEventWeight(template, state),
   }))
   const template = pickRaidingEventTemplate(weightedEligible, state, rng)
-  const text = fillSlots(template.text, rng)
+  const text = fillSlots(template.text, rng, { activeRobot: activeEncounterRobot(state) })
 
   return {
     id: template.id,
@@ -745,11 +755,18 @@ export function resolveAmbientActivityEvent(
     id: template.id,
     tick: state.tick,
     timestamp: now,
-    text: fillSlots(template.text, rng),
+    text: fillSlots(template.text, rng, { activeRobot: activeEncounterRobot(state) }),
     phase: state.raid.phase,
     commsPriority: CommsPriority.Ambient,
     conditions: logConditionsForRaid(state.raid),
   }
+}
+
+/** The robot in the current ROBOT_ENCOUNTER activity, if any. */
+function activeEncounterRobot(state: GameState): RobotEntry | null {
+  const activity = state.raid.activeRaidActivity
+  if (!activity || activity.kind !== 'ROBOT_ENCOUNTER' || !activity.robotId) return null
+  return robots.find(robot => robot.id === activity.robotId) ?? null
 }
 
 /** Apply a template's effects to state, returning the modified state */

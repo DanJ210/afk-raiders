@@ -286,7 +286,18 @@ describe('content validation', () => {
 
       for (const ev of events) {
         const slots = extractSlots(ev.text)
+        const requiresRobotEncounter = ev.requires?.activeActivityKind === 'ROBOT_ENCOUNTER'
+          || (Array.isArray(ev.requires?.activeActivityKind) && ev.requires.activeActivityKind.includes('ROBOT_ENCOUNTER'))
+          || ev.requires?.activeRobotId !== undefined
         for (const slot of slots) {
+          // Context-aware robot slots are only valid on events gated to an active robot encounter.
+          if (slot === 'robot_name' || slot === 'robot_flavor') {
+            if (!requiresRobotEncounter) {
+              unknown.push(`event "${ev.id}" uses context slot "{${slot}}" without requiring an active ROBOT_ENCOUNTER`)
+            }
+            continue
+          }
+
           const isKnown =
             slot in flavor ||
             BUILT_IN_SLOTS.has(slot) ||
