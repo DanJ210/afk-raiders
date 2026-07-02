@@ -11,7 +11,7 @@ This document tracks the migration from single-tick damage events toward Godvill
 ## Current Foundation
 - `GameState.activityLog` exists as a persisted capped log next to `GameState.log`.
 - `TickResult` can return both `events` and `activityEvents`.
-- `CommsLog.vue` renders a compact active-thread feed above the normal diary feed.
+- `CommsLog.vue` renders a compact active-thread feed above the normal diary feed, with a single latest activity line plus a progress meter for timed non-robot activities and a robot HP meter for robot encounters.
 - Extraction and DOWNED timers already emit activity-thread start/progress/complete/fail lines.
 - `RaidState.activeRaidActivity` exists with migration/default state support.
 - Timed shield recharges run as a side condition on `RaidState.activeShieldRecharge`; use/start/completion messages belong to the ambient comms log, not the active-thread feed.
@@ -25,10 +25,11 @@ This document tracks the migration from single-tick damage events toward Godvill
 - Low-danger robot encounter weighting has been reduced now that robot encounters are multi-tick blocking activities; this preserves the balance contract that Low remains extractable often enough for the idle loop.
 - `SEARCH` activities are now supported by `src/engine/raidActivities.ts`; `search_black_box_cache` and `search_water_bottle_stash` prove backpack-loot completion, `search_medical_pouch` proves current-raid field-med completion, and `search_shield_recharger_crate` proves backpack shield-recharger completion from `src/content/raiding-events/search_activities.json`.
 - Search activities can draw from every runtime loot table under `src/content/loot-tables/`, plus the derived `water_bottles` pool, and normal loot searches can return small multi-item bundles.
+- Completed search activities can also uncover current-raid healing items; medical searches remain the higher-chance field-med source.
 - Activity definitions can now declare `requires` gates for danger level, zone, zone condition, and greed. The activity resolver enforces those gates even if a diary event tries to start the activity directly.
 - Activity definitions now include user-facing names. Active activity state and activity-log entries carry those names so the UI can identify the current thread or robot encounter without deriving labels from ids.
 - Robot pools can now gate selection by danger level, zone, zone condition, greed, and deadliness; generic starters should use those gates instead of relying only on event-level requirements.
-- Normal RAIDING diary selection uses a two-stage roll: first ambient comms vs activity starter, then eligible `SEARCH` vs `ROBOT_ENCOUNTER` starters by danger level. Activity starters target about 67% of normal RAIDING diary rolls; within those activity starters, Low targets about 75% search / 25% robots, Medium about 60% / 40%, and High about 50% / 50%.
+- Normal RAIDING diary selection uses a two-stage roll: first ambient comms vs activity starter, then eligible `SEARCH` vs `ROBOT_ENCOUNTER` starters by danger level. Activity starters target about 75% of normal RAIDING diary rolls; within those activity starters, Low targets about 85% search / 15% robots, Medium about 72% / 28%, and High about 62% / 38%.
 - Activity-scoped ambient comms can also fire during active activities/conditions. They go to `GameState.log`, require `activeActivityKind`/`activeActivityId`/`activeRobotId`, and must be ambient-only content with no effects so they never mutate state or pollute `GameState.activityLog`.
 - Damage-only extraction diary events now start `extraction_hazard_damage` activities instead of applying direct `effects.damage`; content tests guard `src/content/raiding-events/extraction_events.json` against direct damage effects.
 - Extraction countdown activity-log text is now sourced from `extraction_countdown` in `src/content/raiding-events/search_activities.json` while `RaidState.extracting` remains the lifecycle guardrail.
@@ -72,7 +73,7 @@ Decision: robot encounters should be `ROBOT_ENCOUNTER` activities. A diary event
 ## Log Ownership Contract
 - `GameState.log` is the diary/comms feed. It narrates ambient events, phase transitions, Handler feedback, loot flavor, mood/greed shifts, and other broad story beats.
 - Healing item use and shield recharger use/start/completion are Handler/ambient beats and belong in `GameState.log`.
-- `GameState.activityLog` is the active-thread feed. It narrates multi-tick progress, combat rounds, damage, shield splits caused by active hazards/combat, revive/extraction timers, and task completion/failure.
+- `GameState.activityLog` is the active-thread feed. It narrates multi-tick progress, combat rounds, damage, shield splits caused by active hazards/combat, revive/extraction timers, and task completion/failure. The UI renders timed activity progress from `ActiveRaidActivity.ticksRemaining / totalTicks`, while robot encounters use `robotHp / robotMaxHp` instead.
 - Activity-log entries should carry `activityName` when the source has a user-facing name, and robot encounters should include the selected robot in that name.
 - Activity-log entry `id` values must include the concrete `activityId` plus status so different activity definitions cannot collide on generic ids such as `activity_extraction_completed`. Code that needs to find a logical activity event should prefer `activityId + status` over parsing `id`.
 - Ordinary diary events must not directly modify HP, apply shield-aware damage, or resolve robot combat once this migration is complete.
@@ -163,7 +164,7 @@ Activity-scoped ambient overlay events are implemented as no-effect diary conten
 
 ## Extraction And Downed Activity Target
 - EXTRACTION should have JSON-backed activity definitions for start/progress/success/failure text, duration, success/failure/complication weights, and requirements.
-- DOWNED should have JSON-backed activity definitions for incapacitated progress, revive/failure text, duration, and requirements.
+- DOWNED should have JSON-backed activity definitions for incapacitated progress, revive/failure text, duration, and requirements. Current lifecycle timing still uses the standard `DOWNED_TICKS` revive window until DOWNED activities own duration.
 - During migration, `RaidState.extracting` and `RaidState.downed` can remain as lifecycle safety fields while the activity resolver mirrors or gradually absorbs their behavior.
 - Final target: extraction and downed outcomes are resolved through the activity system, while phase transitions remain lifecycle moves (`RAIDING -> HUB`, `RAIDING -> KNOCKED_OUT`, `KNOCKED_OUT -> HUB`).
 
@@ -171,6 +172,7 @@ Activity-scoped ambient overlay events are implemented as no-effect diary conten
 - Search activities provide the Godville-style "Searching Medical for Anything" thread.
 - Each tick can emit progress flavor into `activityLog`.
 - Completion can award loot, healing items, shield rechargers, greed/mood changes, or nothing.
+- General searches have a small bonus healing-item chance; medical searches have the high-confidence healing-item path.
 - Loot searches can award bundles. Default roll count scales gently with activity length, and individual activities can set `lootRolls` for more specific reward tuning.
 - Search loot tables should use the canonical table IDs from `src/content/loot-tables/` (`apparel_accessories`, `arc_tech`, `consumables`, `cursed_weird_items`, `loot`, `personal_junk`, `scrap_components`, `valuables`, `weapons_parts`) or the derived `water_bottles` pool.
 - The diary can continue ambient lines while searching unless the activity is marked blocking.
@@ -207,7 +209,7 @@ Added comprehensive activity definitions for extraction and downed outcomes:
 ### Requirements Gates Applied
 - Extraction/downed activities now include `requires.dangerLevel` gates
 - High-danger zone extractions use extended timers (5 vs 4 ticks)
-- High-danger downed states use compressed timers (1 vs 2 ticks) for urgency
+- High-danger downed activity definitions exist as prototypes, but current lifecycle timing still uses the standard 2-tick DOWNED window
 - Low-danger zones get standard extraction flow
 - Medium/High danger zones get complication variants
 
@@ -239,15 +241,15 @@ Added comprehensive activity definitions for extraction and downed outcomes:
      - `extraction_standard_zone` (4 ticks, blocking)
      - `extraction_high_difficulty_zone` (6 ticks, blocking)
    - ✅ **Zone-Aware Extraction Startup**: Modified `startExtractionCondition()` to select zone-appropriate extraction duration
-     - Added `getExtractionDurationForZone()` helper to map zones to durations
-     - Extraction timer now initialized with zone-specific duration instead of hardcoded constant
+     - Added `getExtractionDurationForZone()` helper to read zone durations from `EXTRACTION` activity definitions
+     - Extraction timer now initializes from `search_activities.json` zone activity content instead of a hardcoded constant
      - Friendly zones extract faster (safer); hostile zones take longer (more dangerous)
    - ✅ **Deferred Zone-Aware Outcome Selection**: Zone personality can still inform future extraction outcome activities, but it must be reintroduced only after those activities are true lifecycle owners rather than instant side effects.
    - ✅ **All Tests Passing**: 263/263 tests validate zone extraction system
    - **Implementation Notes**:
-     - Zone extraction activities are defined but primarily affect outcome probabilities
-     - Base extraction duration is driven by zone classification in startExtractionCondition
-     - Both systems work together: duration from zone, outcomes influenced by zone personality
+      - Zone extraction activity definitions are the source for current extraction duration
+      - `startExtractionCondition()` matches the current zone against `extraction_*_zone` activity requirements and falls back to `extraction_countdown`
+      - Future outcome activities can reuse the same zone personality data once `EXTRACTION` activities own lifecycle completion
 
 4. [Future] Integrate downed revival cost scaling with raider level.
 

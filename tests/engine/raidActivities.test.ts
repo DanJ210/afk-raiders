@@ -12,7 +12,18 @@ function fixedRng(): RNG {
     int: vi.fn<(min: number, max: number) => number>().mockImplementation((_min, max) => max),
     clone: () => fixedRng(),
     getSeed: () => 0,
-  }
+  } as unknown as RNG
+}
+
+function bonusHealingRng(): RNG {
+  return {
+    next: vi.fn<() => number>().mockReturnValue(0.01),
+    weightedPick: <T,>(items: readonly T[]) => items[0],
+    pick: <T,>(items: readonly T[]) => items[0],
+    int: vi.fn<(min: number, max: number) => number>().mockImplementation((_min, max) => max),
+    clone: () => bonusHealingRng(),
+    getSeed: () => 0,
+  } as unknown as RNG
 }
 
 function createActiveRobotState(params: {
@@ -457,6 +468,44 @@ describe('raid activities', () => {
         status: 'completed',
       }),
     ])
+  })
+
+  it('can find a bonus healing item when any search completes', () => {
+    const initial = createInitialState(0)
+    const rng = bonusHealingRng()
+    const started = startRaidActivity(
+      {
+        ...initial,
+        raid: {
+          ...initial.raid,
+          phase: 'RAIDING' as const,
+        },
+      },
+      { activityId: 'search_black_box_cache', kind: 'SEARCH', lootTableId: 'scrap_components' },
+      rng,
+      0,
+    )
+
+    expect(started).not.toBeNull()
+
+    const progress = advanceRaidActivity(started!.state, rng, 30_000)
+    const secondProgress = advanceRaidActivity(progress.state, rng, 60_000)
+    const completed = advanceRaidActivity(secondProgress.state, rng, 90_000)
+
+    expect(completed.state.raid.backpack).toEqual([
+      expect.objectContaining({
+        itemId: 'scrap_metal_basic',
+        quantity: 3,
+      }),
+    ])
+    expect(completed.state.raid.healingItems).toEqual([
+      expect.objectContaining({
+        itemId: 'bandage_white',
+        name: 'White Bandage',
+        quantity: 1,
+      }),
+    ])
+    expect(completed.activityEvents[0].text).toContain('Bonus med find: tucked White Bandage')
   })
 
   it('completes newly mapped apparel searches with bundled loot', () => {

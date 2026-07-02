@@ -26,7 +26,7 @@ You are **not** the raider. You are their Handler back in the underground hub, w
 - **DOWNED** means the raider is still in the raid but unable to perform normal actions. Normal raiding/extraction events pause unless a comms event explicitly requires the DOWNED condition.
 - EXTRACTING and DOWNED also write progress into the active-thread log so timed danger is visible separately from ordinary diary chatter.
 - If DOWNED and EXTRACTING overlap, the timers race. Extraction completing first is a successful return; the DOWNED timer expiring first transitions `RAIDING → KNOCKED_OUT`.
-- **Danger-level scaling:** In high-danger zones, extraction timers extend to reflect increased LZ complications and detection risk, while DOWNED recovery windows compress to create urgency. Low-danger deployments give the raider more breathing room in both scenarios.
+- **Danger-level scaling:** Extraction timers vary by zone difficulty, so safer routes extract faster and hostile zones take longer. DOWNED currently uses the standard short revive window; high-danger compressed DOWNED variants are content prototypes for a later activity-owned lifecycle pass.
 - **KNOCKED_OUT** is the short recovery/reset phase after failed revival or raid-timeout loss. `KNOCKED_OUT → HUB` performs failed-raid bookkeeping.
 
 ### The Home Stash
@@ -74,6 +74,8 @@ When normal loot is received, the raid also rolls independent bonus chances for:
 
 Because the rolls are independent, the same loot event can award both bonus consumables in addition to normal loot.
 
+Completed search activities also have a chance to uncover a current-raid healing item, while dedicated medical searches remain the high-confidence source for field meds.
+
 ## 3. The Handler (player) — Signal
 The only player resource. Regenerates ~1 per 10 minutes, capped at 5.
 - **Ready Up! (2 Signal):** HUB-only action that immediately starts DEPLOYING.
@@ -92,7 +94,7 @@ Mood therefore matters beyond flavor text: keeping the raider in a better mood g
 The UI has two coordinated text streams:
 
 - **Diary / comms feed:** the broad autoscrolling story feed for ambient jokes, loot observations, phase transitions, Handler feedback, Raider personality, and shield-recharger use/progress.
-- **Active thread:** a compact second feed for the thing currently taking multiple ticks: searching Medical, waiting for extraction, lying DOWNED, or fighting a robot.
+- **Active thread:** a compact second feed for the thing currently taking multiple ticks: searching Medical, waiting for extraction, lying DOWNED, or fighting a robot. Timed activities show a progress bar, while robot fights show robot HP.
 
 Damage and fighting should live in the active thread, not in one-off diary events. A diary line can announce that a robot appeared or that Medical is being searched, and safe activity-scoped ambient lines can fire during an active thread, but the active thread owns the progress ticks, HP/shield changes, combat outcome, and completion/failure text.
 

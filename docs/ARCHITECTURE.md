@@ -110,7 +110,7 @@ Events are picked by context (zone, greed level, mood, HP) and fill `{slot}` pla
 ```
 Writing jokes never touches engine code — and this is the future community-content pipeline. Phase-transition comms are also content-managed in `src/content/phase_transitions.json`, keyed by transition pairs such as `HUB_to_DEPLOYING`.
 
-AFK Raiders now uses two text streams, tracked in [ACTIVE_RAID_ACTIVITY_PLAN.md](ACTIVE_RAID_ACTIVITY_PLAN.md): `GameState.log` is the diary/comms feed for ambient narration, while `GameState.activityLog` is the active-thread feed for multi-tick tasks. Content events in the diary should start or flavor activity, not directly process combat damage. Activity-scoped ambient overlay events can fire during an active activity/condition, but they must be no-effect content and still append to `GameState.log`. The migration target is to scrub ordinary event tables of HP/damage/fight resolution effects and route those outcomes through `RaidState.activeRaidActivity` or existing timed conditions mirrored into `activityLog`.
+AFK Raiders now uses two text streams, tracked in [ACTIVE_RAID_ACTIVITY_PLAN.md](ACTIVE_RAID_ACTIVITY_PLAN.md): `GameState.log` is the diary/comms feed for ambient narration, while `GameState.activityLog` is the active-thread feed for multi-tick tasks. Content events in the diary should start or flavor activity, not directly process combat damage. Activity-scoped ambient overlay events can fire during an active activity/condition, but they must be no-effect content and still append to `GameState.log`. The active-thread UI shows the latest activity line, timed activity progress from `ticksRemaining / totalTicks`, and robot HP from `robotHp / robotMaxHp`. The migration target is to scrub ordinary event tables of HP/damage/fight resolution effects and route those outcomes through `RaidState.activeRaidActivity` or existing timed conditions mirrored into `activityLog`.
 
 The versioned lore wiki in [docs/lore](lore/) defines parody canon, legal guardrails, tone, and backlog ideas. It is planning/reference material, not runtime data. Source-wiki material should be reduced to general tropes and then rewritten as AFK-original canon there before any game-facing text is added to `src/content/`.
 
@@ -145,6 +145,8 @@ Events may also gate themselves by `requires.dangerLevel` (`Low`, `Medium`, or `
 Loot rarity selection also applies small mood and greed biases in `eventResolver.ts`: positive mood nudges weights toward higher rarity and negative mood nudges toward lower rarity, while higher greed nudges loot-appetite rolls toward higher rarity. Greed also mildly increases robot encounter and risky extraction event weights, making danger more likely without directly changing extraction odds. These effects are intentionally mild and always secondary to danger-level profile tuning.
 
 When an event awards backpack loot (`effects.backpackValue` producing a positive loot add), `processTick()` performs two additional independent consumable bonus rolls: one for a healing item and one for a shield recharger. This allows a single loot event to grant normal loot plus either or both consumable types.
+
+Completed `SEARCH` activities also roll for a bonus current-raid healing item. Dedicated medical searches use a higher healing-item chance than general searches.
 
 When a shield mitigates damage, the activity log should include a follow-up line that shows the split between shield charge lost and HP damage landed. That keeps the active thread readable while still reflecting the shield math.
 
@@ -238,7 +240,7 @@ Save migration upgrades older saves to version 6 by backfilling missing `levelXp
 - `HUB`: 20 ticks (10 minutes)
 - `DEPLOYING`: 4 ticks (2 minutes)
 - `RAIDING`: 60 ticks (30 minutes)
-- `RaidState.extracting`: 4 ticks (~2 minutes), active only during RAIDING
+- `RaidState.extracting`: zone-content-driven duration, active only during RAIDING. Current extraction activity definitions in `src/content/raiding-events/search_activities.json` set friendly zones to 3 ticks, standard zones to 4 ticks, and hostile zones to 6 ticks; unknown zones fall back to `extraction_countdown`.
 - `RaidState.downed`: 2 ticks (60 second revive window), active only during RAIDING
 - `KNOCKED_OUT`: 2 ticks before waking in HUB; keep this duration behind a helper so skills can improve it later.
 

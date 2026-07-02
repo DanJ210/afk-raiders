@@ -181,6 +181,8 @@ const searchLootTables: Record<string, LootItem[]> = {
   weapons_parts: (weaponsPartsData as { items: LootItem[] }).items,
   water_bottles: (lootData as { items: LootItem[] }).items.filter(item => item.id.startsWith('water_bottle')),
 }
+const SEARCH_BONUS_HEALING_ITEM_CHANCE = 0.15
+const MEDICAL_SEARCH_HEALING_ITEM_CHANCE = 1
 const MAX_SEARCH_LOOT_ROLLS = 4
 const ROBOT_HP_PER_MENACE = 6
 const ROBOT_ROUND_DAMAGE_PER_MENACE = 0.35
@@ -372,6 +374,22 @@ function addHealingItem(raid: GameState['raid'], item: HealingItem): GameState['
       }]
 
   return { ...raid, healingItems: nextHealingItems }
+}
+
+function rollSearchHealingItem(raid: GameState['raid'], rng: RNG, chance: number): { raid: GameState['raid']; item: HealingItem | null } {
+  if (rng.next() >= chance) return { raid, item: null }
+
+  const item = rng.weightedPick(healingItems)
+  return {
+    raid: addHealingItem(raid, item),
+    item,
+  }
+}
+
+function appendSearchHealingText(text: string, item: HealingItem | null): string {
+  return item
+    ? `${text} Bonus med find: tucked ${item.name} into the current-raid med pocket.`
+    : text
 }
 
 function canRobotEncounterBeLethal(state: GameState, robot: RobotEntry): boolean {
@@ -631,28 +649,28 @@ function advanceSearchActivity(
       const shieldRecharger = rng.weightedPick(shieldRechargers)
       const backpackItem = shieldRechargerToBackpackItem(shieldRecharger)
       const nextRaid = addBackpackItem({ ...state.raid, activeRaidActivity: null }, backpackItem)
-      const text = fillActivityText(definition.text.completed, {
+      const healingRoll = rollSearchHealingItem(nextRaid, rng, SEARCH_BONUS_HEALING_ITEM_CHANCE)
+      const text = appendSearchHealingText(fillActivityText(definition.text.completed, {
         shield_recharger: shieldRecharger.name,
         ticks_remaining: 0,
-      })
+      }), healingRoll.item)
 
       return {
-        state: { ...state, raid: nextRaid },
+        state: { ...state, raid: healingRoll.raid },
         activityEvents: [activityLogEvent(activity, 'completed', state.tick, now, text)],
         blocking,
       }
     }
 
     if (activity.healingItem ?? definition.healingItem) {
-      const healingItem = rng.weightedPick(healingItems)
-      const nextRaid = addHealingItem({ ...state.raid, activeRaidActivity: null }, healingItem)
+      const healingRoll = rollSearchHealingItem({ ...state.raid, activeRaidActivity: null }, rng, MEDICAL_SEARCH_HEALING_ITEM_CHANCE)
       const text = fillActivityText(definition.text.completed, {
-        healing_item: healingItem.name,
+        healing_item: healingRoll.item?.name ?? 'field meds',
         ticks_remaining: 0,
       })
 
       return {
-        state: { ...state, raid: nextRaid },
+        state: { ...state, raid: healingRoll.raid },
         activityEvents: [activityLogEvent(activity, 'completed', state.tick, now, text)],
         blocking,
       }
@@ -673,14 +691,15 @@ function advanceSearchActivity(
       (raid, loot) => addBackpackItem(raid, loot),
       { ...state.raid, activeRaidActivity: null },
     )
-    const text = fillActivityText(definition.text.completed, {
+    const healingRoll = rollSearchHealingItem(nextRaid, rng, SEARCH_BONUS_HEALING_ITEM_CHANCE)
+    const text = appendSearchHealingText(fillActivityText(definition.text.completed, {
       loot_name: formatLootList(lootItems),
       loot_count: lootItems.length,
       ticks_remaining: 0,
-    })
+    }), healingRoll.item)
 
     return {
-      state: { ...state, raid: nextRaid },
+      state: { ...state, raid: healingRoll.raid },
       activityEvents: [activityLogEvent(activity, 'completed', state.tick, now, text)],
       blocking,
     }
