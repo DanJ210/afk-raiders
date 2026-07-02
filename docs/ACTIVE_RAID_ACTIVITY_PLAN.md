@@ -192,26 +192,33 @@ Activity-scoped ambient overlay events are implemented as no-effect diary conten
 12. [Done] Update balance tests around activity-driven robot outcomes and ambient danger.
 13. [Done] Split monolithic `raid_activities.json` into focused `robot_encounter_activities.json` and `search_activities.json`; migrate all 18 backpackValue events to multi-tick SEARCH activities; remove old file.
 
-## Extraction & Downed Completion Work (Path A - Completed)
-Added comprehensive activity definitions for extraction and downed outcomes:
+## Current Extraction And Downed Contract
+Extraction and DOWNED are still lifecycle conditions layered on `RAIDING`, with JSON-backed text/activity metadata used by the active-thread log.
 
-### Extraction Activity Variants
-- `extraction_countdown` - Standard extraction (4 ticks, all danger levels)
-- `extraction_high_difficulty` - High-danger extraction (5 ticks, High danger only, longer timer)
-- `extraction_success_bonus` - Success milestone activity (1 tick, can grant bonus effects)
-- `extraction_complication_close_call` - LZ complications (2 ticks, Medium/High danger only)
+### Current Extraction Behavior
+- `RaidState.extracting` is the successful raid-exit guardrail.
+- `startExtractionCondition()` starts the condition and clears conflicting side activities such as shield recharge.
+- Extraction duration is content-driven from `EXTRACTION` activity definitions in `search_activities.json`:
+  - `extraction_low_difficulty_zone` - friendly zones, 3 ticks
+  - `extraction_standard_zone` - standard zones, 4 ticks
+  - `extraction_high_difficulty_zone` - hostile zones, 6 ticks
+  - `extraction_countdown` - fallback/default, 4 ticks
+- When the extraction timer completes, `completeExtractionCondition()` performs successful-extraction bookkeeping and immediately transitions `RAIDING -> HUB` in the same tick.
+- Failed extraction events clear `RaidState.extracting`, emit an extraction failed activity entry without the `EXTRACTING` condition tag, and leave the raid in `RAIDING`.
 
-### Downed Activity Variants
-- `downed_countdown` - Standard downed timer (2 ticks, all danger levels)
-- `downed_high_danger` - High-danger downed (1 tick, High danger only, no mercy)
-- `downed_revival_attempt` - Revival through Signal cost (1 tick, custom attempt flavor)
+### Current Downed Behavior
+- `RaidState.downed` is the incapacitated/revive guardrail.
+- Runtime DOWNED duration still uses the standard 2-tick `DOWNED_TICKS` window.
+- DOWNED start/progress activity entries carry the `DOWNED` condition tag; completed/failed entries do not claim the Raider is still DOWNED.
+- `downed_high_danger` and `downed_revival_attempt` remain activity-content prototypes until DOWNED activities own lifecycle duration and completion.
 
-### Requirements Gates Applied
-- Extraction/downed activities now include `requires.dangerLevel` gates
-- High-danger zone extractions use extended timers (5 vs 4 ticks)
-- High-danger downed activity definitions exist as prototypes, but current lifecycle timing still uses the standard 2-tick DOWNED window
-- Low-danger zones get standard extraction flow
-- Medium/High danger zones get complication variants
+### Deferred Outcome Prototypes
+These definitions exist in `search_activities.json`, but successful extraction does not start them yet:
+- `extraction_success_bonus` - success milestone activity (1 tick, non-blocking)
+- `extraction_high_difficulty` - high-danger extraction prototype (5 ticks, blocking)
+- `extraction_complication_close_call` - LZ complication prototype (2 ticks, blocking)
+
+They should only be reintroduced after multi-tick `EXTRACTION` activities can own lifecycle completion and emit started/progress/completed activity events safely. Until then, successful extraction must stay synchronous so stash transfer, raid reset, stats, XP, and `RAIDING -> HUB` cannot drift apart.
 
 ## Next Implementation Order (Path B - In Progress)
 1. [Done] Convert all 18 `backpackValue` instant-loot events into `SEARCH` activities.
@@ -221,15 +228,9 @@ Added comprehensive activity definitions for extraction and downed outcomes:
    - Old `raid_activities.json` removed; migration to split files complete
 
 2. [Done/Revised] Keep successful extraction lifecycle completion synchronous.
-   - ✅ Added 5 new outcome activity definitions to `search_activities.json`:
-     - `extraction_success_bonus` (1 tick, non-blocking, High/Medium/Low danger)
-     - `extraction_high_difficulty` (5 ticks, blocking, High danger only)
-     - `extraction_complication_close_call` (2 ticks, blocking, Medium/High danger only)
-     - `downed_high_danger` (1 tick, blocking, High danger only)
-     - `downed_revival_attempt` (1 tick, blocking, all danger levels)
-   - ✅ `completeExtractionCondition()` applies extraction bookkeeping and always completes the `RAIDING -> HUB` lifecycle transition in the same call.
-   - ✅ Outcome activity definitions remain content-side prototypes, but they are not started by successful extraction until multi-tick `EXTRACTION` activities can own lifecycle completion and emit their started/progress/completed activity events safely.
-   - ✅ Regression coverage verifies extraction cannot strand the raid in `RAIDING` with `extracting` cleared and backpack state half-reset.
+  - ✅ `completeExtractionCondition()` applies extraction bookkeeping and always completes the `RAIDING -> HUB` lifecycle transition in the same call.
+  - ✅ Extraction outcome activity definitions remain content-side prototypes and are not started by successful extraction yet.
+  - ✅ Regression coverage verifies extraction cannot strand the raid in `RAIDING` with `extracting` cleared and backpack state half-reset.
 
 3. [Completed] Add zone-specific extraction difficulty modifiers.
    - ✅ **Zone Classification**: Created three difficulty tiers:
