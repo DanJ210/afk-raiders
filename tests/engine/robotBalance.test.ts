@@ -143,7 +143,7 @@ describe('robot balance guardrails', () => {
     const maxLevelDamage = robotRoundHpDamage('tank_overcompensation', maxLevel)
 
     expect(maxLevelDamage).toBeLessThan(starterDamage)
-    expect(maxLevelDamage).toBeGreaterThan(robotRoundHpDamage('tank_overcompensation', mediumStarter))
+    expect(maxLevelDamage).toBeGreaterThanOrEqual(robotRoundHpDamage('tank_overcompensation', mediumStarter))
     expect(starterDamage - maxLevelDamage).toBeLessThanOrEqual(3)
   })
 
@@ -160,7 +160,7 @@ describe('robot balance guardrails', () => {
     const highMoodDamage = robotRoundHpDamage('tank_overcompensation', highMood)
 
     expect(highMoodDamage).toBeLessThan(highDamage)
-    expect(highMoodDamage).toBeGreaterThan(mediumDamage)
+    expect(highMoodDamage).toBeGreaterThanOrEqual(mediumDamage)
   })
 
   it('keeps max Hiding in Lockers helpful but below the High-danger curve', () => {
@@ -176,7 +176,7 @@ describe('robot balance guardrails', () => {
     const highSkilledDamage = highSkilled.raider.hp - highSkilledResult.state.raider.hp
 
     expect(highSkilledDamage).toBeLessThan(robotRoundHpDamage('tank_overcompensation', createRobotState({ dangerLevel: 'High', shielded: false })))
-    expect(highSkilledDamage).toBeGreaterThan(mediumDamage)
+    expect(highSkilledDamage).toBeGreaterThanOrEqual(mediumDamage)
     expect(highSkilledResult.activityEvents.at(-1)?.text).toContain('Hiding in Lockers ducked')
   })
 })

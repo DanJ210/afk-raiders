@@ -189,10 +189,15 @@ const ROBOT_ROUND_DAMAGE_PER_MENACE = 0.35
 const ROBOT_LETHAL_HP_RATIO = 0.5
 const ROBOT_NONLETHAL_MIN_HP_RATIO = 0.25
 const LETHAL_ROBOT_DEADLINESS: ReadonlySet<RobotEntry['deadliness']> = new Set(['nasty', 'deadly'])
-const DANGER_DAMAGE_SWING: Record<'Low' | 'Medium' | 'High', number> = {
-  Low: 1,
-  Medium: 2,
-  High: 3,
+const DANGER_DAMAGE_SWING_BASE: Record<'Low' | 'Medium' | 'High', number> = {
+  Low: 0,
+  Medium: 1,
+  High: 2,
+}
+const DANGER_DAMAGE_SWING_MULTIPLIER: Record<'Low' | 'Medium' | 'High', number> = {
+  Low: 0.5,
+  Medium: 1,
+  High: 1.5,
 }
 
 export interface StartRaidActivityResult {
@@ -413,9 +418,10 @@ function applyRobotRoundDamage(state: GameState, robot: RobotEntry, activity: Ac
   const profile = getDangerLevelProfile(state.raid.dangerLevel)
   const multiplier = Math.max(0, (activity.robotDamageMultiplier ?? 1) * profile.robotFailureDamageMultiplier)
   const expectedDamage = Math.max(1, Math.ceil(robot.menace * ROBOT_ROUND_DAMAGE_PER_MENACE * multiplier))
-  const dangerSwing = DANGER_DAMAGE_SWING[profile.dangerLevel] ?? DANGER_DAMAGE_SWING.Low
-  const enemySwing = Math.max(1, Math.floor(robot.menace / 3))
-  const totalSwing = dangerSwing + enemySwing
+  const baseSwing = DANGER_DAMAGE_SWING_BASE[profile.dangerLevel] ?? DANGER_DAMAGE_SWING_BASE.Low
+  const swingMultiplier = DANGER_DAMAGE_SWING_MULTIPLIER[profile.dangerLevel] ?? DANGER_DAMAGE_SWING_MULTIPLIER.Low
+  const enemySwing = Math.max(1, Math.ceil(robot.menace / 2))
+  const totalSwing = Math.max(1, baseSwing + Math.ceil(enemySwing * swingMultiplier))
   const minIncomingDamage = Math.max(1, expectedDamage - totalSwing)
   const maxIncomingDamage = Math.max(minIncomingDamage, expectedDamage + totalSwing)
   const rolledDamage = rng.int(minIncomingDamage, maxIncomingDamage)

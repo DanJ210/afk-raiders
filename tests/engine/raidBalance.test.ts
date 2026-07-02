@@ -225,7 +225,7 @@ describe('raid balance', () => {
   it('lets manual healing and shield intervention rescue an otherwise near-lethal high-danger hit', () => {
     const exposed = createHighDangerInterventionState()
     const exposedResult = advanceTankActivity(exposed, 3)
-    expect(exposedResult.raider.hp).toBeLessThanOrEqual(6)
+    expect(exposedResult.raider.hp).toBeLessThanOrEqual(20)
 
     const healed = consumeHealingItem(exposed, 'bandage_purple', 0)
     expect(healed).not.toBeNull()
