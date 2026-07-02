@@ -15,6 +15,17 @@ function fixedRng(): RNG {
   } as unknown as RNG
 }
 
+function fixedRngPickLast(): RNG {
+  return {
+    next: vi.fn<() => number>().mockReturnValue(0.5),
+    weightedPick: <T,>(items: readonly T[]) => items[items.length - 1],
+    pick: <T,>(items: readonly T[]) => items[items.length - 1],
+    int: vi.fn<(min: number, max: number) => number>().mockImplementation((_min, max) => max),
+    clone: () => fixedRngPickLast(),
+    getSeed: () => 0,
+  } as unknown as RNG
+}
+
 function bonusHealingRng(): RNG {
   return {
     next: vi.fn<() => number>().mockReturnValue(0.01),
@@ -180,6 +191,59 @@ describe('raid activities', () => {
     )
 
     expect(result).toBeNull()
+  })
+
+  it('excludes boss robots from generic pools unless includeBosses is true', () => {
+    const initial = createInitialState(0)
+    const state = {
+      ...initial,
+      raid: {
+        ...initial.raid,
+        phase: 'RAIDING' as const,
+        dangerLevel: 'High' as const,
+        zone: 'arc_ruins',
+        greedLevel: 45,
+      },
+    }
+
+    const withoutBosses = startRaidActivity(
+      state,
+      {
+        activityId: 'robot_encounter_standard',
+        kind: 'ROBOT_ENCOUNTER',
+        robotPool: {
+          dangerLevel: 'High',
+          zone: 'arc_ruins',
+          deadliness: ['deadly'],
+          minGreed: 40,
+        },
+      },
+      fixedRngPickLast(),
+      0,
+    )
+
+    expect(withoutBosses).not.toBeNull()
+    expect(withoutBosses!.state.raid.activeRaidActivity?.robotId).not.toBe('drama_queen')
+
+    const withBosses = startRaidActivity(
+      state,
+      {
+        activityId: 'robot_encounter_standard',
+        kind: 'ROBOT_ENCOUNTER',
+        robotPool: {
+          dangerLevel: 'High',
+          zone: 'arc_ruins',
+          deadliness: ['deadly'],
+          minGreed: 40,
+          includeBosses: true,
+        },
+      },
+      fixedRngPickLast(),
+      0,
+    )
+
+    expect(withBosses).not.toBeNull()
+    expect(withBosses!.state.raid.activeRaidActivity?.robotId).toBe('drama_queen')
   })
 
   it('starts a JSON-backed search activity', () => {

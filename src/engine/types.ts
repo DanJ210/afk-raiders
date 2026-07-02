@@ -57,6 +57,8 @@ export interface RobotActivityPool {
   deadliness?: RobotEntry['deadliness'] | RobotEntry['deadliness'][]
   minGreed?: number
   maxGreed?: number
+  /** When true, includes boss robots in pooled selection. Defaults to false. */
+  includeBosses?: boolean
 }
 
 export interface RaidActivityRequires {
@@ -119,6 +121,8 @@ export interface LootItem extends ContentEntry {
 
 export interface RobotEntry extends ContentEntry {
   name: string
+  /** Boss robots are excluded from generic pools unless includeBosses is true. */
+  isBoss?: boolean
   deadliness: 'weak' | 'moderate' | 'dangerous' | 'nasty' | 'deadly'
   menace: number
   flavorLines: string[]

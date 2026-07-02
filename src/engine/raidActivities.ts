@@ -230,6 +230,8 @@ function matchesActivityContext(state: GameState, requires: RaidActivityDefiniti
 function robotMatchesPool(robot: RobotEntry, state: GameState, pool: StartRaidActivityEffect['robotPool']): boolean {
   if (!matchesActivityContext(state, pool)) return false
 
+  if (robot.isBoss && !pool?.includeBosses) return false
+
   if (!pool) return true
   const deadliness = normalizeArray(pool.deadliness)
   if (deadliness.length > 0 && !deadliness.includes(robot.deadliness)) return false

@@ -798,6 +798,7 @@
     "id": "drama_queen",
     "weight": 2,
     "name": "The Drama Queen",
+    "isBoss": true,
     "deadliness": "deadly",
     "menace": 10,
     "flavorLines": [
