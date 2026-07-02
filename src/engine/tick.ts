@@ -774,22 +774,25 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
   if (
     currentState.raid.phase === 'RAIDING' &&
     currentState.raid.phaseTicksRemaining <= 0 &&
-    !currentState.raid.downed &&
     !startedExtractionThisTick
   ) {
-    const downed = startDownedCondition(
-      currentState,
-      state.tick,
-      now,
-      {
-        kind: 'raid_timeout',
-        text: 'Raid timer hit zero. Zone nuke confirmed. Raider is down but the extraction clock may still matter.',
-      },
-    )
-    currentState = downed.state
-    if (downed.event) {
-      emitted.push(downed.event)
-      activityEmitted.push(downedActivityEvent('started', state.tick, now, currentState.raid.downed?.ticksRemaining ?? DOWNED_TICKS))
+    if (!currentState.raid.extracting) {
+      currentState = enterKnockedOutRecovery(currentState, emitted, state.tick, now)
+    } else if (!currentState.raid.downed) {
+      const downed = startDownedCondition(
+        currentState,
+        state.tick,
+        now,
+        {
+          kind: 'raid_timeout',
+          text: 'Raid timer hit zero during extraction. Raider is down, and only the shuttle clock can still save this.',
+        },
+      )
+      currentState = downed.state
+      if (downed.event) {
+        emitted.push(downed.event)
+        activityEmitted.push(downedActivityEvent('started', state.tick, now, currentState.raid.downed?.ticksRemaining ?? DOWNED_TICKS))
+      }
     }
   }
 

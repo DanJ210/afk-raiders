@@ -472,7 +472,7 @@ describe('deterministic snapshot', () => {
     ])
   })
 
-  it('downs the raider when the raid timer expires before extraction', () => {
+  it('immediately enters knocked out when the raid timer expires before extraction', () => {
     const rng = createRNG(FIXED_SEED)
     const initial = createInitialState(0)
     const state = {
@@ -487,14 +487,10 @@ describe('deterministic snapshot', () => {
     }
 
     const result = processTick(state, rng, 0)
-    expect(result.state.raid.phase).toBe('RAIDING')
-    expect(result.state.raid.downed).not.toBeNull()
-    expect(result.state.raider.hp).toBe(0)
-    expect(result.events.some(e => e.id === 'condition_downed_started')).toBe(true)
-    expect(result.events.find(e => e.id === 'condition_downed_started')?.conditions).toEqual(['DOWNED'])
-    const downedStarted = result.activityEvents.find(event => event.activityId === 'downed_recovery' && event.status === 'started')
-    expect(downedStarted?.activityName).toBe('Downed Thread')
-    expect(downedStarted?.text).toBe('Downed thread opened. 2 ticks before the zone writes the ending.')
+    expect(result.state.raid.phase).toBe('KNOCKED_OUT')
+    expect(result.state.raid.downed).toBeNull()
+    expect(result.events.some(e => e.id === 'condition_downed_started')).toBe(false)
+    expect(result.events.some(e => e.id === 'phase_RAIDING_to_KNOCKED_OUT')).toBe(true)
   })
 
   it('logs why the raider was downed when robot combat causes it', () => {
@@ -563,6 +559,54 @@ describe('deterministic snapshot', () => {
     expect(result.state.raid.extracting).not.toBeNull()
     expect(result.events.find(event => event.id === 'condition_extracting_started')?.conditions).toEqual(['EXTRACTING'])
     expect(result.activityEvents.find(event => event.activityId === 'current_extraction' && event.status === 'started')?.text).toBe('Extraction thread opened. LZ timer: 4 ticks.')
+  })
+
+  it('goes straight to KNOCKED_OUT when the raid timer expires without extraction in progress', () => {
+    const rng = createRNG(FIXED_SEED)
+    const initial = createInitialState(0)
+    const state = {
+      ...initial,
+      raid: {
+        ...initial.raid,
+        phase: 'RAIDING' as const,
+        phaseTicksRemaining: 0,
+        extracting: null,
+        downed: null,
+      },
+    }
+
+    const result = processTick(state, rng, 0)
+
+    expect(result.state.raid.phase).toBe('KNOCKED_OUT')
+    expect(result.events.map(event => event.id)).toContain('phase_RAIDING_to_KNOCKED_OUT')
+    expect(result.events.some(event => event.id === 'condition_downed_started')).toBe(false)
+    expect(result.state.raid.downed).toBeNull()
+    expect(result.state.raid.extracting).toBeNull()
+  })
+
+  it('starts downed race at timeout only when extraction is already in progress', () => {
+    const rng = createRNG(FIXED_SEED)
+    const initial = createInitialState(0)
+    const state = {
+      ...initial,
+      raid: {
+        ...initial.raid,
+        phase: 'RAIDING' as const,
+        phaseTicksRemaining: 0,
+        extracting: { ticksRemaining: 2 },
+        downed: null,
+      },
+    }
+
+    const result = processTick(state, rng, 0)
+    const downedStarted = result.events.find(event => event.id === 'condition_downed_started')
+
+    expect(result.state.raid.phase).toBe('RAIDING')
+    expect(result.state.raid.extracting).not.toBeNull()
+    expect(result.state.raid.downed).not.toBeNull()
+    expect(downedStarted).toBeDefined()
+    expect(downedStarted?.text).toBe('Raid timer hit zero during extraction. Raider is down, and only the shuttle clock can still save this.')
+    expect(downedStarted?.conditions).toEqual(['EXTRACTING', 'DOWNED'])
   })
 
   it('starts extraction with zone duration from extraction activity content', () => {
