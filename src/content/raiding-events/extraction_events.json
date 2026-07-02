@@ -1125,5 +1125,100 @@
       "mood": -1,
       "ratRating": 1
     }
+  },
+  {
+    "id": "extract_damp_battlegrounds_wet_sprint",
+    "weight": 8,
+    "text": "Damp Battlegrounds turned the LZ route into a water feature. Sprinting and hydroplaning are now a combined discipline.",
+    "requires": {
+      "phase": "RAIDING",
+      "zone": "damp_battlegrounds",
+      "extracting": true
+    },
+    "effects": {
+      "mood": -1
+    }
+  },
+  {
+    "id": "extract_buried_city_stairwell_guess",
+    "weight": 7,
+    "text": "Buried City offered three stairwells to the LZ. Two were decorative, one was rubble with ambition.",
+    "requires": {
+      "phase": "RAIDING",
+      "zone": "buried_city",
+      "extracting": true
+    },
+    "effects": {
+      "mood": -1,
+      "ratRating": 1
+    }
+  },
+  {
+    "id": "extract_chassis_graveyard_magnetized_path",
+    "weight": 7,
+    "text": "Chassis Graveyard path was covered in old A.R.C. parts. Boots keep choosing sides in an ancient machine argument.",
+    "requires": {
+      "phase": "RAIDING",
+      "zone": "arc_ruins",
+      "extracting": true
+    },
+    "effects": {
+      "mood": -1
+    }
+  },
+  {
+    "id": "extract_sunken_highrise_elevator_truth",
+    "weight": 7,
+    "text": "Sunken Highrise elevator still displays FLOORS. None of them are currently where they claim to be.",
+    "requires": {
+      "phase": "RAIDING",
+      "zone": "the_sunken_highrise",
+      "extracting": true
+    },
+    "effects": {
+      "mood": -1,
+      "greedLevel": -1
+    }
+  },
+  {
+    "id": "extract_forgotten_fields_cover_problem",
+    "weight": 7,
+    "text": "Forgotten Fields has excellent visibility and no cover. Everyone can see your cardio choices in real time.",
+    "requires": {
+      "phase": "RAIDING",
+      "zone": "forgotten_fields",
+      "extracting": true
+    },
+    "effects": {
+      "mood": -1
+    }
+  },
+  {
+    "id": "extract_breach_whistle",
+    "weight": 7,
+    "text": "Wind through The Breach made a sound like a disappointed supervisor. Increased pace without waiting for notes.",
+    "requires": {
+      "phase": "RAIDING",
+      "zone": "the_breach",
+      "extracting": true
+    },
+    "effects": {
+      "mood": -1,
+      "ratRating": 1
+    }
+  },
+  {
+    "id": "extract_stella_picnic_detour",
+    "weight": 8,
+    "text": "Staycation campers set up folding chairs on the shortest LZ route and called it community theater.",
+    "requires": {
+      "phase": "RAIDING",
+      "zone": "stella",
+      "extracting": true
+    },
+    "effects": {
+      "mood": -2,
+      "ratRating": 2
+    }
   }
 ]

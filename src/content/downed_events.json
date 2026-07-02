@@ -33,5 +33,68 @@
     "text": "Raider requested a revive. Signal accounting immediately opened a fresh invoice.",
     "requires": { "phase": "RAIDING", "downed": true },
     "effects": { "ratRating": 1 }
+  },
+  {
+    "id": "downed_floor_negotiation",
+    "weight": 24,
+    "text": "Attempted to negotiate with the floor for a less judgmental angle. Floor countered with gravel.",
+    "requires": { "phase": "RAIDING", "downed": true },
+    "effects": { "mood": -1 }
+  },
+  {
+    "id": "downed_permit_choir_hold_music",
+    "weight": 14,
+    "text": "Permit Choir put the revive request on hold. The hold music is just someone stamping forms off-beat.",
+    "requires": { "phase": "RAIDING", "downed": true },
+    "effects": { "ratRating": 1, "mood": -1 }
+  },
+  {
+    "id": "downed_coupon_baron_offer",
+    "weight": 12,
+    "text": "Coupon Baron offered 5 percent off emergency extraction if paid in pre-disaster confidence.",
+    "requires": { "phase": "RAIDING", "downed": true },
+    "effects": { "ratRating": 2 }
+  },
+  {
+    "id": "downed_locker_philosophy",
+    "weight": 16,
+    "text": "Locker Philosopher on comms says lying still is tactical. Clarified this is not the preferred form.",
+    "requires": { "phase": "RAIDING", "downed": true },
+    "effects": { "mood": -1 }
+  },
+  {
+    "id": "downed_hushtone_failure",
+    "weight": 13,
+    "text": "HushTone emergency whisper mode activated and loudly announced your exact distress coordinates.",
+    "requires": { "phase": "RAIDING", "downed": true },
+    "effects": { "mood": -1, "ratRating": 1 }
+  },
+  {
+    "id": "downed_snack_shrine_vow",
+    "weight": 11,
+    "text": "Promised the Snack Shrine Custodians you would be kinder to rations if this works out.",
+    "requires": { "phase": "RAIDING", "downed": true },
+    "effects": { "mood": 1 }
+  },
+  {
+    "id": "downed_exit_strategy_map",
+    "weight": 12,
+    "text": "Exit Strategy Unlimited map says nearest safe route is six meters left and several life choices ago.",
+    "requires": { "phase": "RAIDING", "downed": true },
+    "effects": { "mood": -1 }
+  },
+  {
+    "id": "downed_stella_picnic_witness",
+    "weight": 9,
+    "text": "A Staycation camper waved from a polite distance and called this a tactical rest interval.",
+    "requires": { "phase": "RAIDING", "zone": "stella", "downed": true },
+    "effects": { "ratRating": 2, "mood": -1 }
+  },
+  {
+    "id": "downed_breach_echo",
+    "weight": 9,
+    "text": "The Breach echoed your breathing back at you with better rhythm and worse bedside manner.",
+    "requires": { "phase": "RAIDING", "zone": "the_breach", "downed": true },
+    "effects": { "mood": -1 }
   }
 ]
