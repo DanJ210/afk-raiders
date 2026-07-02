@@ -193,7 +193,7 @@ Revival cost scaling should tie to Raider Level so players can reduce future `CA
 - Activity definitions include user-facing names for UI and debugging.
 - Activity-scoped ambient overlay comms can fire during active activities/conditions without replacing thread progress.
 - Damage text routes through `activityLog` alongside the activity that caused it.
-- All tests passing: 286 tests, balance guardrails intact, coverage maintained.
+- All tests passing; balance guardrails intact; coverage maintained.
   - Add content validation so every search `lootTableId` resolves to a known table.
   - Add multi-roll search rewards so longer/riskier searches can return small bundles instead of a single item.
   - Add new search activities for underused pools such as apparel/accessories, weapon parts, valuables, arc tech, cursed weird items, and consumables.
