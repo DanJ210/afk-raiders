@@ -883,8 +883,8 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
     }
   }
 
-  // Keep the comms feed readable: only add ambient activity flavor when no
-  // higher-priority handler logs have been queued this tick.
+  // Keep the comms feed readable: only add ambient activity flavor when this
+  // tick has not already emitted any handler comms events.
   if (emitted.length === 0) {
     const ambientActivityEvent = resolveAmbientActivityEvent(currentState, rng, now)
     if (ambientActivityEvent) {

@@ -1,6 +1,7 @@
 # Lore Backlog
 
-This file holds AFK-original concepts that are approved as direction but not yet implemented in runtime JSON.
+This file tracks AFK-original concepts through lore intake and runtime seeding.
+Entries can be either future-only or runtime-started prototypes that still need tuning/enrichment.
 
 ## Robots
 
