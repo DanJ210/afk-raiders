@@ -9,10 +9,10 @@
  * Formula explanation:
  *
  *   baseExtractChance = 2.3%  (Raider's survival instinct, barely)
- *   extractChance     = clamp(baseExtractChance, 0.5%, 8%) plus survival modifiers
+ *   extractChance     = clamp(baseExtractChance, 0.5%, 8%) plus survival modifiers, then reduced by greed
  *
  *   deathChance comes from danger-level ambient RAIDING pressure and skill modifiers.
- *   Greed no longer directly changes extraction odds or downed chance.
+ *   Higher greed suppresses extraction because the Raider wants more loot.
  *
  *   Calm/Pressure are applied to raid.greedLevel before this function is called.
  *   CALL_EXTRACT forces the extraction branch regardless of RNG
@@ -27,7 +27,7 @@ import type { DangerLevel, RaidState } from './types.js'
 import type { RNG } from './rng.js'
 import { getDangerLevelProfile } from './dangerLevelProfiles.js'
 import { PHASE_DURATIONS } from './raidStateMachine.js'
-import { growGreedAfterPushDeeper } from './greed.js'
+import { clampGreedLevel, growGreedAfterPushDeeper } from './greed.js'
 
 export type GreedOutcome = 'PUSH_DEEPER' | 'EXTRACT' | 'DOWNED'
 
@@ -39,7 +39,15 @@ export interface GreedCheckResult {
 const BASE_EXTRACT_CHANCE = 0.023
 const MIN_EXTRACT_CHANCE = 0.005
 const MAX_EXTRACT_CHANCE = 0.08
+const GREED_EXTRACT_CHANCE_PENALTY = 0.018
 export const DEFAULT_MIN_NATURAL_EXTRACTION_RAIDING_TICKS = Math.floor(PHASE_DURATIONS.RAIDING / 2)
+const NATURAL_EXTRACTION_MEDIUM_DANGER_DELAY = 8
+const NATURAL_EXTRACTION_HIGH_DANGER_DELAY = 16
+const NATURAL_EXTRACTION_MINIMUM_TICKS_BY_DANGER: Record<DangerLevel, number> = {
+  Low: DEFAULT_MIN_NATURAL_EXTRACTION_RAIDING_TICKS,
+  Medium: DEFAULT_MIN_NATURAL_EXTRACTION_RAIDING_TICKS + NATURAL_EXTRACTION_MEDIUM_DANGER_DELAY,
+  High: DEFAULT_MIN_NATURAL_EXTRACTION_RAIDING_TICKS + NATURAL_EXTRACTION_HIGH_DANGER_DELAY,
+}
 const LOW_HP_EXTRACTION_DANGER_MULTIPLIER: Record<DangerLevel, number> = {
   Low: 1,
   Medium: 0.25,
@@ -64,6 +72,15 @@ function lowHpExtractionBonus(
 
 function elapsedRaidingTicks(raid: RaidState): number {
   return Math.max(0, PHASE_DURATIONS.RAIDING - raid.phaseTicksRemaining)
+}
+
+function naturalExtractionMinimumTicks(raid: RaidState, minimumRaidingTicksBeforeExtraction: number | undefined): number {
+  if (minimumRaidingTicksBeforeExtraction !== undefined) {
+    return Math.max(0, Math.floor(minimumRaidingTicksBeforeExtraction))
+  }
+
+  if (!raid.dangerLevel) return DEFAULT_MIN_NATURAL_EXTRACTION_RAIDING_TICKS
+  return NATURAL_EXTRACTION_MINIMUM_TICKS_BY_DANGER[raid.dangerLevel] ?? DEFAULT_MIN_NATURAL_EXTRACTION_RAIDING_TICKS
 }
 
 function canNaturallyExtract(raid: RaidState, minimumRaidingTicksBeforeExtraction: number): boolean {
@@ -92,10 +109,12 @@ export function runGreedCheck(
   }
 
   let extractChance = 0
-  if (canNaturallyExtract(raid, opts.minimumRaidingTicksBeforeExtraction ?? DEFAULT_MIN_NATURAL_EXTRACTION_RAIDING_TICKS)) {
+  const minimumRaidingTicksBeforeExtraction = naturalExtractionMinimumTicks(raid, opts.minimumRaidingTicksBeforeExtraction)
+  if (canNaturallyExtract(raid, minimumRaidingTicksBeforeExtraction)) {
     extractChance = BASE_EXTRACT_CHANCE
     extractChance += lowHpExtractionBonus(opts.currentHp, opts.maxHp, opts.hasHealingItems ?? false, raid.dangerLevel)
     extractChance += opts.extractionChanceBonus ?? 0
+    extractChance -= (clampGreedLevel(greedLevel) / 100) * GREED_EXTRACT_CHANCE_PENALTY
     extractChance = Math.min(MAX_EXTRACT_CHANCE, Math.max(MIN_EXTRACT_CHANCE, extractChance))
   }
 
