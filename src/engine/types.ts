@@ -81,7 +81,7 @@ export interface StartRaidActivityEffect {
   kind?: RaidActivityKind
   hazardDamage?: number
   healingItem?: boolean
-  lootTableId?: string
+  lootTableId?: string | string[]
   lootRolls?: number
   shieldRecharger?: boolean
   robotId?: string
@@ -107,7 +107,7 @@ export interface RaidActivityDefinition extends ContentEntry {
   blocking?: boolean
   hazardDamage?: number
   healingItem?: boolean
-  lootTableId?: string
+  lootTableId?: string | string[]
   lootRolls?: number
   shieldRecharger?: boolean
   robotId?: string
@@ -280,7 +280,7 @@ export interface ActiveRaidActivity {
   totalTicks: number
   locationId?: string
   healingItem?: boolean
-  lootTableId?: string
+  lootTableId?: string | string[]
   lootRolls?: number
   shieldRecharger?: boolean
   robotId?: string

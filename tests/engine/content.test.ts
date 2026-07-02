@@ -685,8 +685,12 @@ describe('content validation', () => {
         .filter(activity => activity.kind === 'SEARCH')
         .filter(activity => !activity.shieldRecharger)
         .filter(activity => !activity.healingItem)
-        .filter(activity => activity.lootTableId === undefined || !VALID_SEARCH_LOOT_TABLE_IDS.has(activity.lootTableId))
-        .map(activity => `${activity.id}:${activity.lootTableId ?? 'missing'}`)
+        .filter(activity => {
+          if (activity.lootTableId === undefined) return true
+          const tableIds = Array.isArray(activity.lootTableId) ? activity.lootTableId : [activity.lootTableId]
+          return tableIds.length === 0 || tableIds.some(tableId => !VALID_SEARCH_LOOT_TABLE_IDS.has(tableId))
+        })
+        .map(activity => `${activity.id}:${JSON.stringify(activity.lootTableId ?? 'missing')}`)
 
       expect(unknown).toEqual([])
     })

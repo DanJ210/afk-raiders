@@ -14,8 +14,9 @@ import valuablesData from '../content/loot-tables/valuables.json'
 import weaponsPartsData from '../content/loot-tables/weapons_parts.json'
 import { CommsPriority, type ActivityLogEvent, type ActiveRaidActivity, type BackpackItem, type DownedReason, type GameState, type HealingItem, type LootItem, type RaidActivityDefinition, type RobotEntry, type RobotLootItem, type ShieldRechargerItem, type StartRaidActivityEffect } from './types.js'
 import type { RNG } from './rng.js'
-import { getDangerLevelProfile } from './dangerLevelProfiles.js'
-import { getMoodResilienceReductionPercent } from './mood.js'
+import { getDangerLevelProfile, rarityWeight } from './dangerLevelProfiles.js'
+import { getMoodRarityWeightMultiplier, getMoodResilienceReductionPercent } from './mood.js'
+import { getGreedRarityWeightMultiplier } from './greed.js'
 import { getRaiderLevelBenefitProfile } from './raiderLevel.js'
 import { applyShieldedDamage, type ShieldDamageResult } from './shields.js'
 import { describeShieldDamage } from './eventResolver.js'
@@ -184,6 +185,25 @@ const searchLootTables: Record<string, LootItem[]> = {
 const SEARCH_BONUS_HEALING_ITEM_CHANCE = 0.15
 const MEDICAL_SEARCH_HEALING_ITEM_CHANCE = 1
 const MAX_SEARCH_LOOT_ROLLS = 4
+
+/** Merge one or more search loot table ids into a single pick pool. */
+function resolveSearchLootTable(lootTableId: string | string[] | undefined): LootItem[] {
+  if (lootTableId === undefined) return []
+  const tableIds = Array.isArray(lootTableId) ? lootTableId : [lootTableId]
+  return tableIds.flatMap(tableId => searchLootTables[tableId] ?? [])
+}
+
+/** Weighted search loot pick with danger-level, mood, and greed rarity biases applied. */
+function pickSearchLootItem(lootTable: LootItem[], state: GameState, rng: RNG): LootItem {
+  const profile = getDangerLevelProfile(state.raid.dangerLevel)
+  return rng.weightedPick(lootTable.map(item => ({
+    ...item,
+    weight: item.weight
+      * rarityWeight(profile, item.rarity)
+      * getMoodRarityWeightMultiplier(item.rarity, state.raider.mood)
+      * getGreedRarityWeightMultiplier(item.rarity, state.raid.greedLevel),
+  })))
+}
 const ROBOT_HP_PER_MENACE = 6
 const ROBOT_ROUND_DAMAGE_PER_MENACE = 0.35
 const ROBOT_LETHAL_HP_RATIO = 0.5
@@ -702,16 +722,16 @@ function advanceSearchActivity(
     }
 
     const lootTableId = activity.lootTableId ?? definition.lootTableId
-    const lootTable = lootTableId ? searchLootTables[lootTableId] : undefined
-    if (!lootTable || lootTable.length === 0) {
+    const lootTable = resolveSearchLootTable(lootTableId)
+    if (lootTable.length === 0) {
       return {
         state: { ...state, raid: { ...state.raid, activeRaidActivity: null } },
-        activityEvents: [activityLogEvent(activity, 'failed', state.tick, now, fillActivityText(definition.text.failed, { loot_table: lootTableId ?? 'unknown' }))],
+        activityEvents: [activityLogEvent(activity, 'failed', state.tick, now, fillActivityText(definition.text.failed, { loot_table: Array.isArray(lootTableId) ? lootTableId.join(', ') : lootTableId ?? 'unknown' }))],
         blocking,
       }
     }
 
-    const lootItems = Array.from({ length: searchLootRollCount(activity, definition) }, () => lootItemToBackpackItem(rng.weightedPick(lootTable)))
+    const lootItems = Array.from({ length: searchLootRollCount(activity, definition) }, () => lootItemToBackpackItem(pickSearchLootItem(lootTable, state, rng)))
     const nextRaid = lootItems.reduce<GameState['raid']>(
       (raid, loot) => addBackpackItem(raid, loot),
       { ...state.raid, activeRaidActivity: null },
