@@ -32,6 +32,10 @@ const LOOT_BONUS_HEALING_ITEM_CHANCE = 0.2 // 20% chance to find a healing item 
 const LOOT_BONUS_SHIELD_RECHARGER_CHANCE = 0.15 // 15% chance to find a shield recharger on any loot event, independent of normal loot rolls
 const NEUTRAL_MOOD_THRESHOLD = 0 // Mood above this is positive, below is negative; separate from the "mood" number which can go up to +5 or down to -5
 
+function isAmbientCommsEvent(eventId: string): boolean {
+  return eventId.startsWith('ambient_')
+}
+
 function enforceIncapacitatedHp(state: GameState): GameState {
   if ((!state.raid.downed && state.raid.phase !== 'KNOCKED_OUT') || state.raider.hp === 0) return state
   return {
@@ -816,7 +820,9 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
         }
       }
 
-      emitted.push(event)
+      if (!(emitted.length > 0 && isAmbientCommsEvent(event.id))) {
+        emitted.push(event)
+      }
 
       const backpackQuantityAfterEffects = totalBackpackQuantity(currentState.raid.backpack)
       if (backpackQuantityAfterEffects > backpackQuantityBeforeEffects) {
@@ -877,9 +883,13 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
     }
   }
 
-  const ambientActivityEvent = resolveAmbientActivityEvent(currentState, rng, now)
-  if (ambientActivityEvent) {
-    emitted.push(ambientActivityEvent)
+  // Keep the comms feed readable: only add ambient activity flavor when no
+  // higher-priority handler logs have been queued this tick.
+  if (emitted.length === 0) {
+    const ambientActivityEvent = resolveAmbientActivityEvent(currentState, rng, now)
+    if (ambientActivityEvent) {
+      emitted.push(ambientActivityEvent)
+    }
   }
 
   // ------------------------------------------------------------------

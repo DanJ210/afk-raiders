@@ -11,6 +11,7 @@ import { createInitialState } from '../../src/engine/initialState'
 import { getRaiderLevelFromXp, xpRequiredForLevel } from '../../src/engine/raiderLevel'
 import { skillDefinitionById } from '../../src/engine/skills'
 import { startRaidActivity } from '../../src/engine/raidActivities'
+import { resolveAmbientActivityEvent } from '../../src/engine/eventResolver'
 
 const FIXED_SEED = 42
 
@@ -26,6 +27,17 @@ function runTicks(n: number, seed = FIXED_SEED) {
   }
 
   return { state, allEvents }
+}
+
+function alwaysAmbientRng(): RNG {
+  return {
+    next: vi.fn<() => number>().mockReturnValue(0),
+    weightedPick: <T,>(items: readonly T[]) => items[0],
+    pick: <T,>(items: readonly T[]) => items[0],
+    int: vi.fn<(min: number, _max: number) => number>().mockImplementation((min) => min),
+    clone: () => alwaysAmbientRng(),
+    getSeed: () => 0,
+  } as unknown as RNG
 }
 
 describe('deterministic snapshot', () => {
@@ -1063,6 +1075,48 @@ describe('deterministic snapshot', () => {
     const resolutionEvent = result.events.find(event => event.id === 'robot_encounter_robot_encounter_standard_anxietick_completed')
     expect(resolutionEvent).toBeDefined()
     expect(resolutionEvent?.text).toContain(result.activityEvents[0].text)
+  })
+
+  it('skips ambient activity comms when important handler logs are already queued', () => {
+    const initial = createInitialState(0)
+    const downedContextState = {
+      ...initial,
+      raid: {
+        ...initial.raid,
+        phase: 'RAIDING' as const,
+        downed: {
+          ticksRemaining: 2,
+          totalTicks: 2,
+          reason: {
+            kind: 'damage' as const,
+            text: 'Downed context seed for ambient check.',
+          },
+        },
+      },
+    }
+
+    const ambientPreview = resolveAmbientActivityEvent(downedContextState, alwaysAmbientRng(), 0)
+    expect(ambientPreview).not.toBeNull()
+    expect(ambientPreview!.id.startsWith('ambient_')).toBe(true)
+
+    const state = {
+      ...initial,
+      raider: {
+        ...initial.raider,
+        hp: 0,
+      },
+      raid: {
+        ...initial.raid,
+        phase: 'RAIDING' as const,
+        phaseTicksRemaining: 30,
+        dangerLevel: 'Medium' as const,
+      },
+    }
+
+    const result = processTick(state, alwaysAmbientRng(), 0)
+
+    expect(result.events.some(event => event.id === 'condition_downed_started')).toBe(true)
+    expect(result.events.some(event => event.id.startsWith('ambient_'))).toBe(false)
   })
 
   it('advances non-blocking search activities while still allowing diary events', () => {
