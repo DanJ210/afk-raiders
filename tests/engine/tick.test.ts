@@ -609,6 +609,52 @@ describe('deterministic snapshot', () => {
     expect(downedStarted?.conditions).toEqual(['EXTRACTING', 'DOWNED'])
   })
 
+  it('sets the timeout-downed guard when the timer-zero downed race starts', () => {
+    const rng = createRNG(FIXED_SEED)
+    const initial = createInitialState(0)
+    const state = {
+      ...initial,
+      raid: {
+        ...initial.raid,
+        phase: 'RAIDING' as const,
+        phaseTicksRemaining: 0,
+        extracting: { ticksRemaining: 3 },
+        downed: null,
+      },
+    }
+
+    const result = processTick(state, rng, 0)
+
+    expect(result.state.raid.downed).not.toBeNull()
+    expect(result.state.raid.raidTimeoutDownedStarted).toBe(true)
+  })
+
+  it('does not re-down a revived raider from the same expired raid timer', () => {
+    const rng = createRNG(FIXED_SEED)
+    const initial = createInitialState(0)
+    // State as it looks right after a revive during the timeout race:
+    // timer expired, extraction still running, downed cleared, guard set.
+    const state = {
+      ...initial,
+      raider: { ...initial.raider, hp: 25 },
+      raid: {
+        ...initial.raid,
+        phase: 'RAIDING' as const,
+        phaseTicksRemaining: 0,
+        extracting: { ticksRemaining: 3 },
+        downed: null,
+        raidTimeoutDownedStarted: true,
+      },
+    }
+
+    const result = processTick(state, rng, 0)
+
+    expect(result.state.raid.downed).toBeNull()
+    expect(result.events.some(event => event.id === 'condition_downed_started')).toBe(false)
+    expect(result.state.raid.phase).toBe('RAIDING')
+    expect(result.state.raid.extracting).not.toBeNull()
+  })
+
   it('starts extraction with zone duration from extraction activity content', () => {
     function extractionTicksForZone(zone: string): number | undefined {
       const initial = createInitialState(0)

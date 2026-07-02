@@ -14,7 +14,8 @@ import { advanceSignal, refillSignalWithAmplifier, spendSignal, SIGNAL_CAP } fro
 import { tickPhase } from '../engine/raidStateMachine.js'
 import { sellItemFromHomeStash } from '../engine/homeStash.js'
 import { consumeHealingItem, consumeShieldRecharger } from '../engine/eventResolver.js'
-import { appendLogEntries } from '../engine/log.js'
+import { appendActivityLogEntries, appendLogEntries } from '../engine/log.js'
+import { downedActivityEvent } from '../engine/tick.js'
 import { recordHealingItemUse } from '../engine/stats.js'
 import { createInitialState } from '../engine/initialState.js'
 import { applyRaiderXpGain, rollRaiderXp, getRevivalSignalCost, type RaiderLevelUp } from '../engine/raiderLevel.js'
@@ -266,6 +267,10 @@ export function useHandlerActions(
         downed: null,
       },
       log: appendLogEntries(stateRef.value.log, [reviveEvent]),
+      // Close the DOWNED activity thread immediately so the raid resumes cleanly.
+      activityLog: appendActivityLogEntries(stateRef.value.activityLog, [
+        downedActivityEvent('completed', stateRef.value.tick, actionNow),
+      ]),
     }
     const signalUseEvents = awardSignalUseSkill(actionNow, revivalCost)
     publishEvents?.([reviveEvent, ...signalUseEvents])
@@ -291,14 +296,22 @@ export function useHandlerActions(
 
   function applyHealingItem(itemId: string) {
     const actionNow = Date.now()
+    const wasDowned = stateRef.value.raid.downed !== null
     const healingUse = consumeHealingItem(stateRef.value, itemId, actionNow)
     if (!healingUse) return
 
+    const revived = wasDowned && healingUse.state.raid.downed === null
     const log = appendLogEntries(stateRef.value.log, [healingUse.event])
     stateRef.value = {
       ...healingUse.state,
       stats: recordHealingItemUse(healingUse.state.stats, itemId),
       log,
+      // A revive med closes the DOWNED activity thread immediately.
+      activityLog: revived
+        ? appendActivityLogEntries(healingUse.state.activityLog, [
+            downedActivityEvent('completed', healingUse.state.tick, actionNow),
+          ])
+        : healingUse.state.activityLog,
     }
     publishEvents?.([healingUse.event])
     persistCallback(stateRef.value, rngRef.current.getSeed(), lastTickAtRef.value)

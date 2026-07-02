@@ -778,7 +778,7 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
   ) {
     if (!currentState.raid.extracting) {
       currentState = enterKnockedOutRecovery(currentState, emitted, state.tick, now)
-    } else if (!currentState.raid.downed) {
+    } else if (!currentState.raid.downed && !currentState.raid.raidTimeoutDownedStarted) {
       const downed = startDownedCondition(
         currentState,
         state.tick,
@@ -790,6 +790,10 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
       )
       currentState = downed.state
       if (downed.event) {
+        currentState = {
+          ...currentState,
+          raid: { ...currentState.raid, raidTimeoutDownedStarted: true },
+        }
         emitted.push(downed.event)
         activityEmitted.push(downedActivityEvent('started', state.tick, now, currentState.raid.downed?.ticksRemaining ?? DOWNED_TICKS))
       }

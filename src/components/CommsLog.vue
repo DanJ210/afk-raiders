@@ -279,7 +279,7 @@ function activityBadge(entry: ActivityLogEvent): string {
         :allow-rename="false"
       />
     </div>
-    <div class="h-comms-tick-bar bg-surface-raised border-b border-border overflow-hidden flex-shrink-0" aria-hidden="true">
+    <div class="h-comms-tick-bar bg-surface-raised border-b border-border overflow-hidden shrink-0" aria-hidden="true">
       <div
         :key="store.lastTickAt"
         class="comms-log__tick-bar"

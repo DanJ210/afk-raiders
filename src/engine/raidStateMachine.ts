@@ -110,6 +110,7 @@ export function tickPhase(
         forceExtract: false,
         downed: null,
         extracting: null,
+        raidTimeoutDownedStarted: false,
         zone: null,
         dangerLevel: null,
         zoneCondition: null,
@@ -126,6 +127,7 @@ export function tickPhase(
         forceExtract: false,
         downed: null,
         extracting: null,
+        raidTimeoutDownedStarted: false,
         phaseTicksRemaining: knockedOutDurationTicks(forcedRaid),
       }
     }
@@ -176,6 +178,7 @@ export function tickPhase(
       forceExtract: false,
       downed: null,
       extracting: null,
+      raidTimeoutDownedStarted: false,
       zone: null,
       dangerLevel: null,
       zoneCondition: null,
