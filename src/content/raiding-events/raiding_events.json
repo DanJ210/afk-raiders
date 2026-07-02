@@ -1301,7 +1301,8 @@
                 "arc_ruins",
                 "the_breach"
             ],
-            "minGreed": 30
+            "minGreed": 30,
+            "minRaiderLevel": 28
         },
         "effects": {
             "mood": -5,
@@ -1327,7 +1328,8 @@
                 "arc_ruins",
                 "the_breach"
             ],
-            "minGreed": 40
+            "minGreed": 40,
+            "minRaiderLevel": 36
         },
         "effects": {
             "mood": -6,

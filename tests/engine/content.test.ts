@@ -229,6 +229,8 @@ describe('content validation', () => {
         const activeRobotIds = event.requires?.activeRobotId === undefined
           ? []
           : Array.isArray(event.requires.activeRobotId) ? event.requires.activeRobotId : [event.requires.activeRobotId]
+        const minRaiderLevel = event.requires?.minRaiderLevel
+        const maxRaiderLevel = event.requires?.maxRaiderLevel
 
         for (const phase of phases) {
           expect(VALID_PHASES.has(phase), `event "${event.id}" has invalid phase "${phase}"`).toBe(true)
@@ -250,6 +252,19 @@ describe('content validation', () => {
         }
         for (const activeRobotId of activeRobotIds) {
           expect(robotIds.has(activeRobotId), `event "${event.id}" has invalid activeRobotId "${activeRobotId}"`).toBe(true)
+        }
+        if (minRaiderLevel !== undefined) {
+          expect(Number.isInteger(minRaiderLevel), `event "${event.id}" minRaiderLevel must be an integer`).toBe(true)
+          expect(minRaiderLevel, `event "${event.id}" minRaiderLevel must be >= 1`).toBeGreaterThanOrEqual(1)
+          expect(minRaiderLevel, `event "${event.id}" minRaiderLevel must be <= ${MAX_RAIDER_LEVEL}`).toBeLessThanOrEqual(MAX_RAIDER_LEVEL)
+        }
+        if (maxRaiderLevel !== undefined) {
+          expect(Number.isInteger(maxRaiderLevel), `event "${event.id}" maxRaiderLevel must be an integer`).toBe(true)
+          expect(maxRaiderLevel, `event "${event.id}" maxRaiderLevel must be >= 1`).toBeGreaterThanOrEqual(1)
+          expect(maxRaiderLevel, `event "${event.id}" maxRaiderLevel must be <= ${MAX_RAIDER_LEVEL}`).toBeLessThanOrEqual(MAX_RAIDER_LEVEL)
+        }
+        if (minRaiderLevel !== undefined && maxRaiderLevel !== undefined) {
+          expect(minRaiderLevel, `event "${event.id}" minRaiderLevel must be <= maxRaiderLevel`).toBeLessThanOrEqual(maxRaiderLevel)
         }
       }
     })
@@ -614,6 +629,8 @@ describe('content validation', () => {
         const zoneConditions = activity.robotPool?.zoneCondition === undefined
           ? []
           : Array.isArray(activity.robotPool.zoneCondition) ? activity.robotPool.zoneCondition : [activity.robotPool.zoneCondition]
+        const minRaiderLevel = activity.robotPool?.minRaiderLevel
+        const maxRaiderLevel = activity.robotPool?.maxRaiderLevel
         for (const tier of deadliness) {
           if (!VALID_ROBOT_DEADLINESS.has(tier)) {
             unknown.push(`activity "${activity.id}" references unknown deadliness "${tier}"`)
@@ -633,6 +650,19 @@ describe('content validation', () => {
           if (!VALID_ZONE_CONDITION_IDS.has(zoneCondition)) {
             unknown.push(`activity "${activity.id}" references unknown zoneCondition "${zoneCondition}"`)
           }
+        }
+        if (minRaiderLevel !== undefined) {
+          expect(Number.isInteger(minRaiderLevel), `activity "${activity.id}" robotPool minRaiderLevel must be an integer`).toBe(true)
+          expect(minRaiderLevel, `activity "${activity.id}" robotPool minRaiderLevel must be >= 1`).toBeGreaterThanOrEqual(1)
+          expect(minRaiderLevel, `activity "${activity.id}" robotPool minRaiderLevel must be <= ${MAX_RAIDER_LEVEL}`).toBeLessThanOrEqual(MAX_RAIDER_LEVEL)
+        }
+        if (maxRaiderLevel !== undefined) {
+          expect(Number.isInteger(maxRaiderLevel), `activity "${activity.id}" robotPool maxRaiderLevel must be an integer`).toBe(true)
+          expect(maxRaiderLevel, `activity "${activity.id}" robotPool maxRaiderLevel must be >= 1`).toBeGreaterThanOrEqual(1)
+          expect(maxRaiderLevel, `activity "${activity.id}" robotPool maxRaiderLevel must be <= ${MAX_RAIDER_LEVEL}`).toBeLessThanOrEqual(MAX_RAIDER_LEVEL)
+        }
+        if (minRaiderLevel !== undefined && maxRaiderLevel !== undefined) {
+          expect(minRaiderLevel, `activity "${activity.id}" robotPool minRaiderLevel must be <= maxRaiderLevel`).toBeLessThanOrEqual(maxRaiderLevel)
         }
       }
 

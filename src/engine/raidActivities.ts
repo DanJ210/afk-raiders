@@ -212,6 +212,8 @@ function normalizeArray<T>(value: T | T[] | undefined): T[] {
 function matchesActivityContext(state: GameState, requires: RaidActivityDefinition['requires'] | StartRaidActivityEffect['robotPool']): boolean {
   if (!requires) return true
 
+  const raiderLevel = getRaiderLevelBenefitProfile(state.raider.levelXp).level
+
   const dangerLevels = normalizeArray(requires.dangerLevel)
   if (dangerLevels.length > 0 && (!state.raid.dangerLevel || !dangerLevels.includes(state.raid.dangerLevel))) return false
 
@@ -223,6 +225,8 @@ function matchesActivityContext(state: GameState, requires: RaidActivityDefiniti
 
   if (requires.minGreed !== undefined && state.raid.greedLevel < requires.minGreed) return false
   if (requires.maxGreed !== undefined && state.raid.greedLevel > requires.maxGreed) return false
+  if (requires.minRaiderLevel !== undefined && raiderLevel < requires.minRaiderLevel) return false
+  if (requires.maxRaiderLevel !== undefined && raiderLevel > requires.maxRaiderLevel) return false
 
   return true
 }

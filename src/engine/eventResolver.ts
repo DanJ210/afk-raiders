@@ -38,6 +38,7 @@ import { applyShieldedDamage, startShieldRecharge, type ShieldDamageResult } fro
 import { getSkillModifierProfile } from './skills.js'
 import { clampGreedLevel, getGreedDangerEventWeightMultiplier, getGreedRarityWeightMultiplier } from './greed.js'
 import { logConditionsForRaid } from './log.js'
+import { getRaiderLevelFromXp } from './raiderLevel.js'
 
 // Lifecycle phase events plus RAIDING condition events.
 const events = [
@@ -161,6 +162,7 @@ function currentAmbientActivityContext(state: GameState): { kind: RaidActivityKi
 /** Filter events valid for the current game context */
 export function eligibleEvents(state: GameState): EventTemplate[] {
   const { raid } = state
+  const raiderLevel = getRaiderLevelFromXp(state.raider.levelXp)
   return events.filter(ev => {
     const r = ev.requires
     if (!r) return true
@@ -210,6 +212,8 @@ export function eligibleEvents(state: GameState): EventTemplate[] {
     if (r.maxGreed !== undefined && raid.greedLevel > r.maxGreed) return false
     if (r.minHp !== undefined && state.raider.hp < r.minHp) return false
     if (r.maxHp !== undefined && state.raider.hp > r.maxHp) return false
+    if (r.minRaiderLevel !== undefined && raiderLevel < r.minRaiderLevel) return false
+    if (r.maxRaiderLevel !== undefined && raiderLevel > r.maxRaiderLevel) return false
     return true
   })
 }

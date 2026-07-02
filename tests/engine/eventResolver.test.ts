@@ -13,6 +13,7 @@ import { createRNG } from '../../src/engine/rng'
 import { applyEffects, consumeHealingItem, consumeShieldRecharger, eligibleEvents, events as allEvents, resolveAmbientActivityEvent, resolveEvent, resolveHealingItemFind, resolveShieldRechargerFind } from '../../src/engine/eventResolver'
 import { createInitialState } from '../../src/engine/initialState'
 import type { DangerLevel, EventTemplate, HealingItemStack } from '../../src/engine/types'
+import { xpRequiredForLevel } from '../../src/engine/raiderLevel'
 import zoneConditionsData from '../../src/content/zones/zone_conditions.json'
 
 // backpackValue=450 maps exclusively to Snack Mix (Chaos Blend),
@@ -417,6 +418,47 @@ describe('applyEffects — backpack item behavior', () => {
 
     expect(ids.has('raid_apology_weather_forecast')).toBe(true)
     expect(ids.has('raid_polite_glyphs_customer_service')).toBe(false)
+  })
+
+  it('filters Drama Queen events by minRaiderLevel requirements', () => {
+    const initial = createInitialState(0)
+    const lowLevelState = {
+      ...initial,
+      raider: {
+        ...initial.raider,
+        levelXp: xpRequiredForLevel(20),
+      },
+      raid: {
+        ...initial.raid,
+        phase: 'RAIDING' as const,
+        dangerLevel: 'High' as const,
+        zone: 'arc_ruins',
+        greedLevel: 60,
+      },
+    }
+
+    const unlockedState = {
+      ...initial,
+      raider: {
+        ...initial.raider,
+        levelXp: xpRequiredForLevel(45),
+      },
+      raid: {
+        ...initial.raid,
+        phase: 'RAIDING' as const,
+        dangerLevel: 'High' as const,
+        zone: 'arc_ruins',
+        greedLevel: 60,
+      },
+    }
+
+    const lowLevelIds = new Set(eligibleEvents(lowLevelState).map(event => event.id))
+    expect(lowLevelIds.has('encounter_drama_queen_opening_night')).toBe(false)
+    expect(lowLevelIds.has('encounter_drama_queen_finale_charge')).toBe(false)
+
+    const unlockedIds = new Set(eligibleEvents(unlockedState).map(event => event.id))
+    expect(unlockedIds.has('encounter_drama_queen_opening_night')).toBe(true)
+    expect(unlockedIds.has('encounter_drama_queen_finale_charge')).toBe(true)
   })
 
   it('routes negative HP effects through shield mitigation', () => {

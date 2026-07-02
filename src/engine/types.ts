@@ -26,6 +26,8 @@ export interface EventTemplate extends ContentEntry {
     maxGreed?: number
     minHp?: number
     maxHp?: number
+    minRaiderLevel?: number
+    maxRaiderLevel?: number
   }
   effects?: {
     backpackValue?: number | string // number or dice string like "+1d6"
@@ -57,6 +59,8 @@ export interface RobotActivityPool {
   deadliness?: RobotEntry['deadliness'] | RobotEntry['deadliness'][]
   minGreed?: number
   maxGreed?: number
+  minRaiderLevel?: number
+  maxRaiderLevel?: number
   /** When true, includes boss robots in pooled selection. Defaults to false. */
   includeBosses?: boolean
 }
@@ -67,6 +71,8 @@ export interface RaidActivityRequires {
   zoneCondition?: string | string[]
   minGreed?: number
   maxGreed?: number
+  minRaiderLevel?: number
+  maxRaiderLevel?: number
 }
 
 export interface StartRaidActivityEffect {

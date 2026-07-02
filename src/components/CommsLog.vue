@@ -89,16 +89,16 @@ const downedTimerMs = computed(() => {
 const downedTimerText = computed(() => formatDuration(downedTimerMs.value))
 const showPhaseTimer = computed(() => showMobileRaiderStatus.value && phaseTimerMs.value > 0)
 
-// Re-key the tick bar on every new tick AND whenever the tab becomes visible,
-// so the animation restarts from the correct elapsed offset instead of 0.
+// Tick bar progress is width-driven for better mobile browser reliability.
 const visibility = useDocumentVisibility()
-const tickBarKey = computed(() => `${store.lastTickAt}-${visibility.value}-${props.isActive}`)
-const tickAnimationDelay = computed(() => {
-  // Include visibility/activity as dependencies so delay recomputes when the tab becomes visible.
+const tickProgressPercent = computed(() => {
+  // Include visibility/activity as dependencies so progress recomputes when the tab becomes visible.
   void visibility.value
   void props.isActive
+
+  if (!props.isActive) return 0
   const elapsed = Math.min(TICK_INTERVAL_MS, Math.max(0, Date.now() - store.lastTickAt))
-  return `-${elapsed}ms`
+  return Math.max(0, Math.min(100, (elapsed / TICK_INTERVAL_MS) * 100))
 })
 
 const pinnedTopLog = usePinnedTopLog(logEntryCount)
@@ -280,9 +280,9 @@ function activityBadge(entry: ActivityLogEvent): string {
     </div>
     <div class="h-comms-tick-bar bg-surface-raised border-b border-border overflow-hidden" aria-hidden="true">
       <div
-        :key="tickBarKey"
+        :key="store.lastTickAt"
         class="comms-log__tick-bar"
-        :style="{ animationDuration: `${TICK_INTERVAL_MS}ms`, animationDelay: tickAnimationDelay }"
+        :style="{ width: `${tickProgressPercent}%` }"
       ></div>
     </div>
     <section class="comms-log__activity" aria-label="Activity Log">
@@ -533,18 +533,12 @@ function activityBadge(entry: ActivityLogEvent): string {
   width: 0%;
   background: var(--color-accent);
   opacity: 0.7;
-  animation: tick-fill linear forwards;
+  transition: width 220ms linear;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .comms-log__tick-bar {
-    animation: none;
-    width: 100%;
+    transition: none;
   }
-}
-
-@keyframes tick-fill {
-  from { width: 0%; }
-  to   { width: 100%; }
 }
 </style>
