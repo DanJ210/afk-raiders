@@ -1984,6 +1984,162 @@
         }
     },
     {
+        "id": "raid_coupon_baron_stash_arbitrage",
+        "weight": 8,
+        "text": "Found a Coupon Baron stash notebook with margin math and one line that read LOOT FIRST, RECONCILE LATER.",
+        "requires": {
+            "phase": "RAIDING",
+            "zone": "buried_city",
+            "minGreed": 12
+        },
+        "effects": {
+            "greedLevel": 2,
+            "mood": 1,
+            "startRaidActivity": {
+                "kind": "SEARCH",
+                "activityId": "search_quick_value_7"
+            }
+        }
+    },
+    {
+        "id": "raid_permit_choir_field_office_forms",
+        "weight": 7,
+        "text": "An abandoned Permit Choir field desk still had forms sorted by urgency, melody, and dramatic timing.",
+        "requires": {
+            "phase": "RAIDING",
+            "zone": [
+                "arc_ruins",
+                "the_breach"
+            ],
+            "minGreed": 8
+        },
+        "effects": {
+            "mood": -1,
+            "ratRating": 1,
+            "startRaidActivity": {
+                "kind": "SEARCH",
+                "activityId": "activity_search_005_launch_manifest_clipboard"
+            }
+        }
+    },
+    {
+        "id": "raid_gear_weirdo_prototype_bin",
+        "weight": 7,
+        "text": "Found a Gear Weirdo prototype bin labeled CALIBRATED ENOUGH. The parts looked confident, not stable.",
+        "requires": {
+            "phase": "RAIDING",
+            "zone": [
+                "forgotten_fields",
+                "the_sunken_highrise"
+            ],
+            "dangerLevel": [
+                "Medium",
+                "High"
+            ],
+            "minGreed": 15
+        },
+        "effects": {
+            "greedLevel": 3,
+            "mood": -1,
+            "startRaidActivity": {
+                "kind": "SEARCH",
+                "activityId": "search_weapon_parts_bin"
+            }
+        }
+    },
+    {
+        "id": "raid_damp_battlegrounds_bottle_rack",
+        "weight": 8,
+        "text": "Damp Battlegrounds offered a bottle rack half-submerged in heroic puddle water. Hydration met opportunism.",
+        "requires": {
+            "phase": "RAIDING",
+            "zone": "damp_battlegrounds"
+        },
+        "effects": {
+            "mood": 1,
+            "startRaidActivity": {
+                "kind": "SEARCH",
+                "activityId": "search_water_bottle_stash"
+            }
+        }
+    },
+    {
+        "id": "raid_buried_city_boutique_cache",
+        "weight": 7,
+        "text": "A buried boutique cache survived under three floors of rubble and one very fashionable caution sign.",
+        "requires": {
+            "phase": "RAIDING",
+            "zone": "buried_city",
+            "minGreed": 10
+        },
+        "effects": {
+            "greedLevel": 2,
+            "mood": 1,
+            "startRaidActivity": {
+                "kind": "SEARCH",
+                "activityId": "search_apparel_duffel"
+            }
+        }
+    },
+    {
+        "id": "raid_arc_ruins_service_bay_blackbox",
+        "weight": 7,
+        "text": "Arc Ruins service bay still had a black-box locker and a warning label that read DO NOT MONETIZE THIS.",
+        "requires": {
+            "phase": "RAIDING",
+            "zone": "arc_ruins",
+            "dangerLevel": [
+                "Medium",
+                "High"
+            ],
+            "minGreed": 18
+        },
+        "effects": {
+            "greedLevel": 4,
+            "mood": -1,
+            "startRaidActivity": {
+                "kind": "SEARCH",
+                "activityId": "activity_search_011_black_box_variant"
+            }
+        }
+    },
+    {
+        "id": "raid_sunken_highrise_penthouse_scrap",
+        "weight": 7,
+        "text": "Sunken Highrise penthouse still held a top-floor stash and a staircase that legally qualifies as a dare.",
+        "requires": {
+            "phase": "RAIDING",
+            "zone": "the_sunken_highrise",
+            "minGreed": 16
+        },
+        "effects": {
+            "greedLevel": 3,
+            "mood": -1,
+            "startRaidActivity": {
+                "kind": "SEARCH",
+                "activityId": "activity_search_002_soggy_tower_top_floor"
+            }
+        }
+    },
+    {
+        "id": "raid_stella_lost_locker_manifest",
+        "weight": 7,
+        "text": "Staycation locker manifest listed snacks, socks, and one spiritual emergency blanket. Opened anyway.",
+        "requires": {
+            "phase": "RAIDING",
+            "zone": "stella",
+            "minGreed": 10
+        },
+        "effects": {
+            "greedLevel": 2,
+            "mood": 1,
+            "startRaidActivity": {
+                "kind": "SEARCH",
+                "activityId": "activity_search_003_staycation_locker"
+            }
+        }
+    },
+    {
         "id": "ambient_search_backpack_argument",
         "weight": 10,
         "text": "Raider is arguing with the backpack zipper like it has legal standing.",

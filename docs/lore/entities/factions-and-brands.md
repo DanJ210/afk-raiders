@@ -48,6 +48,6 @@ Recurring vendor voices live in [Traders](traders.md). Add a trader there when a
 | ComfortCo | `comfortco_blanket_receipt` | `hub_comfortco_cot_warranty` |
 | OopsAll Logistics | `oopsall_logistics_label` | `raid_oopsall_misdelivery_cache` |
 | Exit Strategy Unlimited | `exit_strategy_route_card` | `raid_exit_strategy_bad_map` |
-| Coupon Barons | None yet. | `hub_coupon_barons_math` |
-| Gear Weirdos | None yet. | `hub_gear_weirdo_battery_pitch`, `hub_gear_weirdo_shield_pitch`, `deploy_gear_weirdo_recharger_demo` |
-| Permit Choir | None yet. | `hub_permit_choir_ready_up` |
+| Coupon Barons | `coupon_baron_arbitrage_ledger`, `coupon_baron_seal_token` | `hub_coupon_barons_math`, `hub_coupon_baron_ledger_tip`, `raid_coupon_baron_stash_arbitrage` |
+| Gear Weirdos | `gear_weirdo_aftermarket_calibrator` | `hub_gear_weirdo_battery_pitch`, `hub_gear_weirdo_shield_pitch`, `hub_gear_weirdo_calibration_demo`, `deploy_gear_weirdo_recharger_demo`, `raid_gear_weirdo_prototype_bin` |
+| Permit Choir | `permit_choir_form_stack` | `hub_permit_choir_ready_up`, `hub_permit_choir_rehearsal_stamp`, `raid_permit_choir_field_office_forms` |

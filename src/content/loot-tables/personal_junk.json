@@ -378,6 +378,15 @@
             "value": 55,
             "stackSize": 2,
             "flavor": "Premium departure planning. Printed with no visible exits."
+        },
+        {
+            "id": "permit_choir_form_stack",
+            "weight": 14,
+            "rarity": 2,
+            "name": "Permit Choir Form Stack",
+            "value": 22,
+            "stackSize": 6,
+            "flavor": "Triplicate forms bound with hymn notes and urgent stamp requests."
         }
     ]
 }

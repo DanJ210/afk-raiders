@@ -855,5 +855,41 @@
       "greedLevel": 1,
       "mood": 1
     }
+  },
+  {
+    "id": "hub_permit_choir_rehearsal_stamp",
+    "weight": 8,
+    "text": "Permit Choir rehearsed emergency stamping in four-part harmony. I felt processed and weirdly inspired.",
+    "requires": {
+      "phase": "HUB"
+    },
+    "effects": {
+      "mood": 1,
+      "ratRating": 1
+    }
+  },
+  {
+    "id": "hub_coupon_baron_ledger_tip",
+    "weight": 8,
+    "text": "Coupon Baron showed me a discount ledger and called it tactical finance. I called it loot motivation.",
+    "requires": {
+      "phase": "HUB"
+    },
+    "effects": {
+      "greedLevel": 1,
+      "mood": 1
+    }
+  },
+  {
+    "id": "hub_gear_weirdo_calibration_demo",
+    "weight": 8,
+    "text": "Gear weirdo calibrated a weapon part using a spoon and confidence. The spoon looked nervous.",
+    "requires": {
+      "phase": "HUB"
+    },
+    "effects": {
+      "greedLevel": 1,
+      "mood": -1
+    }
   }
 ]
