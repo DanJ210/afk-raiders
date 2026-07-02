@@ -11,7 +11,7 @@
  *   6. {count}         → random plausible water-bottle count (for flavor)
  */
 
-import type { DangerLevel, EventTemplate, GameState, HealingItem, HealingItemStack, LogEvent, LootItem, Phase, RaidActivityKind, RobotEntry, RobotLootItem, ShieldRechargerItem } from './types.js'
+import { CommsPriority, type DangerLevel, type EventTemplate, type GameState, type HealingItem, type HealingItemStack, type LogEvent, type LootItem, type Phase, type RaidActivityKind, type RobotEntry, type RobotLootItem, type ShieldRechargerItem } from './types.js'
 import type { RNG } from './rng.js'
 import hubEventsData from '../content/hub_events.json'
 import deploymentEventsData from '../content/deployment_events.json'
@@ -101,6 +101,30 @@ const ACTIVITY_AMBIENT_COMMS_CHANCE = 0.35
 
 function healingMoodGain(item: HealingItemStack): number {
   return item.moodGain ?? Math.max(1, Math.min(4, item.rarity))
+}
+
+function commsPriorityForEventId(eventId: string): LogEvent['commsPriority'] {
+  return (
+    eventId.startsWith('phase_')
+    || eventId === 'condition_downed_started'
+    || eventId === 'condition_extracting_started'
+    || eventId === 'condition_extraction_failed'
+    || eventId.startsWith('skill_')
+    || eventId.startsWith('raider_level_')
+    || eventId === 'handler_calm'
+    || eventId === 'handler_pressure'
+    || eventId.startsWith('robot_encounter_')
+    || eventId.startsWith('shield_recharger_')
+    || eventId === 'hidden_pocket_saved'
+    || eventId === 'stash_overflow_sale'
+    || eventId === 'raider_level_extraction_stipend'
+  )
+    ? CommsPriority.Priority
+    : CommsPriority.Ambient
+}
+
+function resolveTemplateCommsPriority(template: EventTemplate): LogEvent['commsPriority'] {
+  return template.commsPriority ?? commsPriorityForEventId(template.id)
 }
 
 export function describeShieldDamage(damage: ShieldDamageResult): string {
@@ -300,7 +324,7 @@ function hasAmbientActivityRequirement(template: EventTemplate): boolean {
 }
 
 function isAmbientOnlyEvent(template: EventTemplate): boolean {
-  return !template.effects || Object.keys(template.effects).length === 0
+  return (!template.effects || Object.keys(template.effects).length === 0) && resolveTemplateCommsPriority(template) === CommsPriority.Ambient
 }
 
 function totalEventWeight(templates: EventTemplate[]): number {
@@ -533,6 +557,7 @@ export function resolveHealingItemFind(
       timestamp: now,
       text: `Found ${item.name}. Tucked it into the current-raid med pocket.`,
       phase: state.raid.phase,
+      commsPriority: CommsPriority.Ambient,
       conditions: logConditionsForRaid(state.raid),
     },
   }
@@ -552,6 +577,7 @@ export function resolveShieldRechargerFind(
       timestamp: now,
       text: `Found ${item.name}. Into the backpack it goes for the next shield-confidence emergency.`,
       phase: state.raid.phase,
+      commsPriority: CommsPriority.Priority,
       conditions: logConditionsForRaid(state.raid),
     },
   }
@@ -590,6 +616,7 @@ export function consumeHealingItem(
         timestamp: now,
         text: `Used ${item.name}. Revived Raider with ${hp} HP and gained ${moodGain} mood. Medical dignity returned under protest.`,
         phase: state.raid.phase,
+        commsPriority: CommsPriority.Ambient,
         conditions: logConditionsForRaid(state.raid),
       },
     }
@@ -615,6 +642,7 @@ export function consumeHealingItem(
       timestamp: now,
       text: `Used ${item.name}. Restored ${healed} HP and gained ${moodGain} mood. Medical dignity restored to acceptable levels.`,
       phase: state.raid.phase,
+      commsPriority: CommsPriority.Ambient,
       conditions: logConditionsForRaid(state.raid),
     },
   }
@@ -664,6 +692,7 @@ export function consumeShieldRecharger(
       timestamp: now,
       text: eventText,
       phase: state.raid.phase,
+      commsPriority: CommsPriority.Priority,
       conditions: logConditionsForRaid(state.raid),
     },
   }
@@ -691,6 +720,7 @@ export function resolveEvent(
     timestamp: now,
     text,
     phase: state.raid.phase,
+    commsPriority: resolveTemplateCommsPriority(template),
     conditions: logConditionsForRaid(state.raid),
   }
 }
@@ -717,6 +747,7 @@ export function resolveAmbientActivityEvent(
     timestamp: now,
     text: fillSlots(template.text, rng),
     phase: state.raid.phase,
+    commsPriority: CommsPriority.Ambient,
     conditions: logConditionsForRaid(state.raid),
   }
 }

@@ -1,10 +1,25 @@
 # Active Raid Activity Contract
 
+This file is the working implementation tracker for raid activity/log behavior.
+The canonical, longer-lived description of the contract now lives in [ARCHITECTURE.md](ARCHITECTURE.md) and the design-level summary lives in [GAME_DESIGN.md](GAME_DESIGN.md).
+
 AFK Raiders splits raid narration into two persistent logs to maintain clarity and pacing:
 - **`GameState.log`:** The diary/comms feed for ambient raid narration (loot flavor, phase transitions, mood/greed shifts, Handler feedback).
 - **`GameState.activityLog`:** The active-thread feed for multi-tick work (searches, extraction, DOWNED recovery, robot fights, damage rounds).
 
 Multi-tick tasks are implemented as `RaidState.activeRaidActivity` (timed SEARCH/ROBOT_ENCOUNTER/etc activities) or lifecycle conditions (`RaidState.extracting` and `RaidState.downed`). The engine resolves activities deterministically; JSON owns weights, text, duration, and tuning.
+
+## Process Tick Flow
+
+`processTick()` applies one deterministic simulation step and keeps the two logs separated by purpose:
+1. Advance phase state and emit any phase transition.
+2. Resolve lifecycle conditions such as EXTRACTING and DOWNED before regular raid narration.
+3. Advance active raid activities, including search threads and robot encounters.
+4. Resolve one diary/comms event when no higher-priority comms already filled the tick.
+5. Apply post-event effects, Handler actions, skill XP, and raider XP.
+6. Append the final diary and activity entries to their respective logs.
+
+Priority comms include lifecycle, progression, and other explicit feedback lines that should not be displaced by ambient flavor. Ambient activity chatter is intentionally sparse and is suppressed when priority comms already exist in the same tick.
 
 ## Active Raid Activity Model
 
@@ -158,6 +173,10 @@ EXTRACTION activity definitions should eventually own duration and completion ou
 
 ### Downed Revival Cost Scaling
 Revival cost scaling should tie to Raider Level so players can reduce future `CALL_REVIVE` Signal costs through progression.
+
+### Comms Priority Template Migration
+Add `commsPriority` to the event JSON templates so content authors can mark events as `ambient`, `priority`, or `activity` directly in data.
+Once the content is annotated, remove any engine fallback that infers comms class from event ids or resolver-side defaults.
 
 ## Migration & Validation Changelog
 

@@ -8,7 +8,7 @@
  * - Special-case logic (readyUp initiates phase change, etc.)
  */
 
-import type { GameState, LogEvent } from '../engine/types.js'
+import { CommsPriority, type GameState, type LogEvent } from '../engine/types.js'
 import type { RNG } from '../engine/rng.js'
 import { advanceSignal, refillSignalWithAmplifier, spendSignal, SIGNAL_CAP } from '../engine/signal.js'
 import { tickPhase } from '../engine/raidStateMachine.js'
@@ -61,6 +61,7 @@ function skillLevelUpEvent(levelUp: SkillLevelUp, tick: number, now: number, pha
     timestamp: now,
     text: levelUp.text,
     phase,
+    commsPriority: CommsPriority.Priority,
   }
 }
 
@@ -71,6 +72,7 @@ function raiderLevelUpEvent(levelUp: RaiderLevelUp, tick: number, now: number, p
     timestamp: now,
     text: levelUp.text,
     phase,
+    commsPriority: CommsPriority.Priority,
   }
 }
 
@@ -193,6 +195,7 @@ export function useHandlerActions(
       timestamp: actionNow,
       text: transition.eventText,
       phase: transition.to,
+      commsPriority: CommsPriority.Priority,
     }
 
     stateRef.value = {
@@ -248,6 +251,7 @@ export function useHandlerActions(
       timestamp: actionNow,
       text: `Revive signal punched through. Raider is upright, offended, and technically alive.${costText}`,
       phase: stateRef.value.raid.phase,
+      commsPriority: CommsPriority.Priority,
     }
 
     stateRef.value = {

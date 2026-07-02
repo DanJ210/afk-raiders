@@ -12,6 +12,7 @@ export interface ContentEntry {
 export interface EventTemplate extends ContentEntry {
   text: string
   parameters?: Record<string, string | number>
+  commsPriority?: CommsPriority
   requires?: {
     phase?: Phase | Phase[]
     extracting?: boolean
@@ -100,6 +101,7 @@ export interface RaidActivityDefinition extends ContentEntry {
   name: string
   kind: RaidActivityKind
   ticks: number
+  commsPriority?: CommsPriority
   requires?: RaidActivityRequires
   text: RaidActivityTextSet
   blocking?: boolean
@@ -389,12 +391,21 @@ export interface SignalState {
 
 export type LogCondition = 'DOWNED' | 'EXTRACTING'
 
+export const CommsPriority = {
+  Ambient: 'ambient',
+  Priority: 'priority',
+  Activity: 'activity',
+} as const
+
+export type CommsPriority = typeof CommsPriority[keyof typeof CommsPriority]
+
 export interface LogEvent {
   id: string
   tick: number
   timestamp: number  // ms since epoch
   text: string
   phase: Phase
+  commsPriority: CommsPriority
   conditions?: LogCondition[]
 }
 

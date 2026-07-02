@@ -1,20 +1,10 @@
 /**
- * processTick — the heart of the AFK Raiders simulation engine.
+ * processTick drives one simulation step.
  *
- * Immutable-style: never mutates the input state. Always returns a new state.
- * One tick = one resolved event (or phase transition).
- *
- * Tick flow:
- *   1. Tick phase counter; if transitioning apply transition event.
- *   2. If RAIDING, run the Greed Check to decide push-deeper / extract / downed.
- *   3. Resolve a flavor event for the current phase.
- *   4. Apply event effects. If HP hits 0, start the DOWNED condition; unresolved
- *      DOWNED recovery moves through KNOCKED_OUT before returning home.
- *   5. Consume pending Handler actions (calm / pressure).
- *   6. Increment tick counter, append events to log.
+ * See docs/ARCHITECTURE.md for the current tick-flow contract.
  */
 
-import type { ActivityLogEvent, ActivityStatus, BackpackItem, DownedReason, GameState, HiddenPocketItem, LogCondition, LogEvent, TickResult } from './types.js'
+import { CommsPriority, type ActivityLogEvent, type ActivityStatus, type BackpackItem, type DownedReason, type GameState, type HiddenPocketItem, type LogCondition, type LogEvent, type TickResult } from './types.js'
 import type { RNG } from './rng.js'
 import { DOWNED_TICKS, EXTRACTING_TICKS, tickPhase, transitionText, type PhaseTransition } from './raidStateMachine.js'
 import { runGreedCheck } from './greedCheck.js'
@@ -32,34 +22,12 @@ const LOOT_BONUS_HEALING_ITEM_CHANCE = 0.2 // 20% chance to find a healing item 
 const LOOT_BONUS_SHIELD_RECHARGER_CHANCE = 0.15 // 15% chance to find a shield recharger on any loot event, independent of normal loot rolls
 const NEUTRAL_MOOD_THRESHOLD = 0 // Mood above this is positive, below is negative; separate from the "mood" number which can go up to +5 or down to -5
 
-function isAmbientCommsEvent(eventId: string): boolean {
-  return eventId.startsWith('ambient_')
-}
-
-function isPriorityCommsEvent(eventId: string): boolean {
-  return (
-    eventId.startsWith('phase_')
-    || eventId === 'condition_downed_started'
-    || eventId === 'condition_extracting_started'
-    || eventId === 'condition_extraction_failed'
-    || eventId.startsWith('skill_')
-    || eventId.startsWith('raider_level_')
-    || eventId === 'handler_calm'
-    || eventId === 'handler_pressure'
-    || eventId.startsWith('robot_encounter_')
-    || eventId.startsWith('shield_recharger_')
-    || eventId === 'hidden_pocket_saved'
-    || eventId === 'stash_overflow_sale'
-    || eventId === 'raider_level_extraction_stipend'
-  )
-}
-
 function hasPriorityCommsQueued(events: readonly LogEvent[]): boolean {
-  return events.some(event => isPriorityCommsEvent(event.id))
+  return events.some(event => event.commsPriority === CommsPriority.Priority)
 }
 
 function hasAmbientCommsQueued(events: readonly LogEvent[]): boolean {
-  return events.some(event => isAmbientCommsEvent(event.id))
+  return events.some(event => event.commsPriority === CommsPriority.Ambient)
 }
 
 function enforceIncapacitatedHp(state: GameState): GameState {
@@ -80,6 +48,7 @@ function phaseTransitionEvent(transition: PhaseTransition, tick: number, now: nu
     timestamp: now,
     text,
     phase: transition.to,
+    commsPriority: CommsPriority.Priority,
   }
 }
 
@@ -90,6 +59,7 @@ function conditionEvent(id: string, text: string, tick: number, now: number, con
     timestamp: now,
     text,
     phase: 'RAIDING',
+    commsPriority: CommsPriority.Priority,
     conditions,
   }
 }
@@ -115,6 +85,7 @@ function activityEvent(
     timestamp: number
     text: string
     phase: GameState['raid']['phase']
+    commsPriority: ActivityLogEvent['commsPriority']
     conditions?: LogCondition[]
   },
 ): ActivityLogEvent {
@@ -132,6 +103,7 @@ function robotEncounterResolutionEvent(activity: ActivityLogEvent, tick: number,
     timestamp: now,
     text: `Robot encounter resolved: ${activity.text}`,
     phase: 'RAIDING',
+    commsPriority: CommsPriority.Priority,
     conditions,
   }
 }
@@ -159,6 +131,7 @@ function extractionActivityEvent(status: ActivityStatus, tick: number, now: numb
     timestamp: now,
     text,
     phase: status === 'completed' ? 'HUB' : 'RAIDING',
+    commsPriority: CommsPriority.Activity,
     conditions: status === 'started' || status === 'progress' ? ['EXTRACTING'] : undefined,
   })
 }
@@ -186,6 +159,7 @@ export function downedActivityEvent(status: ActivityStatus, tick: number, now: n
     timestamp: now,
     text,
     phase: status === 'failed' ? 'KNOCKED_OUT' : 'RAIDING',
+    commsPriority: CommsPriority.Activity,
     conditions: status === 'started' || status === 'progress' ? ['DOWNED'] : undefined,
   })
 }
@@ -344,6 +318,7 @@ function stashSaleEvent(sold: number, coins: number, tick: number, now: number):
     timestamp: now,
     text: `Home stash hit ${HOME_STASH_ITEM_LIMIT} items. Auto-sold the ${sold} cheapest item${sold === 1 ? '' : 's'} for ${coins} coin${coins === 1 ? '' : 's'}. The Desperanza Pawn Desk didn't even haggle.`,
     phase: 'HUB',
+    commsPriority: CommsPriority.Priority,
   }
 }
 
@@ -354,6 +329,7 @@ function hiddenPocketSavedEvent(itemName: string, tick: number, now: number): Lo
     timestamp: now,
     text: `Secret Hidden Pocket check: 1x ${itemName} made it home. Very legal, totally declared.`,
     phase: 'HUB',
+    commsPriority: CommsPriority.Priority,
   }
 }
 
@@ -364,6 +340,7 @@ function raiderLevelExtractionBonusEvent(coins: number, tick: number, now: numbe
     timestamp: now,
     text: `Raider Level stipend approved: +${coins} coin${coins === 1 ? '' : 's'} for surviving the paperwork portion of extraction.`,
     phase: 'HUB',
+    commsPriority: CommsPriority.Priority,
   }
 }
 
@@ -507,6 +484,7 @@ function skillLevelUpEvent(levelUp: SkillLevelUp, tick: number, now: number, pha
     timestamp: now,
     text: levelUp.text,
     phase,
+    commsPriority: CommsPriority.Priority,
     conditions,
   }
 }
@@ -518,6 +496,7 @@ function raiderLevelUpEvent(levelUp: RaiderLevelUp, tick: number, now: number, p
     timestamp: now,
     text: levelUp.text,
     phase,
+    commsPriority: CommsPriority.Priority,
     conditions,
   }
 }
@@ -734,6 +713,7 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
         timestamp: now,
         text: `Shield recharge completed. ${shieldRechargeBefore?.name ?? 'The shield recharger'} finished its ${shieldRechargeBefore?.totalTicks ?? 5}-tick crawl.`,
         phase: currentState.raid.phase,
+        commsPriority: CommsPriority.Priority,
         conditions: logConditionsForRaid(currentState.raid),
       })
     }
@@ -846,7 +826,7 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
         }
       }
 
-      if (!(hasPriorityCommsQueued(emitted) && isAmbientCommsEvent(event.id))) {
+      if (!(hasPriorityCommsQueued(emitted) && event.commsPriority === CommsPriority.Ambient)) {
         emitted.push(event)
       }
 
@@ -952,6 +932,7 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
       timestamp: now,
       text: resolveFlavorKey('calm_responses', rng),
       phase: currentState.raid.phase,
+      commsPriority: CommsPriority.Priority,
       conditions: logConditionsForRaid(currentState.raid),
     })
   }
@@ -962,6 +943,7 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
       timestamp: now,
       text: resolveFlavorKey('pressure_responses', rng),
       phase: currentState.raid.phase,
+      commsPriority: CommsPriority.Priority,
       conditions: logConditionsForRaid(currentState.raid),
     })
   }

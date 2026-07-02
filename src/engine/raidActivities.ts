@@ -12,7 +12,7 @@ import personalJunkData from '../content/loot-tables/personal_junk.json'
 import scrapComponentsData from '../content/loot-tables/scrap_components.json'
 import valuablesData from '../content/loot-tables/valuables.json'
 import weaponsPartsData from '../content/loot-tables/weapons_parts.json'
-import type { ActivityLogEvent, ActiveRaidActivity, BackpackItem, DownedReason, GameState, HealingItem, LootItem, RaidActivityDefinition, RobotEntry, RobotLootItem, ShieldRechargerItem, StartRaidActivityEffect } from './types.js'
+import { CommsPriority, type ActivityLogEvent, type ActiveRaidActivity, type BackpackItem, type DownedReason, type GameState, type HealingItem, type LootItem, type RaidActivityDefinition, type RobotEntry, type RobotLootItem, type ShieldRechargerItem, type StartRaidActivityEffect } from './types.js'
 import type { RNG } from './rng.js'
 import { getDangerLevelProfile } from './dangerLevelProfiles.js'
 import { getMoodResilienceReductionPercent } from './mood.js'
@@ -290,6 +290,7 @@ function activityLogEvent(
     timestamp: now,
     text,
     phase: 'RAIDING',
+    commsPriority: CommsPriority.Activity,
   }
 }
 

@@ -37,6 +37,16 @@ The simulation engine is **pure TypeScript with zero framework imports**. Vue re
 - Damage ownership: ordinary diary/comms events are ambient narration. Damage, shield splits, and fighting belong to the active raid activity path and must be narrated in `GameState.activityLog`.
 - Damage narration guarantee: whenever damage is processed by the engine (shielded, unshielded, mitigated to zero HP damage, or lethal), a readable damage flavor line must be emitted to the activity log in that tick.
 
+## Raid narration contract
+`processTick()` keeps the diary/comms feed and active-thread feed separate on purpose:
+- `GameState.log` is for ambient narration, phase transitions, Handler feedback, and other broad story beats.
+- `GameState.activityLog` is for multi-tick tasks, combat rounds, shield splits, revive/extraction timers, and completion/failure text.
+- Lifecycle conditions such as `extracting` and `downed` are resolved before ambient narration so their progress and completion stay visible.
+- Active raid activities (`SEARCH`, `ROBOT_ENCOUNTER`, and future blocking threads) own the detailed combat/progress story.
+- Ambient chatter is intentionally sparse and should be suppressed when priority comms already exist in the same tick.
+- Priority comms include lifecycle, progression, and explicit Handler/system feedback lines that should always win over garnish text.
+- The current working implementation details for this contract live in [ACTIVE_RAID_ACTIVITY_PLAN.md](ACTIVE_RAID_ACTIVITY_PLAN.md); this section is the canonical reference.
+
 ## Folder structure
 ```
 afk-raiders/

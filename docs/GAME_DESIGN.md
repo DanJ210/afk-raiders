@@ -98,6 +98,8 @@ The UI has two coordinated text streams:
 
 Damage and fighting should live in the active thread, not in one-off diary events. A diary line can announce that a robot appeared or that Medical is being searched, and safe activity-scoped ambient lines can fire during an active thread, but the active thread owns the progress ticks, HP/shield changes, combat outcome, and completion/failure text.
 
+The implementation-level rules for this split, including `processTick()` sequencing and log priority behavior, are documented in [docs/ARCHITECTURE.md](ARCHITECTURE.md) and tracked during implementation in [ACTIVE_RAID_ACTIVITY_PLAN.md](ACTIVE_RAID_ACTIVITY_PLAN.md).
+
 Diary examples:
 
 > 📻 *Day 12, 14:02 — Found a water bottle. That's 47 now. I have a system.*
