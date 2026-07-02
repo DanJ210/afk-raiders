@@ -91,13 +91,14 @@ const showPhaseTimer = computed(() => showMobileRaiderStatus.value && phaseTimer
 
 // Tick bar progress is width-driven for better mobile browser reliability.
 const visibility = useDocumentVisibility()
+const tickNow = useNow({ interval: 100 })
 const tickProgressPercent = computed(() => {
   // Include visibility/activity as dependencies so progress recomputes when the tab becomes visible.
   void visibility.value
   void props.isActive
 
   if (!props.isActive) return 0
-  const elapsed = Math.min(TICK_INTERVAL_MS, Math.max(0, Date.now() - store.lastTickAt))
+  const elapsed = Math.min(TICK_INTERVAL_MS, Math.max(0, tickNow.value.getTime() - store.lastTickAt))
   return Math.max(0, Math.min(100, (elapsed / TICK_INTERVAL_MS) * 100))
 })
 
@@ -278,7 +279,7 @@ function activityBadge(entry: ActivityLogEvent): string {
         :allow-rename="false"
       />
     </div>
-    <div class="h-comms-tick-bar bg-surface-raised border-b border-border overflow-hidden" aria-hidden="true">
+    <div class="h-comms-tick-bar bg-surface-raised border-b border-border overflow-hidden flex-shrink-0" aria-hidden="true">
       <div
         :key="store.lastTickAt"
         class="comms-log__tick-bar"
@@ -531,8 +532,8 @@ function activityBadge(entry: ActivityLogEvent): string {
 .comms-log__tick-bar {
   height: 100%;
   width: 0%;
-  background: var(--color-accent);
-  opacity: 0.7;
+  background: #ffffff;
+  opacity: 1;
   transition: width 220ms linear;
 }
 

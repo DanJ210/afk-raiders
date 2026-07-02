@@ -92,6 +92,20 @@ const shieldRechargeProgress = computed(() => {
     <p v-if="recharge" class="m-0 text-[0.68rem] text-accent font-mono">
       Shield is still recharging...
     </p>
+    <div v-if="recharge" class="flex flex-col gap-1 w-full">
+      <div class="flex justify-between gap-2 flex-wrap">
+        <span class="shrink-0 font-mono text-[0.72rem] tracking-[0.04em] text-muted"
+          :class="compact ? 'min-w-shield-label-compact' : 'min-w-shield-label'">Recharge</span>
+        <span class="shrink-0 font-mono text-[0.72rem] text-text">
+          {{ recharge.name }} · {{ recharge.totalTicks - recharge.ticksRemaining }}/{{ recharge.totalTicks }} ticks
+        </span>
+      </div>
+      <div class="h-2 bg-border-subtle border border-border rounded-full overflow-hidden" role="progressbar"
+        aria-valuemin="0" :aria-valuenow="shieldRechargeProgress" aria-valuemax="100">
+        <div class="w-full h-full transition-[width] duration-(--duration-shield-recharge) ease-in-out"
+          :style="{ width: shieldRechargeProgress + '%', background: 'linear-gradient(90deg, #4b9ef0, #7b9ef0, #f0c84b)' }" />
+      </div>
+    </div>
 
     <div class="flex items-center gap-2 min-w-0 w-full max-[600px]:gap-1.5">
       <span class="shrink-0 font-mono text-[0.72rem] tracking-[0.04em] text-muted max-[600px]:text-[0.68rem]" :class="compact ? 'min-w-shield-label-compact' : 'min-w-shield-label'">{{ label ?? 'Shield' }}</span>
@@ -112,26 +126,6 @@ const shieldRechargeProgress = computed(() => {
       <span class="shrink-0 font-mono text-[0.72rem] text-muted min-w-0 wrap-anywhere max-[600px]:hidden">{{ shieldStatus }}</span>
       <span class="shrink-0 font-mono text-[0.72rem] text-muted max-[600px]:text-[0.68rem]">Durability {{ displayedDurability }}%</span>
     </div>
-
-    <div v-if="recharge" class="flex flex-col gap-1 w-full">
-      <div class="flex justify-between gap-2 flex-wrap">
-        <span class="shrink-0 font-mono text-[0.72rem] tracking-[0.04em] text-muted" :class="compact ? 'min-w-shield-label-compact' : 'min-w-shield-label'">Recharge</span>
-        <span class="shrink-0 font-mono text-[0.72rem] text-text">
-          {{ recharge.name }} · {{ recharge.totalTicks - recharge.ticksRemaining }}/{{ recharge.totalTicks }} ticks
-        </span>
-      </div>
-      <div
-        class="h-2 bg-border-subtle border border-border rounded-full overflow-hidden"
-        role="progressbar"
-        aria-valuemin="0"
-        :aria-valuenow="shieldRechargeProgress"
-        aria-valuemax="100"
-      >
-        <div
-          class="w-full h-full transition-[width] duration-(--duration-shield-recharge) ease-in-out"
-          :style="{ width: shieldRechargeProgress + '%', background: 'linear-gradient(90deg, #4b9ef0, #7b9ef0, #f0c84b)' }"
-        />
-      </div>
-    </div>
+    
   </div>
 </template>
