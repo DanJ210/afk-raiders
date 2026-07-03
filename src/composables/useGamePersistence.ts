@@ -94,6 +94,7 @@ function normalizeRaidState(raid: GameState['raid']): GameState['raid'] {
     activeRaidActivity: raid.activeRaidActivity ?? null,
     hiddenPocket: raid.hiddenPocket ?? null,
     healingItems: raid.healingItems ?? [],
+    selectedHealingLoadout: Array.isArray(raid.selectedHealingLoadout) ? raid.selectedHealingLoadout : [],
     equippedWeaponId: typeof raid.equippedWeaponId === 'string' && findWeapon(raid.equippedWeaponId)
       ? raid.equippedWeaponId
       : getDefaultWeapon().id,

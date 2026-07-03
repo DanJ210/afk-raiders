@@ -14,14 +14,16 @@ import PWAInstallPrompt from './components/PWAInstallPrompt.vue'
 import PhaseStatusStrip from './components/PhaseStatusStrip.vue'
 import SkillsPanel from './components/SkillsPanel.vue'
 import RaiderLifetimeStats from './components/RaiderLifetimeStats.vue'
+import PreparationPanel from './components/PreparationPanel.vue'
 
 const store = useGameStore()
 const isMobile = useMediaQuery('(max-width: 600px)')
 
-type MobileTabId = 'comms' | 'stash' | 'raider' | 'raid' | 'stats'
+type MobileTabId = 'comms' | 'stash' | 'prep' | 'raider' | 'raid' | 'stats'
 
 const mobileTabs: Array<{ id: MobileTabId; label: string; icon: string }> = [
   { id: 'stash', label: 'Stash', icon: '🏠' },
+  { id: 'prep', label: 'Prep', icon: '🧰' },
   { id: 'raid', label: 'Raid', icon: '🎒' },
   { id: 'comms', label: 'Comms', icon: '📻' },
   { id: 'raider', label: 'Raider', icon: '🧍' },
@@ -96,6 +98,7 @@ const phaseTimeText = computed(() => {
         <HandlerActions />
         <RaiderCard />
         <SkillsPanel />
+        <PreparationPanel />
         <HomeStash />
         <section class="panel-card shrink-0" aria-label="Lifetime Stats">
           <RaiderLifetimeStats :stats="lifetimeStats" :raider="store.raider" />
@@ -135,6 +138,10 @@ const phaseTimeText = computed(() => {
         <SkillsPanel />
       </section>
 
+      <section v-if="activeMobileTab === 'prep'" class="app__mobile-fill min-h-0 flex-1 flex flex-col gap-2.5 overflow-y-auto">
+        <PreparationPanel />
+      </section>
+
       <section v-if="activeMobileTab === 'stats'" class="min-h-0 flex-1 flex flex-col gap-2.5 overflow-y-auto pb-3">
         <section class="panel-card shrink-0 max-[600px]:p-2.5" aria-label="Lifetime Stats">
           <RaiderLifetimeStats :stats="lifetimeStats" :raider="store.raider" />
@@ -148,7 +155,7 @@ const phaseTimeText = computed(() => {
 
     <nav
       v-if="isMobile"
-      class="sticky bottom-0 grid grid-cols-5 gap-1.5 bg-bg border-t border-border pt-2"
+      class="sticky bottom-0 grid grid-cols-6 gap-1.5 bg-bg border-t border-border pt-2"
       :style="{ paddingBottom: 'calc(8px + env(safe-area-inset-bottom))' }"
       aria-label="Primary"
     >

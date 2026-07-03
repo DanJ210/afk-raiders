@@ -36,6 +36,7 @@ export function createInitialState(now: number = Date.now()): GameState {
       backpack: [],
       hiddenPocket: null,
       healingItems: [],
+      selectedHealingLoadout: [],
       equippedWeaponId: STARTER_WEAPON_ID,
       backpackValue: 0,
       greedLevel: 0,

@@ -6,6 +6,7 @@
     "name": "White Bandage",
     "healAmount": 5,
     "moodGain": 1,
+    "purchaseCost": 8,
     "flavor": "A little strip of hope. Mostly adhesive."
   },
   {
@@ -15,6 +16,7 @@
     "name": "Green Bandage",
     "healAmount": 10,
     "moodGain": 2,
+    "purchaseCost": 18,
     "flavor": "Better than white. Still applied with panic."
   },
   {
@@ -24,6 +26,7 @@
     "name": "Blue Bandage",
     "healAmount": 25,
     "moodGain": 3,
+    "purchaseCost": 42,
     "flavor": "Professional-looking enough to inspire misplaced confidence."
   },
   {
@@ -33,6 +36,7 @@
     "name": "Purple Bandage",
     "healAmount": 50,
     "moodGain": 4,
+    "purchaseCost": 75,
     "flavor": "Premium medical tape for premium mistakes."
   },
   {
@@ -43,6 +47,7 @@
     "healAmount": 0,
     "reviveAmount": 25,
     "moodGain": 3,
+    "purchaseCost": 90,
     "flavor": "Two questionable paddles and one laminated apology. For when 'walk it off' has lost the debate."
   }
 ]

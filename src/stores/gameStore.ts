@@ -23,6 +23,7 @@ import type { AwaySummary } from '../engine/catchUp.js'
 import { useGamePersistence } from '../composables/useGamePersistence.js'
 import { useGameTicker } from '../composables/useGameTicker.js'
 import { useHandlerActions } from '../composables/useHandlerActions.js'
+import { usePreparationActions } from '../composables/usePreparationActions.js'
 
 export const useGameStore = defineStore('game', () => {
   // Initialize persistence and RNG
@@ -67,6 +68,9 @@ export const useGameStore = defineStore('game', () => {
   )
   const log = computed(() => state.value.log)
   const activityLog = computed(() => state.value.activityLog)
+  const ownedWeapons = computed(() => state.value.ownedWeapons)
+  const purchasedHealingItems = computed(() => state.value.purchasedHealingItems)
+  const selectedHealingLoadout = computed(() => state.value.raid.selectedHealingLoadout)
 
   // Initialize ticker (pause/resume, visibility, catch-up)
   const ticker = useGameTicker(
@@ -108,6 +112,18 @@ export const useGameStore = defineStore('game', () => {
     },
   )
 
+  const preparationActions = usePreparationActions(
+    state,
+    lastTickAt,
+    (updatedState, seed, tickTime) => {
+      persistence.persistSave(updatedState, seed, tickTime)
+    },
+    (events) => {
+      newEvents.value = events
+    },
+    () => seedValue.value,
+  )
+
   if (initialAwaySummary) {
     ticker.awaySummary.value = initialAwaySummary
   }
@@ -121,6 +137,9 @@ export const useGameStore = defineStore('game', () => {
     hasPendingHandlerAction,
     log,
     activityLog,
+    ownedWeapons,
+    purchasedHealingItems,
+    selectedHealingLoadout,
     newEvents,
     lastTickAt,
     awaySummary: ticker.awaySummary,
@@ -139,6 +158,12 @@ export const useGameStore = defineStore('game', () => {
     dismissAwaySummary: actions.dismissAwaySummary,
     renameRaider: actions.renameRaider,
     RAIDER_NAME_MAX_LENGTH: actions.RAIDER_NAME_MAX_LENGTH,
+    purchaseWeapon: preparationActions.purchaseWeapon,
+    repairWeapon: preparationActions.repairWeapon,
+    equipWeapon: preparationActions.equipWeapon,
+    purchaseHealingItem: preparationActions.purchaseHealingItem,
+    setSelectedHealingLoadout: preparationActions.setSelectedHealingLoadout,
+    clearSelectedHealingLoadout: preparationActions.clearSelectedHealingLoadout,
   }
 })
 

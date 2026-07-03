@@ -150,6 +150,7 @@ export interface HealingItem extends ContentEntry {
   name: string
   healAmount: number
   moodGain: number
+  purchaseCost: number
   reviveAmount?: number
   flavor?: string
   /** 1 = Common … 5 = Legendary (higher = rarer). */
@@ -352,6 +353,8 @@ export interface RaidState {
   hiddenPocket: HiddenPocketItem | null
   /** Current-raid-only healing consumables. Lost on death/extraction; never stored at home. */
   healingItems: HealingItemStack[]
+  /** Selected current-loadout healing items to move into a raid on the next deployment. */
+  selectedHealingLoadout: HealingItemStack[]
   /** HUB-selected weapon id used for robot encounters unless an activity overrides weapon fields. */
   equippedWeaponId: string | null
   backpackValue: number
