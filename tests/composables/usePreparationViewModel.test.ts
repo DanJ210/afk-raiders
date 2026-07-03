@@ -57,34 +57,34 @@ describe('usePreparationViewModel', () => {
     vi.restoreAllMocks()
   })
 
-  it('asks confirmation before purchasing weapon and does nothing on cancel', () => {
+  it('asks confirmation before purchasing weapon and does nothing on cancel', async () => {
     const confirm = vi.fn(() => false)
     const viewModel = usePreparationViewModel({ confirm })
 
-    viewModel.purchaseWeapon('crowbar_of_minor_confidence')
+    await viewModel.purchaseWeapon('crowbar_of_minor_confidence')
 
     expect(confirm).toHaveBeenCalledTimes(1)
     expect(activeStore.purchaseWeapon).not.toHaveBeenCalled()
   })
 
-  it('purchases healing item when confirmed', () => {
+  it('purchases healing item when confirmed', async () => {
     const confirm = vi.fn(() => true)
     const viewModel = usePreparationViewModel({ confirm })
 
-    viewModel.purchaseHealingItem('bandage_white')
+    await viewModel.purchaseHealingItem('bandage_white')
 
     expect(confirm).toHaveBeenCalledTimes(1)
     expect(activeStore.purchaseHealingItem).toHaveBeenCalledWith('bandage_white', 1)
   })
 
-  it('blocks mutating actions outside HUB phase', () => {
+  it('blocks mutating actions outside HUB phase', async () => {
     activeStore = createStore({ phase: 'RAIDING' })
     const confirm = vi.fn(() => true)
     const viewModel = usePreparationViewModel({ confirm })
 
-    viewModel.purchaseWeapon('crowbar_of_minor_confidence')
-    viewModel.purchaseHealingItem('bandage_white')
-    viewModel.clearLoadout()
+    await viewModel.purchaseWeapon('crowbar_of_minor_confidence')
+    await viewModel.purchaseHealingItem('bandage_white')
+    await viewModel.clearLoadout()
 
     expect(confirm).not.toHaveBeenCalled()
     expect(activeStore.purchaseWeapon).not.toHaveBeenCalled()

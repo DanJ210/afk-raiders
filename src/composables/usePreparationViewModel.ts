@@ -3,7 +3,7 @@ import { getHealingCatalog, getHealingPurchaseCost, getWeaponCatalog, getWeaponP
 import { useGameStore } from '../stores/gameStore'
 
 export interface PreparationViewModelOptions {
-  confirm?: (message: string) => boolean
+  confirm?: (message: string) => boolean | Promise<boolean>
 }
 
 export function usePreparationViewModel(options?: PreparationViewModelOptions) {
@@ -31,14 +31,14 @@ export function usePreparationViewModel(options?: PreparationViewModelOptions) {
     return selectedHealingLoadout.value.find(item => item.itemId === itemId)?.quantity ?? 0
   }
 
-  function purchaseWeapon(weaponId: string) {
+  async function purchaseWeapon(weaponId: string) {
     if (!isHubPhase.value) return
 
     const cost = getWeaponPurchaseCost(weaponId)
     const weapon = weaponCatalog.find(entry => entry.id === weaponId)
     if (!weapon) return
 
-    const confirmed = confirmDialog(
+    const confirmed = await confirmDialog(
       `Buy ${weapon.name} for ${cost.toLocaleString()} coins?\n\nEquipped weapons can be lost on failed raids.`,
     )
     if (!confirmed) return
@@ -46,14 +46,14 @@ export function usePreparationViewModel(options?: PreparationViewModelOptions) {
     store.purchaseWeapon(weaponId)
   }
 
-  function repairWeapon(weaponId: string) {
+  async function repairWeapon(weaponId: string) {
     if (!isHubPhase.value) return
 
     const cost = getWeaponRepairCost(weaponId)
     const weapon = weaponCatalog.find(entry => entry.id === weaponId)
     if (!weapon) return
 
-    const confirmed = confirmDialog(
+    const confirmed = await confirmDialog(
       `Repair ${weapon.name} for ${cost.toLocaleString()} coins?`,
     )
     if (!confirmed) return
@@ -61,13 +61,13 @@ export function usePreparationViewModel(options?: PreparationViewModelOptions) {
     store.repairWeapon(weaponId)
   }
 
-  function equipWeapon(weaponId: string) {
+  async function equipWeapon(weaponId: string) {
     if (!isHubPhase.value) return
 
     const weapon = weaponCatalog.find(entry => entry.id === weaponId)
     if (!weapon) return
 
-    const confirmed = confirmDialog(
+    const confirmed = await confirmDialog(
       `Equip ${weapon.name} for the next raid?\n\nIf the raid fails, this equipped weapon can be lost.`,
     )
     if (!confirmed) return
@@ -75,14 +75,14 @@ export function usePreparationViewModel(options?: PreparationViewModelOptions) {
     store.equipWeapon(weaponId)
   }
 
-  function purchaseHealingItem(itemId: string) {
+  async function purchaseHealingItem(itemId: string) {
     if (!isHubPhase.value) return
 
     const item = healingCatalog.find(entry => entry.id === itemId)
     if (!item) return
 
     const cost = getHealingPurchaseCost(itemId)
-    const confirmed = confirmDialog(
+    const confirmed = await confirmDialog(
       `Buy 1 ${item.name} for ${cost.toLocaleString()} coins?\n\nLoadout meds are consumed on deployment and are lost if the raid fails.`,
     )
     if (!confirmed) return
@@ -121,10 +121,10 @@ export function usePreparationViewModel(options?: PreparationViewModelOptions) {
     store.setSelectedHealingLoadout(next)
   }
 
-  function clearLoadout() {
+  async function clearLoadout() {
     if (!isHubPhase.value) return
 
-    const confirmed = confirmDialog(
+    const confirmed = await confirmDialog(
       'Clear the selected medical loadout?\n\nOnly staged loadout items are cleared. Purchased stock remains in storage.',
     )
     if (!confirmed) return

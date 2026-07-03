@@ -1,6 +1,40 @@
 <script setup lang="ts">
+import { ref } from 'vue'
 import { formatNumber } from '../utils/stash'
 import { usePreparationViewModel } from '../composables/usePreparationViewModel'
+
+interface PreparationConfirmState {
+  open: boolean
+  title: string
+  message: string
+}
+
+const confirmState = ref<PreparationConfirmState>({
+  open: false,
+  title: '',
+  message: '',
+})
+
+let resolveConfirmation: ((value: boolean) => void) | null = null
+
+function requestConfirmation(message: string): Promise<boolean> {
+  const [titleLine, bodyLine] = message.split('\n\n')
+  confirmState.value = {
+    open: true,
+    title: titleLine ?? 'Confirm action',
+    message: bodyLine ?? '',
+  }
+
+  return new Promise<boolean>((resolve) => {
+    resolveConfirmation = resolve
+  })
+}
+
+function closeConfirmation(confirmed: boolean) {
+  confirmState.value.open = false
+  resolveConfirmation?.(confirmed)
+  resolveConfirmation = null
+}
 
 const {
   weaponCatalog,
@@ -22,12 +56,34 @@ const {
   getWeaponPurchaseCost,
   getWeaponRepairCost,
   getHealingPurchaseCost,
-} = usePreparationViewModel()
+} = usePreparationViewModel({
+  confirm: requestConfirmation,
+})
+
+const showWeapons = ref(true)
+const showHealing = ref(true)
 </script>
 
 <template>
   <section class="preparation-panel panel-card shrink-0 max-[600px]:p-2.5" aria-label="Preparation">
     <header class="section-header">PREPARATION</header>
+
+    <div class="mb-3 rounded border border-border-subtle bg-surface-raised p-2">
+      <div class="mb-1.5 inline-flex items-center gap-1.5 rounded border px-2 py-0.5 font-mono text-[0.62rem]"
+        :class="isHubPhase ? 'border-success text-success' : 'border-danger text-danger'"
+      >
+        <span class="h-1.5 w-1.5 rounded-full" :class="isHubPhase ? 'bg-success' : 'bg-danger'" aria-hidden="true" />
+        <span>{{ isHubPhase ? 'READY' : 'LOCKED' }}</span>
+      </div>
+      <div
+        class="h-2 w-full rounded"
+        :class="isHubPhase ? 'bg-success' : 'bg-danger'"
+        aria-hidden="true"
+      />
+      <p class="mt-1.5 mb-0 font-mono text-[0.65rem] leading-snug" :class="isHubPhase ? 'text-success' : 'text-danger'">
+        {{ isHubPhase ? 'Prep unlocked: HUB phase active.' : 'Prep locked: available only during HUB.' }}
+      </p>
+    </div>
 
     <div class="grid grid-cols-2 gap-2 mb-3">
       <div class="flex flex-col gap-1 bg-surface-raised p-2 rounded">
@@ -51,8 +107,16 @@ const {
 
     <div class="grid gap-3">
       <section>
-        <h3 class="m-0 mb-2 font-mono text-[0.78rem] text-accent uppercase tracking-[0.08em]">Weapons</h3>
-        <div class="grid gap-2">
+        <div class="mb-2 flex items-center justify-between gap-2">
+          <h3 class="m-0 font-mono text-[0.78rem] text-accent uppercase tracking-[0.08em]">Weapons</h3>
+          <button
+            type="button"
+            class="rounded border border-border px-2 py-1 font-mono text-[0.66rem] text-text bg-transparent cursor-pointer"
+            @click="showWeapons = !showWeapons"
+          >{{ showWeapons ? 'Collapse' : 'Expand' }}</button>
+        </div>
+
+        <div v-if="showWeapons" class="grid max-h-76 gap-2 overflow-y-auto pr-1">
           <article v-for="weapon in weaponCatalog" :key="weapon.id" class="rounded border border-border-subtle bg-surface-raised p-2">
             <div class="flex items-baseline justify-between gap-2">
               <h4 class="m-0 font-mono text-[0.78rem] font-bold text-text">{{ weapon.name }}</h4>
@@ -95,8 +159,16 @@ const {
 
       <section>
         <div class="flex items-center justify-between gap-2 mb-2">
-          <h3 class="m-0 font-mono text-[0.78rem] text-accent uppercase tracking-[0.08em]">Healing Stock</h3>
+          <div class="flex items-center gap-2">
+            <h3 class="m-0 font-mono text-[0.78rem] text-accent uppercase tracking-[0.08em]">Healing Stock</h3>
+            <button
+              type="button"
+              class="rounded border border-border px-2 py-1 font-mono text-[0.66rem] text-text bg-transparent cursor-pointer"
+              @click="showHealing = !showHealing"
+            >{{ showHealing ? 'Collapse' : 'Expand' }}</button>
+          </div>
           <button
+            v-if="showHealing"
             type="button"
             class="rounded border border-border px-2 py-1 font-mono text-[0.66rem] text-text bg-transparent cursor-pointer disabled:opacity-50"
             :disabled="selectedHealingLoadout.length === 0 || !isHubPhase"
@@ -104,7 +176,7 @@ const {
           >Clear Loadout</button>
         </div>
 
-        <div class="grid gap-2">
+        <div v-if="showHealing" class="grid max-h-76 gap-2 overflow-y-auto pr-1">
           <article v-for="item in healingCatalog" :key="item.id" class="rounded border border-border-subtle bg-surface-raised p-2">
             <div class="flex items-baseline justify-between gap-2">
               <h4 class="m-0 font-mono text-[0.78rem] font-bold text-text">{{ item.name }}</h4>
@@ -143,4 +215,33 @@ const {
       </section>
     </div>
   </section>
+
+  <div
+    v-if="confirmState.open"
+    class="modal-overlay"
+    data-testid="prep-confirm-modal"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Preparation confirmation"
+  >
+    <div class="modal-card" data-testid="prep-confirm-card">
+      <h4 class="m-0 font-mono text-[0.84rem] text-accent">{{ confirmState.title }}</h4>
+      <p v-if="confirmState.message" class="mt-2 mb-0 font-mono text-[0.72rem] leading-snug text-text">{{ confirmState.message }}</p>
+
+      <div class="mt-4 grid grid-cols-2 gap-2">
+        <button
+          type="button"
+          class="rounded border border-border px-3 py-2 font-mono text-[0.75rem] text-text bg-transparent cursor-pointer"
+          data-testid="prep-confirm-cancel"
+          @click="closeConfirmation(false)"
+        >Cancel</button>
+        <button
+          type="button"
+          class="rounded border border-accent px-3 py-2 font-mono text-[0.75rem] text-bg bg-accent cursor-pointer"
+          data-testid="prep-confirm-accept"
+          @click="closeConfirmation(true)"
+        >Confirm</button>
+      </div>
+    </div>
+  </div>
 </template>

@@ -78,8 +78,6 @@ describe('PreparationPanel', () => {
   })
 
   it('asks for confirmation before buying a weapon and blocks purchase on cancel', async () => {
-    const confirmSpy = vi.fn(() => false)
-    ;(window as { confirm?: (message?: string) => boolean }).confirm = confirmSpy
     const wrapper = mount(PreparationPanel)
 
     const crowbarCard = findCardByText(wrapper, 'Crowbar of Minor Confidence')
@@ -87,14 +85,14 @@ describe('PreparationPanel', () => {
     expect(buyButton).toBeDefined()
 
     await buyButton!.trigger('click')
+    expect(wrapper.find('[data-testid="prep-confirm-modal"]').exists()).toBe(true)
 
-    expect(confirmSpy).toHaveBeenCalledTimes(1)
+    await wrapper.get('[data-testid="prep-confirm-cancel"]').trigger('click')
+
     expect(activeStore.purchaseWeapon).not.toHaveBeenCalled()
   })
 
   it('asks for confirmation before buying a healing item and proceeds on accept', async () => {
-    const confirmSpy = vi.fn(() => true)
-    ;(window as { confirm?: (message?: string) => boolean }).confirm = confirmSpy
     const wrapper = mount(PreparationPanel)
 
     const whiteBandageCard = findCardByText(wrapper, 'White Bandage')
@@ -102,8 +100,10 @@ describe('PreparationPanel', () => {
     expect(buyOneButton).toBeDefined()
 
     await buyOneButton!.trigger('click')
+    expect(wrapper.find('[data-testid="prep-confirm-modal"]').exists()).toBe(true)
 
-    expect(confirmSpy).toHaveBeenCalledTimes(1)
+    await wrapper.get('[data-testid="prep-confirm-accept"]').trigger('click')
+
     expect(activeStore.purchaseHealingItem).toHaveBeenCalledWith('bandage_white', 1)
   })
 
