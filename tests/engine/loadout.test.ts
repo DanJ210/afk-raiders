@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { createInitialState } from '../../src/engine/initialState'
 import { applyFailedRaidWeaponLoss, applyRaidWeaponWear, clearSelectedHealingLoadout, consumeSelectedHealingLoadout, equipWeapon, purchaseHealingItem, purchaseWeapon, repairWeapon, setSelectedHealingLoadout } from '../../src/engine/loadout'
 
@@ -122,6 +122,26 @@ describe('loadout transactions', () => {
     expect(broken?.event.id).toBe('weapon_broken_crowbar_of_minor_confidence')
   })
 
+  it('seeds fallback ownership when the equipped weapon breaks as the last owned weapon', () => {
+    const wornState = {
+      ...createState(),
+      raid: {
+        ...createState().raid,
+        equippedWeaponId: 'crowbar_of_minor_confidence',
+      },
+      ownedWeapons: [
+        { weaponId: 'crowbar_of_minor_confidence', durability: 1 },
+      ],
+    }
+
+    const broken = applyRaidWeaponWear(wornState, 0)
+    expect(broken).not.toBeNull()
+    expect(broken?.state.raid.equippedWeaponId).toBe('tea_kettle')
+    expect(broken?.state.ownedWeapons).toEqual([
+      expect.objectContaining({ weaponId: 'tea_kettle', durability: 8 }),
+    ])
+  })
+
   it('loses the equipped weapon on failed raid recovery', () => {
     const failedState = {
       ...createState(),
@@ -140,5 +160,25 @@ describe('loadout transactions', () => {
     expect(lost?.state.ownedWeapons.some(entry => entry.weaponId === 'meeting_room_bat')).toBe(false)
     expect(lost?.state.raid.equippedWeaponId).toBe('tea_kettle')
     expect(lost?.event.id).toBe('weapon_lost_meeting_room_bat')
+  })
+
+  it('seeds fallback ownership when failed raid loss removes the last owned weapon', () => {
+    const failedState = {
+      ...createState(),
+      raid: {
+        ...createState().raid,
+        equippedWeaponId: 'meeting_room_bat',
+      },
+      ownedWeapons: [
+        { weaponId: 'meeting_room_bat', durability: 12 },
+      ],
+    }
+
+    const lost = applyFailedRaidWeaponLoss(failedState, 0)
+    expect(lost).not.toBeNull()
+    expect(lost?.state.raid.equippedWeaponId).toBe('tea_kettle')
+    expect(lost?.state.ownedWeapons).toEqual([
+      expect.objectContaining({ weaponId: 'tea_kettle', durability: 8 }),
+    ])
   })
 })

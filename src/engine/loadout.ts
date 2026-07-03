@@ -269,6 +269,16 @@ function getFallbackEquippedWeaponId(state: GameState, removedWeaponId: string):
   return nextOwnedWeapon?.weaponId ?? getDefaultWeapon().id
 }
 
+function ensureFallbackWeaponOwned(ownedWeapons: OwnedWeapon[], fallbackWeaponId: string): OwnedWeapon[] {
+  if (ownedWeapons.some(entry => entry.weaponId === fallbackWeaponId)) return ownedWeapons
+
+  const fallbackWeapon = findWeapon(fallbackWeaponId)
+  const normalizedFallback = normalizeOwnedWeaponEntry(fallbackWeapon, undefined)
+  if (!normalizedFallback) return ownedWeapons
+
+  return [...ownedWeapons, normalizedFallback]
+}
+
 export function applyRaidWeaponWear(state: GameState, now: number): LoadoutTransactionResult | null {
   const weapon = findWeapon(state.raid.equippedWeaponId)
   if (!weapon) return null
@@ -280,11 +290,12 @@ export function applyRaidWeaponWear(state: GameState, now: number): LoadoutTrans
   if (ownedWeapon.durability <= 1) {
     const nextOwnedWeapons = state.ownedWeapons.filter(entry => entry.weaponId !== weapon.id)
     const nextEquippedWeaponId = getFallbackEquippedWeaponId(state, weapon.id)
+    const nextOwnedWeaponsWithFallback = ensureFallbackWeaponOwned(nextOwnedWeapons, nextEquippedWeaponId)
 
     return {
       state: {
         ...state,
-        ownedWeapons: nextOwnedWeapons,
+        ownedWeapons: nextOwnedWeaponsWithFallback,
         raid: {
           ...state.raid,
           equippedWeaponId: nextEquippedWeaponId,
@@ -326,11 +337,12 @@ export function applyFailedRaidWeaponLoss(state: GameState, now: number): Loadou
 
   const nextOwnedWeapons = state.ownedWeapons.filter(entry => entry.weaponId !== weapon.id)
   const nextEquippedWeaponId = getFallbackEquippedWeaponId(state, weapon.id)
+  const nextOwnedWeaponsWithFallback = ensureFallbackWeaponOwned(nextOwnedWeapons, nextEquippedWeaponId)
 
   return {
     state: {
       ...state,
-      ownedWeapons: nextOwnedWeapons,
+      ownedWeapons: nextOwnedWeaponsWithFallback,
       raid: {
         ...state.raid,
         equippedWeaponId: nextEquippedWeaponId,
