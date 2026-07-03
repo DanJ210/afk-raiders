@@ -609,26 +609,28 @@ describe('deterministic snapshot', () => {
     expect(downedStarted?.conditions).toEqual(['EXTRACTING', 'DOWNED'])
   })
 
-  it('sets the timeout-downed guard when the timer-zero downed race starts', () => {
-    const rng = createRNG(FIXED_SEED)
+  it('sets the timeout-downed guard when the raid timer hits zero during extraction', () => {
     const initial = createInitialState(0)
-    const state = {
-      ...initial,
-      raid: {
-        ...initial.raid,
-        phase: 'RAIDING' as const,
-        phaseTicksRemaining: 0,
-        extracting: { ticksRemaining: 3 },
-        downed: null,
-      },
+
+    const raidBase = {
+      ...initial.raid,
+      phase: 'RAIDING' as const,
+      phaseTicksRemaining: 0,
+      extracting: { ticksRemaining: 3 },
     }
 
-    const result = processTick(state, rng, 0)
+    const fromNotDowned = processTick({
+      ...initial,
+      raid: { ...raidBase, downed: null },
+    }, createRNG(FIXED_SEED), 0)
+    expect(fromNotDowned.state.raid.raidTimeoutDownedStarted).toBe(true)
 
-    expect(result.state.raid.downed).not.toBeNull()
-    expect(result.state.raid.raidTimeoutDownedStarted).toBe(true)
+    const fromAlreadyDowned = processTick({
+      ...initial,
+      raid: { ...raidBase, downed: { ticksRemaining: 1 } },
+    }, createRNG(FIXED_SEED), 0)
+    expect(fromAlreadyDowned.state.raid.raidTimeoutDownedStarted).toBe(true)
   })
-
   it('does not re-down a revived raider from the same expired raid timer', () => {
     const rng = createRNG(FIXED_SEED)
     const initial = createInitialState(0)
