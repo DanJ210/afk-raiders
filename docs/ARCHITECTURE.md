@@ -43,7 +43,8 @@ The simulation engine is **pure TypeScript with zero framework imports**. Vue re
 - `GameState.activityLog` is for multi-tick tasks, combat rounds, shield splits, revive/extraction timers, and completion/failure text.
 - Lifecycle conditions such as `extracting` and `downed` are resolved before ambient narration so their progress and completion stay visible.
 - Active raid activities (`SEARCH`, `ROBOT_ENCOUNTER`, and future blocking threads) own the detailed combat/progress story.
-- Ambient chatter is intentionally sparse and should be suppressed when priority comms already exist in the same tick.
+- Every emitted `LogEvent` carries an explicit `commsPriority` (`ambient` | `priority` | `activity`). Templates may declare `commsPriority` in JSON; the resolver honors template values first with an id-based fallback for unannotated content.
+- Ambient chatter is intentionally sparse and is suppressed when priority comms already exist in the same tick; at most one ambient line lands per tick.
 - Priority comms include lifecycle, progression, and explicit Handler/system feedback lines that should always win over garnish text.
 - The current working implementation details for this contract live in [ACTIVE_RAID_ACTIVITY_PLAN.md](ACTIVE_RAID_ACTIVITY_PLAN.md); this section is the canonical reference.
 
@@ -70,7 +71,8 @@ afk-raiders/
 │   │   ├── hub_events.json      # Desperanza rest & prep (≤5 min)
 │   │   ├── deployment_events.json # One-person tunnel pod ride (2 min)
 │   │   ├── raiding-events/      # RAIDING diary events plus activity definitions
-│   │   │   ├── raiding_events.json # Ambient RAIDING diary starters
+│   │   │   ├── raiding_events.json # RAIDING diary/starter events
+│   │   │   ├── ambient_events.json # Activity-scoped ambient overlay comms
 │   │   │   ├── extraction_events.json # EXTRACTING-condition comms/outcomes
 │   │   │   ├── robot_encounter_activities.json # Robot active-thread definitions
 │   │   │   └── search_activities.json # Search, extraction, and downed active-thread definitions

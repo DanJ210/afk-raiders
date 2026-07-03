@@ -81,7 +81,7 @@ export interface StartRaidActivityEffect {
   kind?: RaidActivityKind
   hazardDamage?: number
   healingItem?: boolean
-  lootTableId?: string
+  lootTableId?: string | string[]
   lootRolls?: number
   shieldRecharger?: boolean
   robotId?: string
@@ -107,7 +107,7 @@ export interface RaidActivityDefinition extends ContentEntry {
   blocking?: boolean
   hazardDamage?: number
   healingItem?: boolean
-  lootTableId?: string
+  lootTableId?: string | string[]
   lootRolls?: number
   shieldRecharger?: boolean
   robotId?: string
@@ -280,7 +280,7 @@ export interface ActiveRaidActivity {
   totalTicks: number
   locationId?: string
   healingItem?: boolean
-  lootTableId?: string
+  lootTableId?: string | string[]
   lootRolls?: number
   shieldRecharger?: boolean
   robotId?: string
@@ -341,6 +341,8 @@ export interface RaidState {
   phaseTicksRemaining: number
   downed: DownedState | null
   extracting: ExtractingState | null
+  /** One-shot guard: the raid-timeout DOWNED race already started this raid, so a revive cannot be re-downed by the same expired timer. */
+  raidTimeoutDownedStarted?: boolean
   /** Set by CALL_EXTRACT action to force next greed check toward extraction */
   forceExtract: boolean
 }

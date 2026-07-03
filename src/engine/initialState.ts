@@ -41,6 +41,7 @@ export function createInitialState(now: number = Date.now()): GameState {
       phaseTicksRemaining: PHASE_DURATIONS['HUB'],
       downed: null,
       extracting: null,
+      raidTimeoutDownedStarted: false,
       forceExtract: false,
     },
     signal: initialSignalState(now),

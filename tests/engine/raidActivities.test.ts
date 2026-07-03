@@ -406,6 +406,76 @@ describe('raid activities', () => {
     expect(completed.activityEvents[0].text).toContain('Water Bottle (Classic)')
   })
 
+  it('merges multiple loot tables when lootTableId is an array', () => {
+    const initial = createInitialState(0)
+    const started = startRaidActivity(
+      {
+        ...initial,
+        raid: {
+          ...initial.raid,
+          phase: 'RAIDING' as const,
+          dangerLevel: 'Low' as const,
+        },
+      },
+      { activityId: 'search_black_box_cache', kind: 'SEARCH', lootTableId: ['water_bottles', 'valuables'] },
+      fixedRng(),
+      0,
+    )
+
+    expect(started).not.toBeNull()
+    expect(started!.state.raid.activeRaidActivity?.lootTableId).toEqual(['water_bottles', 'valuables'])
+
+    // fixedRngPickLast picks the final item of the merged pool, which comes from the second table.
+    let currentState = started!.state
+    let result = advanceRaidActivity(currentState, fixedRngPickLast(), 30_000)
+    while (result.state.raid.activeRaidActivity) {
+      currentState = result.state
+      result = advanceRaidActivity(currentState, fixedRngPickLast(), 60_000)
+    }
+
+    expect(result.state.raid.backpack.length).toBeGreaterThan(0)
+    expect(result.state.raid.backpack[0].itemId.startsWith('water_bottle')).toBe(false)
+  })
+
+  it('applies greed rarity bias to search loot rolls', () => {
+    function averageSearchLootRarity(greedLevel: number): number {
+      const initial = createInitialState(0)
+      let raritySum = 0
+      let itemCount = 0
+
+      for (let seed = 0; seed < 400; seed += 1) {
+        const rng = createRNG(seed)
+        const started = startRaidActivity(
+          {
+            ...initial,
+            raid: {
+              ...initial.raid,
+              phase: 'RAIDING' as const,
+              dangerLevel: null,
+              greedLevel,
+            },
+          },
+          { activityId: 'search_black_box_cache', kind: 'SEARCH', lootTableId: 'valuables' },
+          rng,
+          0,
+        )
+        let result = advanceRaidActivity(started!.state, rng, 0)
+        while (result.state.raid.activeRaidActivity) {
+          result = advanceRaidActivity(result.state, rng, 0)
+        }
+        for (const item of result.state.raid.backpack) {
+          raritySum += item.rarity * item.quantity
+          itemCount += item.quantity
+        }
+      }
+
+      expect(itemCount).toBeGreaterThan(0)
+      return raritySum / itemCount
+    }
+
+    expect(averageSearchLootRarity(100)).toBeGreaterThan(averageSearchLootRarity(0))
+  })
+
   it('blocks activity definitions when zone gates do not match', () => {
     const initial = createInitialState(0)
     const state = {

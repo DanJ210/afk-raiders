@@ -35,7 +35,7 @@ interface ActiveRaidActivity {
   ticksRemaining: number
   totalTicks: number
   locationId?: string
-  lootTableId?: string
+  lootTableId?: string | string[] // One table id or several ids merged into one weighted pool
   robotId?: string               // Specific robot encounter
   robotHp?: number
   robotMaxHp?: number
@@ -61,6 +61,9 @@ interface DownedState {
 Activities are data-driven and split into focused files under `src/content/raiding-events/`:
 - `robot_encounter_activities.json` — ROBOT_ENCOUNTER activity definitions and robot pool selection.
 - `search_activities.json` — SEARCH activities (backpack loot, field meds, shield rechargers), plus EXTRACTION and DOWNED activity metadata.
+- `ambient_events.json` — activity-scoped ambient overlay comms (search/robot/extraction/downed garnish lines), split out of `raiding_events.json`.
+
+Search loot rolls apply the shared rarity biases (danger-level profile, mood, greed) on top of raw table weights, matching diary-event loot behavior.
 
 The engine deterministically resolves activities; JSON owns weights, text, duration, requirements, and tuning.
 
@@ -175,8 +178,8 @@ EXTRACTION activity definitions should eventually own duration and completion ou
 Revival cost scaling should tie to Raider Level so players can reduce future `CALL_REVIVE` Signal costs through progression.
 
 ### Comms Priority Template Migration
-Add `commsPriority` to the event JSON templates so content authors can mark events as `ambient`, `priority`, or `activity` directly in data.
-Once the content is annotated, remove any engine fallback that infers comms class from event ids or resolver-side defaults.
+**Partially done.** The engine supports `commsPriority` (`ambient` | `priority` | `activity`) on emitted `LogEvent`s, and `EventTemplate`/`RaidActivityDefinition` accept an optional template-level `commsPriority` that the resolver honors first.
+Remaining work: annotate existing event JSON content with explicit `commsPriority` values, then remove the id-based engine fallback (`commsPriorityForEventId`).
 
 ## Migration & Validation Changelog
 
@@ -216,6 +219,14 @@ Once the content is annotated, remove any engine fallback that infers comms clas
   - Add content validation so every search `lootTableId` resolves to a known table.
   - Add multi-roll search rewards so longer/riskier searches can return small bundles instead of a single item.
   - Add new search activities for underused pools such as apparel/accessories, weapon parts, valuables, arc tech, cursed weird items, and consumables.
+
+### Phase 6: Comms Priority, Search Loot, and Lifecycle Hardening
+- Added `commsPriority` to all emitted log events; ambient suppression now keys off the field instead of id matching.
+- Split activity-scoped ambient overlay comms into `ambient_events.json`.
+- Added context-aware `{robot_name}` / `{robot_flavor}` slots resolved from the active ROBOT_ENCOUNTER robot; content tests gate their usage.
+- Applied danger/mood/greed rarity biases to SEARCH activity loot rolls; `lootTableId` now accepts arrays merged into one pick pool.
+- Raid-timer expiry without extraction now goes straight to KNOCKED_OUT; the timer-zero DOWNED race is one-shot (`RaidState.raidTimeoutDownedStarted`) and never re-downs a revived raider.
+- Revive (Handler REVIVE or revive med) emits a `completed` DOWNED activity entry so the active thread closes immediately.
 
 
 ## Testing Checklist
