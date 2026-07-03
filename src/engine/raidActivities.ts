@@ -205,6 +205,11 @@ function pickSearchLootItem(lootTable: LootItem[], state: GameState, rng: RNG): 
   })))
 }
 const ROBOT_HP_PER_MENACE = 6
+const ROBOT_HP_DANGER_MULTIPLIER: Record<'Low' | 'Medium' | 'High', number> = {
+  Low: 1,
+  Medium: 1.35,
+  High: 1.75,
+}
 const ROBOT_ROUND_DAMAGE_PER_MENACE = 0.35
 const ROBOT_LETHAL_HP_RATIO = 0.5
 const ROBOT_NONLETHAL_MIN_HP_RATIO = 0.25
@@ -219,6 +224,10 @@ const DANGER_DAMAGE_SWING_MULTIPLIER: Record<'Low' | 'Medium' | 'High', number> 
   Medium: 1,
   High: 1.5,
 }
+const RAIDER_LEVEL_DAMAGE_BONUS_PER_LEVEL = 0.008
+const MOOD_DAMAGE_BONUS_PER_POINT = 0.01
+const MOOD_DAMAGE_MULTIPLIER_MIN = 0.75
+const MOOD_DAMAGE_MULTIPLIER_MAX = 1.35
 
 export interface StartRaidActivityResult {
   state: GameState
@@ -288,8 +297,33 @@ function selectRobot(
   return rng.weightedPick(candidates)
 }
 
-function robotMaxHp(robot: RobotEntry): number {
-  return Math.max(6, robot.menace * ROBOT_HP_PER_MENACE)
+function robotMaxHp(robot: RobotEntry, dangerLevel: GameState['raid']['dangerLevel']): number {
+  const baseHp = Math.max(6, robot.menace * ROBOT_HP_PER_MENACE)
+  const profile = getDangerLevelProfile(dangerLevel)
+  const multiplier = ROBOT_HP_DANGER_MULTIPLIER[profile.dangerLevel] ?? ROBOT_HP_DANGER_MULTIPLIER.Low
+  return Math.max(6, Math.ceil(baseHp * multiplier))
+}
+
+function resolveLegacyRaiderBaseDamage(activity: ActiveRaidActivity): number {
+  if (activity.raiderDamageMin !== undefined || activity.raiderDamageMax !== undefined) {
+    const min = activity.raiderDamageMin ?? activity.raiderDamageMax ?? DEFAULT_RAIDER_WEAPON.damageMin
+    const max = activity.raiderDamageMax ?? activity.raiderDamageMin ?? DEFAULT_RAIDER_WEAPON.damageMax
+    const low = Math.min(min, max)
+    const high = Math.max(min, max)
+    return Math.max(1, Math.round((low + high) / 2))
+  }
+
+  return Math.max(1, DEFAULT_RAIDER_WEAPON.damage)
+}
+
+function raiderLevelDamageMultiplier(levelXp: number): number {
+  const level = getRaiderLevelBenefitProfile(levelXp).level
+  return 1 + Math.max(0, level - 1) * RAIDER_LEVEL_DAMAGE_BONUS_PER_LEVEL
+}
+
+function raiderMoodDamageMultiplier(mood: number): number {
+  const raw = 1 + mood * MOOD_DAMAGE_BONUS_PER_POINT
+  return Math.max(MOOD_DAMAGE_MULTIPLIER_MIN, Math.min(MOOD_DAMAGE_MULTIPLIER_MAX, raw))
 }
 
 function activityLogEvent(
@@ -563,10 +597,12 @@ export function startRaidActivity(
     ticksRemaining: definition.ticks,
     totalTicks: definition.ticks,
     robotId: robot.id,
-    robotHp: robotMaxHp(robot),
-    robotMaxHp: robotMaxHp(robot),
+    robotHp: robotMaxHp(robot, state.raid.dangerLevel),
+    robotMaxHp: robotMaxHp(robot, state.raid.dangerLevel),
     weaponId,
     weaponName,
+    raiderBaseDamage: Math.max(1, definition.raiderBaseDamage ?? effect.raiderBaseDamage ?? equippedWeapon.damage),
+    raiderDamageMultiplier: Math.max(0.01, (definition.raiderDamageMultiplier ?? effect.raiderDamageMultiplier ?? 1) * (equippedWeapon.damageMultiplier ?? 1)),
     raiderDamageMin: definition.raiderDamageMin ?? equippedWeapon.damageMin,
     raiderDamageMax: definition.raiderDamageMax ?? equippedWeapon.damageMax,
     robotDamageTakenMultiplier: Math.max(0.01, effect.robotDamageTakenMultiplier ?? definition.robotDamageTakenMultiplier ?? 1),
@@ -615,9 +651,14 @@ export function advanceRaidActivity(state: GameState, rng: RNG, now: number): Ad
     }
   }
 
-  const rawRaiderDamage = rng.int(activity.raiderDamageMin ?? DEFAULT_RAIDER_WEAPON.damageMin, activity.raiderDamageMax ?? DEFAULT_RAIDER_WEAPON.damageMax)
-  const raiderDamage = Math.max(1, Math.ceil(rawRaiderDamage * (activity.robotDamageTakenMultiplier ?? 1)))
-  const nextRobotHp = Math.max(0, (activity.robotHp ?? robotMaxHp(robot)) - raiderDamage)
+  const baseDamage = activity.raiderBaseDamage ?? resolveLegacyRaiderBaseDamage(activity)
+  const weaponDamageMultiplier = Math.max(0.01, activity.raiderDamageMultiplier ?? 1)
+  const levelDamageMultiplier = raiderLevelDamageMultiplier(state.raider.levelXp)
+  const moodDamageMultiplier = raiderMoodDamageMultiplier(state.raider.mood)
+  const activityDamageMultiplier = Math.max(0.01, activity.robotDamageTakenMultiplier ?? 1)
+  const rawRaiderDamage = baseDamage * weaponDamageMultiplier * levelDamageMultiplier * moodDamageMultiplier * activityDamageMultiplier
+  const raiderDamage = Math.max(1, Math.ceil(rawRaiderDamage))
+  const nextRobotHp = Math.max(0, (activity.robotHp ?? robotMaxHp(robot, state.raid.dangerLevel)) - raiderDamage)
 
   if (nextRobotHp <= 0) {
     const loot = robotLootToBackpackItem(rng.weightedPick(robot.lootTable), robot)
@@ -627,7 +668,7 @@ export function advanceRaidActivity(state: GameState, rng: RNG, now: number): Ad
       weapon_name: activity.weaponName ?? DEFAULT_RAIDER_WEAPON.name,
       raider_damage: raiderDamage,
       robot_hp: 0,
-      robot_max_hp: activity.robotMaxHp ?? robotMaxHp(robot),
+      robot_max_hp: activity.robotMaxHp ?? robotMaxHp(robot, state.raid.dangerLevel),
       loot_name: loot.name,
     })
     return {
@@ -661,7 +702,7 @@ export function advanceRaidActivity(state: GameState, rng: RNG, now: number): Ad
     weapon_name: activity.weaponName ?? DEFAULT_RAIDER_WEAPON.name,
     raider_damage: raiderDamage,
     robot_hp: nextRobotHp,
-    robot_max_hp: activity.robotMaxHp ?? robotMaxHp(robot),
+    robot_max_hp: activity.robotMaxHp ?? robotMaxHp(robot, state.raid.dangerLevel),
     robot_damage_summary: robotDamageSummary,
   })
 

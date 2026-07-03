@@ -88,6 +88,8 @@ export interface StartRaidActivityEffect {
   robotPool?: RobotActivityPool
   robotDamageMultiplier?: number
   robotDamageTakenMultiplier?: number
+  raiderBaseDamage?: number
+  raiderDamageMultiplier?: number
 }
 
 export interface RaidActivityTextSet {
@@ -114,6 +116,8 @@ export interface RaidActivityDefinition extends ContentEntry {
   robotPool?: RobotActivityPool
   weaponId?: string
   weaponName?: string
+  raiderBaseDamage?: number
+  raiderDamageMultiplier?: number
   raiderDamageMin?: number
   raiderDamageMax?: number
   robotDamageTakenMultiplier?: number
@@ -160,6 +164,8 @@ export interface HealingItem extends ContentEntry {
 export interface WeaponEntry extends ContentEntry {
   id: string
   name: string
+  damage: number
+  damageMultiplier: number
   damageMin: number
   damageMax: number
   value: number
@@ -306,6 +312,8 @@ export interface ActiveRaidActivity {
   robotMaxHp?: number
   weaponId?: string
   weaponName?: string
+  raiderBaseDamage?: number
+  raiderDamageMultiplier?: number
   raiderDamageMin?: number
   raiderDamageMax?: number
   robotDamageTakenMultiplier?: number

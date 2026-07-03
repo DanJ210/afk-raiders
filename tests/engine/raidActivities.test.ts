@@ -113,8 +113,8 @@ describe('raid activities', () => {
       robotMaxHp: 12,
       weaponId: DEFAULT_RAIDER_WEAPON.id,
       weaponName: DEFAULT_RAIDER_WEAPON.name,
-      raiderDamageMin: DEFAULT_RAIDER_WEAPON.damageMin,
-      raiderDamageMax: DEFAULT_RAIDER_WEAPON.damageMax,
+      raiderBaseDamage: DEFAULT_RAIDER_WEAPON.damage,
+      raiderDamageMultiplier: DEFAULT_RAIDER_WEAPON.damageMultiplier,
     })
     expect(result!.activityEvent).toMatchObject({
       id: 'activity_robot_encounter_robot_encounter_standard_anxietick_started',
@@ -152,8 +152,8 @@ describe('raid activities', () => {
     expect(result!.state.raid.activeRaidActivity).toMatchObject({
       weaponId: equipped!.id,
       weaponName: equipped!.name,
-      raiderDamageMin: equipped!.damageMin,
-      raiderDamageMax: equipped!.damageMax,
+      raiderBaseDamage: equipped!.damage,
+      raiderDamageMultiplier: equipped!.damageMultiplier,
     })
   })
 
@@ -180,9 +180,43 @@ describe('raid activities', () => {
     expect(result!.state.raid.activeRaidActivity).toMatchObject({
       weaponId: DEFAULT_RAIDER_WEAPON.id,
       weaponName: DEFAULT_RAIDER_WEAPON.name,
-      raiderDamageMin: DEFAULT_RAIDER_WEAPON.damageMin,
-      raiderDamageMax: DEFAULT_RAIDER_WEAPON.damageMax,
+      raiderBaseDamage: DEFAULT_RAIDER_WEAPON.damage,
+      raiderDamageMultiplier: DEFAULT_RAIDER_WEAPON.damageMultiplier,
     })
+  })
+
+  it('scales robot max hp by danger level', () => {
+    const initial = createInitialState(0)
+    const low = startRaidActivity(
+      {
+        ...initial,
+        raid: {
+          ...initial.raid,
+          phase: 'RAIDING' as const,
+          dangerLevel: 'Low' as const,
+        },
+      },
+      { activityId: 'robot_encounter_standard', kind: 'ROBOT_ENCOUNTER', robotId: 'anxietick' },
+      fixedRng(),
+      0,
+    )
+    const high = startRaidActivity(
+      {
+        ...initial,
+        raid: {
+          ...initial.raid,
+          phase: 'RAIDING' as const,
+          dangerLevel: 'High' as const,
+        },
+      },
+      { activityId: 'robot_encounter_standard', kind: 'ROBOT_ENCOUNTER', robotId: 'anxietick' },
+      fixedRng(),
+      0,
+    )
+
+    expect(low).not.toBeNull()
+    expect(high).not.toBeNull()
+    expect((high!.state.raid.activeRaidActivity?.robotMaxHp ?? 0)).toBeGreaterThan(low!.state.raid.activeRaidActivity?.robotMaxHp ?? 0)
   })
 
   it('selects a robot from the event robot pool when no fixed robotId is provided', () => {
@@ -770,7 +804,7 @@ describe('raid activities', () => {
     expect(result.downedReason?.text).toContain('Roomba Prime downed the Raider')
   })
 
-  it('advances robot HP by Tea Kettle damage and completes with robot loot', () => {
+  it('advances robot HP by deterministic modifier-based damage and completes with robot loot', () => {
     const initial = createInitialState(0)
     const started = startRaidActivity(
       {
@@ -793,7 +827,7 @@ describe('raid activities', () => {
     expect(progress.blocking).toBe(true)
     expect(progress.state.raid.activeRaidActivity).toMatchObject({
       robotId: 'anxietick',
-      robotHp: 6,
+      robotHp: 7,
       robotMaxHp: 12,
     })
     expect(progress.activityEvents).toEqual([
@@ -805,7 +839,14 @@ describe('raid activities', () => {
     ])
     expect(progress.activityEvents[0].text).toContain('Tea Kettle')
 
-    const completed = advanceRaidActivity(progress.state, fixedRng(), 60_000)
+    const secondProgress = advanceRaidActivity(progress.state, fixedRng(), 60_000)
+    expect(secondProgress.state.raid.activeRaidActivity).toMatchObject({
+      robotId: 'anxietick',
+      robotHp: 2,
+      robotMaxHp: 12,
+    })
+
+    const completed = advanceRaidActivity(secondProgress.state, fixedRng(), 90_000)
 
     expect(completed.blocking).toBe(true)
     expect(completed.robotDefeatedId).toBe('anxietick')
@@ -824,6 +865,15 @@ describe('raid activities', () => {
         status: 'completed',
       }),
     ])
+  })
+
+  it('increases outgoing raider damage with higher Raider Level', () => {
+    const lowLevel = advanceRaidActivity(createActiveRobotState({ robotId: 'anxietick', robotHp: 20, shielded: false }), fixedRng(), 0)
+    const maxLevel = advanceRaidActivity(createActiveRobotState({ robotId: 'anxietick', robotHp: 20, levelXp: xpRequiredForLevel(75), shielded: false }), fixedRng(), 0)
+
+    const lowLevelRobotHp = lowLevel.state.raid.activeRaidActivity?.robotHp ?? Number.POSITIVE_INFINITY
+    const maxLevelRobotHp = maxLevel.state.raid.activeRaidActivity?.robotHp ?? Number.POSITIVE_INFINITY
+    expect(maxLevelRobotHp).toBeLessThan(lowLevelRobotHp)
   })
 
   it('applies mood resilience to robot activity retaliation', () => {
