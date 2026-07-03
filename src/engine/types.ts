@@ -118,8 +118,6 @@ export interface RaidActivityDefinition extends ContentEntry {
   weaponName?: string
   raiderBaseDamage?: number
   raiderDamageMultiplier?: number
-  raiderDamageMin?: number
-  raiderDamageMax?: number
   robotDamageTakenMultiplier?: number
 }
 
@@ -314,8 +312,6 @@ export interface ActiveRaidActivity {
   weaponName?: string
   raiderBaseDamage?: number
   raiderDamageMultiplier?: number
-  raiderDamageMin?: number
-  raiderDamageMax?: number
   robotDamageTakenMultiplier?: number
   robotDamageMultiplier?: number
   raiderAction?: 'fighting' | 'hiding' | 'fleeing' | 'searching'

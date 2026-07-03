@@ -10,7 +10,7 @@ import { downedActivityEvent, maybeAwardLootBonusConsumables, processTick } from
 import { createInitialState } from '../../src/engine/initialState'
 import { getRaiderLevelFromXp, xpRequiredForLevel } from '../../src/engine/raiderLevel'
 import { skillDefinitionById } from '../../src/engine/skills'
-import { startRaidActivity } from '../../src/engine/raidActivities'
+import { DEFAULT_RAIDER_WEAPON, startRaidActivity } from '../../src/engine/raidActivities'
 import { resolveAmbientActivityEvent } from '../../src/engine/eventResolver'
 
 const FIXED_SEED = 42
@@ -516,8 +516,8 @@ describe('deterministic snapshot', () => {
           robotMaxHp: 999,
           weaponId: 'tea_kettle',
           weaponName: 'Tea Kettle',
-          raiderDamageMin: 0,
-          raiderDamageMax: 0,
+          raiderBaseDamage: 0,
+          raiderDamageMultiplier: 1,
           robotDamageMultiplier: 50,
           raiderAction: 'fighting' as const,
         },
@@ -1137,8 +1137,8 @@ describe('deterministic snapshot', () => {
           robotMaxHp: 12,
           weaponId: 'tea_kettle',
           weaponName: 'Tea Kettle',
-          raiderDamageMin: 3,
-          raiderDamageMax: 6,
+          raiderBaseDamage: DEFAULT_RAIDER_WEAPON.damage,
+          raiderDamageMultiplier: DEFAULT_RAIDER_WEAPON.damageMultiplier,
           raiderAction: 'fighting' as const,
         },
       },

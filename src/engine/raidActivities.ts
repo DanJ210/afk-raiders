@@ -304,18 +304,6 @@ function robotMaxHp(robot: RobotEntry, dangerLevel: GameState['raid']['dangerLev
   return Math.max(6, Math.ceil(baseHp * multiplier))
 }
 
-function resolveLegacyRaiderBaseDamage(activity: ActiveRaidActivity): number {
-  if (activity.raiderDamageMin !== undefined || activity.raiderDamageMax !== undefined) {
-    const min = activity.raiderDamageMin ?? activity.raiderDamageMax ?? DEFAULT_RAIDER_WEAPON.damageMin
-    const max = activity.raiderDamageMax ?? activity.raiderDamageMin ?? DEFAULT_RAIDER_WEAPON.damageMax
-    const low = Math.min(min, max)
-    const high = Math.max(min, max)
-    return Math.max(1, Math.round((low + high) / 2))
-  }
-
-  return Math.max(1, DEFAULT_RAIDER_WEAPON.damage)
-}
-
 function raiderLevelDamageMultiplier(levelXp: number): number {
   const level = getRaiderLevelBenefitProfile(levelXp).level
   return 1 + Math.max(0, level - 1) * RAIDER_LEVEL_DAMAGE_BONUS_PER_LEVEL
@@ -603,8 +591,6 @@ export function startRaidActivity(
     weaponName,
     raiderBaseDamage: Math.max(1, definition.raiderBaseDamage ?? effect.raiderBaseDamage ?? equippedWeapon.damage),
     raiderDamageMultiplier: Math.max(0.01, (definition.raiderDamageMultiplier ?? effect.raiderDamageMultiplier ?? 1) * (equippedWeapon.damageMultiplier ?? 1)),
-    raiderDamageMin: definition.raiderDamageMin ?? equippedWeapon.damageMin,
-    raiderDamageMax: definition.raiderDamageMax ?? equippedWeapon.damageMax,
     robotDamageTakenMultiplier: Math.max(0.01, effect.robotDamageTakenMultiplier ?? definition.robotDamageTakenMultiplier ?? 1),
     robotDamageMultiplier: effect.robotDamageMultiplier,
     raiderAction: 'fighting',
@@ -651,7 +637,7 @@ export function advanceRaidActivity(state: GameState, rng: RNG, now: number): Ad
     }
   }
 
-  const baseDamage = activity.raiderBaseDamage ?? resolveLegacyRaiderBaseDamage(activity)
+  const baseDamage = Math.max(1, activity.raiderBaseDamage ?? DEFAULT_RAIDER_WEAPON.damage)
   const weaponDamageMultiplier = Math.max(0.01, activity.raiderDamageMultiplier ?? 1)
   const levelDamageMultiplier = raiderLevelDamageMultiplier(state.raider.levelXp)
   const moodDamageMultiplier = raiderMoodDamageMultiplier(state.raider.mood)
