@@ -119,7 +119,7 @@ describe('loadout transactions', () => {
     expect(broken).not.toBeNull()
     expect(broken?.state.ownedWeapons.some(entry => entry.weaponId === 'aspperigo')).toBe(false)
     expect(broken?.state.raid.equippedWeaponId).toBe('tea_kettle')
-    expect(broken?.event.id).toBe('aspperigo')
+    expect(broken?.event.id).toBe('weapon_broken_aspperigo')
   })
 
   it('seeds fallback ownership when the equipped weapon breaks as the last owned weapon', () => {
