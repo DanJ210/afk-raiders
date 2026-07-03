@@ -21,13 +21,13 @@ import { getRaiderLevelBenefitProfile } from './raiderLevel.js'
 import { applyShieldedDamage, type ShieldDamageResult } from './shields.js'
 import { describeShieldDamage } from './eventResolver.js'
 import { getSkillModifierProfile } from './skills.js'
+import { findWeapon, getDefaultWeapon } from './weapons.js'
 
-export const DEFAULT_RAIDER_WEAPON = {
-  id: 'tea_kettle',
-  name: 'Tea Kettle',
-  damageMin: 3,
-  damageMax: 6,
-} as const
+export const DEFAULT_RAIDER_WEAPON = getDefaultWeapon()
+
+function resolveEquippedWeapon(state: GameState) {
+  return findWeapon(state.raid.equippedWeaponId) ?? DEFAULT_RAIDER_WEAPON
+}
 
 function normalizeActivityText(value: unknown): RaidActivityDefinition['text'] | null {
   if (typeof value === 'string') {
@@ -549,8 +549,13 @@ export function startRaidActivity(
   const robot = selectRobot(state, definition, effect, rng)
   if (!robot) return null
 
-  const weaponId = definition.weaponId ?? DEFAULT_RAIDER_WEAPON.id
-  const weaponName = definition.weaponName ?? DEFAULT_RAIDER_WEAPON.name
+  const equippedWeapon = resolveEquippedWeapon(state)
+  const weaponId = definition.weaponId && definition.weaponId !== DEFAULT_RAIDER_WEAPON.id
+    ? definition.weaponId
+    : equippedWeapon.id
+  const weaponName = definition.weaponName && definition.weaponName !== DEFAULT_RAIDER_WEAPON.name
+    ? definition.weaponName
+    : equippedWeapon.name
   const activeActivity: ActiveRaidActivity = {
     id: definition.id,
     name: `${definition.name}: ${robot.name}`,
@@ -562,8 +567,8 @@ export function startRaidActivity(
     robotMaxHp: robotMaxHp(robot),
     weaponId,
     weaponName,
-    raiderDamageMin: definition.raiderDamageMin ?? DEFAULT_RAIDER_WEAPON.damageMin,
-    raiderDamageMax: definition.raiderDamageMax ?? DEFAULT_RAIDER_WEAPON.damageMax,
+    raiderDamageMin: definition.raiderDamageMin ?? equippedWeapon.damageMin,
+    raiderDamageMax: definition.raiderDamageMax ?? equippedWeapon.damageMax,
     robotDamageTakenMultiplier: Math.max(0.01, effect.robotDamageTakenMultiplier ?? definition.robotDamageTakenMultiplier ?? 1),
     robotDamageMultiplier: effect.robotDamageMultiplier,
     raiderAction: 'fighting',

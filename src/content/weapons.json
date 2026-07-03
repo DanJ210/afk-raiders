@@ -1,0 +1,50 @@
+[
+  {
+    "id": "tea_kettle",
+    "weight": 100,
+    "name": "Tea Kettle",
+    "damageMin": 3,
+    "damageMax": 6,
+    "value": 0,
+    "rarity": 1,
+    "durabilityMax": 8,
+    "repairCost": 0,
+    "flavor": "Standard issue in Desperanza: whistles under pressure and occasionally during combat."
+  },
+  {
+    "id": "crowbar_of_minor_confidence",
+    "weight": 75,
+    "name": "Crowbar of Minor Confidence",
+    "damageMin": 4,
+    "damageMax": 7,
+    "value": 65,
+    "rarity": 2,
+    "durabilityMax": 10,
+    "repairCost": 18,
+    "flavor": "Opens doors, crates, and emotional boundaries in equal measure."
+  },
+  {
+    "id": "meeting_room_bat",
+    "weight": 50,
+    "name": "Meeting Room Bat",
+    "damageMin": 5,
+    "damageMax": 9,
+    "value": 140,
+    "rarity": 3,
+    "durabilityMax": 12,
+    "repairCost": 30,
+    "flavor": "Recovered from a motivational workshop that got out of hand."
+  },
+  {
+    "id": "audit_hammer_deluxe",
+    "weight": 25,
+    "name": "Audit Hammer Deluxe",
+    "damageMin": 7,
+    "damageMax": 11,
+    "value": 280,
+    "rarity": 4,
+    "durabilityMax": 14,
+    "repairCost": 55,
+    "flavor": "Every hit requests receipts and immediate compliance."
+  }
+]

@@ -156,6 +156,23 @@ export interface HealingItem extends ContentEntry {
   rarity: number
 }
 
+export interface WeaponEntry extends ContentEntry {
+  id: string
+  name: string
+  damageMin: number
+  damageMax: number
+  value: number
+  rarity: number
+  durabilityMax: number
+  repairCost: number
+  flavor?: string
+}
+
+export interface OwnedWeapon {
+  weaponId: string
+  durability: number
+}
+
 export interface ShieldRechargerItem extends ContentEntry {
   name: string
   value: number
@@ -335,6 +352,8 @@ export interface RaidState {
   hiddenPocket: HiddenPocketItem | null
   /** Current-raid-only healing consumables. Lost on death/extraction; never stored at home. */
   healingItems: HealingItemStack[]
+  /** HUB-selected weapon id used for robot encounters unless an activity overrides weapon fields. */
+  equippedWeaponId: string | null
   backpackValue: number
   greedLevel: number   // 0–100; higher = stronger loot appetite and major-condition momentum
   phase: Phase
@@ -431,6 +450,10 @@ export interface GameState {
   log: LogEvent[]
   activityLog: ActivityLogEvent[]
   homeStash: BackpackItem[]
+  /** Weapons owned by the handler. Durability is consumed by raid outcomes and can be repaired in HUB. */
+  ownedWeapons: OwnedWeapon[]
+  /** Purchased HUB stock of healing consumables available for future raid loadouts. */
+  purchasedHealingItems: HealingItemStack[]
   /** Coin stash from auto-sold overflow loot — value is never deleted, only converted */
   coins: number
   stats: RaiderLifetimeStats

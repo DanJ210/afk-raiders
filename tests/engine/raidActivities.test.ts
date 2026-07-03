@@ -4,6 +4,7 @@ import { createInitialState } from '../../src/engine/initialState'
 import { xpRequiredForLevel } from '../../src/engine/raiderLevel'
 import { createRNG } from '../../src/engine/rng'
 import type { RNG } from '../../src/engine/rng'
+import { findWeapon } from '../../src/engine/weapons'
 
 function fixedRng(): RNG {
   return {
@@ -123,6 +124,65 @@ describe('raid activities', () => {
       status: 'started',
     })
     expect(result!.activityEvent.text).toContain('Tea Kettle')
+  })
+
+  it('uses the equipped weapon from raid state when the activity does not override weapon values', () => {
+    const initial = createInitialState(0)
+    const equipped = findWeapon('audit_hammer_deluxe')
+    expect(equipped).not.toBeNull()
+
+    const state = {
+      ...initial,
+      raid: {
+        ...initial.raid,
+        phase: 'RAIDING' as const,
+        dangerLevel: 'Low' as const,
+        equippedWeaponId: equipped!.id,
+      },
+    }
+
+    const result = startRaidActivity(
+      state,
+      { activityId: 'robot_encounter_standard', kind: 'ROBOT_ENCOUNTER', robotId: 'anxietick' },
+      fixedRng(),
+      0,
+    )
+
+    expect(result).not.toBeNull()
+    expect(result!.state.raid.activeRaidActivity).toMatchObject({
+      weaponId: equipped!.id,
+      weaponName: equipped!.name,
+      raiderDamageMin: equipped!.damageMin,
+      raiderDamageMax: equipped!.damageMax,
+    })
+  })
+
+  it('falls back to the default weapon if equipped weapon id is missing/invalid', () => {
+    const initial = createInitialState(0)
+    const state = {
+      ...initial,
+      raid: {
+        ...initial.raid,
+        phase: 'RAIDING' as const,
+        dangerLevel: 'Low' as const,
+        equippedWeaponId: 'not_a_real_weapon',
+      },
+    }
+
+    const result = startRaidActivity(
+      state,
+      { activityId: 'robot_encounter_standard', kind: 'ROBOT_ENCOUNTER', robotId: 'anxietick' },
+      fixedRng(),
+      0,
+    )
+
+    expect(result).not.toBeNull()
+    expect(result!.state.raid.activeRaidActivity).toMatchObject({
+      weaponId: DEFAULT_RAIDER_WEAPON.id,
+      weaponName: DEFAULT_RAIDER_WEAPON.name,
+      raiderDamageMin: DEFAULT_RAIDER_WEAPON.damageMin,
+      raiderDamageMax: DEFAULT_RAIDER_WEAPON.damageMax,
+    })
   })
 
   it('selects a robot from the event robot pool when no fixed robotId is provided', () => {
