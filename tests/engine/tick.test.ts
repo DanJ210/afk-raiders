@@ -706,7 +706,8 @@ describe('deterministic snapshot', () => {
       ...initial,
       raid: { ...raidBase, downed: { ticksRemaining: 1 } },
     }, createRNG(FIXED_SEED), 0)
-    expect(fromAlreadyDowned.state.raid.raidTimeoutDownedStarted).toBe(true)
+    expect(fromAlreadyDowned.state.raid.phase).toBe('KNOCKED_OUT')
+    expect(fromAlreadyDowned.state.raid.raidTimeoutDownedStarted).toBe(false)
   })
   it('does not re-down a revived raider from the same expired raid timer', () => {
     const rng = createRNG(FIXED_SEED)
@@ -800,6 +801,33 @@ describe('deterministic snapshot', () => {
     ])
     expect(eventIds).toContain('phase_RAIDING_to_HUB')
     expect(eventIds).not.toContain('phase_RAIDING_to_KNOCKED_OUT')
+  })
+
+  it('lets DOWNED expiry beat extraction when extraction still has time left', () => {
+    const rng = createRNG(FIXED_SEED)
+    const initial = createInitialState(0)
+    const state = {
+      ...initial,
+      raider: { ...initial.raider, hp: 0 },
+      raid: {
+        ...initial.raid,
+        zone: 'damp_battlegrounds',
+        dangerLevel: 'High' as const,
+        phase: 'RAIDING' as const,
+        phaseTicksRemaining: 0,
+        extracting: { ticksRemaining: 2 },
+        downed: { ticksRemaining: 1 },
+      },
+    }
+
+    const result = processTick(state, rng, 0)
+    const eventIds = result.events.map(event => event.id)
+
+    expect(result.state.raid.phase).toBe('KNOCKED_OUT')
+    expect(result.state.raid.extracting).toBeNull()
+    expect(result.state.raid.downed).toBeNull()
+    expect(eventIds).toContain('phase_RAIDING_to_KNOCKED_OUT')
+    expect(eventIds).not.toContain('phase_RAIDING_to_HUB')
   })
 
   it('completes extraction to HUB even when outcome odds would have selected a complication', () => {

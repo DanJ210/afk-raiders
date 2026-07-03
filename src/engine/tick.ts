@@ -263,8 +263,9 @@ function advanceRaidConditions(state: GameState): { state: GameState; extraction
     ? { ...state.raid.downed, ticksRemaining: state.raid.downed.ticksRemaining - 1 }
     : null
   const extractionCompleted = extracting !== null && extracting.ticksRemaining <= 0
-  const timeoutRaceActive = state.raid.extracting !== null && state.raid.phaseTicksRemaining <= 0
-  const downedExpired = downed !== null && downed.ticksRemaining <= 0 && !timeoutRaceActive
+  // During the timeout extraction race, both timers advance. Caller order gives
+  // extraction precedence when both hit zero on the same tick.
+  const downedExpired = downed !== null && downed.ticksRemaining <= 0
 
   return {
     state: {
