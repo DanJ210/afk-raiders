@@ -532,8 +532,85 @@ describe('deterministic snapshot', () => {
       robotId: 'roomba_prime',
       robotName: 'Roomba Prime',
     })
+    expect(result.state.raid.activeRaidActivity).toBeNull()
     expect(downedEvent?.text).toContain('Roomba Prime downed the Raider')
     expect(result.activityEvents.find(event => event.activityId === 'downed_recovery' && event.status === 'started')).toBeDefined()
+  })
+
+  it('keeps extracting but clears non-extraction activities when timeout starts downed race', () => {
+    const rng = createRNG(FIXED_SEED)
+    const initial = createInitialState(0)
+    const state = {
+      ...initial,
+      raid: {
+        ...initial.raid,
+        phase: 'RAIDING' as const,
+        phaseTicksRemaining: 1,
+        extracting: { ticksRemaining: 3, totalTicks: 3 },
+        activeRaidActivity: {
+          id: 'robot_encounter_standard',
+          name: 'Robot Encounter: Anxietick',
+          kind: 'ROBOT_ENCOUNTER' as const,
+          ticksRemaining: 2,
+          totalTicks: 6,
+          robotId: 'anxietick',
+          robotHp: 10,
+          robotMaxHp: 12,
+          weaponId: 'tea_kettle',
+          weaponName: 'Tea Kettle',
+          raiderBaseDamage: 5,
+          raiderDamageMultiplier: 1,
+          raiderAction: 'fighting' as const,
+        },
+      },
+    }
+
+    const result = processTick(state, rng, 0)
+
+    expect(result.state.raid.phase).toBe('RAIDING')
+    expect(result.state.raid.extracting).not.toBeNull()
+    expect(result.state.raid.downed?.reason?.kind).toBe('raid_timeout')
+    expect(result.state.raid.activeRaidActivity).toBeNull()
+    expect(result.state.raid.raidTimeoutDownedStarted).toBe(true)
+    expect(result.events.some(event => event.id === 'condition_downed_started')).toBe(true)
+  })
+
+  it('clears active activities when ambient pressure downs the raider', () => {
+    const initial = createInitialState(0)
+    const alwaysDownedRng = {
+      next: vi.fn<() => number>().mockReturnValue(0),
+      weightedPick: <T,>(items: readonly T[]) => items[0],
+      pick: <T,>(items: readonly T[]) => items[0],
+      int: (_min: number, max: number) => max,
+      clone: () => alwaysDownedRng as unknown as RNG,
+      getSeed: () => 0,
+    } as unknown as RNG
+
+    const state = {
+      ...initial,
+      raid: {
+        ...initial.raid,
+        phase: 'RAIDING' as const,
+        dangerLevel: 'High' as const,
+        phaseTicksRemaining: 30,
+        extracting: null,
+        downed: null,
+        activeRaidActivity: {
+          id: 'extraction_complication_close_call',
+          name: 'Extraction Complication: Close Call',
+          kind: 'EXTRACTION' as const,
+          ticksRemaining: 0,
+          totalTicks: 1,
+        },
+      },
+    }
+
+    const result = processTick(state, alwaysDownedRng, 0)
+
+    expect(result.state.raid.downed?.reason?.kind).toBe('ambient_pressure')
+    expect(result.events.some(event => event.id === 'condition_downed_started')).toBe(true)
+    expect(result.state.raid.extracting).toBeNull()
+    expect(result.state.raid.activeRaidActivity).toBeNull()
   })
 
   it('honors Call Extract when the raid timer expires on the next tick', () => {
