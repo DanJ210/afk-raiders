@@ -9,6 +9,7 @@ const weaponCatalog = getWeaponCatalog()
 const healingCatalog = getHealingCatalog()
 
 const coins = computed(() => store.state.coins)
+const isHubPhase = computed(() => store.phase === 'HUB')
 const ownedWeapons = computed(() => store.ownedWeapons)
 const purchasedHealingItems = computed(() => store.purchasedHealingItems)
 const selectedHealingLoadout = computed(() => store.selectedHealingLoadout)
@@ -26,18 +27,49 @@ function selectedHealingQuantity(itemId: string) {
 }
 
 function purchaseWeapon(weaponId: string) {
+  const cost = getWeaponPurchaseCost(weaponId)
+  const weapon = weaponCatalog.find(entry => entry.id === weaponId)
+  if (!weapon) return
+  const confirmed = window.confirm(
+    `Buy ${weapon.name} for ${formatNumber(cost)} coins?\n\nEquipped weapons can be lost on failed raids.`,
+  )
+  if (!confirmed) return
+
   store.purchaseWeapon(weaponId)
 }
 
 function repairWeapon(weaponId: string) {
+  const cost = getWeaponRepairCost(weaponId)
+  const weapon = weaponCatalog.find(entry => entry.id === weaponId)
+  if (!weapon) return
+  const confirmed = window.confirm(
+    `Repair ${weapon.name} for ${formatNumber(cost)} coins?`,
+  )
+  if (!confirmed) return
+
   store.repairWeapon(weaponId)
 }
 
 function equipWeapon(weaponId: string) {
+  const weapon = weaponCatalog.find(entry => entry.id === weaponId)
+  if (!weapon) return
+  const confirmed = window.confirm(
+    `Equip ${weapon.name} for the next raid?\n\nIf the raid fails, this equipped weapon can be lost.`,
+  )
+  if (!confirmed) return
+
   store.equipWeapon(weaponId)
 }
 
 function purchaseHealingItem(itemId: string) {
+  const item = healingCatalog.find(entry => entry.id === itemId)
+  if (!item) return
+  const cost = getHealingPurchaseCost(itemId)
+  const confirmed = window.confirm(
+    `Buy 1 ${item.name} for ${formatNumber(cost)} coins?\n\nLoadout meds are consumed on deployment and are lost if the raid fails.`,
+  )
+  if (!confirmed) return
+
   store.purchaseHealingItem(itemId, 1)
 }
 
@@ -68,6 +100,11 @@ function removeHealingFromLoadout(itemId: string) {
 }
 
 function clearLoadout() {
+  const confirmed = window.confirm(
+    'Clear the selected medical loadout?\n\nOnly staged loadout items are cleared. Purchased stock remains in storage.',
+  )
+  if (!confirmed) return
+
   store.clearSelectedHealingLoadout()
 }
 </script>
@@ -85,6 +122,15 @@ function clearLoadout() {
         <span class="text-raider-tiny text-muted font-mono">Selected Meds</span>
         <span class="text-[1rem] font-bold text-text font-mono">{{ selectedHealingLoadout.length }}</span>
       </div>
+    </div>
+
+    <div class="mb-3 rounded border border-border-subtle bg-surface-raised p-2">
+      <p class="m-0 font-mono text-[0.65rem] leading-snug text-muted">
+        Loadout warning: healing items moved into loadout are consumed when deployment starts.
+      </p>
+      <p class="m-0 mt-1 font-mono text-[0.65rem] leading-snug text-muted">
+        Failure warning: the currently equipped weapon can be lost when a raid ends in KNOCKED_OUT.
+      </p>
     </div>
 
     <div class="grid gap-3">
@@ -108,20 +154,20 @@ function clearLoadout() {
                 v-if="!ownedWeapon(weapon.id)"
                 type="button"
                 class="rounded border border-border px-2 py-1 font-mono text-[0.68rem] text-text bg-transparent cursor-pointer disabled:opacity-50"
-                :disabled="coins < getWeaponPurchaseCost(weapon.id)"
+                :disabled="coins < getWeaponPurchaseCost(weapon.id) || !isHubPhase"
                 @click="purchaseWeapon(weapon.id)"
               >Buy</button>
               <template v-else>
                 <button
                   type="button"
                   class="rounded border border-border px-2 py-1 font-mono text-[0.68rem] text-text bg-transparent cursor-pointer disabled:opacity-50"
-                  :disabled="store.raid.equippedWeaponId === weapon.id"
+                  :disabled="store.raid.equippedWeaponId === weapon.id || !isHubPhase"
                   @click="equipWeapon(weapon.id)"
                 >{{ store.raid.equippedWeaponId === weapon.id ? 'Equipped' : 'Equip' }}</button>
                 <button
                   type="button"
                   class="rounded border border-border px-2 py-1 font-mono text-[0.68rem] text-text bg-transparent cursor-pointer disabled:opacity-50"
-                  :disabled="coins < getWeaponRepairCost(weapon.id) || ownedWeapon(weapon.id)?.durability === weapon.durabilityMax"
+                  :disabled="coins < getWeaponRepairCost(weapon.id) || ownedWeapon(weapon.id)?.durability === weapon.durabilityMax || !isHubPhase"
                   @click="repairWeapon(weapon.id)"
                 >Repair</button>
                 <span v-if="ownedWeapon(weapon.id)" class="self-center font-mono text-[0.66rem] text-muted">Durability {{ ownedWeapon(weapon.id)?.durability }}/{{ weapon.durabilityMax }}</span>
@@ -137,7 +183,7 @@ function clearLoadout() {
           <button
             type="button"
             class="rounded border border-border px-2 py-1 font-mono text-[0.66rem] text-text bg-transparent cursor-pointer disabled:opacity-50"
-            :disabled="selectedHealingLoadout.length === 0"
+            :disabled="selectedHealingLoadout.length === 0 || !isHubPhase"
             @click="clearLoadout"
           >Clear Loadout</button>
         </div>
@@ -160,19 +206,19 @@ function clearLoadout() {
               <button
                 type="button"
                 class="rounded border border-border px-2 py-1 font-mono text-[0.68rem] text-text bg-transparent cursor-pointer disabled:opacity-50"
-                :disabled="coins < getHealingPurchaseCost(item.id)"
+                :disabled="coins < getHealingPurchaseCost(item.id) || !isHubPhase"
                 @click="purchaseHealingItem(item.id)"
               >Buy 1</button>
               <button
                 type="button"
                 class="rounded border border-border px-2 py-1 font-mono text-[0.68rem] text-text bg-transparent cursor-pointer disabled:opacity-50"
-                :disabled="(purchasedHealingItem(item.id)?.quantity ?? 0) <= selectedHealingQuantity(item.id)"
+                :disabled="(purchasedHealingItem(item.id)?.quantity ?? 0) <= selectedHealingQuantity(item.id) || !isHubPhase"
                 @click="addHealingToLoadout(item.id)"
               >Load +1</button>
               <button
                 type="button"
                 class="rounded border border-border px-2 py-1 font-mono text-[0.68rem] text-text bg-transparent cursor-pointer disabled:opacity-50"
-                :disabled="selectedHealingQuantity(item.id) <= 0"
+                :disabled="selectedHealingQuantity(item.id) <= 0 || !isHubPhase"
                 @click="removeHealingFromLoadout(item.id)"
               >Load -1</button>
             </div>
