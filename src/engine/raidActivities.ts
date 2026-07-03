@@ -218,20 +218,24 @@ const ROBOT_ROUND_DAMAGE_PER_MENACE = 0.35
 const ROBOT_LETHAL_HP_RATIO = 0.5
 const ROBOT_NONLETHAL_MIN_HP_RATIO = 0.25
 const LETHAL_ROBOT_DEADLINESS: ReadonlySet<RobotEntry['deadliness']> = new Set(['nasty', 'deadly'])
-const DANGER_DAMAGE_SWING_BASE: Record<'Low' | 'Medium' | 'High', number> = {
+const ROBOT_DAMAGE_SPREAD_BASE = 0.14
+const ROBOT_DAMAGE_SPREAD_PER_MENACE = 0.025
+const ROBOT_DAMAGE_SPREAD_DANGER_BONUS: Record<'Low' | 'Medium' | 'High', number> = {
   Low: 0,
-  Medium: 1,
-  High: 2,
-}
-const DANGER_DAMAGE_SWING_MULTIPLIER: Record<'Low' | 'Medium' | 'High', number> = {
-  Low: 0.5,
-  Medium: 1,
-  High: 1.5,
+  Medium: 0.1,
+  High: 0.22,
 }
 const RAIDER_LEVEL_DAMAGE_BONUS_PER_LEVEL = 0.008
 const MOOD_DAMAGE_BONUS_PER_POINT = 0.01
 const MOOD_DAMAGE_MULTIPLIER_MIN = 0.75
 const MOOD_DAMAGE_MULTIPLIER_MAX = 1.35
+
+function rollWeaponDamageBase(activity: ActiveRaidActivity, rng: RNG): number {
+  const weapon = findWeapon(activity.weaponId) ?? DEFAULT_RAIDER_WEAPON
+  const minDamage = Math.max(1, Math.floor(Math.min(weapon.damageMin, weapon.damageMax)))
+  const maxDamage = Math.max(minDamage, Math.floor(Math.max(weapon.damageMin, weapon.damageMax)))
+  return rng.int(minDamage, maxDamage)
+}
 
 export interface StartRaidActivityResult {
   state: GameState
@@ -464,13 +468,18 @@ function canRobotEncounterBeLethal(state: GameState, robot: RobotEntry): boolean
 function applyRobotRoundDamage(state: GameState, robot: RobotEntry, activity: ActiveRaidActivity, rng: RNG): ShieldDamageResult {
   const profile = getDangerLevelProfile(state.raid.dangerLevel)
   const multiplier = Math.max(0, (activity.robotDamageMultiplier ?? 1) * profile.robotFailureDamageMultiplier)
-  const expectedDamage = Math.max(1, Math.ceil(robot.menace * ROBOT_ROUND_DAMAGE_PER_MENACE * multiplier))
-  const baseSwing = DANGER_DAMAGE_SWING_BASE[profile.dangerLevel] ?? DANGER_DAMAGE_SWING_BASE.Low
-  const swingMultiplier = DANGER_DAMAGE_SWING_MULTIPLIER[profile.dangerLevel] ?? DANGER_DAMAGE_SWING_MULTIPLIER.Low
-  const enemySwing = Math.max(1, Math.ceil(robot.menace / 2))
-  const totalSwing = Math.max(1, baseSwing + Math.ceil(enemySwing * swingMultiplier))
-  const minIncomingDamage = Math.max(1, expectedDamage - totalSwing)
-  const maxIncomingDamage = Math.max(minIncomingDamage, expectedDamage + totalSwing)
+  const expectedDamage = Math.max(1, robot.menace * ROBOT_ROUND_DAMAGE_PER_MENACE * multiplier)
+  const spread = Math.min(
+    0.6,
+    ROBOT_DAMAGE_SPREAD_BASE
+      + (robot.menace * ROBOT_DAMAGE_SPREAD_PER_MENACE)
+      + (ROBOT_DAMAGE_SPREAD_DANGER_BONUS[profile.dangerLevel] ?? ROBOT_DAMAGE_SPREAD_DANGER_BONUS.Low),
+  )
+  const minIncomingDamage = Math.max(1, Math.floor(expectedDamage * (1 - spread)))
+  const maxIncomingDamage = Math.max(
+    minIncomingDamage + (expectedDamage >= 2 ? 1 : 0),
+    Math.ceil(expectedDamage * (1 + spread)),
+  )
   const rolledDamage = rng.int(minIncomingDamage, maxIncomingDamage)
   const incomingDamage = Math.max(minIncomingDamage, Math.min(maxIncomingDamage, rolledDamage))
   const skillMultiplier = getSkillModifierProfile(state.raider.skills).robotFailureDamageMultiplier
@@ -576,6 +585,7 @@ export function startRaidActivity(
   if (!robot) return null
 
   const activeWeapon = resolveActivityWeapon(state, definition)
+  const explicitBaseDamage = definition.raiderBaseDamage ?? effect.raiderBaseDamage
   const activeActivity: ActiveRaidActivity = {
     id: definition.id,
     name: `${definition.name}: ${robot.name}`,
@@ -587,7 +597,7 @@ export function startRaidActivity(
     robotMaxHp: robotMaxHp(robot, state.raid.dangerLevel),
     weaponId: activeWeapon.id,
     weaponName: activeWeapon.name,
-    raiderBaseDamage: Math.max(1, definition.raiderBaseDamage ?? effect.raiderBaseDamage ?? activeWeapon.damage),
+    raiderBaseDamage: explicitBaseDamage !== undefined ? Math.max(1, explicitBaseDamage) : undefined,
     raiderDamageMultiplier: Math.max(0.01, (definition.raiderDamageMultiplier ?? effect.raiderDamageMultiplier ?? 1) * (activeWeapon.damageMultiplier ?? 1)),
     robotDamageTakenMultiplier: Math.max(0.01, effect.robotDamageTakenMultiplier ?? definition.robotDamageTakenMultiplier ?? 1),
     robotDamageMultiplier: effect.robotDamageMultiplier,
@@ -635,7 +645,7 @@ export function advanceRaidActivity(state: GameState, rng: RNG, now: number): Ad
     }
   }
 
-  const baseDamage = Math.max(1, activity.raiderBaseDamage ?? DEFAULT_RAIDER_WEAPON.damage)
+  const baseDamage = Math.max(1, activity.raiderBaseDamage ?? rollWeaponDamageBase(activity, rng))
   const weaponDamageMultiplier = Math.max(0.01, activity.raiderDamageMultiplier ?? 1)
   const levelDamageMultiplier = raiderLevelDamageMultiplier(state.raider.levelXp)
   const moodDamageMultiplier = raiderMoodDamageMultiplier(state.raider.mood)

@@ -52,6 +52,9 @@ function createActiveRobotState(params: {
   raiderDamage?: number
 }): ReturnType<typeof createInitialState> {
   const initial = createInitialState(0)
+  const raiderBaseDamage = params.raiderDamage !== undefined
+    ? Math.max(0, params.raiderDamage)
+    : undefined
   return {
     ...initial,
     raider: {
@@ -75,7 +78,7 @@ function createActiveRobotState(params: {
         robotMaxHp: params.robotHp ?? 999,
         weaponId: DEFAULT_RAIDER_WEAPON.id,
         weaponName: DEFAULT_RAIDER_WEAPON.name,
-        raiderBaseDamage: params.raiderDamage ?? 0,
+        raiderBaseDamage,
         raiderDamageMultiplier: 1,
         robotDamageMultiplier: params.robotDamageMultiplier,
         raiderAction: 'fighting' as const,
@@ -113,7 +116,6 @@ describe('raid activities', () => {
       robotMaxHp: 12,
       weaponId: DEFAULT_RAIDER_WEAPON.id,
       weaponName: DEFAULT_RAIDER_WEAPON.name,
-      raiderBaseDamage: DEFAULT_RAIDER_WEAPON.damage,
       raiderDamageMultiplier: DEFAULT_RAIDER_WEAPON.damageMultiplier,
     })
     expect(result!.activityEvent).toMatchObject({
@@ -152,7 +154,6 @@ describe('raid activities', () => {
     expect(result!.state.raid.activeRaidActivity).toMatchObject({
       weaponId: DEFAULT_RAIDER_WEAPON.id,
       weaponName: DEFAULT_RAIDER_WEAPON.name,
-      raiderBaseDamage: DEFAULT_RAIDER_WEAPON.damage,
       raiderDamageMultiplier: DEFAULT_RAIDER_WEAPON.damageMultiplier,
     })
   })
@@ -180,7 +181,6 @@ describe('raid activities', () => {
     expect(result!.state.raid.activeRaidActivity).toMatchObject({
       weaponId: DEFAULT_RAIDER_WEAPON.id,
       weaponName: DEFAULT_RAIDER_WEAPON.name,
-      raiderBaseDamage: DEFAULT_RAIDER_WEAPON.damage,
       raiderDamageMultiplier: DEFAULT_RAIDER_WEAPON.damageMultiplier,
     })
   })
@@ -217,7 +217,6 @@ describe('raid activities', () => {
       expect(result!.state.raid.activeRaidActivity).toMatchObject({
         weaponId: DEFAULT_RAIDER_WEAPON.id,
         weaponName: DEFAULT_RAIDER_WEAPON.name,
-        raiderBaseDamage: DEFAULT_RAIDER_WEAPON.damage,
         raiderDamageMultiplier: DEFAULT_RAIDER_WEAPON.damageMultiplier,
       })
     } finally {
@@ -336,6 +335,21 @@ describe('raid activities', () => {
       robotId: 'walker_texas_malfunction',
     })
     expect(result!.activityEvent.activityId).toBe('robot_encounter_standard_walker_texas_malfunction')
+  })
+
+  it('rolls per-round raider weapon damage between damageMin and damageMax', () => {
+    const state = createActiveRobotState({
+      robotId: 'anxietick',
+      robotHp: 20,
+      ticksRemaining: 2,
+    })
+
+    const rolledRng = fixedRng()
+    const result = advanceRaidActivity(state, rolledRng, 0)
+    const intMock = rolledRng.int as unknown as { mock: { calls: unknown[][] } }
+
+    expect(result.state.raid.activeRaidActivity?.robotHp).toBe(14)
+    expect(intMock.mock.calls.length).toBeGreaterThan(0)
   })
 
   it('blocks robot pool selection when zone or danger gates do not match', () => {
@@ -909,7 +923,7 @@ describe('raid activities', () => {
     expect(progress.blocking).toBe(true)
     expect(progress.state.raid.activeRaidActivity).toMatchObject({
       robotId: 'anxietick',
-      robotHp: 7,
+      robotHp: 6,
       robotMaxHp: 12,
     })
     expect(progress.activityEvents).toEqual([
@@ -922,13 +936,7 @@ describe('raid activities', () => {
     expect(progress.activityEvents[0].text).toContain('Tea Kettle')
 
     const secondProgress = advanceRaidActivity(progress.state, fixedRng(), 60_000)
-    expect(secondProgress.state.raid.activeRaidActivity).toMatchObject({
-      robotId: 'anxietick',
-      robotHp: 2,
-      robotMaxHp: 12,
-    })
-
-    const completed = advanceRaidActivity(secondProgress.state, fixedRng(), 90_000)
+    const completed = secondProgress
 
     expect(completed.blocking).toBe(true)
     expect(completed.robotDefeatedId).toBe('anxietick')
@@ -996,6 +1004,30 @@ describe('raid activities', () => {
     })
 
     expect(new Set(damages).size).toBeGreaterThan(1)
+  })
+
+  it('keeps low danger retaliation tighter than high danger across seeded rolls', () => {
+    function damageRangeForDanger(dangerLevel: 'Low' | 'High'): number {
+      const baseState = createActiveRobotState({
+        robotId: 'tank_overcompensation',
+        dangerLevel,
+        shielded: false,
+        robotHp: 999,
+        raiderDamage: 0,
+      })
+
+      const damages = Array.from({ length: 20 }, (_, index) => {
+        const result = advanceRaidActivity(baseState, createRNG(200 + index), index)
+        return baseState.raider.hp - result.state.raider.hp
+      })
+
+      return Math.max(...damages) - Math.min(...damages)
+    }
+
+    const lowRange = damageRangeForDanger('Low')
+    const highRange = damageRangeForDanger('High')
+
+    expect(highRange).toBeGreaterThan(lowRange)
   })
 
   it('applies activity damage multipliers only while the robot survives the round', () => {
