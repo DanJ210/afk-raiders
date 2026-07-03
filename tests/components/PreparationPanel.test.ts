@@ -80,8 +80,8 @@ describe('PreparationPanel', () => {
   it('asks for confirmation before buying a weapon and blocks purchase on cancel', async () => {
     const wrapper = mount(PreparationPanel)
 
-    const crowbarCard = findCardByText(wrapper, 'Crowbar of Minor Confidence')
-    const buyButton = crowbarCard.findAll('button').find(item => item.text() === 'Buy')
+    const aspperigoCard = findCardByText(wrapper, 'Aspperigo')
+    const buyButton = aspperigoCard.findAll('button').find(item => item.text() === 'Buy')
     expect(buyButton).toBeDefined()
 
     await buyButton!.trigger('click')
@@ -134,8 +134,8 @@ describe('PreparationPanel', () => {
     activeStore = createStore({ phase: 'RAIDING' })
     const wrapper = mount(PreparationPanel)
 
-    const crowbarCard = findCardByText(wrapper, 'Crowbar of Minor Confidence')
-    const buyWeaponButton = crowbarCard.findAll('button').find(item => item.text() === 'Buy')
+    const aspperigoCard = findCardByText(wrapper, 'Aspperigo')
+    const buyWeaponButton = aspperigoCard.findAll('button').find(item => item.text() === 'Buy')
     expect(buyWeaponButton).toBeDefined()
     expect((buyWeaponButton!.element as HTMLButtonElement).disabled).toBe(true)
 

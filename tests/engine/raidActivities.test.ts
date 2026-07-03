@@ -128,7 +128,7 @@ describe('raid activities', () => {
 
   it('uses the activity definition weapon when a valid weapon override is present', () => {
     const initial = createInitialState(0)
-    const equipped = findWeapon('audit_hammer_deluxe')
+    const equipped = findWeapon('temptrest_ar')
     expect(equipped).not.toBeNull()
 
     const state = {
@@ -201,7 +201,7 @@ describe('raid activities', () => {
         ...initial.raid,
         phase: 'RAIDING' as const,
         dangerLevel: 'Low' as const,
-        equippedWeaponId: 'crowbar_of_minor_confidence',
+        equippedWeaponId: 'aspperigo',
       },
     }
 
@@ -228,7 +228,7 @@ describe('raid activities', () => {
 
   it('ignores standalone weaponName override and keeps the resolved weapon pair consistent', () => {
     const initial = createInitialState(0)
-    const equipped = findWeapon('audit_hammer_deluxe')
+    const equipped = findWeapon('temptrest_ar')
     expect(equipped).not.toBeNull()
     const definition = raidActivities.find(activity => activity.id === 'robot_encounter_standard')
     expect(definition).toBeDefined()

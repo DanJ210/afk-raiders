@@ -12,17 +12,17 @@ function createState() {
 
 describe('loadout transactions', () => {
   it('buys and equips a weapon from the catalog', () => {
-    const purchase = purchaseWeapon(createState(), 'crowbar_of_minor_confidence', 0)
+    const purchase = purchaseWeapon(createState(), 'aspperigo', 0)
     expect(purchase).not.toBeNull()
     expect(purchase?.state.coins).toBe(935)
     expect(purchase?.state.ownedWeapons).toEqual([
       expect.objectContaining({ weaponId: 'tea_kettle' }),
-      expect.objectContaining({ weaponId: 'crowbar_of_minor_confidence', durability: 10 }),
+      expect.objectContaining({ weaponId: 'aspperigo', durability: 10 }),
     ])
 
-    const equipped = equipWeapon(purchase!.state, 'crowbar_of_minor_confidence', 0)
+    const equipped = equipWeapon(purchase!.state, 'aspperigo', 0)
     expect(equipped).not.toBeNull()
-    expect(equipped?.state.raid.equippedWeaponId).toBe('crowbar_of_minor_confidence')
+    expect(equipped?.state.raid.equippedWeaponId).toBe('aspperigo')
   })
 
   it('repairs an owned weapon when enough coins are available', () => {
@@ -32,15 +32,15 @@ describe('loadout transactions', () => {
       coins: 100,
       ownedWeapons: [
         { weaponId: 'tea_kettle', durability: 2 },
-        { weaponId: 'meeting_room_bat', durability: 3 },
+        { weaponId: 'vernerider', durability: 3 },
       ],
     }
 
-    const repaired = repairWeapon(damaged, 'meeting_room_bat', 0)
+    const repaired = repairWeapon(damaged, 'vernerider', 0)
     expect(repaired).not.toBeNull()
     expect(repaired?.state.coins).toBe(70)
-    expect(repaired?.state.ownedWeapons.find(entry => entry.weaponId === 'meeting_room_bat')).toEqual({
-      weaponId: 'meeting_room_bat',
+    expect(repaired?.state.ownedWeapons.find(entry => entry.weaponId === 'vernerider')).toEqual({
+      weaponId: 'vernerider',
       durability: 12,
     })
   })
@@ -107,19 +107,19 @@ describe('loadout transactions', () => {
       ...createState(),
       raid: {
         ...createState().raid,
-        equippedWeaponId: 'crowbar_of_minor_confidence',
+        equippedWeaponId: 'aspperigo',
       },
       ownedWeapons: [
         { weaponId: 'tea_kettle', durability: 8 },
-        { weaponId: 'crowbar_of_minor_confidence', durability: 1 },
+        { weaponId: 'aspperigo', durability: 1 },
       ],
     }
 
     const broken = applyRaidWeaponWear(wornState, 0)
     expect(broken).not.toBeNull()
-    expect(broken?.state.ownedWeapons.some(entry => entry.weaponId === 'crowbar_of_minor_confidence')).toBe(false)
+    expect(broken?.state.ownedWeapons.some(entry => entry.weaponId === 'aspperigo')).toBe(false)
     expect(broken?.state.raid.equippedWeaponId).toBe('tea_kettle')
-    expect(broken?.event.id).toBe('weapon_broken_crowbar_of_minor_confidence')
+    expect(broken?.event.id).toBe('weapon_broken_aspperigo')
   })
 
   it('seeds fallback ownership when the equipped weapon breaks as the last owned weapon', () => {
@@ -127,10 +127,10 @@ describe('loadout transactions', () => {
       ...createState(),
       raid: {
         ...createState().raid,
-        equippedWeaponId: 'crowbar_of_minor_confidence',
+        equippedWeaponId: 'aspperigo',
       },
       ownedWeapons: [
-        { weaponId: 'crowbar_of_minor_confidence', durability: 1 },
+        { weaponId: 'aspperigo', durability: 1 },
       ],
     }
 
@@ -147,19 +147,19 @@ describe('loadout transactions', () => {
       ...createState(),
       raid: {
         ...createState().raid,
-        equippedWeaponId: 'meeting_room_bat',
+        equippedWeaponId: 'vernerider',
       },
       ownedWeapons: [
         { weaponId: 'tea_kettle', durability: 8 },
-        { weaponId: 'meeting_room_bat', durability: 12 },
+        { weaponId: 'vernerider', durability: 12 },
       ],
     }
 
     const lost = applyFailedRaidWeaponLoss(failedState, 0)
     expect(lost).not.toBeNull()
-    expect(lost?.state.ownedWeapons.some(entry => entry.weaponId === 'meeting_room_bat')).toBe(false)
+    expect(lost?.state.ownedWeapons.some(entry => entry.weaponId === 'vernerider')).toBe(false)
     expect(lost?.state.raid.equippedWeaponId).toBe('tea_kettle')
-    expect(lost?.event.id).toBe('weapon_lost_meeting_room_bat')
+    expect(lost?.event.id).toBe('weapon_lost_vernerider')
   })
 
   it('seeds fallback ownership when failed raid loss removes the last owned weapon', () => {
@@ -167,10 +167,10 @@ describe('loadout transactions', () => {
       ...createState(),
       raid: {
         ...createState().raid,
-        equippedWeaponId: 'meeting_room_bat',
+        equippedWeaponId: 'vernerider',
       },
       ownedWeapons: [
-        { weaponId: 'meeting_room_bat', durability: 12 },
+        { weaponId: 'vernerider', durability: 12 },
       ],
     }
 

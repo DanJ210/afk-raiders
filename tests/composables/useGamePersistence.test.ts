@@ -220,7 +220,7 @@ describe('useGamePersistence', () => {
         ],
         raid: {
           ...initial.raid,
-          equippedWeaponId: 'audit_hammer_deluxe',
+          equippedWeaponId: 'temptrest_ar',
         },
       },
       seed: 123,

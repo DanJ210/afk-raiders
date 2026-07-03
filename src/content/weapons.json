@@ -14,9 +14,9 @@
     "flavor": "Standard issue in Desperanza: whistles under pressure and occasionally during combat."
   },
   {
-    "id": "crowbar_of_minor_confidence",
+    "id": "aspperigo",
     "weight": 75,
-    "name": "Crowbar of Minor Confidence",
+    "name": "Aspperigo",
     "damage": 6,
     "damageMultiplier": 1.08,
     "damageMin": 4,
@@ -25,12 +25,12 @@
     "rarity": 2,
     "durabilityMax": 10,
     "repairCost": 18,
-    "flavor": "Opens doors, crates, and emotional boundaries in equal measure."
+    "flavor": "Eddie's favorite and we don't know why."
   },
   {
-    "id": "meeting_room_bat",
+    "id": "vernerider",
     "weight": 50,
-    "name": "Meeting Room Bat",
+    "name": "Vernerider",
     "damage": 7,
     "damageMultiplier": 1.18,
     "damageMin": 5,
@@ -39,12 +39,12 @@
     "rarity": 3,
     "durabilityMax": 12,
     "repairCost": 30,
-    "flavor": "Recovered from a motivational workshop that got out of hand."
+    "flavor": "No one can pronounce it right."
   },
   {
-    "id": "audit_hammer_deluxe",
+    "id": "temptrest_ar",
     "weight": 25,
-    "name": "Audit Hammer Deluxe",
+    "name": "Temptrest AR",
     "damage": 9,
     "damageMultiplier": 1.32,
     "damageMin": 7,
@@ -53,6 +53,6 @@
     "rarity": 4,
     "durabilityMax": 14,
     "repairCost": 55,
-    "flavor": "Every hit requests receipts and immediate compliance."
+    "flavor": "The favorite among Raiders. The most prized possession."
   }
 ]
