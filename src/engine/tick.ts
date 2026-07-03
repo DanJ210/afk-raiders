@@ -778,24 +778,29 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
   ) {
     if (!currentState.raid.extracting) {
       currentState = enterKnockedOutRecovery(currentState, emitted, state.tick, now)
-    } else if (!currentState.raid.downed && !currentState.raid.raidTimeoutDownedStarted) {
-      const downed = startDownedCondition(
-        currentState,
-        state.tick,
-        now,
-        {
-          kind: 'raid_timeout',
-          text: 'Raid timer hit zero during extraction. Raider is down, and only the shuttle clock can still save this.',
-        },
-      )
-      currentState = downed.state
-      if (downed.event) {
-        currentState = {
-          ...currentState,
-          raid: { ...currentState.raid, raidTimeoutDownedStarted: true },
+    } else if (!currentState.raid.raidTimeoutDownedStarted) {
+      // Timer hit zero during extraction: set the one-shot guard even if we're already DOWNED,
+      // so a revive cannot be re-downed by the same expired raid timer.
+      currentState = {
+        ...currentState,
+        raid: { ...currentState.raid, raidTimeoutDownedStarted: true },
+      }
+
+      if (!currentState.raid.downed) {
+        const downed = startDownedCondition(
+          currentState,
+          state.tick,
+          now,
+          {
+            kind: 'raid_timeout',
+            text: 'Raid timer hit zero during extraction. Raider is down, and only the shuttle clock can still save this.',
+          },
+        )
+        currentState = downed.state
+        if (downed.event) {
+          emitted.push(downed.event)
+          activityEmitted.push(downedActivityEvent('started', state.tick, now, currentState.raid.downed?.ticksRemaining ?? DOWNED_TICKS))
         }
-        emitted.push(downed.event)
-        activityEmitted.push(downedActivityEvent('started', state.tick, now, currentState.raid.downed?.ticksRemaining ?? DOWNED_TICKS))
       }
     }
   }
