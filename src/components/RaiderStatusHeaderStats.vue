@@ -2,6 +2,8 @@
 import { computed, ref } from 'vue'
 import type { ActiveShieldRecharge, GameState, ShieldState } from '../engine/types'
 import { useRaiderLevelViewModel } from '../composables/useRaiderLevelViewModel'
+import { findWeapon, getDefaultWeapon } from '../engine/weapons'
+import { rarityBarClass, rarityLabel } from '../utils/rarity'
 import ShieldBar from './ShieldBar.vue'
 import MoodResilienceBadge from './MoodResilienceBadge.vue'
 
@@ -15,6 +17,7 @@ interface Props {
   phaseTimerText: string
   raidShield: ShieldState | null
   activeShieldRecharge: ActiveShieldRecharge | null
+  equippedWeaponId: GameState['raid']['equippedWeaponId']
   nameMaxLength: number
   allowRename?: boolean
 }
@@ -88,6 +91,11 @@ const phaseBadgeClass = computed(() => {
   if (props.phase === 'KNOCKED_OUT') return 'text-danger border-danger'
   return 'text-accent border-accent'
 })
+
+const equippedWeapon = computed(() => findWeapon(props.equippedWeaponId) ?? getDefaultWeapon())
+const equippedWeaponDamageText = computed(() => `${equippedWeapon.value.damageMin}-${equippedWeapon.value.damageMax} dmg`)
+const equippedWeaponRarityText = computed(() => rarityLabel(equippedWeapon.value.rarity))
+const equippedWeaponRarityBarClass = computed(() => rarityBarClass(equippedWeapon.value.rarity))
 </script>
 
 <template>
@@ -180,6 +188,15 @@ const phaseBadgeClass = computed(() => {
         <div class="h-full rounded transition-[width] duration-(--duration-greed-fill) ease-in-out" :class="hpFillColor" :style="{ width: hpPercent + '%' }" />
       </div>
       <span class="font-mono text-raider-value text-text min-w-0 wrap-anywhere">{{ raider.hp }}/{{ raider.maxHp }}</span>
+    </div>
+
+    <div class="flex items-center gap-2 min-w-0 max-[600px]:items-start max-[600px]:flex-wrap">
+      <span class="font-mono text-xs text-muted min-w-raider-label max-[600px]:min-w-0">Weapon</span>
+      <span class="font-mono text-raider-value text-text min-w-0 wrap-anywhere inline-flex items-center gap-1.5">
+        <span :class="equippedWeaponRarityBarClass" aria-hidden="true" />
+        <span>{{ equippedWeapon.name }}</span>
+        <span class="text-raider-tiny text-muted">{{ equippedWeaponDamageText }} · {{ equippedWeaponRarityText }}</span>
+      </span>
     </div>
 
     <div class="flex items-center gap-2 min-w-0 max-[600px]:items-start max-[600px]:flex-wrap">

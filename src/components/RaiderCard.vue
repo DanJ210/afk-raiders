@@ -96,6 +96,7 @@ onBeforeUnmount(() => {
       :phase-timer-text="phaseTimerText"
       :raid-shield="raidShield"
       :active-shield-recharge="activeShieldRecharge"
+      :equipped-weapon-id="store.raid.equippedWeaponId"
       :name-max-length="store.RAIDER_NAME_MAX_LENGTH"
       @rename="store.renameRaider"
     />

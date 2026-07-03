@@ -10,7 +10,7 @@ import { downedActivityEvent, maybeAwardLootBonusConsumables, processTick } from
 import { createInitialState } from '../../src/engine/initialState'
 import { getRaiderLevelFromXp, xpRequiredForLevel } from '../../src/engine/raiderLevel'
 import { skillDefinitionById } from '../../src/engine/skills'
-import { startRaidActivity } from '../../src/engine/raidActivities'
+import { DEFAULT_RAIDER_WEAPON, startRaidActivity } from '../../src/engine/raidActivities'
 import { resolveAmbientActivityEvent } from '../../src/engine/eventResolver'
 
 const FIXED_SEED = 42
@@ -516,8 +516,8 @@ describe('deterministic snapshot', () => {
           robotMaxHp: 999,
           weaponId: 'tea_kettle',
           weaponName: 'Tea Kettle',
-          raiderDamageMin: 0,
-          raiderDamageMax: 0,
+          raiderBaseDamage: 0,
+          raiderDamageMultiplier: 1,
           robotDamageMultiplier: 50,
           raiderAction: 'fighting' as const,
         },
@@ -532,8 +532,85 @@ describe('deterministic snapshot', () => {
       robotId: 'roomba_prime',
       robotName: 'Roomba Prime',
     })
+    expect(result.state.raid.activeRaidActivity).toBeNull()
     expect(downedEvent?.text).toContain('Roomba Prime downed the Raider')
     expect(result.activityEvents.find(event => event.activityId === 'downed_recovery' && event.status === 'started')).toBeDefined()
+  })
+
+  it('keeps extracting but clears non-extraction activities when timeout starts downed race', () => {
+    const rng = createRNG(FIXED_SEED)
+    const initial = createInitialState(0)
+    const state = {
+      ...initial,
+      raid: {
+        ...initial.raid,
+        phase: 'RAIDING' as const,
+        phaseTicksRemaining: 1,
+        extracting: { ticksRemaining: 3, totalTicks: 3 },
+        activeRaidActivity: {
+          id: 'robot_encounter_standard',
+          name: 'Robot Encounter: Anxietick',
+          kind: 'ROBOT_ENCOUNTER' as const,
+          ticksRemaining: 2,
+          totalTicks: 6,
+          robotId: 'anxietick',
+          robotHp: 10,
+          robotMaxHp: 12,
+          weaponId: 'tea_kettle',
+          weaponName: 'Tea Kettle',
+          raiderBaseDamage: 5,
+          raiderDamageMultiplier: 1,
+          raiderAction: 'fighting' as const,
+        },
+      },
+    }
+
+    const result = processTick(state, rng, 0)
+
+    expect(result.state.raid.phase).toBe('RAIDING')
+    expect(result.state.raid.extracting).not.toBeNull()
+    expect(result.state.raid.downed?.reason?.kind).toBe('raid_timeout')
+    expect(result.state.raid.activeRaidActivity).toBeNull()
+    expect(result.state.raid.raidTimeoutDownedStarted).toBe(true)
+    expect(result.events.some(event => event.id === 'condition_downed_started')).toBe(true)
+  })
+
+  it('clears active activities when ambient pressure downs the raider', () => {
+    const initial = createInitialState(0)
+    const alwaysDownedRng = {
+      next: vi.fn<() => number>().mockReturnValue(0),
+      weightedPick: <T,>(items: readonly T[]) => items[0],
+      pick: <T,>(items: readonly T[]) => items[0],
+      int: (_min: number, max: number) => max,
+      clone: () => alwaysDownedRng as unknown as RNG,
+      getSeed: () => 0,
+    } as unknown as RNG
+
+    const state = {
+      ...initial,
+      raid: {
+        ...initial.raid,
+        phase: 'RAIDING' as const,
+        dangerLevel: 'High' as const,
+        phaseTicksRemaining: 30,
+        extracting: null,
+        downed: null,
+        activeRaidActivity: {
+          id: 'extraction_complication_close_call',
+          name: 'Extraction Complication: Close Call',
+          kind: 'EXTRACTION' as const,
+          ticksRemaining: 0,
+          totalTicks: 1,
+        },
+      },
+    }
+
+    const result = processTick(state, alwaysDownedRng, 0)
+
+    expect(result.state.raid.downed?.reason?.kind).toBe('ambient_pressure')
+    expect(result.events.some(event => event.id === 'condition_downed_started')).toBe(true)
+    expect(result.state.raid.extracting).toBeNull()
+    expect(result.state.raid.activeRaidActivity).toBeNull()
   })
 
   it('honors Call Extract when the raid timer expires on the next tick', () => {
@@ -629,7 +706,8 @@ describe('deterministic snapshot', () => {
       ...initial,
       raid: { ...raidBase, downed: { ticksRemaining: 1 } },
     }, createRNG(FIXED_SEED), 0)
-    expect(fromAlreadyDowned.state.raid.raidTimeoutDownedStarted).toBe(true)
+    expect(fromAlreadyDowned.state.raid.phase).toBe('KNOCKED_OUT')
+    expect(fromAlreadyDowned.state.raid.raidTimeoutDownedStarted).toBe(false)
   })
   it('does not re-down a revived raider from the same expired raid timer', () => {
     const rng = createRNG(FIXED_SEED)
@@ -723,6 +801,33 @@ describe('deterministic snapshot', () => {
     ])
     expect(eventIds).toContain('phase_RAIDING_to_HUB')
     expect(eventIds).not.toContain('phase_RAIDING_to_KNOCKED_OUT')
+  })
+
+  it('lets DOWNED expiry beat extraction when extraction still has time left', () => {
+    const rng = createRNG(FIXED_SEED)
+    const initial = createInitialState(0)
+    const state = {
+      ...initial,
+      raider: { ...initial.raider, hp: 0 },
+      raid: {
+        ...initial.raid,
+        zone: 'damp_battlegrounds',
+        dangerLevel: 'High' as const,
+        phase: 'RAIDING' as const,
+        phaseTicksRemaining: 0,
+        extracting: { ticksRemaining: 2 },
+        downed: { ticksRemaining: 1 },
+      },
+    }
+
+    const result = processTick(state, rng, 0)
+    const eventIds = result.events.map(event => event.id)
+
+    expect(result.state.raid.phase).toBe('KNOCKED_OUT')
+    expect(result.state.raid.extracting).toBeNull()
+    expect(result.state.raid.downed).toBeNull()
+    expect(eventIds).toContain('phase_RAIDING_to_KNOCKED_OUT')
+    expect(eventIds).not.toContain('phase_RAIDING_to_HUB')
   })
 
   it('completes extraction to HUB even when outcome odds would have selected a complication', () => {
@@ -1137,8 +1242,8 @@ describe('deterministic snapshot', () => {
           robotMaxHp: 12,
           weaponId: 'tea_kettle',
           weaponName: 'Tea Kettle',
-          raiderDamageMin: 3,
-          raiderDamageMax: 6,
+          raiderBaseDamage: DEFAULT_RAIDER_WEAPON.damage,
+          raiderDamageMultiplier: DEFAULT_RAIDER_WEAPON.damageMultiplier,
           raiderAction: 'fighting' as const,
         },
       },

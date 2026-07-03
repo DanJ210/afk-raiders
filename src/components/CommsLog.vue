@@ -275,6 +275,7 @@ function activityBadge(entry: ActivityLogEvent): string {
         :phase-timer-text="phaseTimerText"
         :raid-shield="raidShield"
         :active-shield-recharge="raidShieldRecharge"
+        :equipped-weapon-id="store.raid.equippedWeaponId"
         :name-max-length="0"
         :allow-rename="false"
       />

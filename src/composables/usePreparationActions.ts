@@ -1,0 +1,74 @@
+import { appendLogEntries } from '../engine/log.js'
+import type { GameState, LogEvent } from '../engine/types.js'
+import { clearSelectedHealingLoadout, equipWeapon, purchaseHealingItem, purchaseWeapon, repairWeapon, setSelectedHealingLoadout } from '../engine/loadout.js'
+
+export interface PreparationActionsReturn {
+  purchaseWeapon: (weaponId: string) => void
+  repairWeapon: (weaponId: string) => void
+  equipWeapon: (weaponId: string) => void
+  purchaseHealingItem: (itemId: string, quantity?: number) => void
+  setSelectedHealingLoadout: (selections: Array<{ itemId: string; quantity: number }>) => void
+  clearSelectedHealingLoadout: () => void
+}
+
+export function usePreparationActions(
+  stateRef: { value: GameState },
+  lastTickAtRef: { value: number },
+  persistCallback: (state: GameState, seed: number, lastTickAt: number) => void,
+  publishEvents?: (events: LogEvent[]) => void,
+  getSeed?: () => number,
+): PreparationActionsReturn {
+  function commit(result: NonNullable<ReturnType<typeof purchaseWeapon>>) {
+    stateRef.value = {
+      ...result.state,
+      log: appendLogEntries(stateRef.value.log, [result.event]),
+    }
+    publishEvents?.([result.event])
+    persistCallback(stateRef.value, getSeed?.() ?? 0, lastTickAtRef.value)
+  }
+
+  function purchaseWeaponAction(weaponId: string) {
+    const result = purchaseWeapon(stateRef.value, weaponId, Date.now())
+    if (!result) return
+    commit(result)
+  }
+
+  function repairWeaponAction(weaponId: string) {
+    const result = repairWeapon(stateRef.value, weaponId, Date.now())
+    if (!result) return
+    commit(result)
+  }
+
+  function equipWeaponAction(weaponId: string) {
+    const result = equipWeapon(stateRef.value, weaponId, Date.now())
+    if (!result) return
+    commit(result)
+  }
+
+  function purchaseHealingItemAction(itemId: string, quantity = 1) {
+    const result = purchaseHealingItem(stateRef.value, itemId, quantity, Date.now())
+    if (!result) return
+    commit(result)
+  }
+
+  function setSelectedHealingLoadoutAction(selections: Array<{ itemId: string; quantity: number }>) {
+    const result = setSelectedHealingLoadout(stateRef.value, selections, Date.now())
+    if (!result) return
+    commit(result)
+  }
+
+  function clearSelectedHealingLoadoutAction() {
+    const result = clearSelectedHealingLoadout(stateRef.value, Date.now())
+    if (!result) return
+    commit(result)
+  }
+
+  return {
+    purchaseWeapon: purchaseWeaponAction,
+    repairWeapon: repairWeaponAction,
+    equipWeapon: equipWeaponAction,
+    purchaseHealingItem: purchaseHealingItemAction,
+    setSelectedHealingLoadout: setSelectedHealingLoadoutAction,
+    clearSelectedHealingLoadout: clearSelectedHealingLoadoutAction,
+  }
+}

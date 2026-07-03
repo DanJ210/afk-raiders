@@ -17,6 +17,7 @@ import { advanceShieldRecharge } from './shields.js'
 import { applySkillPractice, getSkillModifierProfile, rollSkillPractice, type SkillLevelUp, type SkillPracticeTrigger } from './skills.js'
 import { applyRaiderXpGain, getRaiderLevelBenefitProfile, rollRaiderXp, type RaiderLevelUp, type RaiderXpTrigger } from './raiderLevel.js'
 import { advanceRaidActivity, raidActivities, startRaidActivity } from './raidActivities.js'
+import { applyFailedRaidWeaponLoss, applyRaidWeaponWear, consumeSelectedHealingLoadout } from './loadout.js'
 
 const LOOT_BONUS_HEALING_ITEM_CHANCE = 0.2 // 20% chance to find a healing item on any loot event, independent of normal loot rolls
 const LOOT_BONUS_SHIELD_RECHARGER_CHANCE = 0.15 // 15% chance to find a shield recharger on any loot event, independent of normal loot rolls
@@ -262,6 +263,8 @@ function advanceRaidConditions(state: GameState): { state: GameState; extraction
     ? { ...state.raid.downed, ticksRemaining: state.raid.downed.ticksRemaining - 1 }
     : null
   const extractionCompleted = extracting !== null && extracting.ticksRemaining <= 0
+  // During the timeout extraction race, both timers advance. Caller order gives
+  // extraction precedence when both hit zero on the same tick.
   const downedExpired = downed !== null && downed.ticksRemaining <= 0
 
   return {
@@ -448,6 +451,11 @@ function completeExtractionCondition(
     dangerLevel: extractedRaid.dangerLevel,
   })
   currentState = extraction.state
+  const weaponWear = applyRaidWeaponWear(currentState, now)
+  if (weaponWear) {
+    currentState = weaponWear.state
+    emitted.push(weaponWear.event)
+  }
   if (extraction.levelCoinBonus > 0) {
     emitted.push(raiderLevelExtractionBonusEvent(extraction.levelCoinBonus, tick, now))
   }
@@ -585,6 +593,10 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
   if (transition) {
     emitted.push(phaseTransitionEvent(transition, state.tick, now))
 
+    if (transition.to === 'DEPLOYING') {
+      currentState = consumeSelectedHealingLoadout(currentState)
+    }
+
     // KNOCKED_OUT -> HUB performs failed-raid bookkeeping. tickPhase has
     // already cleared the raid snapshot, so read loss context from input state.
     if (transition.to === 'HUB' && transition.from === 'KNOCKED_OUT') {
@@ -599,6 +611,11 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
           deathCount: recovery.state.raider.deathCount + 1,
         },
         stats: recordOutcome(currentState.stats, 'deaths', state.raid.zone, state.raid.dangerLevel),
+      }
+      const weaponLoss = applyFailedRaidWeaponLoss(currentState, now)
+      if (weaponLoss) {
+        currentState = weaponLoss.state
+        emitted.push(weaponLoss.event)
       }
       if (recovery.saved && recovery.savedItemName) {
         skillPracticeTriggers.push({ skillId: 'hiding_in_lockers', reason: 'hidden_pocket_saved', minXp: 2, maxXp: 4 })

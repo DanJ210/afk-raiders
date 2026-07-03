@@ -13,7 +13,7 @@
 You are **not** the raider. You are their Handler back in the underground hub, watching a comms feed, occasionally nudging them, and mostly witnessing their terrible decisions. The Raider plays themselves: deploys topside, loots garbage, panics at robots, befriends vending machines, and dies hilariously — or extracts triumphantly with a backpack full of water bottles.
 
 ## 2. Core Loop
-1. **Prep phase (hub):** Raider sells loot, buys questionable gear, eats expired MREs, gossips with NPCs.
+1. **Prep phase (hub):** Raider sells loot, buys questionable gear, equips one weapon, and stages healing loadout stock before deployment. Preparation is HUB-only: weapons can be bought/equipped/repaired, healing items are purchased into persistent stock, and selected healing loadout is consumed at deployment start. Purchase/equip/repair actions use confirmations so accidental spend is less likely.
 2. **Deploy:** Raider autonomously picks a zone and a seeded **zone condition** (for example Light Fog, Acid Rain, Robot Surge). Greed carried over from the last raid nudges whether the next condition comes from the minor or major condition pool.
 3. **Raid diary and active threads:** Ambient raid diary lines cover loot finds, weather, suspicious noises, Raider commentary, and manual shield-recharger use/progress. Multi-tick active threads cover searches, extraction drama, DOWNED recovery, and robot fights. The selected condition sets a `dangerLevel` (Low/Medium/High), which then drives the danger-level profile for both upside (loot value/rarity) and risk (ambient downed pressure, robot pressure, extraction danger).
    - Raider **mood** now provides a tiny secondary bias to loot quality: positive mood slightly improves higher-rarity odds, while negative mood slightly favors lower-rarity outcomes. Greed adds a second small loot-appetite bias toward higher-rarity finds.
@@ -38,6 +38,19 @@ Loot that makes it home goes into the **Stash** — a persistent collection that
 - Overflow is auto-sold by lowest value first and credited as coins (value is never deleted).
 - Duplicate items stack with a ×N quantity multiplier, and their displayed value is multiplied accordingly.
 - The in-raid backpack resets if the raider dies or fails to extract — the stash is untouched.
+
+### Preparation Economy (current implementation)
+- The Preparation panel is available in HUB (desktop panel and mobile tab parity).
+- Weapon loop:
+   - Buy weapon tiers with coins.
+   - Equip exactly one weapon for the next raid.
+   - Repair owned weapons in HUB.
+   - Failed raid recovery can remove the currently equipped weapon.
+- Healing loop:
+   - Buy healing items into persistent stock.
+   - Stage quantities into raid loadout.
+   - On deployment start, staged loadout is consumed from stock and moved into current-raid healing inventory.
+   - Staged items are at-risk just like the raid: they are consumed on deployment and raid outcomes determine whether they survive as used value or loss.
 
 ### Secret Hidden Pocket (parody safe pocket)
 The Raider has one manual **Secret Hidden Pocket** slot per raid:

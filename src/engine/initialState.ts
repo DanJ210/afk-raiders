@@ -6,8 +6,9 @@ import { PHASE_DURATIONS } from './raidStateMachine.js'
 import { createInitialLifetimeStats } from './stats.js'
 import { createStarterShieldState } from './shields.js'
 import { createInitialSkills } from './skills.js'
+import { createStarterOwnedWeapon, STARTER_WEAPON_ID } from './weapons.js'
 
-export const SAVE_VERSION = 8
+export const SAVE_VERSION = 9
 
 export function createInitialState(now: number = Date.now()): GameState {
   return {
@@ -35,6 +36,8 @@ export function createInitialState(now: number = Date.now()): GameState {
       backpack: [],
       hiddenPocket: null,
       healingItems: [],
+      selectedHealingLoadout: [],
+      equippedWeaponId: STARTER_WEAPON_ID,
       backpackValue: 0,
       greedLevel: 0,
       phase: 'HUB',
@@ -49,6 +52,8 @@ export function createInitialState(now: number = Date.now()): GameState {
     log: [],
     activityLog: [],
     homeStash: [],
+    ownedWeapons: [createStarterOwnedWeapon()],
+    purchasedHealingItems: [],
     coins: 0,
     stats: createInitialLifetimeStats(),
     pendingCalm: false,

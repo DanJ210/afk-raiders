@@ -70,6 +70,7 @@ afk-raiders/
 │   ├── content/                 # The comedy lives here, as data
 │   │   ├── hub_events.json      # Desperanza rest & prep (≤5 min)
 │   │   ├── deployment_events.json # One-person tunnel pod ride (2 min)
+│   │   ├── weapons.json         # Purchasable weapon catalog (damage, rarity, value, durability)
 │   │   ├── raiding-events/      # RAIDING diary events plus activity definitions
 │   │   │   ├── raiding_events.json # RAIDING diary/starter events
 │   │   │   ├── ambient_events.json # Activity-scoped ambient overlay comms
@@ -77,7 +78,7 @@ afk-raiders/
 │   │   │   ├── robot_encounter_activities.json # Robot active-thread definitions
 │   │   │   └── search_activities.json # Search, extraction, and downed active-thread definitions
 │   │   ├── knocked_out_events.json # Recovery reset quips
-│   │   ├── loot.json            # Many varieties of original comedy/parody loot items
+│   │   ├── loot-tables/         # Base loot pools merged by resolver
 │   │   ├── healing_items.json   # Current-raid-only field meds
 │   │   ├── shield_rechargers.json # Manual-use backpack shield consumables
 │   │   ├── skills.json          # Cardio/Hoarding/Hiding definitions and level-up text
@@ -89,12 +90,16 @@ afk-raiders/
 │   ├── stores/
 │   │   ├── gameStore.ts         # Engine state + tick driver
 │   │   └── settingsStore.ts
+│   ├── composables/
+│   │   ├── usePreparationActions.ts  # Buy/equip/repair/loadout orchestration + persistence
+│   │   └── usePreparationViewModel.ts # Preparation panel derived state + confirm-gated actions
 │   ├── components/
 │   │   ├── CommsLog.vue         # THE star — diary feed plus active-thread feed
 │   │   ├── RaiderCard.vue       # Stats, mood, Raider Level, Rat Rating
 │   │   ├── BackpackPanel.vue
 │   │   ├── HomeStash.vue        # Persistent stash — extracted loot, ×N stacking
 │   │   ├── HandlerActions.vue   # Ready Up / Calm / Pressure / CALL EXTRACT
+│   │   ├── PreparationPanel.vue # HUB-only weapon shop + healing stock/loadout staging
 │   │   └── AwaySummary.vue
 │   └── App.vue
 └── tests/engine/                # Snapshot sims: seed X → identical story
@@ -142,6 +147,8 @@ Static balance configuration that must affect deterministic engine behavior also
 
 Use `standard` for normal development, PRs, and production builds. Temporarily switch `skillXpThresholdProfile` to `prototype` only for local prototype/balance testing when quick level-ups are useful, then switch it back before merging or deploying. Content tests validate that the active profile exists and that every profile has valid ascending thresholds.
 
+Loadout/store guardrails also live in `tests/engine/content.test.ts`. The suite validates the purchasable economy contract for `weapons.json` and `healing_items.json`, including ID uniqueness, required combat/economy fields, non-negative purchase/repair costs, and rarity-to-cost monotonicity checks so higher-rarity gear is not accidentally cheaper than lower-rarity options.
+
 Events may also use condition requirements for RAIDING overlays. Extraction is represented by `RaidState.extracting`, not an `EXTRACTING` phase; downed-but-revivable state is represented by `RaidState.downed`, not a `DOWNED` phase. Condition-specific events should declare requirements such as:
 
 ```json
@@ -185,6 +192,13 @@ Shield rechargers are intentionally different from field meds:
 
 ### 3. Signal as the only real input
 Signal regenerates (~1 per 10 min, capped at 5). Ready Up (2 Signal) starts DEPLOYING from HUB. Calm (1 Signal, internal action ID `CALM`) reduces current greed before the next greed check, cooling rare-loot appetite, risky-event pressure, and future major-condition momentum. Pressure (1 Signal, internal action ID `PRESSURE`) increases current greed before the next check, raising rare-loot appetite, risky-event pressure, and future major-condition momentum. CALL EXTRACT (3 Signal) starts or forces the EXTRACTING condition during RAIDING. Revive (5 Signal, internal action ID `REVIVE`) is available only during RAIDING while DOWNED, clears the DOWNED condition, and restores 25 HP while preserving shield state. Greed itself does not lower extraction chance. Natural extraction is disabled until the raider has spent the configured minimum RAIDING ticks in-zone (`DEFAULT_MIN_NATURAL_EXTRACTION_RAIDING_TICKS`, currently 30 ticks / 15 minutes); CALL EXTRACT bypasses this guard, including the final RAIDING tick before timer expiry. When the Raider is low on HP and has no current-raid bandages, the Greed Check adds a survival-instinct extraction bonus after that guard, dampened by danger level so Medium and High conditions still punish unattended raids. During active RAIDING only one action may be queued at a time, so action buttons lock until the next tick applies and clears the pending action. While DOWNED, normal Handler raid actions are disabled; Revive is the downed-only exception. On successful HUB returns, raid pressure state cools down (greed decays, extracting clears); KNOCKED_OUT recovery resets greed to 0.
+
+### 3a. Preparation economy (HUB-only)
+- The Preparation flow is HUB-only and currently exposed by `PreparationPanel.vue`.
+- Weapons are bought with coins, can be equipped for the next raid, lose durability across raid outcomes, can be repaired in HUB, and can be lost on failed raid recovery paths.
+- Healing purchases are persistent stock in `GameState.purchasedHealingItems`; selecting a raid loadout stages quantities in `RaidState.selectedHealingLoadout`.
+- Staged healing loadout is consumed exactly once at deployment start (`HUB -> DEPLOYING`), then converted into current-raid healing inventory.
+- Purchase/equip/repair/clear-loadout actions are confirmation-gated in UI (`usePreparationViewModel`) to reduce accidental spending.
 
 ### 4. Lifetime stat collection
 `GameState.stats` tracks long-lived outcomes: extraction/death totals and context (zone + danger level), robot defeats, and healing item usage.

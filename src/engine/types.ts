@@ -88,6 +88,8 @@ export interface StartRaidActivityEffect {
   robotPool?: RobotActivityPool
   robotDamageMultiplier?: number
   robotDamageTakenMultiplier?: number
+  raiderBaseDamage?: number
+  raiderDamageMultiplier?: number
 }
 
 export interface RaidActivityTextSet {
@@ -114,8 +116,8 @@ export interface RaidActivityDefinition extends ContentEntry {
   robotPool?: RobotActivityPool
   weaponId?: string
   weaponName?: string
-  raiderDamageMin?: number
-  raiderDamageMax?: number
+  raiderBaseDamage?: number
+  raiderDamageMultiplier?: number
   robotDamageTakenMultiplier?: number
 }
 
@@ -150,10 +152,30 @@ export interface HealingItem extends ContentEntry {
   name: string
   healAmount: number
   moodGain: number
+  purchaseCost: number
   reviveAmount?: number
   flavor?: string
   /** 1 = Common … 5 = Legendary (higher = rarer). */
   rarity: number
+}
+
+export interface WeaponEntry extends ContentEntry {
+  id: string
+  name: string
+  damage: number
+  damageMultiplier: number
+  damageMin: number
+  damageMax: number
+  value: number
+  rarity: number
+  durabilityMax: number
+  repairCost: number
+  flavor?: string
+}
+
+export interface OwnedWeapon {
+  weaponId: string
+  durability: number
 }
 
 export interface ShieldRechargerItem extends ContentEntry {
@@ -288,8 +310,8 @@ export interface ActiveRaidActivity {
   robotMaxHp?: number
   weaponId?: string
   weaponName?: string
-  raiderDamageMin?: number
-  raiderDamageMax?: number
+  raiderBaseDamage?: number
+  raiderDamageMultiplier?: number
   robotDamageTakenMultiplier?: number
   robotDamageMultiplier?: number
   raiderAction?: 'fighting' | 'hiding' | 'fleeing' | 'searching'
@@ -335,6 +357,10 @@ export interface RaidState {
   hiddenPocket: HiddenPocketItem | null
   /** Current-raid-only healing consumables. Lost on death/extraction; never stored at home. */
   healingItems: HealingItemStack[]
+  /** Selected current-loadout healing items to move into a raid on the next deployment. */
+  selectedHealingLoadout: HealingItemStack[]
+  /** HUB-selected weapon id used for robot encounters unless an activity overrides weapon fields. */
+  equippedWeaponId: string | null
   backpackValue: number
   greedLevel: number   // 0–100; higher = stronger loot appetite and major-condition momentum
   phase: Phase
@@ -431,6 +457,10 @@ export interface GameState {
   log: LogEvent[]
   activityLog: ActivityLogEvent[]
   homeStash: BackpackItem[]
+  /** Weapons owned by the handler. Durability is consumed by raid outcomes and can be repaired in HUB. */
+  ownedWeapons: OwnedWeapon[]
+  /** Purchased HUB stock of healing consumables available for future raid loadouts. */
+  purchasedHealingItems: HealingItemStack[]
   /** Coin stash from auto-sold overflow loot — value is never deleted, only converted */
   coins: number
   stats: RaiderLifetimeStats

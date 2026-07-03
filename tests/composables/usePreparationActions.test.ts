@@ -1,0 +1,59 @@
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { usePreparationActions } from '../../src/composables/usePreparationActions'
+import { createInitialState } from '../../src/engine/initialState'
+
+function setupState() {
+  const state = createInitialState(0)
+  state.coins = 1_000
+  return { value: state }
+}
+
+describe('usePreparationActions', () => {
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  it('mutates the store for purchase, equip, and loadout selection actions', () => {
+    const stateRef = setupState()
+    const lastTickAtRef = { value: 0 }
+    const persistCallback = vi.fn()
+    const published: unknown[] = []
+    const actions = usePreparationActions(
+      stateRef,
+      lastTickAtRef,
+      persistCallback,
+      events => published.push(...events),
+      () => 123,
+    )
+
+    actions.purchaseWeapon('crowbar_of_minor_confidence')
+    expect(stateRef.value.coins).toBe(935)
+    expect(stateRef.value.ownedWeapons.some(weapon => weapon.weaponId === 'crowbar_of_minor_confidence')).toBe(true)
+
+    actions.equipWeapon('crowbar_of_minor_confidence')
+    expect(stateRef.value.raid.equippedWeaponId).toBe('crowbar_of_minor_confidence')
+
+    actions.purchaseHealingItem('bandage_green', 2)
+    expect(stateRef.value.coins).toBe(899)
+    expect(stateRef.value.purchasedHealingItems).toEqual([
+      expect.objectContaining({ itemId: 'bandage_green', quantity: 2 }),
+    ])
+
+    actions.setSelectedHealingLoadout([{ itemId: 'bandage_green', quantity: 1 }])
+    expect(stateRef.value.purchasedHealingItems).toEqual([
+      expect.objectContaining({ itemId: 'bandage_green', quantity: 2 }),
+    ])
+    expect(stateRef.value.raid.selectedHealingLoadout).toEqual([
+      expect.objectContaining({ itemId: 'bandage_green', quantity: 1 }),
+    ])
+
+    actions.clearSelectedHealingLoadout()
+    expect(stateRef.value.purchasedHealingItems).toEqual([
+      expect.objectContaining({ itemId: 'bandage_green', quantity: 2 }),
+    ])
+    expect(stateRef.value.raid.selectedHealingLoadout).toEqual([])
+
+    expect(persistCallback).toHaveBeenCalled()
+    expect(published.length).toBeGreaterThan(0)
+  })
+})

@@ -114,6 +114,7 @@ export function tickPhase(
         zone: null,
         dangerLevel: null,
         zoneCondition: null,
+        selectedHealingLoadout: [],
       }
     }
     // Failed recovery phase owns the reset after an unresolved downed condition.
@@ -129,6 +130,7 @@ export function tickPhase(
         extracting: null,
         raidTimeoutDownedStarted: false,
         phaseTicksRemaining: knockedOutDurationTicks(forcedRaid),
+        selectedHealingLoadout: [],
       }
     }
     if (forced === 'DEPLOYING') {
@@ -182,6 +184,7 @@ export function tickPhase(
       zone: null,
       dangerLevel: null,
       zoneCondition: null,
+      selectedHealingLoadout: [],
     }
   }
 

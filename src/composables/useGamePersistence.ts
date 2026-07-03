@@ -16,6 +16,7 @@ import { sellStashOverflow } from '../engine/homeStash.js'
 import { createStarterShieldState } from '../engine/shields.js'
 import { normalizeSkills } from '../engine/skills.js'
 import { normalizeRaiderLevelXp } from '../engine/raiderLevel.js'
+import { createStarterOwnedWeapon, findWeapon, getDefaultWeapon } from '../engine/weapons.js'
 
 const STORAGE_KEY = 'afk-raiders-save'
 const MIN_SUPPORTED_SAVE_VERSION = 3
@@ -93,6 +94,10 @@ function normalizeRaidState(raid: GameState['raid']): GameState['raid'] {
     activeRaidActivity: raid.activeRaidActivity ?? null,
     hiddenPocket: raid.hiddenPocket ?? null,
     healingItems: raid.healingItems ?? [],
+    selectedHealingLoadout: Array.isArray(raid.selectedHealingLoadout) ? raid.selectedHealingLoadout : [],
+    equippedWeaponId: typeof raid.equippedWeaponId === 'string' && findWeapon(raid.equippedWeaponId)
+      ? raid.equippedWeaponId
+      : getDefaultWeapon().id,
     dangerLevel: raid.dangerLevel ?? null,
     zoneCondition: raid.zoneCondition ?? null,
     downed: normalizeTimedCondition(raid.downed, PHASE_DURATIONS.KNOCKED_OUT),
@@ -129,6 +134,62 @@ function normalizeRaidState(raid: GameState['raid']): GameState['raid'] {
     phase,
     phaseTicksRemaining: sanitizeTicksRemaining(raid.phaseTicksRemaining, PHASE_DURATIONS[phase]),
   }
+}
+
+function normalizeOwnedWeapons(value: unknown): GameState['ownedWeapons'] {
+  if (!Array.isArray(value)) return [createStarterOwnedWeapon()]
+
+  const normalized = value.flatMap((entry): GameState['ownedWeapons'] => {
+    if (!isRecord(entry) || typeof entry.weaponId !== 'string') return []
+    const weapon = findWeapon(entry.weaponId)
+    if (!weapon) return []
+    const durability = typeof entry.durability === 'number' && Number.isFinite(entry.durability)
+      ? Math.max(0, Math.min(weapon.durabilityMax, Math.floor(entry.durability)))
+      : weapon.durabilityMax
+    return [{ weaponId: weapon.id, durability }]
+  })
+
+  return normalized.length > 0 ? normalized : [createStarterOwnedWeapon()]
+}
+
+function reconcileEquippedWeaponId(
+  equippedWeaponId: GameState['raid']['equippedWeaponId'],
+  ownedWeapons: GameState['ownedWeapons'],
+): string {
+  if (typeof equippedWeaponId === 'string' && ownedWeapons.some(entry => entry.weaponId === equippedWeaponId)) {
+    return equippedWeaponId
+  }
+
+  return ownedWeapons[0]?.weaponId ?? getDefaultWeapon().id
+}
+
+function normalizePurchasedHealingItems(value: unknown): GameState['purchasedHealingItems'] {
+  if (!Array.isArray(value)) return []
+
+  return value.flatMap((entry): GameState['purchasedHealingItems'] => {
+    if (!isRecord(entry) || typeof entry.itemId !== 'string' || typeof entry.name !== 'string') return []
+    const quantity = sanitizeCount(entry.quantity)
+    if (quantity <= 0) return []
+
+    return [{
+      itemId: entry.itemId,
+      name: entry.name,
+      healAmount: typeof entry.healAmount === 'number' && Number.isFinite(entry.healAmount)
+        ? Math.max(0, Math.floor(entry.healAmount))
+        : 0,
+      reviveAmount: typeof entry.reviveAmount === 'number' && Number.isFinite(entry.reviveAmount)
+        ? Math.max(0, Math.floor(entry.reviveAmount))
+        : undefined,
+      moodGain: typeof entry.moodGain === 'number' && Number.isFinite(entry.moodGain)
+        ? Math.floor(entry.moodGain)
+        : 0,
+      rarity: typeof entry.rarity === 'number' && Number.isFinite(entry.rarity)
+        ? Math.max(1, Math.min(5, Math.floor(entry.rarity)))
+        : 1,
+      flavor: typeof entry.flavor === 'string' ? entry.flavor : undefined,
+      quantity,
+    }]
+  })
 }
 
 function sanitizeCounterMap(value: unknown): Record<string, number> {
@@ -229,6 +290,8 @@ export function useGamePersistence(): GamePersistenceReturn {
       const loadedRaider = loadedState.raider as LegacyRaiderStats
       const legacyActivityLog = (loadedState as GameState & { activityLog?: unknown }).activityLog
       const sale = sellStashOverflow(loadedState.homeStash)
+      const ownedWeapons = normalizeOwnedWeapons((loadedState as unknown as Record<string, unknown>).ownedWeapons)
+      const normalizedRaid = normalizeRaidState(loadedState.raid)
       data.state = {
         ...loadedState,
         raider: {
@@ -244,9 +307,14 @@ export function useGamePersistence(): GamePersistenceReturn {
         pendingPressure: (loadedState as any).pendingPressure ?? (loadedState as any).pendingScold ?? false,
         activityLog: Array.isArray(legacyActivityLog) ? legacyActivityLog as GameState['activityLog'] : [],
         homeStash: sale.homeStash,
+        ownedWeapons,
+        purchasedHealingItems: normalizePurchasedHealingItems((loadedState as unknown as Record<string, unknown>).purchasedHealingItems),
         coins: (loadedState.coins ?? 0) + sale.coinsGained,
         stats: normalizeLifetimeStats(loadedState),
-        raid: normalizeRaidState(loadedState.raid),
+        raid: {
+          ...normalizedRaid,
+          equippedWeaponId: reconcileEquippedWeaponId(normalizedRaid.equippedWeaponId, ownedWeapons),
+        },
       }
       data.version = SAVE_VERSION
       data.state.version = SAVE_VERSION

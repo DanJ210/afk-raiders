@@ -11,6 +11,16 @@ Entries can be either future-only or runtime-started prototypes that still need 
 | Receipt Printer of Doom | Original AFK Creation | Runtime-started citation platform in `robots.json` and raiding events. |
 | Apology Turret | Original AFK Creation | Runtime-started dangerous citation platform in `robots.json` and raiding events. |
 
+## Weapons
+
+| Idea | Type | Notes |
+|---|---|---|
+| Tea Kettle | Runtime-started | Default starter weapon and baseline preparation fallback. |
+| Crowbar of Minor Confidence | Runtime-started | Low-tier purchasable weapon. |
+| Meeting Room Bat | Runtime-started | Mid-tier purchasable weapon. |
+| Audit Hammer Deluxe | Runtime-started | High-tier purchasable weapon. |
+| Future weapon tiers | Backlog | Add more parody-safe tiers if the store and durability loop needs additional breadth. |
+
 ## Zones And Events
 
 | Idea | Type | Notes |

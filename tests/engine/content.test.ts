@@ -25,6 +25,7 @@ import progressionConfigData from '../../src/content/progression_config.json'
 import raiderLevelsData from '../../src/content/raider_levels.json'
 import zoneConditionsData from '../../src/content/zones/zone_conditions.json'
 import zonesData from '../../src/content/zones/zones.json'
+import weaponsData from '../../src/content/weapons.json'
 import { MAX_RAIDER_LEVEL } from '../../src/engine/raiderLevel'
 import { raidActivities } from '../../src/engine/raidActivities'
 import type { RaidActivityDefinition, RaiderLevelContent, SkillDefinition, SkillTrackId } from '../../src/engine/types'
@@ -94,6 +95,17 @@ const FORBIDDEN_PLAYER_FACING_TERMS = [
   { pattern: /Emotional Support Pocket/i, message: 'use Secret Hidden Pocket as the canonical pocket name' },
 ]
 const skills = skillsData as SkillDefinition[]
+const weapons = weaponsData as Array<{
+  id: string
+  weight: number
+  name: string
+  damageMin: number
+  damageMax: number
+  value: number
+  rarity: number
+  durabilityMax: number
+  repairCost: number
+}>
 const progressionConfig = progressionConfigData as {
   skillXpThresholdProfile: string
   skillXpThresholdProfiles: Record<string, number[]>
@@ -853,6 +865,7 @@ describe('content validation', () => {
         expect(item.weight, `healing item "${item.id}" has weight ${item.weight}`).toBeGreaterThan(0)
         expect(item.healAmount, `healing item "${item.id}" exceeds one-use heal cap`).toBeLessThanOrEqual(50)
         expect(item.healAmount + (item.reviveAmount ?? 0), `healing item "${item.id}" must heal or revive`).toBeGreaterThan(0)
+        expect(item.purchaseCost, `healing item "${item.id}" purchaseCost must be >= 0`).toBeGreaterThanOrEqual(0)
         if (item.reviveAmount !== undefined) {
           expect(item.reviveAmount, `healing item "${item.id}" reviveAmount must be positive`).toBeGreaterThan(0)
         }
@@ -874,6 +887,63 @@ describe('content validation', () => {
         healAmount: 0,
         reviveAmount: 25,
       })
+    })
+
+    it('keeps purchase costs non-decreasing by rarity across healing items', () => {
+      const byRarity = [...healingItems].sort((a, b) => a.rarity - b.rarity)
+
+      for (let index = 1; index < byRarity.length; index += 1) {
+        const current = byRarity[index]
+        const previous = byRarity[index - 1]
+        if (current.rarity > previous.rarity) {
+          expect(
+            current.purchaseCost,
+            `healing item "${current.id}" should not cost less than lower-rarity "${previous.id}"`,
+          ).toBeGreaterThanOrEqual(previous.purchaseCost)
+        }
+      }
+    })
+  })
+
+  describe('weapons.json', () => {
+    it('all weapon IDs are unique', () => {
+      const ids = weapons.map(item => item.id)
+      expect(new Set(ids).size).toBe(ids.length)
+    })
+
+    it('all weapons have valid combat and economy fields', () => {
+      for (const weapon of weapons) {
+        expect(weapon.weight, `weapon "${weapon.id}" has weight ${weapon.weight}`).toBeGreaterThan(0)
+        expect(weapon.name.trim(), `weapon "${weapon.id}" must have a display name`).not.toBe('')
+        expect(weapon.damageMin, `weapon "${weapon.id}" damageMin must be > 0`).toBeGreaterThan(0)
+        expect(weapon.damageMax, `weapon "${weapon.id}" damageMax must be >= damageMin`).toBeGreaterThanOrEqual(weapon.damageMin)
+        expect(weapon.value, `weapon "${weapon.id}" value must be >= 0`).toBeGreaterThanOrEqual(0)
+        expect(weapon.rarity, `weapon "${weapon.id}" rarity must be >= 1`).toBeGreaterThanOrEqual(1)
+        expect(weapon.rarity, `weapon "${weapon.id}" rarity must be <= 5`).toBeLessThanOrEqual(5)
+        expect(weapon.durabilityMax, `weapon "${weapon.id}" durabilityMax must be > 0`).toBeGreaterThan(0)
+        expect(weapon.repairCost, `weapon "${weapon.id}" repairCost must be >= 0`).toBeGreaterThanOrEqual(0)
+      }
+    })
+
+    it('keeps starter weapon free to repair', () => {
+      const starter = weapons.find(weapon => weapon.id === 'tea_kettle')
+      expect(starter, 'tea_kettle weapon must exist').toBeDefined()
+      expect(starter?.repairCost).toBe(0)
+    })
+
+    it('keeps higher-rarity weapons at least as expensive to buy as lower-rarity options', () => {
+      const byRarity = [...weapons].sort((a, b) => a.rarity - b.rarity)
+
+      for (let index = 1; index < byRarity.length; index += 1) {
+        const current = byRarity[index]
+        const previous = byRarity[index - 1]
+        if (current.rarity > previous.rarity) {
+          expect(
+            current.value,
+            `weapon "${current.id}" should not be cheaper than lower-rarity "${previous.id}"`,
+          ).toBeGreaterThanOrEqual(previous.value)
+        }
+      }
     })
   })
 

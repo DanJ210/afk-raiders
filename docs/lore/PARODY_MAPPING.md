@@ -13,6 +13,7 @@ This table is the canonical mapping from source-facing tropes or design function
 | Explosive or overcommitted machine | Bomber Who Misreads the Room, Tank of Overcompensation | Parody Equivalent | High-greed robot encounters |
 | Heavy armored machine | Roomba Prime, Crusher of Dreams, Tank of Overcompensation | Parody Equivalent | Deadly robot tiers |
 | Giant dramatic boss machine | The Drama Queen | Backlog | Future boss/event content |
+| Improvised survivor weapons and scavenged tools | Tea Kettle, Crowbar of Minor Confidence, Meeting Room Bat, Audit Hammer Deluxe | Original AFK Creation | Weapons system, Preparation panel, weapon lore docs |
 | Flooded industrial map | Damp Battlegrounds | Parody Equivalent | Zone pool |
 | Ruined buried city map | Buried City (Now 30% More Buried) | Parody Equivalent | Zone pool |
 | Machine facility ruins | Chassis Graveyard | Original AFK Creation | Zone pool |
