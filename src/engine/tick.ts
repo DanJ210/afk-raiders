@@ -669,6 +669,22 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
   let advancedActivityThisTick = false
   if (
     currentState.raid.phase === 'RAIDING' &&
+    currentState.raid.forceExtract &&
+    !currentState.raid.extracting &&
+    !currentState.raid.downed
+  ) {
+    skillPracticeTriggers.push({ skillId: 'cardio', reason: 'extraction_started', minXp: 1, maxXp: 2 })
+    const started = startExtractionCondition(currentState, state.tick, now)
+    currentState = started.state
+    startedExtractionThisTick = started.event !== null
+    if (started.event) {
+      emitted.push(started.event)
+      activityEmitted.push(extractionActivityEvent('started', state.tick, now, currentState.raid.extracting?.ticksRemaining ?? EXTRACTING_TICKS))
+    }
+  }
+
+  if (
+    currentState.raid.phase === 'RAIDING' &&
     !currentState.raid.extracting &&
     !currentState.raid.downed &&
     currentState.raid.activeRaidActivity?.kind !== 'SHIELD_RECHARGE'
