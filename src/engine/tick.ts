@@ -643,9 +643,6 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
     if (currentState.raid.extracting) {
       activityEmitted.push(extractionActivityEvent('progress', state.tick, now, currentState.raid.extracting.ticksRemaining))
     }
-    if (currentState.raid.downed) {
-      activityEmitted.push(downedActivityEvent('progress', state.tick, now, currentState.raid.downed.ticksRemaining))
-    }
   }
 
   if (

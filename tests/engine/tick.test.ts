@@ -996,7 +996,7 @@ describe('deterministic snapshot', () => {
     expect(downedEvent?.conditions).toEqual(['EXTRACTING', 'DOWNED'])
   })
 
-  it('keeps HP at 0 while the raider remains DOWNED', () => {
+  it('keeps HP at 0 while the raider remains DOWNED without re-emitting DOWNED progress activity', () => {
     const rng = createRNG(FIXED_SEED)
     const initial = createInitialState(0)
     const state = {
@@ -1015,7 +1015,7 @@ describe('deterministic snapshot', () => {
     expect(result.state.raid.phase).toBe('RAIDING')
     expect(result.state.raid.downed?.ticksRemaining).toBe(1)
     expect(result.state.raider.hp).toBe(0)
-    expect(result.activityEvents.find(event => event.activityId === 'downed_recovery' && event.status === 'progress')?.text).toBe('Downed thread: 1 tick left for a miracle or medically questionable idea.')
+    expect(result.activityEvents.some(event => event.activityId === 'downed_recovery' && event.status === 'progress')).toBe(false)
   })
 
   it('uses JSON-backed DOWNED failure activity text when the downed timer expires', () => {
