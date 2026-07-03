@@ -208,4 +208,30 @@ describe('useGamePersistence', () => {
     expect(loaded?.state.raid.equippedWeaponId).toBe('tea_kettle')
     expect(loaded?.state.purchasedHealingItems).toEqual([])
   })
+
+  it('reconciles equipped weapon to owned weapons when saved equipped id is valid but unowned', () => {
+    const initial = createInitialState(1000)
+    const legacySave = {
+      state: {
+        ...initial,
+        version: 8,
+        ownedWeapons: [
+          { weaponId: 'not_a_real_weapon', durability: 99 },
+        ],
+        raid: {
+          ...initial.raid,
+          equippedWeaponId: 'audit_hammer_deluxe',
+        },
+      },
+      seed: 123,
+      lastTickAt: 1000,
+      version: 8,
+    }
+    stubLocalStorage([[STORAGE_KEY, JSON.stringify(legacySave)]])
+
+    const loaded = useGamePersistence().loadSave()
+
+    expect(loaded?.state.ownedWeapons).toEqual([{ weaponId: 'tea_kettle', durability: 8 }])
+    expect(loaded?.state.raid.equippedWeaponId).toBe('tea_kettle')
+  })
 })

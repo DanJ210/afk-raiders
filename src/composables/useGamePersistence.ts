@@ -152,6 +152,17 @@ function normalizeOwnedWeapons(value: unknown): GameState['ownedWeapons'] {
   return normalized.length > 0 ? normalized : [createStarterOwnedWeapon()]
 }
 
+function reconcileEquippedWeaponId(
+  equippedWeaponId: GameState['raid']['equippedWeaponId'],
+  ownedWeapons: GameState['ownedWeapons'],
+): string {
+  if (typeof equippedWeaponId === 'string' && ownedWeapons.some(entry => entry.weaponId === equippedWeaponId)) {
+    return equippedWeaponId
+  }
+
+  return ownedWeapons[0]?.weaponId ?? getDefaultWeapon().id
+}
+
 function normalizePurchasedHealingItems(value: unknown): GameState['purchasedHealingItems'] {
   if (!Array.isArray(value)) return []
 
@@ -279,6 +290,8 @@ export function useGamePersistence(): GamePersistenceReturn {
       const loadedRaider = loadedState.raider as LegacyRaiderStats
       const legacyActivityLog = (loadedState as GameState & { activityLog?: unknown }).activityLog
       const sale = sellStashOverflow(loadedState.homeStash)
+      const ownedWeapons = normalizeOwnedWeapons((loadedState as unknown as Record<string, unknown>).ownedWeapons)
+      const normalizedRaid = normalizeRaidState(loadedState.raid)
       data.state = {
         ...loadedState,
         raider: {
@@ -294,11 +307,14 @@ export function useGamePersistence(): GamePersistenceReturn {
         pendingPressure: (loadedState as any).pendingPressure ?? (loadedState as any).pendingScold ?? false,
         activityLog: Array.isArray(legacyActivityLog) ? legacyActivityLog as GameState['activityLog'] : [],
         homeStash: sale.homeStash,
-        ownedWeapons: normalizeOwnedWeapons((loadedState as unknown as Record<string, unknown>).ownedWeapons),
+        ownedWeapons,
         purchasedHealingItems: normalizePurchasedHealingItems((loadedState as unknown as Record<string, unknown>).purchasedHealingItems),
         coins: (loadedState.coins ?? 0) + sale.coinsGained,
         stats: normalizeLifetimeStats(loadedState),
-        raid: normalizeRaidState(loadedState.raid),
+        raid: {
+          ...normalizedRaid,
+          equippedWeaponId: reconcileEquippedWeaponId(normalizedRaid.equippedWeaponId, ownedWeapons),
+        },
       }
       data.version = SAVE_VERSION
       data.state.version = SAVE_VERSION

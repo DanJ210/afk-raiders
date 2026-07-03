@@ -29,6 +29,10 @@ function resolveEquippedWeapon(state: GameState) {
   return findWeapon(state.raid.equippedWeaponId) ?? DEFAULT_RAIDER_WEAPON
 }
 
+function resolveActivityWeapon(state: GameState, definition: RaidActivityDefinition) {
+  return findWeapon(definition.weaponId) ?? resolveEquippedWeapon(state)
+}
+
 function normalizeActivityText(value: unknown): RaidActivityDefinition['text'] | null {
   if (typeof value === 'string') {
     return {
@@ -571,13 +575,7 @@ export function startRaidActivity(
   const robot = selectRobot(state, definition, effect, rng)
   if (!robot) return null
 
-  const equippedWeapon = resolveEquippedWeapon(state)
-  const weaponId = definition.weaponId && definition.weaponId !== DEFAULT_RAIDER_WEAPON.id
-    ? definition.weaponId
-    : equippedWeapon.id
-  const weaponName = definition.weaponName && definition.weaponName !== DEFAULT_RAIDER_WEAPON.name
-    ? definition.weaponName
-    : equippedWeapon.name
+  const activeWeapon = resolveActivityWeapon(state, definition)
   const activeActivity: ActiveRaidActivity = {
     id: definition.id,
     name: `${definition.name}: ${robot.name}`,
@@ -587,17 +585,17 @@ export function startRaidActivity(
     robotId: robot.id,
     robotHp: robotMaxHp(robot, state.raid.dangerLevel),
     robotMaxHp: robotMaxHp(robot, state.raid.dangerLevel),
-    weaponId,
-    weaponName,
-    raiderBaseDamage: Math.max(1, definition.raiderBaseDamage ?? effect.raiderBaseDamage ?? equippedWeapon.damage),
-    raiderDamageMultiplier: Math.max(0.01, (definition.raiderDamageMultiplier ?? effect.raiderDamageMultiplier ?? 1) * (equippedWeapon.damageMultiplier ?? 1)),
+    weaponId: activeWeapon.id,
+    weaponName: activeWeapon.name,
+    raiderBaseDamage: Math.max(1, definition.raiderBaseDamage ?? effect.raiderBaseDamage ?? activeWeapon.damage),
+    raiderDamageMultiplier: Math.max(0.01, (definition.raiderDamageMultiplier ?? effect.raiderDamageMultiplier ?? 1) * (activeWeapon.damageMultiplier ?? 1)),
     robotDamageTakenMultiplier: Math.max(0.01, effect.robotDamageTakenMultiplier ?? definition.robotDamageTakenMultiplier ?? 1),
     robotDamageMultiplier: effect.robotDamageMultiplier,
     raiderAction: 'fighting',
   }
   const text = fillActivityText(definition.text.started, {
     robot_name: robot.name,
-    weapon_name: weaponName,
+    weapon_name: activeWeapon.name,
   })
 
   return {

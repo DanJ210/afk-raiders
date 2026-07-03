@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { formatNumber } from '../utils/stash'
 import { usePreparationViewModel } from '../composables/usePreparationViewModel'
 
@@ -18,6 +18,10 @@ const confirmState = ref<PreparationConfirmState>({
 let resolveConfirmation: ((value: boolean) => void) | null = null
 
 function requestConfirmation(message: string): Promise<boolean> {
+  if (confirmState.value.open || resolveConfirmation) {
+    return Promise.resolve(false)
+  }
+
   const [titleLine, bodyLine] = message.split('\n\n')
   confirmState.value = {
     open: true,
@@ -60,6 +64,11 @@ const {
   confirm: requestConfirmation,
 })
 
+const selectedHealingLoadoutCount = computed(() => selectedHealingLoadout.value.reduce(
+  (total, item) => total + item.quantity,
+  0,
+))
+
 const showWeapons = ref(true)
 const showHealing = ref(true)
 </script>
@@ -92,7 +101,7 @@ const showHealing = ref(true)
       </div>
       <div class="flex flex-col gap-1 bg-surface-raised p-2 rounded">
         <span class="text-raider-tiny text-muted font-mono">Selected Meds</span>
-        <span class="text-[1rem] font-bold text-text font-mono">{{ selectedHealingLoadout.length }}</span>
+        <span class="text-[1rem] font-bold text-text font-mono">{{ selectedHealingLoadoutCount }}</span>
       </div>
     </div>
 

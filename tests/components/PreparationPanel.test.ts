@@ -107,6 +107,29 @@ describe('PreparationPanel', () => {
     expect(activeStore.purchaseHealingItem).toHaveBeenCalledWith('bandage_white', 1)
   })
 
+  it('rejects a second confirmation request while one is already pending', async () => {
+    const wrapper = mount(PreparationPanel)
+    const panelVm = wrapper.vm as unknown as {
+      requestConfirmation?: (message: string) => Promise<boolean>
+    }
+
+    expect(panelVm.requestConfirmation).toBeTypeOf('function')
+
+    const firstConfirmation = panelVm.requestConfirmation!('First title\n\nFirst body')
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.get('[data-testid="prep-confirm-modal"]').text()).toContain('First title')
+
+    const secondResult = await panelVm.requestConfirmation!('Second title\n\nSecond body')
+    expect(secondResult).toBe(false)
+    expect(wrapper.get('[data-testid="prep-confirm-modal"]').text()).toContain('First title')
+    expect(wrapper.get('[data-testid="prep-confirm-modal"]').text()).not.toContain('Second title')
+
+    await wrapper.get('[data-testid="prep-confirm-cancel"]').trigger('click')
+
+    await expect(firstConfirmation).resolves.toBe(false)
+  })
+
   it('disables preparation action buttons outside HUB phase', () => {
     activeStore = createStore({ phase: 'RAIDING' })
     const wrapper = mount(PreparationPanel)
@@ -130,5 +153,19 @@ describe('PreparationPanel', () => {
 
     expect(wrapper.text()).toContain('Loadout warning: healing items moved into loadout are consumed when deployment starts.')
     expect(wrapper.text()).toContain('Failure warning: the currently equipped weapon can be lost when a raid ends in KNOCKED_OUT.')
+  })
+
+  it('shows total selected med quantity rather than distinct item count', () => {
+    activeStore = createStore({
+      selectedHealingLoadout: [
+        { itemId: 'bandage_white', quantity: 2 },
+        { itemId: 'bandage_blue', quantity: 3 },
+      ],
+    })
+
+    const wrapper = mount(PreparationPanel)
+
+    expect(wrapper.text()).toContain('Selected Meds')
+    expect(wrapper.text()).toContain('5')
   })
 })

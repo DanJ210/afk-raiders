@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { advanceRaidActivity, DEFAULT_RAIDER_WEAPON, startRaidActivity } from '../../src/engine/raidActivities'
+import { advanceRaidActivity, DEFAULT_RAIDER_WEAPON, raidActivities, startRaidActivity } from '../../src/engine/raidActivities'
 import { createInitialState } from '../../src/engine/initialState'
 import { xpRequiredForLevel } from '../../src/engine/raiderLevel'
 import { createRNG } from '../../src/engine/rng'
@@ -126,7 +126,7 @@ describe('raid activities', () => {
     expect(result!.activityEvent.text).toContain('Tea Kettle')
   })
 
-  it('uses the equipped weapon from raid state when the activity does not override weapon values', () => {
+  it('uses the activity definition weapon when a valid weapon override is present', () => {
     const initial = createInitialState(0)
     const equipped = findWeapon('audit_hammer_deluxe')
     expect(equipped).not.toBeNull()
@@ -150,10 +150,10 @@ describe('raid activities', () => {
 
     expect(result).not.toBeNull()
     expect(result!.state.raid.activeRaidActivity).toMatchObject({
-      weaponId: equipped!.id,
-      weaponName: equipped!.name,
-      raiderBaseDamage: equipped!.damage,
-      raiderDamageMultiplier: equipped!.damageMultiplier,
+      weaponId: DEFAULT_RAIDER_WEAPON.id,
+      weaponName: DEFAULT_RAIDER_WEAPON.name,
+      raiderBaseDamage: DEFAULT_RAIDER_WEAPON.damage,
+      raiderDamageMultiplier: DEFAULT_RAIDER_WEAPON.damageMultiplier,
     })
   })
 
@@ -183,6 +183,88 @@ describe('raid activities', () => {
       raiderBaseDamage: DEFAULT_RAIDER_WEAPON.damage,
       raiderDamageMultiplier: DEFAULT_RAIDER_WEAPON.damageMultiplier,
     })
+  })
+
+  it('resolves overridden weapon id and name from the same weapon entry', () => {
+    const initial = createInitialState(0)
+    const definition = raidActivities.find(activity => activity.id === 'robot_encounter_standard')
+    expect(definition).toBeDefined()
+
+    const originalWeaponId = definition!.weaponId
+    const originalWeaponName = definition!.weaponName
+    definition!.weaponId = 'tea_kettle'
+    definition!.weaponName = 'Definitely Not A Tea Kettle'
+
+    const state = {
+      ...initial,
+      raid: {
+        ...initial.raid,
+        phase: 'RAIDING' as const,
+        dangerLevel: 'Low' as const,
+        equippedWeaponId: 'crowbar_of_minor_confidence',
+      },
+    }
+
+    try {
+      const result = startRaidActivity(
+        state,
+        { activityId: 'robot_encounter_standard', kind: 'ROBOT_ENCOUNTER', robotId: 'anxietick' },
+        fixedRng(),
+        0,
+      )
+
+      expect(result).not.toBeNull()
+      expect(result!.state.raid.activeRaidActivity).toMatchObject({
+        weaponId: DEFAULT_RAIDER_WEAPON.id,
+        weaponName: DEFAULT_RAIDER_WEAPON.name,
+        raiderBaseDamage: DEFAULT_RAIDER_WEAPON.damage,
+        raiderDamageMultiplier: DEFAULT_RAIDER_WEAPON.damageMultiplier,
+      })
+    } finally {
+      definition!.weaponId = originalWeaponId
+      definition!.weaponName = originalWeaponName
+    }
+  })
+
+  it('ignores standalone weaponName override and keeps the resolved weapon pair consistent', () => {
+    const initial = createInitialState(0)
+    const equipped = findWeapon('audit_hammer_deluxe')
+    expect(equipped).not.toBeNull()
+    const definition = raidActivities.find(activity => activity.id === 'robot_encounter_standard')
+    expect(definition).toBeDefined()
+
+    const originalWeaponId = definition!.weaponId
+    const originalWeaponName = definition!.weaponName
+    definition!.weaponId = undefined
+    definition!.weaponName = 'Pretend Hammer'
+
+    const state = {
+      ...initial,
+      raid: {
+        ...initial.raid,
+        phase: 'RAIDING' as const,
+        dangerLevel: 'Low' as const,
+        equippedWeaponId: equipped!.id,
+      },
+    }
+
+    try {
+      const result = startRaidActivity(
+        state,
+        { activityId: 'robot_encounter_standard', kind: 'ROBOT_ENCOUNTER', robotId: 'anxietick' },
+        fixedRng(),
+        0,
+      )
+
+      expect(result).not.toBeNull()
+      expect(result!.state.raid.activeRaidActivity).toMatchObject({
+        weaponId: equipped!.id,
+        weaponName: equipped!.name,
+      })
+    } finally {
+      definition!.weaponId = originalWeaponId
+      definition!.weaponName = originalWeaponName
+    }
   })
 
   it('scales robot max hp by danger level', () => {
