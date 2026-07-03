@@ -1,6 +1,20 @@
 import { describe, expect, it } from 'vitest'
 import { createInitialState } from '../../src/engine/initialState'
-import { applyFailedRaidWeaponLoss, applyRaidWeaponWear, clearSelectedHealingLoadout, consumeSelectedHealingLoadout, equipWeapon, purchaseHealingItem, purchaseWeapon, repairWeapon, setSelectedHealingLoadout } from '../../src/engine/loadout'
+import {
+  applyFailedRaidWeaponLoss,
+  applyRaidWeaponWear,
+  clearSelectedHealingLoadout,
+  clearSelectedShieldRechargerLoadout,
+  consumeSelectedPreparationLoadouts,
+  consumeSelectedHealingLoadout,
+  equipWeapon,
+  purchaseHealingItem,
+  purchaseShieldRecharger,
+  purchaseWeapon,
+  repairWeapon,
+  setSelectedHealingLoadout,
+  setSelectedShieldRechargerLoadout,
+} from '../../src/engine/loadout'
 
 function createState() {
   const state = createInitialState(0)
@@ -79,6 +93,25 @@ describe('loadout transactions', () => {
     expect(cleared?.state.raid.selectedHealingLoadout).toEqual([])
   })
 
+  it('buys shield rechargers into persistent stock and stages them for the next raid', () => {
+    const bought = purchaseShieldRecharger(createState(), 'fizz_cell', 2, 0)
+    expect(bought).not.toBeNull()
+    expect(bought?.state.coins).toBe(976)
+    expect(bought?.state.purchasedShieldRechargers).toEqual([
+      expect.objectContaining({ itemId: 'fizz_cell', quantity: 2 }),
+    ])
+
+    const selected = setSelectedShieldRechargerLoadout(bought!.state, [{ itemId: 'fizz_cell', quantity: 1 }], 0)
+    expect(selected).not.toBeNull()
+    expect(selected?.state.raid.selectedShieldRechargerLoadout).toEqual([
+      expect.objectContaining({ itemId: 'fizz_cell', quantity: 1 }),
+    ])
+
+    const cleared = clearSelectedShieldRechargerLoadout(selected!.state, 0)
+    expect(cleared).not.toBeNull()
+    expect(cleared?.state.raid.selectedShieldRechargerLoadout).toEqual([])
+  })
+
   it('applies the selected healing loadout into the raid and clears the staging area', () => {
     const state = {
       ...createState(),
@@ -100,6 +133,55 @@ describe('loadout transactions', () => {
       expect.objectContaining({ itemId: 'bandage_white', quantity: 1 }),
     ])
     expect(applied.raid.selectedHealingLoadout).toEqual([])
+  })
+
+  it('applies selected prep loadouts into the raid and converts staged rechargers into backpack items', () => {
+    const state = {
+      ...createState(),
+      purchasedHealingItems: [
+        { itemId: 'bandage_white', name: 'White Bandage', healAmount: 5, moodGain: 1, rarity: 1, purchaseCost: 8, quantity: 1 },
+      ],
+      purchasedShieldRechargers: [
+        { itemId: 'fizz_cell', name: 'Fizz Cell', value: 12, chargeAmount: 20, rarity: 1, quantity: 1 },
+      ],
+      raid: {
+        ...createState().raid,
+        selectedHealingLoadout: [
+          { itemId: 'bandage_white', name: 'White Bandage', healAmount: 5, moodGain: 1, rarity: 1, purchaseCost: 8, quantity: 1 },
+        ],
+        selectedShieldRechargerLoadout: [
+          { itemId: 'fizz_cell', name: 'Fizz Cell', value: 12, chargeAmount: 20, rarity: 1, quantity: 1 },
+        ],
+      },
+    }
+
+    const applied = consumeSelectedPreparationLoadouts(state)
+
+    expect(applied.purchasedHealingItems).toEqual([
+      expect.objectContaining({ itemId: 'bandage_white', quantity: 1 }),
+    ])
+    expect(applied.purchasedShieldRechargers).toEqual([
+      expect.objectContaining({ itemId: 'fizz_cell', quantity: 1 }),
+    ])
+    expect(applied.raid.selectedHealingLoadout).toEqual([
+      expect.objectContaining({ itemId: 'bandage_white', quantity: 1 }),
+    ])
+    expect(applied.raid.selectedShieldRechargerLoadout).toEqual([
+      expect.objectContaining({ itemId: 'fizz_cell', quantity: 1 }),
+    ])
+    expect(applied.raid.healingItems).toEqual([
+      expect.objectContaining({ itemId: 'bandage_white', quantity: 1, fromLoadout: true }),
+    ])
+    expect(applied.raid.backpack).toEqual([
+      expect.objectContaining({
+        itemId: 'fizz_cell',
+        kind: 'shield_recharger',
+        shieldChargeAmount: 20,
+        quantity: 1,
+        fromLoadout: true,
+      }),
+    ])
+    expect(applied.raid.backpackValue).toBe(0)
   })
 
   it('wears the equipped weapon down after a raid and breaks it at zero durability', () => {

@@ -70,7 +70,9 @@ export const useGameStore = defineStore('game', () => {
   const activityLog = computed(() => state.value.activityLog)
   const ownedWeapons = computed(() => state.value.ownedWeapons)
   const purchasedHealingItems = computed(() => state.value.purchasedHealingItems)
+  const purchasedShieldRechargers = computed(() => state.value.purchasedShieldRechargers)
   const selectedHealingLoadout = computed(() => state.value.raid.selectedHealingLoadout)
+  const selectedShieldRechargerLoadout = computed(() => state.value.raid.selectedShieldRechargerLoadout)
 
   // Initialize ticker (pause/resume, visibility, catch-up)
   const ticker = useGameTicker(
@@ -139,7 +141,9 @@ export const useGameStore = defineStore('game', () => {
     activityLog,
     ownedWeapons,
     purchasedHealingItems,
+    purchasedShieldRechargers,
     selectedHealingLoadout,
+    selectedShieldRechargerLoadout,
     newEvents,
     lastTickAt,
     awaySummary: ticker.awaySummary,
@@ -162,8 +166,11 @@ export const useGameStore = defineStore('game', () => {
     repairWeapon: preparationActions.repairWeapon,
     equipWeapon: preparationActions.equipWeapon,
     purchaseHealingItem: preparationActions.purchaseHealingItem,
+    purchaseShieldRecharger: preparationActions.purchaseShieldRecharger,
     setSelectedHealingLoadout: preparationActions.setSelectedHealingLoadout,
+    setSelectedShieldRechargerLoadout: preparationActions.setSelectedShieldRechargerLoadout,
     clearSelectedHealingLoadout: preparationActions.clearSelectedHealingLoadout,
+    clearSelectedShieldRechargerLoadout: preparationActions.clearSelectedShieldRechargerLoadout,
   }
 })
 

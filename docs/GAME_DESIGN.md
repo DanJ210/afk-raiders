@@ -13,7 +13,7 @@
 You are **not** the raider. You are their Handler back in the underground hub, watching a comms feed, occasionally nudging them, and mostly witnessing their terrible decisions. The Raider plays themselves: deploys topside, loots garbage, panics at robots, befriends vending machines, and dies hilariously — or extracts triumphantly with a backpack full of water bottles.
 
 ## 2. Core Loop
-1. **Prep phase (hub):** Raider sells loot, buys questionable gear, equips one weapon, and stages healing loadout stock before deployment. Preparation is HUB-only: weapons can be bought/equipped/repaired, healing items are purchased into persistent stock, and selected healing loadout is consumed at deployment start. Purchase/equip/repair actions use confirmations so accidental spend is less likely.
+1. **Prep phase (hub):** Raider sells loot, buys questionable gear, equips one weapon, and stages consumable loadout stock before deployment. Preparation is HUB-only: weapons can be bought/equipped/repaired, healing items and shield rechargers are purchased into persistent stock, and selected consumable loadouts are applied at deployment start without being auto-consumed. Purchase/equip/repair actions use confirmations so accidental spend is less likely.
 2. **Deploy:** Raider autonomously picks a zone and a seeded **zone condition** (for example Light Fog, Acid Rain, Robot Surge). Greed carried over from the last raid nudges whether the next condition comes from the minor or major condition pool.
 3. **Raid diary and active threads:** Ambient raid diary lines cover loot finds, weather, suspicious noises, Raider commentary, and manual shield-recharger use/progress. Multi-tick active threads cover searches, extraction drama, DOWNED recovery, and robot fights. The selected condition sets a `dangerLevel` (Low/Medium/High), which then drives the danger-level profile for both upside (loot value/rarity) and risk (ambient downed pressure, robot pressure, extraction danger).
    - Raider **mood** now provides a tiny secondary bias to loot quality: positive mood slightly improves higher-rarity odds, while negative mood slightly favors lower-rarity outcomes. Greed adds a second small loot-appetite bias toward higher-rarity finds.
@@ -49,8 +49,13 @@ Loot that makes it home goes into the **Stash** — a persistent collection that
 - Healing loop:
    - Buy healing items into persistent stock.
    - Stage quantities into raid loadout.
-   - On deployment start, staged loadout is consumed from stock and moved into current-raid healing inventory.
-   - Staged items are at-risk just like the raid: they are consumed on deployment and raid outcomes determine whether they survive as used value or loss.
+   - On deployment start, staged loadout is copied into current-raid healing inventory.
+   - Successful HUB return keeps staged loadouts configured; KNOCKED_OUT clears staged loadouts.
+- Shield recharger loop:
+   - Buy shield rechargers into persistent stock.
+   - Stage quantities into raid loadout.
+   - On deployment start, staged rechargers are copied into current-raid backpack as manual-use shield consumables.
+   - Successful HUB return keeps staged loadouts configured; KNOCKED_OUT clears staged loadouts.
 
 ### Secret Hidden Pocket (parody safe pocket)
 The Raider has one manual **Secret Hidden Pocket** slot per raid:
@@ -76,8 +81,9 @@ Mood also feeds a small hidden **resilience** bonus against robot damage:
 - The active-thread feed calls out the bonus when it happens so the player can see the mood effect in the same place as the fight math.
 
 ### Shield Rechargers
-Shield rechargers are manual-use backpack loot found during RAIDING:
+Shield rechargers are manual-use backpack consumables available from both RAIDING finds and HUB loadout prep:
 - They drop into the normal current-raid backpack, not the separate field-meds pocket.
+- The player can buy them in HUB, stage them in a prep loadout, and deploy with them already in the backpack.
 - The player must manually apply them from the backpack UI.
 - Rechargers restore shield charge only; they do not repair shield durability.
 - If unused, they extract into Home Stash like normal backpack loot.

@@ -95,6 +95,7 @@ function normalizeRaidState(raid: GameState['raid']): GameState['raid'] {
     hiddenPocket: raid.hiddenPocket ?? null,
     healingItems: raid.healingItems ?? [],
     selectedHealingLoadout: Array.isArray(raid.selectedHealingLoadout) ? raid.selectedHealingLoadout : [],
+    selectedShieldRechargerLoadout: Array.isArray(raid.selectedShieldRechargerLoadout) ? raid.selectedShieldRechargerLoadout : [],
     equippedWeaponId: typeof raid.equippedWeaponId === 'string' && findWeapon(raid.equippedWeaponId)
       ? raid.equippedWeaponId
       : getDefaultWeapon().id,
@@ -183,6 +184,35 @@ function normalizePurchasedHealingItems(value: unknown): GameState['purchasedHea
       moodGain: typeof entry.moodGain === 'number' && Number.isFinite(entry.moodGain)
         ? Math.floor(entry.moodGain)
         : 0,
+      rarity: typeof entry.rarity === 'number' && Number.isFinite(entry.rarity)
+        ? Math.max(1, Math.min(5, Math.floor(entry.rarity)))
+        : 1,
+      flavor: typeof entry.flavor === 'string' ? entry.flavor : undefined,
+      quantity,
+    }]
+  })
+}
+
+function normalizePurchasedShieldRechargers(value: unknown): GameState['purchasedShieldRechargers'] {
+  if (!Array.isArray(value)) return []
+
+  return value.flatMap((entry): GameState['purchasedShieldRechargers'] => {
+    if (!isRecord(entry) || typeof entry.itemId !== 'string' || typeof entry.name !== 'string') return []
+    const quantity = sanitizeCount(entry.quantity)
+    if (quantity <= 0) return []
+
+    return [{
+      itemId: entry.itemId,
+      name: entry.name,
+      value: typeof entry.value === 'number' && Number.isFinite(entry.value)
+        ? Math.max(0, Math.floor(entry.value))
+        : 0,
+      chargeAmount: typeof entry.chargeAmount === 'number' && Number.isFinite(entry.chargeAmount)
+        ? Math.max(0, Math.floor(entry.chargeAmount))
+        : 0,
+      applyTicks: typeof entry.applyTicks === 'number' && Number.isFinite(entry.applyTicks)
+        ? Math.max(0, Math.floor(entry.applyTicks))
+        : undefined,
       rarity: typeof entry.rarity === 'number' && Number.isFinite(entry.rarity)
         ? Math.max(1, Math.min(5, Math.floor(entry.rarity)))
         : 1,
@@ -309,6 +339,7 @@ export function useGamePersistence(): GamePersistenceReturn {
         homeStash: sale.homeStash,
         ownedWeapons,
         purchasedHealingItems: normalizePurchasedHealingItems((loadedState as unknown as Record<string, unknown>).purchasedHealingItems),
+        purchasedShieldRechargers: normalizePurchasedShieldRechargers((loadedState as unknown as Record<string, unknown>).purchasedShieldRechargers),
         coins: (loadedState.coins ?? 0) + sale.coinsGained,
         stats: normalizeLifetimeStats(loadedState),
         raid: {

@@ -32,9 +32,25 @@ function createStore(overrides: Record<string, unknown> = {}) {
         quantity: 2,
       },
     ],
+    purchasedShieldRechargers: [
+      {
+        itemId: 'fizz_cell',
+        name: 'Fizz Cell',
+        value: 12,
+        chargeAmount: 20,
+        rarity: 1,
+        quantity: 2,
+      },
+    ],
     selectedHealingLoadout: [
       {
         itemId: 'bandage_white',
+        quantity: 1,
+      },
+    ],
+    selectedShieldRechargerLoadout: [
+      {
+        itemId: 'fizz_cell',
         quantity: 1,
       },
     ],
@@ -42,8 +58,11 @@ function createStore(overrides: Record<string, unknown> = {}) {
     repairWeapon: vi.fn(),
     equipWeapon: vi.fn(),
     purchaseHealingItem: vi.fn(),
+    purchaseShieldRecharger: vi.fn(),
     setSelectedHealingLoadout: vi.fn(),
+    setSelectedShieldRechargerLoadout: vi.fn(),
     clearSelectedHealingLoadout: vi.fn(),
+    clearSelectedShieldRechargerLoadout: vi.fn(),
     ...overrides,
   })
 
@@ -107,6 +126,21 @@ describe('PreparationPanel', () => {
     expect(activeStore.purchaseHealingItem).toHaveBeenCalledWith('bandage_white', 1)
   })
 
+  it('asks for confirmation before buying a shield recharger and proceeds on accept', async () => {
+    const wrapper = mount(PreparationPanel)
+
+    const fizzCellCard = findCardByText(wrapper, 'Fizz Cell')
+    const buyOneButton = fizzCellCard.findAll('button').find(item => item.text() === 'Buy 1')
+    expect(buyOneButton).toBeDefined()
+
+    await buyOneButton!.trigger('click')
+    expect(wrapper.find('[data-testid="prep-confirm-modal"]').exists()).toBe(true)
+
+    await wrapper.get('[data-testid="prep-confirm-accept"]').trigger('click')
+
+    expect(activeStore.purchaseShieldRecharger).toHaveBeenCalledWith('fizz_cell', 1)
+  })
+
   it('rejects a second confirmation request while one is already pending', async () => {
     const wrapper = mount(PreparationPanel)
     const panelVm = wrapper.vm as unknown as {
@@ -148,11 +182,11 @@ describe('PreparationPanel', () => {
     expect((clearLoadoutButton.element as HTMLButtonElement).disabled).toBe(true)
   })
 
-  it('shows explicit loadout consumption and weapon-loss warnings', () => {
+  it('shows explicit loadout behavior and weapon-loss warnings', () => {
     const wrapper = mount(PreparationPanel)
 
-    expect(wrapper.text()).toContain('Loadout warning: healing items moved into loadout are consumed when deployment starts.')
-    expect(wrapper.text()).toContain('Failure warning: the currently equipped weapon can be lost when a raid ends in KNOCKED_OUT.')
+    expect(wrapper.text()).toContain('Loadout behavior: staged healing and shield rechargers are available during the raid and remain configured on successful return.')
+    expect(wrapper.text()).toContain('Failure warning: KNOCKED_OUT clears staged loadouts, and the currently equipped weapon can be lost.')
   })
 
   it('shows total selected med quantity rather than distinct item count', () => {
@@ -167,5 +201,21 @@ describe('PreparationPanel', () => {
 
     expect(wrapper.text()).toContain('Selected Meds')
     expect(wrapper.text()).toContain('5')
+  })
+
+  it('keeps a single parent scroll path on mobile by disabling inner list scroll there', () => {
+    const wrapper = mount(PreparationPanel)
+
+    const scrollRegions = wrapper.findAll('div').filter(item => {
+      const classes = item.attributes('class') ?? ''
+      return classes.includes('max-h-76') && classes.includes('overflow-y-auto')
+    })
+
+    expect(scrollRegions).toHaveLength(3)
+    for (const region of scrollRegions) {
+      const classes = region.attributes('class') ?? ''
+      expect(classes).toContain('max-[600px]:max-h-none')
+      expect(classes).toContain('max-[600px]:overflow-visible')
+    }
   })
 })

@@ -17,7 +17,7 @@ import { advanceShieldRecharge } from './shields.js'
 import { applySkillPractice, getSkillModifierProfile, rollSkillPractice, type SkillLevelUp, type SkillPracticeTrigger } from './skills.js'
 import { applyRaiderXpGain, getRaiderLevelBenefitProfile, rollRaiderXp, type RaiderLevelUp, type RaiderXpTrigger } from './raiderLevel.js'
 import { advanceRaidActivity, raidActivities, startRaidActivity } from './raidActivities.js'
-import { applyFailedRaidWeaponLoss, applyRaidWeaponWear, consumeSelectedHealingLoadout } from './loadout.js'
+import { applyFailedRaidWeaponLoss, applyRaidWeaponWear, consumeSelectedPreparationLoadouts } from './loadout.js'
 
 const LOOT_BONUS_HEALING_ITEM_CHANCE = 0.2 // 20% chance to find a healing item on any loot event, independent of normal loot rolls
 const LOOT_BONUS_SHIELD_RECHARGER_CHANCE = 0.15 // 15% chance to find a shield recharger on any loot event, independent of normal loot rolls
@@ -428,25 +428,26 @@ function completeExtractionCondition(
   now: number,
 ): GameState {
   const extractedRaid = state.raid
+  const extractedBackpack = extractedRaid.backpack.filter(item => !item.fromLoadout)
   let currentState: GameState = state
 
   // First, apply the successful extraction bookkeeping (transfer loot, heal, etc.)
   queueSuccessfulExtractionSkillPractice(skillPracticeTriggers, {
-    backpack: extractedRaid.backpack,
+    backpack: extractedBackpack,
     backpackValue: extractedRaid.backpackValue,
     dangerLevel: extractedRaid.dangerLevel,
     hp: state.raider.hp,
     maxHp: state.raider.maxHp,
   })
   queueSuccessfulExtractionRaiderXp(raiderXpTriggers, {
-    backpack: extractedRaid.backpack,
+    backpack: extractedBackpack,
     backpackValue: extractedRaid.backpackValue,
     dangerLevel: extractedRaid.dangerLevel,
     hp: state.raider.hp,
     maxHp: state.raider.maxHp,
   })
 
-  const extraction = applySuccessfulExtraction(currentState, extractedRaid.backpack, {
+  const extraction = applySuccessfulExtraction(currentState, extractedBackpack, {
     zone: extractedRaid.zone,
     dangerLevel: extractedRaid.dangerLevel,
   })
@@ -594,7 +595,7 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
     emitted.push(phaseTransitionEvent(transition, state.tick, now))
 
     if (transition.to === 'DEPLOYING') {
-      currentState = consumeSelectedHealingLoadout(currentState)
+      currentState = consumeSelectedPreparationLoadouts(currentState)
     }
 
     // KNOCKED_OUT -> HUB performs failed-raid bookkeeping. tickPhase has

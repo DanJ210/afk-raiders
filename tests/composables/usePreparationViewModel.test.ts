@@ -29,9 +29,25 @@ function createStore(overrides: Record<string, unknown> = {}) {
         quantity: 2,
       },
     ],
+    purchasedShieldRechargers: [
+      {
+        itemId: 'fizz_cell',
+        name: 'Fizz Cell',
+        value: 12,
+        chargeAmount: 20,
+        rarity: 1,
+        quantity: 2,
+      },
+    ],
     selectedHealingLoadout: [
       {
         itemId: 'bandage_white',
+        quantity: 1,
+      },
+    ],
+    selectedShieldRechargerLoadout: [
+      {
+        itemId: 'fizz_cell',
         quantity: 1,
       },
     ],
@@ -39,8 +55,11 @@ function createStore(overrides: Record<string, unknown> = {}) {
     repairWeapon: vi.fn(),
     equipWeapon: vi.fn(),
     purchaseHealingItem: vi.fn(),
+    purchaseShieldRecharger: vi.fn(),
     setSelectedHealingLoadout: vi.fn(),
+    setSelectedShieldRechargerLoadout: vi.fn(),
     clearSelectedHealingLoadout: vi.fn(),
+    clearSelectedShieldRechargerLoadout: vi.fn(),
     ...overrides,
   })
 }
@@ -77,6 +96,16 @@ describe('usePreparationViewModel', () => {
     expect(activeStore.purchaseHealingItem).toHaveBeenCalledWith('bandage_white', 1)
   })
 
+  it('purchases shield recharger when confirmed', async () => {
+    const confirm = vi.fn(() => true)
+    const viewModel = usePreparationViewModel({ confirm })
+
+    await viewModel.purchaseShieldRecharger('fizz_cell')
+
+    expect(confirm).toHaveBeenCalledTimes(1)
+    expect(activeStore.purchaseShieldRecharger).toHaveBeenCalledWith('fizz_cell', 1)
+  })
+
   it('blocks mutating actions outside HUB phase', async () => {
     activeStore = createStore({ phase: 'RAIDING' })
     const confirm = vi.fn(() => true)
@@ -84,12 +113,16 @@ describe('usePreparationViewModel', () => {
 
     await viewModel.purchaseWeapon('aspperigo')
     await viewModel.purchaseHealingItem('bandage_white')
+    await viewModel.purchaseShieldRecharger('fizz_cell')
     await viewModel.clearLoadout()
+    await viewModel.clearShieldRechargerLoadout()
 
     expect(confirm).not.toHaveBeenCalled()
     expect(activeStore.purchaseWeapon).not.toHaveBeenCalled()
     expect(activeStore.purchaseHealingItem).not.toHaveBeenCalled()
+    expect(activeStore.purchaseShieldRecharger).not.toHaveBeenCalled()
     expect(activeStore.clearSelectedHealingLoadout).not.toHaveBeenCalled()
+    expect(activeStore.clearSelectedShieldRechargerLoadout).not.toHaveBeenCalled()
   })
 
   it('updates staged loadout quantities through store action', () => {
@@ -102,5 +135,13 @@ describe('usePreparationViewModel', () => {
 
     viewModel.removeHealingFromLoadout('bandage_white')
     expect(activeStore.setSelectedHealingLoadout).toHaveBeenCalledWith([])
+
+    viewModel.addShieldRechargerToLoadout('fizz_cell')
+    expect(activeStore.setSelectedShieldRechargerLoadout).toHaveBeenCalledWith([
+      { itemId: 'fizz_cell', quantity: 2 },
+    ])
+
+    viewModel.removeShieldRechargerFromLoadout('fizz_cell')
+    expect(activeStore.setSelectedShieldRechargerLoadout).toHaveBeenCalledWith([])
   })
 })

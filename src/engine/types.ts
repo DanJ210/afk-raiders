@@ -259,6 +259,8 @@ export interface BackpackItem {
   shieldChargeAmount?: number
   /** Number of ticks the recharge animation should take when this is a shield recharger. */
   applyTicks?: number
+  /** True when staged from HUB loadout rather than found during the raid. */
+  fromLoadout?: boolean
 }
 
 export interface HealingItemStack {
@@ -268,6 +270,20 @@ export interface HealingItemStack {
   reviveAmount?: number
   /** Optional for backward compatibility with saved current-raid meds. */
   moodGain?: number
+  rarity: number
+  flavor?: string
+  quantity: number
+  /** True when staged from HUB loadout rather than found during the raid. */
+  fromLoadout?: boolean
+}
+
+export interface ShieldRechargerStack {
+  itemId: string
+  name: string
+  value: number
+  chargeAmount: number
+  /** Number of ticks to apply during active raid use. */
+  applyTicks?: number
   rarity: number
   flavor?: string
   quantity: number
@@ -359,6 +375,8 @@ export interface RaidState {
   healingItems: HealingItemStack[]
   /** Selected current-loadout healing items to move into a raid on the next deployment. */
   selectedHealingLoadout: HealingItemStack[]
+  /** Selected current-loadout shield rechargers to move into a raid on the next deployment. */
+  selectedShieldRechargerLoadout: ShieldRechargerStack[]
   /** HUB-selected weapon id used for robot encounters unless an activity overrides weapon fields. */
   equippedWeaponId: string | null
   backpackValue: number
@@ -461,6 +479,8 @@ export interface GameState {
   ownedWeapons: OwnedWeapon[]
   /** Purchased HUB stock of healing consumables available for future raid loadouts. */
   purchasedHealingItems: HealingItemStack[]
+  /** Purchased HUB stock of shield rechargers available for future raid loadouts. */
+  purchasedShieldRechargers: ShieldRechargerStack[]
   /** Coin stash from auto-sold overflow loot — value is never deleted, only converted */
   coins: number
   stats: RaiderLifetimeStats

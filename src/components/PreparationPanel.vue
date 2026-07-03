@@ -43,23 +43,32 @@ function closeConfirmation(confirmed: boolean) {
 const {
   weaponCatalog,
   healingCatalog,
+  shieldRechargerCatalog,
   coins,
   isHubPhase,
   equippedWeaponId,
   selectedHealingLoadout,
+  selectedShieldRechargerLoadout,
   ownedWeapon,
   purchasedHealingItem,
+  purchasedShieldRechargerItem,
   selectedHealingQuantity,
+  selectedShieldRechargerQuantity,
   purchaseWeapon,
   repairWeapon,
   equipWeapon,
   purchaseHealingItem,
+  purchaseShieldRecharger,
   addHealingToLoadout,
   removeHealingFromLoadout,
+  addShieldRechargerToLoadout,
+  removeShieldRechargerFromLoadout,
   clearLoadout,
+  clearShieldRechargerLoadout,
   getWeaponPurchaseCost,
   getWeaponRepairCost,
   getHealingPurchaseCost,
+  getShieldRechargerPurchaseCost,
 } = usePreparationViewModel({
   confirm: requestConfirmation,
 })
@@ -69,12 +78,18 @@ const selectedHealingLoadoutCount = computed(() => selectedHealingLoadout.value.
   0,
 ))
 
+const selectedShieldRechargerLoadoutCount = computed(() => selectedShieldRechargerLoadout.value.reduce(
+  (total, item) => total + item.quantity,
+  0,
+))
+
 const showWeapons = ref(true)
+const showRechargers = ref(true)
 const showHealing = ref(true)
 </script>
 
 <template>
-  <section class="preparation-panel panel-card shrink-0 max-[600px]:p-2.5" aria-label="Preparation">
+  <section class="preparation-panel panel-card shrink-0 min-h-0 h-full flex flex-col overflow-y-auto max-[600px]:p-2.5" aria-label="Preparation">
     <header class="section-header">PREPARATION</header>
 
     <div class="mb-3 rounded border border-border-subtle bg-surface-raised p-2">
@@ -103,14 +118,18 @@ const showHealing = ref(true)
         <span class="text-raider-tiny text-muted font-mono">Selected Meds</span>
         <span class="text-[1rem] font-bold text-text font-mono">{{ selectedHealingLoadoutCount }}</span>
       </div>
+      <div class="flex flex-col gap-1 bg-surface-raised p-2 rounded col-span-2">
+        <span class="text-raider-tiny text-muted font-mono">Selected Rechargers</span>
+        <span class="text-[1rem] font-bold text-text font-mono">{{ selectedShieldRechargerLoadoutCount }}</span>
+      </div>
     </div>
 
     <div class="mb-3 rounded border border-border-subtle bg-surface-raised p-2">
       <p class="m-0 font-mono text-[0.65rem] leading-snug text-muted">
-        Loadout warning: healing items moved into loadout are consumed when deployment starts.
+        Loadout behavior: staged healing and shield rechargers are available during the raid and remain configured on successful return.
       </p>
       <p class="m-0 mt-1 font-mono text-[0.65rem] leading-snug text-muted">
-        Failure warning: the currently equipped weapon can be lost when a raid ends in KNOCKED_OUT.
+        Failure warning: KNOCKED_OUT clears staged loadouts, and the currently equipped weapon can be lost.
       </p>
     </div>
 
@@ -125,7 +144,7 @@ const showHealing = ref(true)
           >{{ showWeapons ? 'Collapse' : 'Expand' }}</button>
         </div>
 
-        <div v-if="showWeapons" class="grid max-h-76 gap-2 overflow-y-auto pr-1">
+        <div v-if="showWeapons" class="grid max-h-76 gap-2 overflow-y-auto pr-1 max-[600px]:max-h-none max-[600px]:overflow-visible">
           <article v-for="weapon in weaponCatalog" :key="weapon.id" class="rounded border border-border-subtle bg-surface-raised p-2">
             <div class="flex items-baseline justify-between gap-2">
               <h4 class="m-0 font-mono text-[0.78rem] font-bold text-text">{{ weapon.name }}</h4>
@@ -169,6 +188,62 @@ const showHealing = ref(true)
       <section>
         <div class="flex items-center justify-between gap-2 mb-2">
           <div class="flex items-center gap-2">
+            <h3 class="m-0 font-mono text-[0.78rem] text-accent uppercase tracking-[0.08em]">Shield Rechargers</h3>
+            <button
+              type="button"
+              class="rounded border border-border px-2 py-1 font-mono text-[0.66rem] text-text bg-transparent cursor-pointer"
+              @click="showRechargers = !showRechargers"
+            >{{ showRechargers ? 'Collapse' : 'Expand' }}</button>
+          </div>
+          <button
+            v-if="showRechargers"
+            type="button"
+            class="rounded border border-border px-2 py-1 font-mono text-[0.66rem] text-text bg-transparent cursor-pointer disabled:opacity-50"
+            :disabled="selectedShieldRechargerLoadout.length === 0 || !isHubPhase"
+            @click="clearShieldRechargerLoadout"
+          >Clear Rechargers</button>
+        </div>
+
+        <div v-if="showRechargers" class="grid max-h-76 gap-2 overflow-y-auto pr-1 max-[600px]:max-h-none max-[600px]:overflow-visible">
+          <article v-for="item in shieldRechargerCatalog" :key="item.id" class="rounded border border-border-subtle bg-surface-raised p-2">
+            <div class="flex items-baseline justify-between gap-2">
+              <h4 class="m-0 font-mono text-[0.78rem] font-bold text-text">{{ item.name }}</h4>
+              <span class="font-mono text-[0.68rem] text-muted">Tier {{ item.rarity }}</span>
+            </div>
+            <p class="m-0 mt-1 font-mono text-[0.66rem] leading-snug text-muted">{{ item.flavor }}</p>
+            <div class="mt-2 flex flex-wrap items-center gap-2 text-[0.66rem] font-mono text-muted">
+              <span>Charge +{{ item.chargeAmount }}</span>
+              <span>Buy {{ formatNumber(getShieldRechargerPurchaseCost(item.id)) }}</span>
+              <span>Stock {{ purchasedShieldRechargerItem(item.id)?.quantity ?? 0 }}</span>
+              <span>Loadout {{ selectedShieldRechargerQuantity(item.id) }}</span>
+            </div>
+            <div class="mt-2 flex flex-wrap gap-2">
+              <button
+                type="button"
+                class="rounded border border-border px-2 py-1 font-mono text-[0.68rem] text-text bg-transparent cursor-pointer disabled:opacity-50"
+                :disabled="coins < getShieldRechargerPurchaseCost(item.id) || !isHubPhase"
+                @click="purchaseShieldRecharger(item.id)"
+              >Buy 1</button>
+              <button
+                type="button"
+                class="rounded border border-border px-2 py-1 font-mono text-[0.68rem] text-text bg-transparent cursor-pointer disabled:opacity-50"
+                :disabled="(purchasedShieldRechargerItem(item.id)?.quantity ?? 0) <= selectedShieldRechargerQuantity(item.id) || !isHubPhase"
+                @click="addShieldRechargerToLoadout(item.id)"
+              >Load +1</button>
+              <button
+                type="button"
+                class="rounded border border-border px-2 py-1 font-mono text-[0.68rem] text-text bg-transparent cursor-pointer disabled:opacity-50"
+                :disabled="selectedShieldRechargerQuantity(item.id) <= 0 || !isHubPhase"
+                @click="removeShieldRechargerFromLoadout(item.id)"
+              >Load -1</button>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section>
+        <div class="flex items-center justify-between gap-2 mb-2">
+          <div class="flex items-center gap-2">
             <h3 class="m-0 font-mono text-[0.78rem] text-accent uppercase tracking-[0.08em]">Healing Stock</h3>
             <button
               type="button"
@@ -185,7 +260,7 @@ const showHealing = ref(true)
           >Clear Loadout</button>
         </div>
 
-        <div v-if="showHealing" class="grid max-h-76 gap-2 overflow-y-auto pr-1">
+        <div v-if="showHealing" class="grid max-h-76 gap-2 overflow-y-auto pr-1 max-[600px]:max-h-none max-[600px]:overflow-visible">
           <article v-for="item in healingCatalog" :key="item.id" class="rounded border border-border-subtle bg-surface-raised p-2">
             <div class="flex items-baseline justify-between gap-2">
               <h4 class="m-0 font-mono text-[0.78rem] font-bold text-text">{{ item.name }}</h4>

@@ -1,9 +1,11 @@
 import healingItemsData from '../content/healing_items.json'
-import type { GameState, HealingItem, HealingItemStack, LogEvent, OwnedWeapon } from './types.js'
+import shieldRechargersData from '../content/shield_rechargers.json'
+import type { BackpackItem, GameState, HealingItem, HealingItemStack, LogEvent, OwnedWeapon, ShieldRechargerItem, ShieldRechargerStack } from './types.js'
 import { CommsPriority } from './types.js'
 import { findWeapon, getDefaultWeapon, getWeaponCatalog as resolveWeaponCatalog } from './weapons.js'
 
 const healingCatalog = healingItemsData as HealingItem[]
+const shieldRechargerCatalog = shieldRechargersData as ShieldRechargerItem[]
 
 export interface LoadoutTransactionResult {
   state: GameState
@@ -47,6 +49,16 @@ function removeHealingStackQuantity(stacks: HealingItemStack[], itemId: string, 
   })
 }
 
+function mergeShieldRechargerStacks(stacks: ShieldRechargerStack[], nextStack: ShieldRechargerStack): ShieldRechargerStack[] {
+  const existing = stacks.find(stack => stack.itemId === nextStack.itemId)
+  if (!existing) return [...stacks, nextStack]
+
+  return stacks.map(stack => stack.itemId === nextStack.itemId
+    ? { ...stack, quantity: stack.quantity + nextStack.quantity }
+    : stack,
+  )
+}
+
 function normalizeOwnedWeaponEntry(weapon: ReturnType<typeof findWeapon>, existing: OwnedWeapon | undefined): OwnedWeapon | null {
   if (!weapon) return null
   return {
@@ -63,9 +75,18 @@ export function getWeaponCatalog() {
   return resolveWeaponCatalog()
 }
 
+export function getShieldRechargerCatalog(): ShieldRechargerItem[] {
+  return shieldRechargerCatalog
+}
+
 export function findHealingItem(itemId: string | null | undefined): HealingItem | null {
   if (!itemId) return null
   return healingCatalog.find(item => item.id === itemId) ?? null
+}
+
+export function findShieldRecharger(itemId: string | null | undefined): ShieldRechargerItem | null {
+  if (!itemId) return null
+  return shieldRechargerCatalog.find(item => item.id === itemId) ?? null
 }
 
 export function getWeaponPurchaseCost(weaponId: string | null | undefined): number {
@@ -81,6 +102,11 @@ export function getWeaponRepairCost(weaponId: string | null | undefined): number
 export function getHealingPurchaseCost(itemId: string | null | undefined): number {
   const item = findHealingItem(itemId)
   return item?.purchaseCost ?? 0
+}
+
+export function getShieldRechargerPurchaseCost(itemId: string | null | undefined): number {
+  const item = findShieldRecharger(itemId)
+  return item?.value ?? 0
 }
 
 export function purchaseWeapon(state: GameState, weaponId: string, now: number): LoadoutTransactionResult | null {
@@ -186,6 +212,38 @@ export function purchaseHealingItem(state: GameState, itemId: string, quantity: 
   }
 }
 
+export function purchaseShieldRecharger(state: GameState, itemId: string, quantity: number, now: number): LoadoutTransactionResult | null {
+  const item = findShieldRecharger(itemId)
+  const stackQuantity = normalizeQuantity(quantity)
+  const totalCost = item?.value ? item.value * stackQuantity : 0
+  if (!item || state.coins < totalCost) return null
+
+  const nextStack: ShieldRechargerStack = {
+    itemId: item.id,
+    name: item.name,
+    value: item.value,
+    chargeAmount: item.chargeAmount,
+    applyTicks: item.applyTicks,
+    rarity: item.rarity,
+    flavor: item.flavor,
+    quantity: stackQuantity,
+  }
+
+  return {
+    state: {
+      ...state,
+      coins: state.coins - totalCost,
+      purchasedShieldRechargers: mergeShieldRechargerStacks(state.purchasedShieldRechargers, nextStack),
+    },
+    event: createPurchaseEvent(
+      `shield_recharger_purchase_${item.id}`,
+      state.tick,
+      now,
+      `Bought ${stackQuantity}x ${item.name} for ${totalCost} coins. The shield budget called this proactive optimism.`,
+    ),
+  }
+}
+
 export function setSelectedHealingLoadout(state: GameState, selections: Array<{ itemId: string; quantity: number }>, now: number): LoadoutTransactionResult | null {
   if (state.raid.phase !== 'HUB') return null
 
@@ -244,6 +302,68 @@ export function clearSelectedHealingLoadout(state: GameState, now: number): Load
   }
 }
 
+export function setSelectedShieldRechargerLoadout(
+  state: GameState,
+  selections: Array<{ itemId: string; quantity: number }>,
+  now: number,
+): LoadoutTransactionResult | null {
+  if (state.raid.phase !== 'HUB') return null
+
+  const resolvedSelections = selections
+    .map(selection => ({
+      item: findShieldRecharger(selection.itemId),
+      quantity: normalizeQuantity(selection.quantity),
+    }))
+    .filter((selection): selection is { item: ShieldRechargerItem; quantity: number } => Boolean(selection.item))
+
+  if (resolvedSelections.length === 0) {
+    return clearSelectedShieldRechargerLoadout(state, now)
+  }
+
+  const selectedShieldRechargerLoadout: ShieldRechargerStack[] = []
+
+  for (const selection of resolvedSelections) {
+    const available = state.purchasedShieldRechargers.find(entry => entry.itemId === selection.item.id)
+    if (!available || available.quantity < selection.quantity) return null
+    selectedShieldRechargerLoadout.push({
+      itemId: selection.item.id,
+      name: selection.item.name,
+      value: selection.item.value,
+      chargeAmount: selection.item.chargeAmount,
+      applyTicks: selection.item.applyTicks,
+      rarity: selection.item.rarity,
+      flavor: selection.item.flavor,
+      quantity: selection.quantity,
+    })
+  }
+
+  return {
+    state: {
+      ...state,
+      raid: {
+        ...state.raid,
+        selectedShieldRechargerLoadout,
+      },
+    },
+    event: createPurchaseEvent('shield_recharger_loadout_selected', state.tick, now, 'Shield recharger loadout staged. Future panic now has battery support.'),
+  }
+}
+
+export function clearSelectedShieldRechargerLoadout(state: GameState, now: number): LoadoutTransactionResult | null {
+  if (state.raid.phase !== 'HUB') return null
+
+  return {
+    state: {
+      ...state,
+      raid: {
+        ...state.raid,
+        selectedShieldRechargerLoadout: [],
+      },
+    },
+    event: createPurchaseEvent('shield_recharger_loadout_cleared', state.tick, now, 'Cleared staged shield rechargers. We are raw-dogging mitigation again.'),
+  }
+}
+
 export function consumeSelectedHealingLoadout(state: GameState): GameState {
   const selected = state.raid.selectedHealingLoadout
   if (selected.length === 0) return state
@@ -262,6 +382,62 @@ export function consumeSelectedHealingLoadout(state: GameState): GameState {
       selectedHealingLoadout: [],
     },
   }
+}
+
+function consumeSelectedShieldRechargerLoadout(state: GameState): GameState {
+  const selected = state.raid.selectedShieldRechargerLoadout
+  if (selected.length === 0) return state
+
+  const stagedBackpackItems: BackpackItem[] = selected.map(item => {
+    const existing = state.raid.backpack.find(entry => entry.itemId === item.itemId)
+    const quantity = existing ? Math.max(existing.quantity, item.quantity) : item.quantity
+
+    return {
+      itemId: item.itemId,
+      name: item.name,
+      value: item.value,
+      rarity: item.rarity,
+      flavor: item.flavor,
+      quantity,
+      kind: 'shield_recharger',
+      shieldChargeAmount: item.chargeAmount,
+      applyTicks: item.applyTicks,
+      fromLoadout: true,
+    }
+  })
+
+  const nextBackpack = state.raid.backpack
+    .filter(entry => !stagedBackpackItems.some(staged => staged.itemId === entry.itemId))
+    .concat(stagedBackpackItems)
+
+  return {
+    ...state,
+    raid: {
+      ...state.raid,
+      backpack: nextBackpack,
+    },
+  }
+}
+
+export function consumeSelectedPreparationLoadouts(state: GameState): GameState {
+  const withHealing = {
+    ...state,
+    raid: {
+      ...state.raid,
+      healingItems: state.raid.selectedHealingLoadout.map(item => ({
+        itemId: item.itemId,
+        name: item.name,
+        healAmount: item.healAmount,
+        reviveAmount: item.reviveAmount,
+        moodGain: item.moodGain,
+        rarity: item.rarity,
+        flavor: item.flavor,
+        quantity: item.quantity,
+        fromLoadout: true,
+      })),
+    },
+  }
+  return consumeSelectedShieldRechargerLoadout(withHealing)
 }
 
 function getFallbackEquippedWeaponId(state: GameState, removedWeaponId: string): string {
