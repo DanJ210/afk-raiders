@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { formatNumber } from '../utils/stash'
+import { rarityBarClass, rarityLabel } from '../utils/rarity'
 import { usePreparationViewModel } from '../composables/usePreparationViewModel'
 
 interface PreparationConfirmState {
@@ -86,6 +87,21 @@ const selectedShieldRechargerLoadoutCount = computed(() => selectedShieldRecharg
 const showWeapons = ref(true)
 const showRechargers = ref(true)
 const showHealing = ref(true)
+
+function equipButtonColorClass(isEquipped: boolean): string {
+  return isEquipped
+    ? 'border-success text-success'
+    : 'border-warning text-warning'
+}
+
+function repairButtonColorClass(weaponId: string, durabilityMax: number): string {
+  const currentDurability = ownedWeapon(weaponId)?.durability ?? durabilityMax
+  const ratio = durabilityMax > 0 ? currentDurability / durabilityMax : 1
+
+  if (ratio > 0.8) return 'border-success text-success'
+  if (ratio >= 0.3) return 'border-warning text-warning'
+  return 'border-danger text-danger'
+}
 </script>
 
 <template>
@@ -152,7 +168,10 @@ const showHealing = ref(true)
             </div>
             <p class="m-0 mt-1 font-mono text-[0.66rem] leading-snug text-muted">{{ weapon.flavor }}</p>
             <div class="mt-2 flex flex-wrap items-center gap-2 text-[0.66rem] font-mono text-muted">
-              <span>Tier {{ weapon.rarity }}</span>
+              <span class="inline-flex items-center gap-1">
+                <span :class="rarityBarClass(weapon.rarity)" :title="rarityLabel(weapon.rarity)" aria-hidden="true" />
+                <span>{{ rarityLabel(weapon.rarity) }}</span>
+              </span>
               <span>Durability {{ weapon.durabilityMax }}</span>
               <span>Repair {{ formatNumber(getWeaponRepairCost(weapon.id)) }}</span>
               <span>Buy {{ formatNumber(getWeaponPurchaseCost(weapon.id)) }}</span>
@@ -161,20 +180,22 @@ const showHealing = ref(true)
               <button
                 v-if="!ownedWeapon(weapon.id)"
                 type="button"
-                class="rounded border border-border px-2 py-1 font-mono text-[0.68rem] text-text bg-transparent cursor-pointer disabled:opacity-50"
+                class="rounded border px-2 py-1 font-mono text-[0.68rem] bg-transparent cursor-pointer disabled:opacity-50 border-accent text-accent"
                 :disabled="coins < getWeaponPurchaseCost(weapon.id) || !isHubPhase"
                 @click="purchaseWeapon(weapon.id)"
               >Buy</button>
               <template v-else>
                 <button
                   type="button"
-                  class="rounded border border-border px-2 py-1 font-mono text-[0.68rem] text-text bg-transparent cursor-pointer disabled:opacity-50"
+                  class="rounded border px-2 py-1 font-mono text-[0.68rem] bg-transparent cursor-pointer disabled:opacity-50"
+                  :class="equipButtonColorClass(equippedWeaponId === weapon.id)"
                   :disabled="equippedWeaponId === weapon.id || !isHubPhase"
                   @click="equipWeapon(weapon.id)"
                 >{{ equippedWeaponId === weapon.id ? 'Equipped' : 'Equip' }}</button>
                 <button
                   type="button"
-                  class="rounded border border-border px-2 py-1 font-mono text-[0.68rem] text-text bg-transparent cursor-pointer disabled:opacity-50"
+                  class="rounded border px-2 py-1 font-mono text-[0.68rem] bg-transparent cursor-pointer disabled:opacity-50"
+                  :class="repairButtonColorClass(weapon.id, weapon.durabilityMax)"
                   :disabled="coins < getWeaponRepairCost(weapon.id) || ownedWeapon(weapon.id)?.durability === weapon.durabilityMax || !isHubPhase"
                   @click="repairWeapon(weapon.id)"
                 >Repair</button>
@@ -220,19 +241,19 @@ const showHealing = ref(true)
             <div class="mt-2 flex flex-wrap gap-2">
               <button
                 type="button"
-                class="rounded border border-border px-2 py-1 font-mono text-[0.68rem] text-text bg-transparent cursor-pointer disabled:opacity-50"
+                class="rounded border px-2 py-1 font-mono text-[0.68rem] bg-transparent cursor-pointer disabled:opacity-50 border-accent text-accent"
                 :disabled="coins < getShieldRechargerPurchaseCost(item.id) || !isHubPhase"
                 @click="purchaseShieldRecharger(item.id)"
               >Buy 1</button>
               <button
                 type="button"
-                class="rounded border border-border px-2 py-1 font-mono text-[0.68rem] text-text bg-transparent cursor-pointer disabled:opacity-50"
+                class="rounded border px-2 py-1 font-mono text-[0.68rem] bg-transparent cursor-pointer disabled:opacity-50 border-success text-success"
                 :disabled="(purchasedShieldRechargerItem(item.id)?.quantity ?? 0) <= selectedShieldRechargerQuantity(item.id) || !isHubPhase"
                 @click="addShieldRechargerToLoadout(item.id)"
               >Load +1</button>
               <button
                 type="button"
-                class="rounded border border-border px-2 py-1 font-mono text-[0.68rem] text-text bg-transparent cursor-pointer disabled:opacity-50"
+                class="rounded border px-2 py-1 font-mono text-[0.68rem] bg-transparent cursor-pointer disabled:opacity-50 border-warning text-warning"
                 :disabled="selectedShieldRechargerQuantity(item.id) <= 0 || !isHubPhase"
                 @click="removeShieldRechargerFromLoadout(item.id)"
               >Load -1</button>
@@ -264,7 +285,10 @@ const showHealing = ref(true)
           <article v-for="item in healingCatalog" :key="item.id" class="rounded border border-border-subtle bg-surface-raised p-2">
             <div class="flex items-baseline justify-between gap-2">
               <h4 class="m-0 font-mono text-[0.78rem] font-bold text-text">{{ item.name }}</h4>
-              <span class="font-mono text-[0.68rem] text-muted">Tier {{ item.rarity }}</span>
+              <span class="inline-flex items-center gap-1 font-mono text-[0.68rem] text-muted">
+                <span :class="rarityBarClass(item.rarity)" :title="rarityLabel(item.rarity)" aria-hidden="true" />
+                <span>{{ rarityLabel(item.rarity) }}</span>
+              </span>
             </div>
             <p class="m-0 mt-1 font-mono text-[0.66rem] leading-snug text-muted">{{ item.flavor }}</p>
             <div class="mt-2 flex flex-wrap items-center gap-2 text-[0.66rem] font-mono text-muted">
@@ -277,19 +301,19 @@ const showHealing = ref(true)
             <div class="mt-2 flex flex-wrap gap-2">
               <button
                 type="button"
-                class="rounded border border-border px-2 py-1 font-mono text-[0.68rem] text-text bg-transparent cursor-pointer disabled:opacity-50"
+                class="rounded border px-2 py-1 font-mono text-[0.68rem] bg-transparent cursor-pointer disabled:opacity-50 border-accent text-accent"
                 :disabled="coins < getHealingPurchaseCost(item.id) || !isHubPhase"
                 @click="purchaseHealingItem(item.id)"
               >Buy 1</button>
               <button
                 type="button"
-                class="rounded border border-border px-2 py-1 font-mono text-[0.68rem] text-text bg-transparent cursor-pointer disabled:opacity-50"
+                class="rounded border px-2 py-1 font-mono text-[0.68rem] bg-transparent cursor-pointer disabled:opacity-50 border-success text-success"
                 :disabled="(purchasedHealingItem(item.id)?.quantity ?? 0) <= selectedHealingQuantity(item.id) || !isHubPhase"
                 @click="addHealingToLoadout(item.id)"
               >Load +1</button>
               <button
                 type="button"
-                class="rounded border border-border px-2 py-1 font-mono text-[0.68rem] text-text bg-transparent cursor-pointer disabled:opacity-50"
+                class="rounded border px-2 py-1 font-mono text-[0.68rem] bg-transparent cursor-pointer disabled:opacity-50 border-warning text-warning"
                 :disabled="selectedHealingQuantity(item.id) <= 0 || !isHubPhase"
                 @click="removeHealingFromLoadout(item.id)"
               >Load -1</button>
