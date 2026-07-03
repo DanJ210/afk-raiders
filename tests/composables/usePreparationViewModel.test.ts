@@ -61,7 +61,7 @@ describe('usePreparationViewModel', () => {
     const confirm = vi.fn(() => false)
     const viewModel = usePreparationViewModel({ confirm })
 
-    await viewModel.purchaseWeapon('crowbar_of_minor_confidence')
+    await viewModel.purchaseWeapon('aspperigo')
 
     expect(confirm).toHaveBeenCalledTimes(1)
     expect(activeStore.purchaseWeapon).not.toHaveBeenCalled()
@@ -82,7 +82,7 @@ describe('usePreparationViewModel', () => {
     const confirm = vi.fn(() => true)
     const viewModel = usePreparationViewModel({ confirm })
 
-    await viewModel.purchaseWeapon('crowbar_of_minor_confidence')
+    await viewModel.purchaseWeapon('aspperigo')
     await viewModel.purchaseHealingItem('bandage_white')
     await viewModel.clearLoadout()
 

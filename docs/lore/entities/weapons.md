@@ -7,9 +7,9 @@ AFK Raiders weapons are improvised tools, misfiled hardware, and aggressively ov
 | Weapon | ID | Damage | Cost | Repair | Lore hook |
 |---|---|---|---|---|---|
 | Tea Kettle | `tea_kettle` | 3-6 | 0 | 0 | Default survival tool. Whistles, complains, and still somehow gets the job done. |
-| Crowbar of Minor Confidence | `crowbar_of_minor_confidence` | 4-7 | 65 | 18 | Opens crates, doors, and the raider's sense of judgment. |
-| Meeting Room Bat | `meeting_room_bat` | 5-9 | 140 | 30 | Salvaged from a meeting nobody agreed to attend. |
-| Audit Hammer Deluxe | `audit_hammer_deluxe` | 7-11 | 280 | 55 | Every swing requests receipts and final approval. |
+| Aspperigo | `aspperigo` | 4-7 | 65 | 18 | Eddie's favorite and we don't know why. |
+| Vernerider | `vernerider` | 5-9 | 140 | 30 | No one can pronounce it right. |
+| Temptrest AR | `temptrest_ar` | 7-11 | 280 | 55 | The favorite among Raiders. The most prized possession. |
 
 ## Design Rules
 

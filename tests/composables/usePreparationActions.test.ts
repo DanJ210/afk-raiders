@@ -26,12 +26,12 @@ describe('usePreparationActions', () => {
       () => 123,
     )
 
-    actions.purchaseWeapon('crowbar_of_minor_confidence')
+    actions.purchaseWeapon('aspperigo')
     expect(stateRef.value.coins).toBe(935)
-    expect(stateRef.value.ownedWeapons.some(weapon => weapon.weaponId === 'crowbar_of_minor_confidence')).toBe(true)
+    expect(stateRef.value.ownedWeapons.some(weapon => weapon.weaponId === 'aspperigo')).toBe(true)
 
-    actions.equipWeapon('crowbar_of_minor_confidence')
-    expect(stateRef.value.raid.equippedWeaponId).toBe('crowbar_of_minor_confidence')
+    actions.equipWeapon('aspperigo')
+    expect(stateRef.value.raid.equippedWeaponId).toBe('aspperigo')
 
     actions.purchaseHealingItem('bandage_green', 2)
     expect(stateRef.value.coins).toBe(899)

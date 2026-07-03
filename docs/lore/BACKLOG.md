@@ -15,10 +15,10 @@ Entries can be either future-only or runtime-started prototypes that still need 
 
 | Idea | Type | Notes |
 |---|---|---|
-| Tea Kettle | Runtime-started | Default starter weapon and baseline preparation fallback. |
-| Crowbar of Minor Confidence | Runtime-started | Low-tier purchasable weapon. |
-| Meeting Room Bat | Runtime-started | Mid-tier purchasable weapon. |
-| Audit Hammer Deluxe | Runtime-started | High-tier purchasable weapon. |
+| Tea Kettle | Runtime-started | Default starter weapon and baseline preparation fallback. | Assault Rifle
+| Aspperigo | Runtime-started | Low-tier purchasable weapon. | Assault Rife
+| Vernerider | Runtime-started | Mid-tier purchasable weapon. | Handgun
+| Temptrest AR | Runtime-started | High-tier purchasable weapon. | Assault Rifle
 | Future weapon tiers | Backlog | Add more parody-safe tiers if the store and durability loop needs additional breadth. |
 
 ## Zones And Events
