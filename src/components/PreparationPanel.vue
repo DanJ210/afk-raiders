@@ -1,112 +1,28 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import { useGameStore } from '../stores/gameStore'
-import { getHealingCatalog, getHealingPurchaseCost, getWeaponCatalog, getWeaponPurchaseCost, getWeaponRepairCost } from '../engine/loadout'
 import { formatNumber } from '../utils/stash'
+import { usePreparationViewModel } from '../composables/usePreparationViewModel'
 
-const store = useGameStore()
-const weaponCatalog = getWeaponCatalog()
-const healingCatalog = getHealingCatalog()
-
-const coins = computed(() => store.state.coins)
-const isHubPhase = computed(() => store.phase === 'HUB')
-const ownedWeapons = computed(() => store.ownedWeapons)
-const purchasedHealingItems = computed(() => store.purchasedHealingItems)
-const selectedHealingLoadout = computed(() => store.selectedHealingLoadout)
-
-function ownedWeapon(weaponId: string) {
-  return ownedWeapons.value.find(weapon => weapon.weaponId === weaponId) ?? null
-}
-
-function purchasedHealingItem(itemId: string) {
-  return purchasedHealingItems.value.find(item => item.itemId === itemId) ?? null
-}
-
-function selectedHealingQuantity(itemId: string) {
-  return selectedHealingLoadout.value.find(item => item.itemId === itemId)?.quantity ?? 0
-}
-
-function purchaseWeapon(weaponId: string) {
-  const cost = getWeaponPurchaseCost(weaponId)
-  const weapon = weaponCatalog.find(entry => entry.id === weaponId)
-  if (!weapon) return
-  const confirmed = window.confirm(
-    `Buy ${weapon.name} for ${formatNumber(cost)} coins?\n\nEquipped weapons can be lost on failed raids.`,
-  )
-  if (!confirmed) return
-
-  store.purchaseWeapon(weaponId)
-}
-
-function repairWeapon(weaponId: string) {
-  const cost = getWeaponRepairCost(weaponId)
-  const weapon = weaponCatalog.find(entry => entry.id === weaponId)
-  if (!weapon) return
-  const confirmed = window.confirm(
-    `Repair ${weapon.name} for ${formatNumber(cost)} coins?`,
-  )
-  if (!confirmed) return
-
-  store.repairWeapon(weaponId)
-}
-
-function equipWeapon(weaponId: string) {
-  const weapon = weaponCatalog.find(entry => entry.id === weaponId)
-  if (!weapon) return
-  const confirmed = window.confirm(
-    `Equip ${weapon.name} for the next raid?\n\nIf the raid fails, this equipped weapon can be lost.`,
-  )
-  if (!confirmed) return
-
-  store.equipWeapon(weaponId)
-}
-
-function purchaseHealingItem(itemId: string) {
-  const item = healingCatalog.find(entry => entry.id === itemId)
-  if (!item) return
-  const cost = getHealingPurchaseCost(itemId)
-  const confirmed = window.confirm(
-    `Buy 1 ${item.name} for ${formatNumber(cost)} coins?\n\nLoadout meds are consumed on deployment and are lost if the raid fails.`,
-  )
-  if (!confirmed) return
-
-  store.purchaseHealingItem(itemId, 1)
-}
-
-function addHealingToLoadout(itemId: string) {
-  const available = purchasedHealingItem(itemId)
-  if (!available) return
-  const current = selectedHealingQuantity(itemId)
-  if (current >= available.quantity) return
-
-  const next = selectedHealingLoadout.value.filter(item => item.itemId !== itemId)
-  next.push({ ...available, quantity: current + 1 })
-  store.setSelectedHealingLoadout(next.map(item => ({ itemId: item.itemId, quantity: item.quantity })))
-}
-
-function removeHealingFromLoadout(itemId: string) {
-  const current = selectedHealingQuantity(itemId)
-  if (current <= 0) return
-
-  const next = selectedHealingLoadout.value
-    .filter(item => item.itemId !== itemId)
-    .map(item => ({ itemId: item.itemId, quantity: item.quantity }))
-
-  if (current > 1) {
-    next.push({ itemId, quantity: current - 1 })
-  }
-
-  store.setSelectedHealingLoadout(next)
-}
-
-function clearLoadout() {
-  const confirmed = window.confirm(
-    'Clear the selected medical loadout?\n\nOnly staged loadout items are cleared. Purchased stock remains in storage.',
-  )
-  if (!confirmed) return
-
-  store.clearSelectedHealingLoadout()
-}
+const {
+  weaponCatalog,
+  healingCatalog,
+  coins,
+  isHubPhase,
+  equippedWeaponId,
+  selectedHealingLoadout,
+  ownedWeapon,
+  purchasedHealingItem,
+  selectedHealingQuantity,
+  purchaseWeapon,
+  repairWeapon,
+  equipWeapon,
+  purchaseHealingItem,
+  addHealingToLoadout,
+  removeHealingFromLoadout,
+  clearLoadout,
+  getWeaponPurchaseCost,
+  getWeaponRepairCost,
+  getHealingPurchaseCost,
+} = usePreparationViewModel()
 </script>
 
 <template>
@@ -161,9 +77,9 @@ function clearLoadout() {
                 <button
                   type="button"
                   class="rounded border border-border px-2 py-1 font-mono text-[0.68rem] text-text bg-transparent cursor-pointer disabled:opacity-50"
-                  :disabled="store.raid.equippedWeaponId === weapon.id || !isHubPhase"
+                  :disabled="equippedWeaponId === weapon.id || !isHubPhase"
                   @click="equipWeapon(weapon.id)"
-                >{{ store.raid.equippedWeaponId === weapon.id ? 'Equipped' : 'Equip' }}</button>
+                >{{ equippedWeaponId === weapon.id ? 'Equipped' : 'Equip' }}</button>
                 <button
                   type="button"
                   class="rounded border border-border px-2 py-1 font-mono text-[0.68rem] text-text bg-transparent cursor-pointer disabled:opacity-50"
