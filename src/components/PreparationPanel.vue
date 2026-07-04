@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 import { formatNumber } from '../utils/stash'
 import { rarityBarClass, rarityLabel } from '../utils/rarity'
 import { usePreparationViewModel } from '../composables/usePreparationViewModel'
+import teaKettleThumbnail from '../assets/weapon-icons/tea-kettle/tk_thumbnail.png'
 
 interface PreparationConfirmState {
   open: boolean
@@ -88,6 +89,14 @@ const showWeapons = ref(true)
 const showRechargers = ref(true)
 const showHealing = ref(true)
 
+const weaponIconById: Record<string, string> = {
+  tea_kettle: teaKettleThumbnail,
+}
+
+function weaponIconSrc(weaponId: string): string | undefined {
+  return weaponIconById[weaponId]
+}
+
 function equipButtonColorClass(isEquipped: boolean): string {
   return isEquipped
     ? 'border-success text-success'
@@ -163,7 +172,17 @@ function repairButtonColorClass(weaponId: string, durabilityMax: number): string
         <div v-if="showWeapons" class="grid max-h-76 gap-2 overflow-y-auto pr-1 max-[600px]:max-h-none max-[600px]:overflow-visible">
           <article v-for="weapon in weaponCatalog" :key="weapon.id" class="rounded border border-border-subtle bg-surface-raised p-2">
             <div class="flex items-baseline justify-between gap-2">
-              <h4 class="m-0 font-mono text-[0.78rem] font-bold text-text">{{ weapon.name }}</h4>
+              <div class="flex min-w-0 items-center gap-2">
+                <img
+                  v-if="weaponIconSrc(weapon.id)"
+                  :src="weaponIconSrc(weapon.id)"
+                  :alt="`${weapon.name} icon`"
+                  class="h-8 w-8 shrink-0 rounded border border-border-subtle bg-surface p-0.5 object-contain"
+                  loading="lazy"
+                  decoding="async"
+                >
+                <h4 class="m-0 font-mono text-[0.78rem] font-bold text-text">{{ weapon.name }}</h4>
+              </div>
               <span class="font-mono text-[0.68rem] text-muted">{{ weapon.damageMin }}-{{ weapon.damageMax }} dmg</span>
             </div>
             <p class="m-0 mt-1 font-mono text-[0.66rem] leading-snug text-muted">{{ weapon.flavor }}</p>
