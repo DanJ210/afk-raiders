@@ -229,7 +229,10 @@ function repairButtonColorClass(weaponId: string, durabilityMax: number): string
           <article v-for="item in shieldRechargerCatalog" :key="item.id" class="rounded border border-border-subtle bg-surface-raised p-2">
             <div class="flex items-baseline justify-between gap-2">
               <h4 class="m-0 font-mono text-[0.78rem] font-bold text-text">{{ item.name }}</h4>
-              <span class="font-mono text-[0.68rem] text-muted">Tier {{ item.rarity }}</span>
+              <span class="inline-flex items-center gap-1 font-mono text-[0.68rem] text-muted">
+                <span :class="rarityBarClass(item.rarity)" :title="rarityLabel(item.rarity)" aria-hidden="true" />
+                <span>{{ rarityLabel(item.rarity) }}</span>
+              </span>
             </div>
             <p class="m-0 mt-1 font-mono text-[0.66rem] leading-snug text-muted">{{ item.flavor }}</p>
             <div class="mt-2 flex flex-wrap items-center gap-2 text-[0.66rem] font-mono text-muted">
