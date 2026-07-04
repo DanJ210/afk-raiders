@@ -211,10 +211,10 @@ function pickSearchLootItem(lootTable: LootItem[], state: GameState, rng: RNG): 
 const ROBOT_HP_PER_MENACE = 6
 const ROBOT_HP_DANGER_MULTIPLIER: Record<'Low' | 'Medium' | 'High', number> = {
   Low: 1,
-  Medium: 1.35,
-  High: 1.75,
+  Medium: 1.55,
+  High: 2.75,
 }
-const ROBOT_ROUND_DAMAGE_PER_MENACE = 0.35
+const ROBOT_ROUND_DAMAGE_PER_MENACE = 0.38
 const ROBOT_LETHAL_HP_RATIO = 0.5
 const ROBOT_NONLETHAL_MIN_HP_RATIO = 0.25
 const LETHAL_ROBOT_DEADLINESS: ReadonlySet<RobotEntry['deadliness']> = new Set(['nasty', 'deadly'])
@@ -222,8 +222,8 @@ const ROBOT_DAMAGE_SPREAD_BASE = 0.14
 const ROBOT_DAMAGE_SPREAD_PER_MENACE = 0.025
 const ROBOT_DAMAGE_SPREAD_DANGER_BONUS: Record<'Low' | 'Medium' | 'High', number> = {
   Low: 0,
-  Medium: 0.1,
-  High: 0.22,
+  Medium: 0.22,
+  High: 0.55,
 }
 const RAIDER_LEVEL_DAMAGE_BONUS_PER_LEVEL = 0.008
 const MOOD_DAMAGE_BONUS_PER_POINT = 0.01
