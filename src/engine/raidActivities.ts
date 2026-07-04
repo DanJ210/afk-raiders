@@ -389,8 +389,20 @@ function shieldRechargerToBackpackItem(item: ShieldRechargerItem): BackpackItem 
 
 function addBackpackItem(raid: GameState['raid'], item: BackpackItem): GameState['raid'] {
   const existing = raid.backpack.find(entry => entry.itemId === item.itemId)
+  const existingLoadoutQuantity = existing
+    ? Math.max(0, Math.min(existing.quantity, Math.floor(existing.fromLoadoutQuantity ?? (existing.fromLoadout ? existing.quantity : 0))))
+    : 0
   const backpack = existing
-    ? raid.backpack.map(entry => entry.itemId === item.itemId ? { ...entry, quantity: entry.quantity + 1 } : entry)
+    ? raid.backpack.map(entry => {
+        if (entry.itemId !== item.itemId) return entry
+        const nextEntry: BackpackItem = {
+          ...entry,
+          quantity: entry.quantity + 1,
+        }
+        return existingLoadoutQuantity > 0
+          ? { ...nextEntry, fromLoadout: true, fromLoadoutQuantity: existingLoadoutQuantity }
+          : stripLoadoutMetadata(nextEntry)
+      })
     : [...raid.backpack, item]
 
   return {
@@ -398,6 +410,11 @@ function addBackpackItem(raid: GameState['raid'], item: BackpackItem): GameState
     backpack,
     backpackValue: raid.backpackValue + item.value,
   }
+}
+
+function stripLoadoutMetadata(item: BackpackItem): BackpackItem {
+  const { fromLoadout: _fromLoadout, fromLoadoutQuantity: _fromLoadoutQuantity, ...rest } = item
+  return rest
 }
 
 function searchLootRollCount(activity: ActiveRaidActivity, definition: RaidActivityDefinition): number {
@@ -486,11 +503,12 @@ function applyRobotRoundDamage(state: GameState, robot: RobotEntry, activity: Ac
   const damageAfterSkills = Math.max(0, Math.ceil(incomingDamage * skillMultiplier))
   const skillDamageReduced = Math.max(0, incomingDamage - damageAfterSkills)
   const resilienceReductionPercent = getMoodResilienceReductionPercent(state.raider.mood) + getRaiderLevelBenefitProfile(state.raider.levelXp).resilienceReductionPercent
-  const preShieldDamage = resilienceReductionPercent > 0 && damageAfterSkills > 0
-    ? Math.max(1, Math.floor(damageAfterSkills * (1 - (resilienceReductionPercent / 100))))
-    : damageAfterSkills
-  const resilienceDamageReduced = Math.max(0, damageAfterSkills - preShieldDamage)
-  const shielded = applyShieldedDamage(state.raider, state.raid, preShieldDamage)
+  const resilienceCarry = state.raid.robotResilienceCarry ?? 0
+  const rawResilienceMitigation = damageAfterSkills * (resilienceReductionPercent / 100) + resilienceCarry
+  const resilienceDamageReduced = Math.min(Math.max(0, damageAfterSkills - 1), Math.floor(rawResilienceMitigation))
+  const nextResilienceCarry = rawResilienceMitigation - resilienceDamageReduced
+  const preShieldDamage = Math.max(1, damageAfterSkills - resilienceDamageReduced)
+  const shielded = applyShieldedDamage(state.raider, { ...state.raid, robotResilienceCarry: nextResilienceCarry }, preShieldDamage)
   const shieldDamage: ShieldDamageResult = {
     ...shielded,
     incomingDamage,

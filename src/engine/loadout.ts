@@ -390,7 +390,10 @@ function consumeSelectedShieldRechargerLoadout(state: GameState): GameState {
 
   const stagedBackpackItems: BackpackItem[] = selected.map(item => {
     const existing = state.raid.backpack.find(entry => entry.itemId === item.itemId)
-    const quantity = existing ? Math.max(existing.quantity, item.quantity) : item.quantity
+    const existingLoadoutQuantity = existing
+      ? Math.max(0, Math.min(existing.quantity, Math.floor(existing.fromLoadoutQuantity ?? (existing.fromLoadout ? existing.quantity : 0))))
+      : 0
+    const quantity = existing ? existing.quantity + item.quantity : item.quantity
 
     return {
       itemId: item.itemId,
@@ -402,7 +405,8 @@ function consumeSelectedShieldRechargerLoadout(state: GameState): GameState {
       kind: 'shield_recharger',
       shieldChargeAmount: item.chargeAmount,
       applyTicks: item.applyTicks,
-      fromLoadout: true,
+      fromLoadout: existingLoadoutQuantity + item.quantity > 0,
+      fromLoadoutQuantity: existingLoadoutQuantity + item.quantity,
     }
   })
 

@@ -53,7 +53,7 @@ function enterDeploying(raid: RaidState, rng?: RNG): RaidState {
     name: condition.name,
     description: condition.description,
   }
-  return { ...raid, zone, dangerLevel, zoneCondition }
+  return { ...raid, zone, dangerLevel, zoneCondition, robotResilienceCarry: 0 }
 }
 
 // Ticks each lifecycle phase lasts before auto-transitioning (1 tick = 30s)

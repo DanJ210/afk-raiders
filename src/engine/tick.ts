@@ -351,6 +351,29 @@ function totalBackpackQuantity(backpack: BackpackItem[]): number {
   return backpack.reduce((sum, item) => sum + item.quantity, 0)
 }
 
+function loadoutBackpackQuantity(item: BackpackItem): number {
+  const declaredLoadoutQuantity = Math.max(0, Math.floor(item.fromLoadoutQuantity ?? (item.fromLoadout ? item.quantity : 0)))
+  return Math.min(item.quantity, declaredLoadoutQuantity)
+}
+
+function splitExtractedBackpack(backpack: BackpackItem[]): BackpackItem[] {
+  return backpack.flatMap(item => {
+    const lootedQuantity = item.quantity - loadoutBackpackQuantity(item)
+    if (lootedQuantity <= 0) return []
+
+    const extractedItem: BackpackItem = {
+      ...item,
+      quantity: lootedQuantity,
+    }
+    return [stripLoadoutMetadata(extractedItem)]
+  })
+}
+
+function stripLoadoutMetadata(item: BackpackItem): BackpackItem {
+  const { fromLoadout: _fromLoadout, fromLoadoutQuantity: _fromLoadoutQuantity, ...rest } = item
+  return rest
+}
+
 function queueSuccessfulExtractionSkillPractice(
   queue: SkillPracticeTrigger[],
   params: {
@@ -428,20 +451,21 @@ function completeExtractionCondition(
   now: number,
 ): GameState {
   const extractedRaid = state.raid
-  const extractedBackpack = extractedRaid.backpack.filter(item => !item.fromLoadout)
+  const extractedBackpack = splitExtractedBackpack(extractedRaid.backpack)
+  const extractedBackpackValue = extractedBackpack.reduce((sum, item) => sum + (item.value * item.quantity), 0)
   let currentState: GameState = state
 
   // First, apply the successful extraction bookkeeping (transfer loot, heal, etc.)
   queueSuccessfulExtractionSkillPractice(skillPracticeTriggers, {
     backpack: extractedBackpack,
-    backpackValue: extractedRaid.backpackValue,
+    backpackValue: extractedBackpackValue,
     dangerLevel: extractedRaid.dangerLevel,
     hp: state.raider.hp,
     maxHp: state.raider.maxHp,
   })
   queueSuccessfulExtractionRaiderXp(raiderXpTriggers, {
     backpack: extractedBackpack,
-    backpackValue: extractedRaid.backpackValue,
+    backpackValue: extractedBackpackValue,
     dangerLevel: extractedRaid.dangerLevel,
     hp: state.raider.hp,
     maxHp: state.raider.maxHp,

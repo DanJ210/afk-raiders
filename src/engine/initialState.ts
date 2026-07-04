@@ -40,6 +40,7 @@ export function createInitialState(now: number = Date.now()): GameState {
       selectedShieldRechargerLoadout: [],
       equippedWeaponId: STARTER_WEAPON_ID,
       backpackValue: 0,
+      robotResilienceCarry: 0,
       greedLevel: 0,
       phase: 'HUB',
       phaseTicksRemaining: PHASE_DURATIONS['HUB'],

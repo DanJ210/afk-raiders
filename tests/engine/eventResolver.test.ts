@@ -703,6 +703,51 @@ describe('applyEffects — backpack item behavior', () => {
     expect(result!.state.raid.activeRaidActivity).toBeNull()
   })
 
+  it('consumes a staged shield recharger without erasing the value of a looted copy in the same stack', () => {
+    const initial = createInitialState(0)
+    const state = {
+      ...initial,
+      raid: {
+        ...initial.raid,
+        phase: 'RAIDING' as const,
+        shield: {
+          ...initial.raid.shield!,
+          charge: 5,
+          durability: 80,
+        },
+        backpack: [
+          {
+            itemId: 'panic_capacitor',
+            name: 'Panic Capacitor',
+            value: 70,
+            rarity: 4,
+            quantity: 2,
+            kind: 'shield_recharger' as const,
+            shieldChargeAmount: 50,
+            fromLoadout: true,
+            fromLoadoutQuantity: 1,
+          },
+        ],
+        backpackValue: 140,
+      },
+    }
+
+    const result = consumeShieldRecharger(state, 'panic_capacitor', 0)
+
+    expect(result).not.toBeNull()
+    expect(result!.state.raid.backpack).toHaveLength(1)
+    expect(result!.state.raid.backpack[0].quantity).toBe(1)
+    expect(result!.state.raid.backpack[0].fromLoadout).toBeUndefined()
+    expect(result!.state.raid.backpack[0].fromLoadoutQuantity).toBeUndefined()
+    expect(result!.state.raid.backpackValue).toBe(140)
+    expect(result!.state.raid.activeShieldRecharge).toMatchObject({
+      itemId: 'panic_capacitor',
+      chargeRemaining: 50,
+      totalTicks: 5,
+      ticksRemaining: 5,
+    })
+  })
+
   it('supports future instant shield rechargers', () => {
     const initial = createInitialState(0)
     const state = {

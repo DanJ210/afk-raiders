@@ -43,6 +43,7 @@ function createActiveRobotState(params: {
   robotId: string
   dangerLevel?: 'Low' | 'Medium' | 'High'
   hp?: number
+  maxHp?: number
   mood?: number
   levelXp?: number
   shielded?: boolean
@@ -60,6 +61,7 @@ function createActiveRobotState(params: {
     raider: {
       ...initial.raider,
       hp: params.hp ?? initial.raider.hp,
+      maxHp: params.maxHp ?? initial.raider.maxHp,
       mood: params.mood ?? initial.raider.mood,
       levelXp: params.levelXp ?? initial.raider.levelXp,
     },
@@ -967,8 +969,8 @@ describe('raid activities', () => {
   })
 
   it('applies mood resilience to robot activity retaliation', () => {
-    const neutral = advanceRaidActivity(createActiveRobotState({ robotId: 'roomba_prime', shielded: false }), fixedRng(), 0)
-    const upbeat = advanceRaidActivity(createActiveRobotState({ robotId: 'roomba_prime', mood: 5, shielded: false }), fixedRng(), 0)
+    const neutral = advanceRaidActivity(createActiveRobotState({ robotId: 'roomba_prime', shielded: false, robotDamageMultiplier: 10 }), fixedRng(), 0)
+    const upbeat = advanceRaidActivity(createActiveRobotState({ robotId: 'roomba_prime', mood: 5, shielded: false, robotDamageMultiplier: 10 }), fixedRng(), 0)
 
     expect(upbeat.state.raider.hp).toBeGreaterThan(neutral.state.raider.hp)
     expect(upbeat.activityEvents[0].text).toContain('Resilience mitigated')
@@ -980,6 +982,34 @@ describe('raid activities', () => {
 
     expect(maxLevel.state.raider.hp).toBeGreaterThanOrEqual(lowLevel.state.raider.hp)
     expect(maxLevel.activityEvents[0].text).toContain('Resilience mitigated')
+  })
+
+  it('lets fractional resilience carry make nearby percentages diverge over repeated hits', () => {
+    function applyRepeatedRetaliation(levelXp: number): number {
+      let currentState = createActiveRobotState({
+        robotId: 'anxietick',
+        mood: 0,
+        levelXp,
+        shielded: false,
+        hp: 1_000_000,
+        maxHp: 1_000_000,
+        robotHp: 1_000_000,
+        ticksRemaining: 1_000,
+      })
+
+      for (let index = 0; index < 500; index += 1) {
+        const result = advanceRaidActivity(currentState, fixedRng(), index)
+        currentState = result.state
+        if (!currentState.raid.activeRaidActivity) break
+      }
+
+      return currentState.raider.hp
+    }
+
+    const lowerResilienceHp = applyRepeatedRetaliation(xpRequiredForLevel(63))
+    const higherResilienceHp = applyRepeatedRetaliation(xpRequiredForLevel(64))
+
+    expect(higherResilienceHp).toBeGreaterThan(lowerResilienceHp)
   })
 
   it('scales robot activity retaliation by danger level', () => {

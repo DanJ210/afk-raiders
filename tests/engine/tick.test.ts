@@ -221,6 +221,52 @@ describe('deterministic snapshot', () => {
     expect(extractionCompleted?.text).toBe('Extraction thread closed. Raider made it back with the bag and several legal questions.')
   })
 
+  it('only extracts the looted quantity when a backpack stack mixes staged and found shield rechargers', () => {
+    const rng = createRNG(FIXED_SEED)
+    const initial = createInitialState(0)
+    const state = {
+      ...initial,
+      raid: {
+        ...initial.raid,
+        zone: 'damp_battlegrounds',
+        dangerLevel: 'Medium' as const,
+        phase: 'RAIDING' as const,
+        phaseTicksRemaining: 30,
+        extracting: { ticksRemaining: 1 },
+        backpack: [
+          {
+            itemId: 'panic_capacitor',
+            name: 'Panic Capacitor',
+            value: 70,
+            rarity: 4,
+            quantity: 2,
+            kind: 'shield_recharger' as const,
+            shieldChargeAmount: 50,
+            fromLoadout: true,
+            fromLoadoutQuantity: 1,
+          },
+        ],
+        backpackValue: 140,
+      },
+    }
+
+    const result = processTick(state, rng, 0)
+
+    expect(result.state.raid.phase).toBe('HUB')
+    expect(result.state.homeStash).toEqual([
+      {
+        itemId: 'panic_capacitor',
+        name: 'Panic Capacitor',
+        value: 70,
+        rarity: 4,
+        quantity: 1,
+        kind: 'shield_recharger',
+        shieldChargeAmount: 50,
+      },
+    ])
+    expect(result.state.raider.extractCount).toBe(1)
+  })
+
   it('awards autonomous skill practice and level-up comms on extraction', () => {
     const rng = createRNG(FIXED_SEED)
     const initial = createInitialState(0)

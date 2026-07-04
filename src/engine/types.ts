@@ -261,6 +261,8 @@ export interface BackpackItem {
   applyTicks?: number
   /** True when staged from HUB loadout rather than found during the raid. */
   fromLoadout?: boolean
+  /** Quantity within this stack that was staged from HUB loadout rather than found during the raid. */
+  fromLoadoutQuantity?: number
 }
 
 export interface HealingItemStack {
@@ -380,6 +382,8 @@ export interface RaidState {
   /** HUB-selected weapon id used for robot encounters unless an activity overrides weapon fields. */
   equippedWeaponId: string | null
   backpackValue: number
+  /** Fractional carry from repeated resilience rounding during robot retaliation. */
+  robotResilienceCarry?: number
   greedLevel: number   // 0–100; higher = stronger loot appetite and major-condition momentum
   phase: Phase
   phaseTicksRemaining: number
