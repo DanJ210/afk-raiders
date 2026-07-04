@@ -1,14 +1,27 @@
 import { appendLogEntries } from '../engine/log.js'
 import type { GameState, LogEvent } from '../engine/types.js'
-import { clearSelectedHealingLoadout, equipWeapon, purchaseHealingItem, purchaseWeapon, repairWeapon, setSelectedHealingLoadout } from '../engine/loadout.js'
+import {
+  clearSelectedHealingLoadout,
+  clearSelectedShieldRechargerLoadout,
+  equipWeapon,
+  purchaseHealingItem,
+  purchaseShieldRecharger,
+  purchaseWeapon,
+  repairWeapon,
+  setSelectedHealingLoadout,
+  setSelectedShieldRechargerLoadout,
+} from '../engine/loadout.js'
 
 export interface PreparationActionsReturn {
   purchaseWeapon: (weaponId: string) => void
   repairWeapon: (weaponId: string) => void
   equipWeapon: (weaponId: string) => void
   purchaseHealingItem: (itemId: string, quantity?: number) => void
+  purchaseShieldRecharger: (itemId: string, quantity?: number) => void
   setSelectedHealingLoadout: (selections: Array<{ itemId: string; quantity: number }>) => void
+  setSelectedShieldRechargerLoadout: (selections: Array<{ itemId: string; quantity: number }>) => void
   clearSelectedHealingLoadout: () => void
+  clearSelectedShieldRechargerLoadout: () => void
 }
 
 export function usePreparationActions(
@@ -51,8 +64,20 @@ export function usePreparationActions(
     commit(result)
   }
 
+  function purchaseShieldRechargerAction(itemId: string, quantity = 1) {
+    const result = purchaseShieldRecharger(stateRef.value, itemId, quantity, Date.now())
+    if (!result) return
+    commit(result)
+  }
+
   function setSelectedHealingLoadoutAction(selections: Array<{ itemId: string; quantity: number }>) {
     const result = setSelectedHealingLoadout(stateRef.value, selections, Date.now())
+    if (!result) return
+    commit(result)
+  }
+
+  function setSelectedShieldRechargerLoadoutAction(selections: Array<{ itemId: string; quantity: number }>) {
+    const result = setSelectedShieldRechargerLoadout(stateRef.value, selections, Date.now())
     if (!result) return
     commit(result)
   }
@@ -63,12 +88,21 @@ export function usePreparationActions(
     commit(result)
   }
 
+  function clearSelectedShieldRechargerLoadoutAction() {
+    const result = clearSelectedShieldRechargerLoadout(stateRef.value, Date.now())
+    if (!result) return
+    commit(result)
+  }
+
   return {
     purchaseWeapon: purchaseWeaponAction,
     repairWeapon: repairWeaponAction,
     equipWeapon: equipWeaponAction,
     purchaseHealingItem: purchaseHealingItemAction,
+    purchaseShieldRecharger: purchaseShieldRechargerAction,
     setSelectedHealingLoadout: setSelectedHealingLoadoutAction,
+    setSelectedShieldRechargerLoadout: setSelectedShieldRechargerLoadoutAction,
     clearSelectedHealingLoadout: clearSelectedHealingLoadoutAction,
+    clearSelectedShieldRechargerLoadout: clearSelectedShieldRechargerLoadoutAction,
   }
 }

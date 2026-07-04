@@ -221,6 +221,52 @@ describe('deterministic snapshot', () => {
     expect(extractionCompleted?.text).toBe('Extraction thread closed. Raider made it back with the bag and several legal questions.')
   })
 
+  it('only extracts the looted quantity when a backpack stack mixes staged and found shield rechargers', () => {
+    const rng = createRNG(FIXED_SEED)
+    const initial = createInitialState(0)
+    const state = {
+      ...initial,
+      raid: {
+        ...initial.raid,
+        zone: 'damp_battlegrounds',
+        dangerLevel: 'Medium' as const,
+        phase: 'RAIDING' as const,
+        phaseTicksRemaining: 30,
+        extracting: { ticksRemaining: 1 },
+        backpack: [
+          {
+            itemId: 'panic_capacitor',
+            name: 'Panic Capacitor',
+            value: 70,
+            rarity: 4,
+            quantity: 2,
+            kind: 'shield_recharger' as const,
+            shieldChargeAmount: 50,
+            fromLoadout: true,
+            fromLoadoutQuantity: 1,
+          },
+        ],
+        backpackValue: 140,
+      },
+    }
+
+    const result = processTick(state, rng, 0)
+
+    expect(result.state.raid.phase).toBe('HUB')
+    expect(result.state.homeStash).toEqual([
+      {
+        itemId: 'panic_capacitor',
+        name: 'Panic Capacitor',
+        value: 70,
+        rarity: 4,
+        quantity: 1,
+        kind: 'shield_recharger',
+        shieldChargeAmount: 50,
+      },
+    ])
+    expect(result.state.raider.extractCount).toBe(1)
+  })
+
   it('awards autonomous skill practice and level-up comms on extraction', () => {
     const rng = createRNG(FIXED_SEED)
     const initial = createInitialState(0)
@@ -638,6 +684,50 @@ describe('deterministic snapshot', () => {
     expect(result.activityEvents.find(event => event.activityId === 'current_extraction' && event.status === 'started')?.text).toBe('Extraction thread opened. LZ timer: 4 ticks.')
   })
 
+  it('immediately starts extraction and cancels active raid activity when force extract is set', () => {
+    const rng = createRNG(FIXED_SEED)
+    const initial = createInitialState(0)
+    const state = {
+      ...initial,
+      raid: {
+        ...initial.raid,
+        phase: 'RAIDING' as const,
+        phaseTicksRemaining: 30,
+        forceExtract: true,
+        activeShieldRecharge: {
+          itemId: 'field_recharger_basic',
+          name: 'Field Recharger',
+          ticksRemaining: 2,
+          totalTicks: 4,
+          chargePerTick: 8,
+        },
+        activeRaidActivity: {
+          id: 'robot_encounter_standard',
+          name: 'Robot Encounter: Anxietick',
+          kind: 'ROBOT_ENCOUNTER' as const,
+          ticksRemaining: 2,
+          totalTicks: 6,
+          robotId: 'anxietick',
+          robotHp: 10,
+          robotMaxHp: 12,
+          weaponId: 'tea_kettle',
+          weaponName: 'Tea Kettle',
+          raiderBaseDamage: 5,
+          raiderDamageMultiplier: 1,
+          raiderAction: 'fighting' as const,
+        },
+      },
+    }
+
+    const result = processTick(state, rng, 0)
+
+    expect(result.state.raid.extracting).not.toBeNull()
+    expect(result.state.raid.activeRaidActivity).toBeNull()
+    expect(result.state.raid.activeShieldRecharge).toBeNull()
+    expect(result.events.some(event => event.id === 'condition_extracting_started')).toBe(true)
+    expect(result.activityEvents.some(event => event.activity === 'ROBOT_ENCOUNTER')).toBe(false)
+  })
+
   it('goes straight to KNOCKED_OUT when the raid timer expires without extraction in progress', () => {
     const rng = createRNG(FIXED_SEED)
     const initial = createInitialState(0)
@@ -996,7 +1086,7 @@ describe('deterministic snapshot', () => {
     expect(downedEvent?.conditions).toEqual(['EXTRACTING', 'DOWNED'])
   })
 
-  it('keeps HP at 0 while the raider remains DOWNED', () => {
+  it('keeps HP at 0 while the raider remains DOWNED without re-emitting DOWNED progress activity', () => {
     const rng = createRNG(FIXED_SEED)
     const initial = createInitialState(0)
     const state = {
@@ -1015,7 +1105,7 @@ describe('deterministic snapshot', () => {
     expect(result.state.raid.phase).toBe('RAIDING')
     expect(result.state.raid.downed?.ticksRemaining).toBe(1)
     expect(result.state.raider.hp).toBe(0)
-    expect(result.activityEvents.find(event => event.activityId === 'downed_recovery' && event.status === 'progress')?.text).toBe('Downed thread: 1 tick left for a miracle or medically questionable idea.')
+    expect(result.activityEvents.some(event => event.activityId === 'downed_recovery' && event.status === 'progress')).toBe(false)
   })
 
   it('uses JSON-backed DOWNED failure activity text when the downed timer expires', () => {

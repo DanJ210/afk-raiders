@@ -11,7 +11,7 @@
  *   6. {count}         → random plausible water-bottle count (for flavor)
  */
 
-import { CommsPriority, type DangerLevel, type EventTemplate, type GameState, type HealingItem, type HealingItemStack, type LogEvent, type LootItem, type Phase, type RaidActivityKind, type RobotEntry, type RobotLootItem, type ShieldRechargerItem } from './types.js'
+import { CommsPriority, type BackpackItem, type DangerLevel, type EventTemplate, type GameState, type HealingItem, type HealingItemStack, type LogEvent, type LootItem, type Phase, type RaidActivityKind, type RobotEntry, type RobotLootItem, type ShieldRechargerItem } from './types.js'
 import type { RNG } from './rng.js'
 import hubEventsData from '../content/hub_events.json'
 import deploymentEventsData from '../content/deployment_events.json'
@@ -448,6 +448,9 @@ function addBackpackItem(
   item: LootItem | ShieldRechargerItem,
 ): GameState['raid'] {
   const existing = raid.backpack.find(entry => entry.itemId === item.id)
+  const existingLoadoutQuantity = existing
+    ? Math.max(0, Math.min(existing.quantity, Math.floor(existing.fromLoadoutQuantity ?? (existing.fromLoadout ? existing.quantity : 0))))
+    : 0
   const extraFields = 'chargeAmount' in item
     ? {
         kind: 'shield_recharger' as const,
@@ -456,11 +459,18 @@ function addBackpackItem(
       }
     : {}
   const backpack = existing
-    ? raid.backpack.map(entry => (
-        entry.itemId === item.id
-          ? { ...entry, quantity: entry.quantity + 1 }
-          : entry
-      ))
+    ? raid.backpack.map(entry => {
+        if (entry.itemId !== item.id) return entry
+        const nextQuantity = entry.quantity + 1
+        const nextEntry: BackpackItem = {
+          ...entry,
+          ...extraFields,
+          quantity: nextQuantity,
+        }
+        return existingLoadoutQuantity > 0
+          ? { ...nextEntry, fromLoadout: true, fromLoadoutQuantity: existingLoadoutQuantity }
+          : stripLoadoutMetadata(nextEntry)
+      })
     : [...raid.backpack, {
         itemId: item.id,
         name: item.name,
@@ -478,27 +488,46 @@ function addBackpackItem(
   }
 }
 
-function removeBackpackItem(
+function stripLoadoutMetadata(item: BackpackItem): BackpackItem {
+  const { fromLoadout: _fromLoadout, fromLoadoutQuantity: _fromLoadoutQuantity, ...rest } = item
+  return rest
+}
+
+function consumeBackpackItem(
   raid: GameState['raid'],
   itemId: string,
-): GameState['raid'] {
+): { raid: GameState['raid']; consumedValue: number } | null {
   const current = raid.backpack.find(entry => entry.itemId === itemId)
-  if (!current) return raid
+  if (!current) return null
 
-  const backpack = current.quantity <= 1
+  const loadoutQuantity = Math.max(0, Math.min(current.quantity, Math.floor(current.fromLoadoutQuantity ?? (current.fromLoadout ? current.quantity : 0))))
+  const consumedFromLoadout = loadoutQuantity > 0
+  const nextLoadoutQuantity = consumedFromLoadout ? loadoutQuantity - 1 : 0
+  const nextQuantity = current.quantity - 1
+
+  const backpack = nextQuantity <= 0
     ? raid.backpack.filter(entry => entry.itemId !== itemId)
-    : raid.backpack.map(entry => (
-        entry.itemId === itemId
-          ? { ...entry, quantity: entry.quantity - 1 }
-          : entry
-      ))
+    : raid.backpack.map(entry => {
+        if (entry.itemId !== itemId) return entry
+        const nextEntry: BackpackItem = {
+          ...entry,
+          quantity: nextQuantity,
+        }
+        return nextLoadoutQuantity > 0
+          ? { ...nextEntry, fromLoadout: true, fromLoadoutQuantity: nextLoadoutQuantity }
+          : stripLoadoutMetadata(nextEntry)
+      })
 
   return {
-    ...raid,
-    backpack,
-    hiddenPocket: current.quantity <= 1 && raid.hiddenPocket?.itemId === itemId
-      ? null
-      : raid.hiddenPocket,
+    raid: {
+      ...raid,
+      backpack,
+      backpackValue: Math.max(0, raid.backpackValue - (consumedFromLoadout ? 0 : current.value)),
+      hiddenPocket: nextQuantity <= 0 && raid.hiddenPocket?.itemId === itemId
+        ? null
+        : raid.hiddenPocket,
+    },
+    consumedValue: consumedFromLoadout ? 0 : current.value,
   }
 }
 
@@ -680,10 +709,8 @@ export function consumeShieldRecharger(
   })
   if (start.startedCharge <= 0) return null
 
-  const baseRaid = {
-    ...removeBackpackItem(start.raid, item.itemId),
-    backpackValue: Math.max(0, state.raid.backpackValue - item.value),
-  }
+  const consumed = consumeBackpackItem(start.raid, item.itemId)
+  if (!consumed) return null
 
   const eventText = start.completedImmediately
     ? `Used ${item.name}. Restored ${start.startedCharge} shield charge instantly. Confidence field humming again.`
@@ -692,7 +719,7 @@ export function consumeShieldRecharger(
   return {
     state: {
       ...state,
-      raid: baseRaid,
+      raid: consumed.raid,
     },
     event: {
       id: start.completedImmediately

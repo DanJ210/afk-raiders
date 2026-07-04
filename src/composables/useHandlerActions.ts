@@ -21,7 +21,7 @@ import { createInitialState } from '../engine/initialState.js'
 import { applyRaiderXpGain, rollRaiderXp, getRevivalSignalCost, type RaiderLevelUp } from '../engine/raiderLevel.js'
 import { applySkillPractice, rollSkillPractice, type SkillLevelUp } from '../engine/skills.js'
 import type { BackpackItem } from '../engine/types.js'
-import { consumeSelectedHealingLoadout } from '../engine/loadout.js'
+import { consumeSelectedPreparationLoadouts } from '../engine/loadout.js'
 
 const RAIDER_NAME_MAX_LENGTH = 25
 const REVIVE_HP_RESTORE = 25
@@ -188,7 +188,7 @@ export function useHandlerActions(
     const updated = spendSignal(syncSignalProgress(actionNow), 'READY_UP')
     if (!updated) return
 
-    const preparedState = consumeSelectedHealingLoadout(stateRef.value)
+    const preparedState = consumeSelectedPreparationLoadouts(stateRef.value)
     const { raid: deployingRaid, transition } = tickPhase(preparedState.raid, 'DEPLOYING', rngRef.current)
     if (!transition) return
 

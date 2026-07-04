@@ -24,7 +24,25 @@ const bonusViewModel = useRaiderBonusRows(computed(() => props.raider))
       </div>
 
       <div class="min-w-0">
-        <h4 class="m-0 mb-1 font-mono text-[0.72rem] tracking-[0.04em] text-accent">Bonuses</h4>
+        <h4 class="m-0 mb-1 font-mono text-[0.72rem] tracking-[0.04em] text-accent">Applied Bonuses</h4>
+        <ul v-if="bonusViewModel.appliedRows.value.length > 0" class="list-none m-0 p-0 flex flex-col gap-1">
+          <li
+            v-for="bonus in bonusViewModel.appliedRows.value"
+            :key="`applied-${bonus.id}`"
+            class="min-w-0 rounded bg-surface-raised border border-border-subtle p-1.5"
+          >
+            <div class="flex items-baseline justify-between gap-2 min-w-0 max-[600px]:flex-wrap">
+              <span class="font-mono text-raider-tiny text-text font-bold wrap-anywhere">{{ bonus.source }}</span>
+              <span class="font-mono text-[0.68rem] text-accent shrink-0">{{ bonus.value }}</span>
+            </div>
+            <p class="m-0 mt-0.5 font-mono text-[0.66rem] text-muted leading-snug wrap-anywhere">{{ bonus.mechanic }}</p>
+          </li>
+        </ul>
+        <p v-else class="m-0 font-mono text-[0.72rem] text-muted wrap-anywhere">No active bonuses yet.</p>
+      </div>
+
+      <div class="min-w-0">
+        <h4 class="m-0 mb-1 font-mono text-[0.72rem] tracking-[0.04em] text-accent">All Bonuses</h4>
         <ul class="list-none m-0 p-0 flex flex-col gap-1">
           <li
             v-for="bonus in bonusViewModel.rows.value"

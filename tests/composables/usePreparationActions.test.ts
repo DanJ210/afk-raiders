@@ -39,6 +39,12 @@ describe('usePreparationActions', () => {
       expect.objectContaining({ itemId: 'bandage_green', quantity: 2 }),
     ])
 
+    actions.purchaseShieldRecharger('fizz_cell', 2)
+    expect(stateRef.value.coins).toBe(875)
+    expect(stateRef.value.purchasedShieldRechargers).toEqual([
+      expect.objectContaining({ itemId: 'fizz_cell', quantity: 2 }),
+    ])
+
     actions.setSelectedHealingLoadout([{ itemId: 'bandage_green', quantity: 1 }])
     expect(stateRef.value.purchasedHealingItems).toEqual([
       expect.objectContaining({ itemId: 'bandage_green', quantity: 2 }),
@@ -52,6 +58,17 @@ describe('usePreparationActions', () => {
       expect.objectContaining({ itemId: 'bandage_green', quantity: 2 }),
     ])
     expect(stateRef.value.raid.selectedHealingLoadout).toEqual([])
+
+    actions.setSelectedShieldRechargerLoadout([{ itemId: 'fizz_cell', quantity: 1 }])
+    expect(stateRef.value.purchasedShieldRechargers).toEqual([
+      expect.objectContaining({ itemId: 'fizz_cell', quantity: 2 }),
+    ])
+    expect(stateRef.value.raid.selectedShieldRechargerLoadout).toEqual([
+      expect.objectContaining({ itemId: 'fizz_cell', quantity: 1 }),
+    ])
+
+    actions.clearSelectedShieldRechargerLoadout()
+    expect(stateRef.value.raid.selectedShieldRechargerLoadout).toEqual([])
 
     expect(persistCallback).toHaveBeenCalled()
     expect(published.length).toBeGreaterThan(0)

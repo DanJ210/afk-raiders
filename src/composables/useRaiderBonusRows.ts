@@ -8,6 +8,7 @@ export interface RaiderBonusRow {
   source: string
   mechanic: string
   value: string
+  isApplied: boolean
 }
 
 function formatAmount(value: number, fractionDigits = 2): string {
@@ -41,51 +42,61 @@ export function useRaiderBonusRows(raiderRef: { value: Pick<RaiderStats, 'levelX
         source: `Raider Level ${levelBenefits.level}`,
         mechanic: 'Successful extraction coin stipend',
         value: `+${levelBenefits.extractionCoinBonus} ${extractionCoinLabel} per extract`,
+        isApplied: levelBenefits.extractionCoinBonus > 0,
       },
       {
         id: 'raider_level_resilience',
         source: `Raider Level ${levelBenefits.level}`,
         mechanic: 'Failed robot damage before shields',
         value: `${formatPercent(levelBenefits.resilienceReductionPercent)} resilience trim`,
+        isApplied: levelBenefits.resilienceReductionPercent > 0,
       },
       {
         id: 'cardio_extraction_chance',
         source: `Cardio Level ${cardioLevel}`,
         mechanic: 'Natural extraction chance',
         value: `+${formatPercentPoints(skillModifiers.extractionChanceBonus)}`,
+        isApplied: skillModifiers.extractionChanceBonus > 0,
       },
       {
         id: 'cardio_raid_safety',
         source: `Cardio Level ${cardioLevel}`,
         mechanic: 'Ambient RAIDING downed pressure',
         value: `${formatPercent((1 - skillModifiers.ambientRaidDeathChanceMultiplier) * 100)} reduction`,
+        isApplied: skillModifiers.ambientRaidDeathChanceMultiplier < 1,
       },
       {
         id: 'hoarding_loot_value',
         source: `Hoarding Level ${hoardingLevel}`,
         mechanic: 'Loot value rolls',
         value: `+${formatPercent((skillModifiers.lootValueMultiplier - 1) * 100)} value`,
+        isApplied: skillModifiers.lootValueMultiplier > 1,
       },
       {
         id: 'hoarding_bonus_consumables',
         source: `Hoarding Level ${hoardingLevel}`,
         mechanic: 'Bonus field meds and shield rechargers on loot',
         value: `+${formatPercentPoints(skillModifiers.lootBonusConsumableChanceBonus)}`,
+        isApplied: skillModifiers.lootBonusConsumableChanceBonus > 0,
       },
       {
         id: 'hiding_robot_damage',
         source: `Hiding in Lockers Level ${hidingLevel}`,
         mechanic: 'Failed robot encounter damage before shields',
         value: `${formatPercent((1 - skillModifiers.robotFailureDamageMultiplier) * 100)} reduction`,
+        isApplied: skillModifiers.robotFailureDamageMultiplier < 1,
       },
       {
         id: 'signal_handling_progression',
         source: `Signal Handling Level ${signalHandlingLevel}`,
         mechanic: 'Handler Signal use progression',
         value: 'No direct survival modifier for MVP',
+        isApplied: false,
       },
     ]
   })
 
-  return { rows }
+  const appliedRows = computed(() => rows.value.filter(row => row.isApplied))
+
+  return { rows, appliedRows }
 }

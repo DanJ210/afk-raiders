@@ -17,7 +17,7 @@ import { advanceShieldRecharge } from './shields.js'
 import { applySkillPractice, getSkillModifierProfile, rollSkillPractice, type SkillLevelUp, type SkillPracticeTrigger } from './skills.js'
 import { applyRaiderXpGain, getRaiderLevelBenefitProfile, rollRaiderXp, type RaiderLevelUp, type RaiderXpTrigger } from './raiderLevel.js'
 import { advanceRaidActivity, raidActivities, startRaidActivity } from './raidActivities.js'
-import { applyFailedRaidWeaponLoss, applyRaidWeaponWear, consumeSelectedHealingLoadout } from './loadout.js'
+import { applyFailedRaidWeaponLoss, applyRaidWeaponWear, consumeSelectedPreparationLoadouts } from './loadout.js'
 
 const LOOT_BONUS_HEALING_ITEM_CHANCE = 0.2 // 20% chance to find a healing item on any loot event, independent of normal loot rolls
 const LOOT_BONUS_SHIELD_RECHARGER_CHANCE = 0.15 // 15% chance to find a shield recharger on any loot event, independent of normal loot rolls
@@ -351,6 +351,29 @@ function totalBackpackQuantity(backpack: BackpackItem[]): number {
   return backpack.reduce((sum, item) => sum + item.quantity, 0)
 }
 
+function loadoutBackpackQuantity(item: BackpackItem): number {
+  const declaredLoadoutQuantity = Math.max(0, Math.floor(item.fromLoadoutQuantity ?? (item.fromLoadout ? item.quantity : 0)))
+  return Math.min(item.quantity, declaredLoadoutQuantity)
+}
+
+function splitExtractedBackpack(backpack: BackpackItem[]): BackpackItem[] {
+  return backpack.flatMap(item => {
+    const lootedQuantity = item.quantity - loadoutBackpackQuantity(item)
+    if (lootedQuantity <= 0) return []
+
+    const extractedItem: BackpackItem = {
+      ...item,
+      quantity: lootedQuantity,
+    }
+    return [stripLoadoutMetadata(extractedItem)]
+  })
+}
+
+function stripLoadoutMetadata(item: BackpackItem): BackpackItem {
+  const { fromLoadout: _fromLoadout, fromLoadoutQuantity: _fromLoadoutQuantity, ...rest } = item
+  return rest
+}
+
 function queueSuccessfulExtractionSkillPractice(
   queue: SkillPracticeTrigger[],
   params: {
@@ -428,25 +451,27 @@ function completeExtractionCondition(
   now: number,
 ): GameState {
   const extractedRaid = state.raid
+  const extractedBackpack = splitExtractedBackpack(extractedRaid.backpack)
+  const extractedBackpackValue = extractedBackpack.reduce((sum, item) => sum + (item.value * item.quantity), 0)
   let currentState: GameState = state
 
   // First, apply the successful extraction bookkeeping (transfer loot, heal, etc.)
   queueSuccessfulExtractionSkillPractice(skillPracticeTriggers, {
-    backpack: extractedRaid.backpack,
-    backpackValue: extractedRaid.backpackValue,
+    backpack: extractedBackpack,
+    backpackValue: extractedBackpackValue,
     dangerLevel: extractedRaid.dangerLevel,
     hp: state.raider.hp,
     maxHp: state.raider.maxHp,
   })
   queueSuccessfulExtractionRaiderXp(raiderXpTriggers, {
-    backpack: extractedRaid.backpack,
-    backpackValue: extractedRaid.backpackValue,
+    backpack: extractedBackpack,
+    backpackValue: extractedBackpackValue,
     dangerLevel: extractedRaid.dangerLevel,
     hp: state.raider.hp,
     maxHp: state.raider.maxHp,
   })
 
-  const extraction = applySuccessfulExtraction(currentState, extractedRaid.backpack, {
+  const extraction = applySuccessfulExtraction(currentState, extractedBackpack, {
     zone: extractedRaid.zone,
     dangerLevel: extractedRaid.dangerLevel,
   })
@@ -594,7 +619,7 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
     emitted.push(phaseTransitionEvent(transition, state.tick, now))
 
     if (transition.to === 'DEPLOYING') {
-      currentState = consumeSelectedHealingLoadout(currentState)
+      currentState = consumeSelectedPreparationLoadouts(currentState)
     }
 
     // KNOCKED_OUT -> HUB performs failed-raid bookkeeping. tickPhase has
@@ -642,9 +667,6 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
     if (currentState.raid.extracting) {
       activityEmitted.push(extractionActivityEvent('progress', state.tick, now, currentState.raid.extracting.ticksRemaining))
     }
-    if (currentState.raid.downed) {
-      activityEmitted.push(downedActivityEvent('progress', state.tick, now, currentState.raid.downed.ticksRemaining))
-    }
   }
 
   if (
@@ -669,6 +691,22 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
   let startedExtractionThisTick = false
   let advancedBlockingActivity = false
   let advancedActivityThisTick = false
+  if (
+    currentState.raid.phase === 'RAIDING' &&
+    currentState.raid.forceExtract &&
+    !currentState.raid.extracting &&
+    !currentState.raid.downed
+  ) {
+    skillPracticeTriggers.push({ skillId: 'cardio', reason: 'extraction_started', minXp: 1, maxXp: 2 })
+    const started = startExtractionCondition(currentState, state.tick, now)
+    currentState = started.state
+    startedExtractionThisTick = started.event !== null
+    if (started.event) {
+      emitted.push(started.event)
+      activityEmitted.push(extractionActivityEvent('started', state.tick, now, currentState.raid.extracting?.ticksRemaining ?? EXTRACTING_TICKS))
+    }
+  }
+
   if (
     currentState.raid.phase === 'RAIDING' &&
     !currentState.raid.extracting &&

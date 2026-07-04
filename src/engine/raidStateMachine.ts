@@ -53,7 +53,7 @@ function enterDeploying(raid: RaidState, rng?: RNG): RaidState {
     name: condition.name,
     description: condition.description,
   }
-  return { ...raid, zone, dangerLevel, zoneCondition }
+  return { ...raid, zone, dangerLevel, zoneCondition, robotResilienceCarry: 0 }
 }
 
 // Ticks each lifecycle phase lasts before auto-transitioning (1 tick = 30s)
@@ -114,7 +114,6 @@ export function tickPhase(
         zone: null,
         dangerLevel: null,
         zoneCondition: null,
-        selectedHealingLoadout: [],
       }
     }
     // Failed recovery phase owns the reset after an unresolved downed condition.
@@ -131,6 +130,7 @@ export function tickPhase(
         raidTimeoutDownedStarted: false,
         phaseTicksRemaining: knockedOutDurationTicks(forcedRaid),
         selectedHealingLoadout: [],
+        selectedShieldRechargerLoadout: [],
       }
     }
     if (forced === 'DEPLOYING') {
@@ -184,7 +184,6 @@ export function tickPhase(
       zone: null,
       dangerLevel: null,
       zoneCondition: null,
-      selectedHealingLoadout: [],
     }
   }
 
