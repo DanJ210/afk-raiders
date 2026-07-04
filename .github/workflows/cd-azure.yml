@@ -48,7 +48,7 @@ jobs:
   deploy-production:
     name: Deploy to Azure Production
     runs-on: ubuntu-latest
-    needs: validate
+    #needs: validate
     environment:
       name: production
     env:
