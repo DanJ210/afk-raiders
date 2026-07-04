@@ -80,5 +80,16 @@ describe('useRaiderBonusRows', () => {
       mechanic: 'Handler Signal use progression',
       value: 'No direct survival modifier for MVP',
     })
+
+    const appliedIds = viewModel.appliedRows.value.map(row => row.id)
+    expect(appliedIds).toEqual([
+      'raider_level_extraction_stipend',
+      'raider_level_resilience',
+      'cardio_extraction_chance',
+      'cardio_raid_safety',
+      'hoarding_loot_value',
+      'hoarding_bonus_consumables',
+      'hiding_robot_damage',
+    ])
   })
 })
