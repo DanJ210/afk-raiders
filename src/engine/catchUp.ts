@@ -73,8 +73,16 @@ export function catchUp(
     replayedEvents.push(...result.events)
   }
 
-  const deaths = replayedEvents.filter(isDeathTransition).length
-  const extracts = replayedEvents.filter(isExtractionTransition).length
+  const extractsFromTransitions = replayedEvents.filter(isExtractionTransition).length
+  const extractsFromStats = Math.max(0, currentState.stats.extracts.total - state.stats.extracts.total)
+  const extracts = Math.max(extractsFromTransitions, extractsFromStats)
+  const recordedDeaths = Math.max(0, currentState.stats.deaths.total - state.stats.deaths.total)
+  // If we load while already KNOCKED_OUT, that pending recovery bookkeeping death
+  // belongs to the pre-away failure and should not count as a new away death.
+  const pendingRecoveryDeaths = state.raid.phase === 'KNOCKED_OUT' ? 1 : 0
+  const deathsFromStats = Math.max(0, recordedDeaths - pendingRecoveryDeaths)
+  const deathsFromTransitions = replayedEvents.filter(isDeathTransition).length
+  const deaths = Math.max(deathsFromTransitions, deathsFromStats)
   const lootValueGained = Math.max(
     0,
     getTotalItemValue(currentState.homeStash) + currentState.coins - stashValueBefore,
