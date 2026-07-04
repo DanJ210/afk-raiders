@@ -503,10 +503,12 @@ function applyRobotRoundDamage(state: GameState, robot: RobotEntry, activity: Ac
   const damageAfterSkills = Math.max(0, Math.ceil(incomingDamage * skillMultiplier))
   const skillDamageReduced = Math.max(0, incomingDamage - damageAfterSkills)
   const resilienceReductionPercent = getMoodResilienceReductionPercent(state.raider.mood) + getRaiderLevelBenefitProfile(state.raider.levelXp).resilienceReductionPercent
-  const resilienceCarry = state.raid.robotResilienceCarry ?? 0
+  const resilienceCarryRaw = Math.max(0, state.raid.robotResilienceCarry ?? 0)
+  const resilienceCarry = resilienceCarryRaw - Math.floor(resilienceCarryRaw)
   const rawResilienceMitigation = damageAfterSkills * (resilienceReductionPercent / 100) + resilienceCarry
-  const resilienceDamageReduced = Math.min(Math.max(0, damageAfterSkills - 1), Math.floor(rawResilienceMitigation))
-  const nextResilienceCarry = rawResilienceMitigation - resilienceDamageReduced
+  const resilienceMitigationFloor = Math.floor(rawResilienceMitigation)
+  const resilienceDamageReduced = Math.min(Math.max(0, damageAfterSkills - 1), resilienceMitigationFloor)
+  const nextResilienceCarry = rawResilienceMitigation - resilienceMitigationFloor
   const preShieldDamage = Math.max(1, damageAfterSkills - resilienceDamageReduced)
   const shielded = applyShieldedDamage(state.raider, { ...state.raid, robotResilienceCarry: nextResilienceCarry }, preShieldDamage)
   const shieldDamage: ShieldDamageResult = {
