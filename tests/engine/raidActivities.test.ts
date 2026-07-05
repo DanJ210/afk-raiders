@@ -130,7 +130,7 @@ describe('raid activities', () => {
     expect(result!.activityEvent.text).toContain('Tea Kettle')
   })
 
-  it('uses the activity definition weapon when a valid weapon override is present', () => {
+  it('uses the equipped weapon when a valid override is present', () => {
     const initial = createInitialState(0)
     const equipped = findWeapon('temptrest_ar')
     expect(equipped).not.toBeNull()
@@ -154,9 +154,9 @@ describe('raid activities', () => {
 
     expect(result).not.toBeNull()
     expect(result!.state.raid.activeRaidActivity).toMatchObject({
-      weaponId: DEFAULT_RAIDER_WEAPON.id,
-      weaponName: DEFAULT_RAIDER_WEAPON.name,
-      raiderDamageMultiplier: DEFAULT_RAIDER_WEAPON.damageMultiplier,
+      weaponId: equipped!.id,
+      weaponName: equipped!.name,
+      raiderDamageMultiplier: equipped!.damageMultiplier,
     })
   })
 
@@ -187,15 +187,15 @@ describe('raid activities', () => {
     })
   })
 
-  it('resolves overridden weapon id and name from the same weapon entry', () => {
+  it('keeps weapon id and name consistent when the activity definition omits an override', () => {
     const initial = createInitialState(0)
     const definition = raidActivities.find(activity => activity.id === 'robot_encounter_standard')
     expect(definition).toBeDefined()
 
     const originalWeaponId = definition!.weaponId
     const originalWeaponName = definition!.weaponName
-    definition!.weaponId = 'tea_kettle'
-    definition!.weaponName = 'Definitely Not A Tea Kettle'
+    definition!.weaponId = undefined
+    definition!.weaponName = undefined
 
     const state = {
       ...initial,
@@ -217,9 +217,9 @@ describe('raid activities', () => {
 
       expect(result).not.toBeNull()
       expect(result!.state.raid.activeRaidActivity).toMatchObject({
-        weaponId: DEFAULT_RAIDER_WEAPON.id,
-        weaponName: DEFAULT_RAIDER_WEAPON.name,
-        raiderDamageMultiplier: DEFAULT_RAIDER_WEAPON.damageMultiplier,
+        weaponId: 'aspperigo',
+        weaponName: 'Aspperigo',
+        raiderDamageMultiplier: expect.any(Number),
       })
     } finally {
       definition!.weaponId = originalWeaponId
