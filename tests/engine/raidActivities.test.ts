@@ -217,8 +217,8 @@ describe('raid activities', () => {
 
       expect(result).not.toBeNull()
       expect(result!.state.raid.activeRaidActivity).toMatchObject({
-        weaponId: 'aspperigo',
-        weaponName: 'Aspperigo',
+        weaponId: definition!.weaponId ?? 'aspperigo',
+        weaponName: definition!.weaponName ?? 'Aspperigo',
         raiderDamageMultiplier: expect.any(Number),
       })
     } finally {

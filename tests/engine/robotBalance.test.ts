@@ -152,7 +152,7 @@ describe('robot balance guardrails', () => {
     const highNeutral = createRobotState({ dangerLevel: 'High', shielded: false })
     const highMood = {
       ...highNeutral,
-      raider: { ...highNeutral.raider, mood: 3 },
+      raider: { ...highNeutral.raider, mood: 5 },
     }
 
     const mediumDamage = robotRoundHpDamage('tank_overcompensation', mediumNeutral)
