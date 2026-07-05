@@ -83,7 +83,17 @@ const shieldRechargeProgress = computed(() => {
   const active = recharge.value
   if (!active || active.totalTicks <= 0) return 0
   const completedTicks = active.totalTicks - active.ticksRemaining
-  return Math.max(0, Math.min(100, Math.round((completedTicks / active.totalTicks) * 100)))
+  const displayedTicks = Math.min(active.totalTicks, Math.max(1, completedTicks + 1))
+  return Math.max(0, Math.min(100, Math.round((displayedTicks / active.totalTicks) * 100)))
+})
+
+const shieldRechargeProgressText = computed(() => {
+  const active = recharge.value
+  if (!active || active.totalTicks <= 0) return '0/0'
+
+  const completedTicks = active.totalTicks - active.ticksRemaining
+  const displayedTicks = Math.min(active.totalTicks, Math.max(1, completedTicks + 1))
+  return `${displayedTicks}/${active.totalTicks}`
 })
 </script>
 
@@ -97,7 +107,7 @@ const shieldRechargeProgress = computed(() => {
         <span class="shrink-0 font-mono text-[0.72rem] tracking-[0.04em] text-muted"
           :class="compact ? 'min-w-shield-label-compact' : 'min-w-shield-label'">Recharge</span>
         <span class="shrink-0 font-mono text-[0.72rem] text-text">
-          {{ recharge.name }} · {{ recharge.totalTicks - recharge.ticksRemaining }}/{{ recharge.totalTicks }} ticks
+          {{ recharge.name }} · {{ shieldRechargeProgressText }} ticks
         </span>
       </div>
       <div class="h-2 bg-border-subtle border border-border rounded-full overflow-hidden" role="progressbar"

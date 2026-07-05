@@ -6,8 +6,6 @@
   "kind": "ROBOT_ENCOUNTER",
   "ticks": 6,
   "blocking": true,
-  "weaponId": "tea_kettle",
-  "weaponName": "Tea Kettle",
   "robotPool": {
     "deadliness": [
       "weak",

@@ -29,21 +29,29 @@ describe('usePreparationActions', () => {
     actions.purchaseWeapon('aspperigo')
     expect(stateRef.value.coins).toBe(935)
     expect(stateRef.value.ownedWeapons.some(weapon => weapon.weaponId === 'aspperigo')).toBe(true)
+    expect(stateRef.value.log).toHaveLength(0)
+    expect(published).toHaveLength(0)
 
     actions.equipWeapon('aspperigo')
     expect(stateRef.value.raid.equippedWeaponId).toBe('aspperigo')
+    expect(stateRef.value.log).toHaveLength(1)
+    expect(published).toHaveLength(1)
 
     actions.purchaseHealingItem('bandage_green', 2)
     expect(stateRef.value.coins).toBe(899)
     expect(stateRef.value.purchasedHealingItems).toEqual([
       expect.objectContaining({ itemId: 'bandage_green', quantity: 2 }),
     ])
+    expect(stateRef.value.log).toHaveLength(1)
+    expect(published).toHaveLength(1)
 
     actions.purchaseShieldRecharger('fizz_cell', 2)
     expect(stateRef.value.coins).toBe(875)
     expect(stateRef.value.purchasedShieldRechargers).toEqual([
       expect.objectContaining({ itemId: 'fizz_cell', quantity: 2 }),
     ])
+    expect(stateRef.value.log).toHaveLength(1)
+    expect(published).toHaveLength(1)
 
     actions.setSelectedHealingLoadout([{ itemId: 'bandage_green', quantity: 1 }])
     expect(stateRef.value.purchasedHealingItems).toEqual([
