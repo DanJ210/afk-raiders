@@ -48,19 +48,20 @@ const activityProgressSource = computed(() => {
 })
 const activityProgressTotal = computed(() => Math.max(0, activityProgressSource.value?.totalTicks ?? 0))
 const activityProgressRemaining = computed(() => Math.max(0, Math.min(activityProgressSource.value?.ticksRemaining ?? 0, activityProgressTotal.value)))
-const activityProgressCompleted = computed(() => Math.max(0, activityProgressTotal.value - activityProgressRemaining.value))
-const activityProgressDisplayCompleted = computed(() => {
+const activityProgressCompleted = computed(() => {
   if (activityProgressTotal.value <= 0) return 0
-  return Math.min(activityProgressTotal.value, Math.max(1, activityProgressCompleted.value + 1))
+  const completed = Math.max(0, activityProgressTotal.value - activityProgressRemaining.value)
+  return Math.min(activityProgressTotal.value, Math.max(1, completed + 1))
 })
+const activityProgressRawCompleted = computed(() => Math.max(0, activityProgressTotal.value - activityProgressRemaining.value))
 const activityProgressPercent = computed(() => {
   if (activityProgressTotal.value <= 0) return 0
-  return Math.max(0, Math.min(100, (activityProgressCompleted.value / activityProgressTotal.value) * 100))
+  return Math.max(0, Math.min(100, (activityProgressRawCompleted.value / activityProgressTotal.value) * 100))
 })
 const showActivityProgressBar = computed(() => {
   return Boolean(activityProgressSource.value && activityProgressTotal.value > 0)
 })
-const activityProgressText = computed(() => `${activityProgressDisplayCompleted.value}/${activityProgressTotal.value}`)
+const activityProgressText = computed(() => `${activityProgressCompleted.value}/${activityProgressTotal.value}`)
 const showRobotHpBar = computed(() => {
   const activity = activeActivity.value
   return activity?.kind === 'ROBOT_ENCOUNTER' && (activity.robotMaxHp ?? 0) > 0 && activity.robotHp !== undefined

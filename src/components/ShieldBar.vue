@@ -83,7 +83,8 @@ const shieldRechargeProgress = computed(() => {
   const active = recharge.value
   if (!active || active.totalTicks <= 0) return 0
   const completedTicks = active.totalTicks - active.ticksRemaining
-  return Math.max(0, Math.min(100, Math.round((completedTicks / active.totalTicks) * 100)))
+  const displayedTicks = Math.min(active.totalTicks, Math.max(1, completedTicks + 1))
+  return Math.max(0, Math.min(100, Math.round((displayedTicks / active.totalTicks) * 100)))
 })
 
 const shieldRechargeProgressText = computed(() => {

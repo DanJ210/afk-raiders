@@ -189,6 +189,8 @@ describe('raid activities', () => {
 
   it('keeps weapon id and name consistent when the activity definition omits an override', () => {
     const initial = createInitialState(0)
+    const equipped = findWeapon('aspperigo')
+    expect(equipped).not.toBeNull()
     const definition = raidActivities.find(activity => activity.id === 'robot_encounter_standard')
     expect(definition).toBeDefined()
 
@@ -219,7 +221,7 @@ describe('raid activities', () => {
       expect(result!.state.raid.activeRaidActivity).toMatchObject({
         weaponId: definition!.weaponId ?? 'aspperigo',
         weaponName: definition!.weaponName ?? 'Aspperigo',
-        raiderDamageMultiplier: expect.any(Number),
+        raiderDamageMultiplier: equipped!.damageMultiplier,
       })
     } finally {
       definition!.weaponId = originalWeaponId
