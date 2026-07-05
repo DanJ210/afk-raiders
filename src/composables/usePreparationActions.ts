@@ -1,4 +1,5 @@
 import { appendLogEntries } from '../engine/log.js'
+import { createRNG } from '../engine/rng.js'
 import type { GameState, LogEvent } from '../engine/types.js'
 import {
   clearSelectedHealingLoadout,
@@ -35,6 +36,11 @@ export function usePreparationActions(
     persistCallback(stateRef.value, getSeed?.() ?? 0, lastTickAtRef.value)
   }
 
+  /** UI-boundary RNG for desk-voice narration variety; not part of the tick simulation. */
+  function narrationRng(now: number) {
+    return createRNG((((getSeed?.() ?? 0) ^ now) >>> 0))
+  }
+
   function commitLogged(result: NonNullable<ReturnType<typeof purchaseWeapon>>) {
     stateRef.value = {
       ...result.state,
@@ -44,39 +50,39 @@ export function usePreparationActions(
     persistState()
   }
 
-  function commitSilent(result: NonNullable<ReturnType<typeof purchaseWeapon>>) {
-    stateRef.value = result.state
-    persistState()
-  }
-
   function purchaseWeaponAction(weaponId: string) {
-    const result = purchaseWeapon(stateRef.value, weaponId, Date.now())
+    const now = Date.now()
+    const result = purchaseWeapon(stateRef.value, weaponId, now, narrationRng(now))
     if (!result) return
-    commitSilent(result)
+    commitLogged(result)
   }
 
   function repairWeaponAction(weaponId: string) {
-    const result = repairWeapon(stateRef.value, weaponId, Date.now())
+    const now = Date.now()
+    const result = repairWeapon(stateRef.value, weaponId, now, narrationRng(now))
     if (!result) return
     commitLogged(result)
   }
 
   function equipWeaponAction(weaponId: string) {
-    const result = equipWeapon(stateRef.value, weaponId, Date.now())
+    const now = Date.now()
+    const result = equipWeapon(stateRef.value, weaponId, now, narrationRng(now))
     if (!result) return
     commitLogged(result)
   }
 
   function purchaseHealingItemAction(itemId: string, quantity = 1) {
-    const result = purchaseHealingItem(stateRef.value, itemId, quantity, Date.now())
+    const now = Date.now()
+    const result = purchaseHealingItem(stateRef.value, itemId, quantity, now, narrationRng(now))
     if (!result) return
-    commitSilent(result)
+    commitLogged(result)
   }
 
   function purchaseShieldRechargerAction(itemId: string, quantity = 1) {
-    const result = purchaseShieldRecharger(stateRef.value, itemId, quantity, Date.now())
+    const now = Date.now()
+    const result = purchaseShieldRecharger(stateRef.value, itemId, quantity, now, narrationRng(now))
     if (!result) return
-    commitSilent(result)
+    commitLogged(result)
   }
 
   function setSelectedHealingLoadoutAction(selections: Array<{ itemId: string; quantity: number }>) {

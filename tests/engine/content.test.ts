@@ -26,6 +26,8 @@ import raiderLevelsData from '../../src/content/raider_levels.json'
 import zoneConditionsData from '../../src/content/zones/zone_conditions.json'
 import zonesData from '../../src/content/zones/zones.json'
 import weaponsData from '../../src/content/weapons.json'
+import raiderIdentityData from '../../src/content/raider_identity.json'
+import prepEventsData from '../../src/content/prep_events.json'
 import { MAX_RAIDER_LEVEL } from '../../src/engine/raiderLevel'
 import { raidActivities } from '../../src/engine/raidActivities'
 import type { RaidActivityDefinition, RaiderLevelContent, SkillDefinition, SkillTrackId } from '../../src/engine/types'
@@ -66,7 +68,7 @@ const DEADLINESS_RANK = {
 } as const
 
 // Known non-table slot names handled directly in fillSlots()
-const BUILT_IN_SLOTS = new Set(['mundane_item', 'water_item', 'healing_item', 'count'])
+const BUILT_IN_SLOTS = new Set(['mundane_item', 'water_item', 'healing_item', 'count', 'raider_name'])
 const VALID_PHASES = new Set<Phase>(['HUB', 'DEPLOYING', 'RAIDING', 'KNOCKED_OUT'])
 const VALID_DANGER_LEVELS = new Set<DangerLevel>(['Low', 'Medium', 'High'])
 const VALID_SKILL_IDS = new Set<SkillTrackId>(['cardio', 'hoarding', 'hiding_in_lockers', 'signal_handling'])
@@ -76,6 +78,7 @@ const VALID_ZONE_CONDITION_IDS = new Set([
   ...zoneConditionsData.major_conditions,
 ].map(condition => condition.id))
 const VALID_ZONE_IDS = new Set(zonesData.map(zone => zone.id))
+const VALID_TRAIT_IDS = new Set(raiderIdentityData.traits.map(trait => trait.id))
 const contentJsonModules = import.meta.glob('../../src/content/**/*.json', { eager: true }) as Record<string, { default: unknown }>
 const NON_PLAYER_FACING_CONTENT_KEYS = new Set([
   'category',
@@ -241,6 +244,9 @@ describe('content validation', () => {
         const activeRobotIds = event.requires?.activeRobotId === undefined
           ? []
           : Array.isArray(event.requires.activeRobotId) ? event.requires.activeRobotId : [event.requires.activeRobotId]
+        const traits = event.requires?.traits === undefined
+          ? []
+          : Array.isArray(event.requires.traits) ? event.requires.traits : [event.requires.traits]
         const minRaiderLevel = event.requires?.minRaiderLevel
         const maxRaiderLevel = event.requires?.maxRaiderLevel
 
@@ -264,6 +270,9 @@ describe('content validation', () => {
         }
         for (const activeRobotId of activeRobotIds) {
           expect(robotIds.has(activeRobotId), `event "${event.id}" has invalid activeRobotId "${activeRobotId}"`).toBe(true)
+        }
+        for (const trait of traits) {
+          expect(VALID_TRAIT_IDS.has(trait), `event "${event.id}" has invalid trait "${trait}"`).toBe(true)
         }
         if (minRaiderLevel !== undefined) {
           expect(Number.isInteger(minRaiderLevel), `event "${event.id}" minRaiderLevel must be an integer`).toBe(true)
@@ -1071,6 +1080,35 @@ describe('content validation', () => {
       expect([...coveredLevels].sort((a, b) => a - b)).toEqual(
         Array.from({ length: MAX_RAIDER_LEVEL }, (_, index) => index + 1),
       )
+    })
+  })
+
+  describe('prep_events.json', () => {
+    const PREP_SLOTS = new Set(['item', 'cost', 'quantity'])
+    const pools = Object.entries(prepEventsData) as Array<[string, Array<{ id: string; weight: number; text: string }>]>
+
+    it('every pool has entries with positive weights and unique ids', () => {
+      const allIds: string[] = []
+      for (const [kind, pool] of pools) {
+        expect(pool.length, `prep pool "${kind}" must not be empty`).toBeGreaterThan(0)
+        for (const entry of pool) {
+          expect(entry.weight, `prep line "${entry.id}" has weight ${entry.weight}`).toBeGreaterThan(0)
+          expect(entry.text.trim(), `prep line "${entry.id}" has empty text`).not.toBe('')
+          allIds.push(entry.id)
+        }
+      }
+      expect(new Set(allIds).size).toBe(allIds.length)
+    })
+
+    it('only uses known narration slots', () => {
+      for (const [, pool] of pools) {
+        for (const entry of pool) {
+          const slots = [...entry.text.matchAll(/\{(\w+)\}/g)].map(match => match[1])
+          for (const slot of slots) {
+            expect(PREP_SLOTS.has(slot), `prep line "${entry.id}" uses unknown slot "{${slot}}"`).toBe(true)
+          }
+        }
+      }
     })
   })
 })

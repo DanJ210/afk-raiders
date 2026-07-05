@@ -18,6 +18,7 @@ import { appendActivityLogEntries, appendLogEntries } from '../engine/log.js'
 import { downedActivityEvent } from '../engine/tick.js'
 import { recordHealingItemUse } from '../engine/stats.js'
 import { createInitialState } from '../engine/initialState.js'
+import { generateIdentityForSeed } from '../engine/identity.js'
 import { applyRaiderXpGain, rollRaiderXp, getRevivalSignalCost, type RaiderLevelUp } from '../engine/raiderLevel.js'
 import { applySkillPractice, rollSkillPractice, type SkillLevelUp } from '../engine/skills.js'
 import type { BackpackItem } from '../engine/types.js'
@@ -363,7 +364,7 @@ export function useHandlerActions(
   function resetSave() {
     const freshNow = Date.now()
     const newSeed = freshNow & 0xffffffff
-    const freshState = createInitialState(freshNow)
+    const freshState = createInitialState(freshNow, generateIdentityForSeed(newSeed))
     onResetSave(freshState, newSeed, freshNow)
   }
 

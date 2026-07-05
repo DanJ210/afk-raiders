@@ -420,6 +420,54 @@ describe('applyEffects — backpack item behavior', () => {
     expect(ids.has('raid_polite_glyphs_customer_service')).toBe(false)
   })
 
+  it('filters trait events by raider personality traits', () => {
+    const initial = createInitialState(0)
+    const cowardState = {
+      ...initial,
+      raider: {
+        ...initial.raider,
+        traits: ['coward'],
+      },
+      raid: {
+        ...initial.raid,
+        phase: 'RAIDING' as const,
+      },
+    }
+
+    const cowardIds = new Set(eligibleEvents(cowardState).map(event => event.id))
+    expect(cowardIds.has('trait_coward_raiding_exit_count')).toBe(true)
+    expect(cowardIds.has('trait_hoarder_raiding_empty_crate')).toBe(false)
+
+    const traitlessIds = new Set(eligibleEvents(initial).map(event => event.id))
+    expect([...traitlessIds].some(id => id.startsWith('trait_'))).toBe(false)
+  })
+
+  it('fills {raider_name} from the raider state', () => {
+    const initial = createInitialState(0)
+    const state = {
+      ...initial,
+      raider: {
+        ...initial.raider,
+        name: 'Mira "Wet Socks" Malone',
+        traits: ['coward'],
+      },
+      raid: {
+        ...initial.raid,
+        phase: 'HUB' as const,
+      },
+    }
+
+    // Resolve until a raider_name template lands or attempts run out.
+    const rng = createRNG(99)
+    let sawName = false
+    for (let i = 0; i < 500 && !sawName; i++) {
+      const event = resolveEvent({ ...state, tick: i }, rng, 1000 + i)
+      if (event && event.text.includes('Mira "Wet Socks" Malone')) sawName = true
+      expect(event?.text ?? '').not.toContain('{raider_name}')
+    }
+    expect(sawName).toBe(true)
+  })
+
   it('filters Drama Queen events by minRaiderLevel requirements', () => {
     const initial = createInitialState(0)
     const lowLevelState = {

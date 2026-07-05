@@ -20,6 +20,8 @@ export interface EventTemplate extends ContentEntry {
     dangerLevel?: DangerLevel | DangerLevel[]
     zone?: string | string[]
     zoneCondition?: string | string[]
+    /** Raider must have at least one of these personality trait ids. */
+    traits?: string | string[]
     activeActivityKind?: RaidActivityKind | RaidActivityKind[]
     activeActivityId?: string | string[]
     activeRobotId?: string | string[]
@@ -397,6 +399,8 @@ export interface RaidState {
 
 export interface RaiderStats {
   name: string
+  /** Personality trait ids from raider_identity.json — gate diary lines via requires.traits. */
+  traits: string[]
   hp: number
   maxHp: number
   mood: number        // -5 to +5

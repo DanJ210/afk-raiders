@@ -16,9 +16,11 @@ import { sellStashOverflow } from '../engine/homeStash.js'
 import { createStarterShieldState } from '../engine/shields.js'
 import { normalizeSkills } from '../engine/skills.js'
 import { normalizeRaiderLevelXp } from '../engine/raiderLevel.js'
+import { DEFAULT_RAIDER_NAME, generateIdentityForSeed, sanitizePersonalityTraits } from '../engine/identity.js'
 import { createStarterOwnedWeapon, findWeapon, getDefaultWeapon } from '../engine/weapons.js'
 
 const STORAGE_KEY = 'afk-raiders-save'
+const CREATION_PENDING_KEY = 'afk-raiders-creation-pending'
 const MIN_SUPPORTED_SAVE_VERSION = 3
 
 type LegacyRaiderStats = Omit<GameState['raider'], 'levelXp'> & { levelXp?: unknown }
@@ -297,10 +299,22 @@ function seedLegacyRaiderLevelXp(raider: Pick<GameState['raider'], 'extractCount
   return normalizeRaiderLevelXp(extracts * 60 + deaths * 15 + deploys * 4)
 }
 
+/**
+ * Keep valid saved trait ids; legacy saves that predate personality traits
+ * get a deterministic backfill rolled from the save seed.
+ */
+function normalizeRaiderTraits(value: unknown, seed: number): string[] {
+  const sanitized = sanitizePersonalityTraits(value)
+  if (sanitized.length > 0) return sanitized
+  return generateIdentityForSeed(seed).traits
+}
+
 export interface GamePersistenceReturn {
   loadSave: () => SaveData | null
   persistSave: (state: GameState, seed: number, lastTickAt: number) => void
   clearSave: () => void
+  loadCreationPending: () => boolean
+  setCreationPending: (pending: boolean) => void
 }
 
 /**
@@ -326,6 +340,10 @@ export function useGamePersistence(): GamePersistenceReturn {
         ...loadedState,
         raider: {
           ...loadedState.raider,
+          name: typeof loadedState.raider.name === 'string' && loadedState.raider.name.trim().length > 0
+            ? loadedState.raider.name
+            : DEFAULT_RAIDER_NAME,
+          traits: normalizeRaiderTraits(loadedState.raider.traits, data.seed),
           mood: clampMood(loadedState.raider.mood),
           levelXp: loadedRaider.levelXp === undefined
             ? seedLegacyRaiderLevelXp(loadedRaider)
@@ -372,9 +390,32 @@ export function useGamePersistence(): GamePersistenceReturn {
     }
   }
 
+  /** True while a fresh raider still needs the first-run creation flow. */
+  function loadCreationPending(): boolean {
+    try {
+      return localStorage.getItem(CREATION_PENDING_KEY) === '1'
+    } catch {
+      return false
+    }
+  }
+
+  function setCreationPending(pending: boolean) {
+    try {
+      if (pending) {
+        localStorage.setItem(CREATION_PENDING_KEY, '1')
+      } else {
+        localStorage.removeItem(CREATION_PENDING_KEY)
+      }
+    } catch {
+      // silently ignore
+    }
+  }
+
   return {
     loadSave,
     persistSave,
     clearSave,
+    loadCreationPending,
+    setCreationPending,
   }
 }

@@ -1,0 +1,391 @@
+[
+  {
+    "id": "trait_coward_hub_locker_catalog",
+    "weight": 10,
+    "text": "Updated the personal locker catalog. Desperanza has 14 viable hiding spots. Two have cup holders.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "HUB", "traits": "coward" },
+    "effects": { "mood": 1 }
+  },
+  {
+    "id": "trait_coward_hub_exit_drill",
+    "weight": 8,
+    "text": "Ran a personal exit drill in the mess hall. Nobody else moved. {raider_name} logged a new record anyway.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "HUB", "traits": "coward" },
+    "effects": {}
+  },
+  {
+    "id": "trait_coward_raiding_exit_count",
+    "weight": 10,
+    "text": "Counted the exits. Found three. Memorized five, just in case two more appear under pressure.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "RAIDING", "traits": "coward" },
+    "effects": {}
+  },
+  {
+    "id": "trait_coward_raiding_locker_review",
+    "weight": 9,
+    "text": "Passed a locker and gave it a professional once-over. Spacious. Ventilated. Five stars. Saving it for later.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "RAIDING", "traits": "coward" },
+    "effects": { "mood": 1 }
+  },
+  {
+    "id": "trait_coward_raiding_brave_moment",
+    "weight": 6,
+    "text": "Stood in the open for a full four seconds. On purpose. {raider_name} would like this noted in the record.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "RAIDING", "traits": "coward" },
+    "effects": { "mood": 1 }
+  },
+  {
+    "id": "trait_coward_raiding_noise",
+    "weight": 9,
+    "text": "Heard a noise. Cataloged it as 'probably fine' and relocated anyway. Cardio is just fear with a schedule.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "RAIDING", "traits": "coward" },
+    "effects": {}
+  },
+  {
+    "id": "trait_coward_hub_bravery_form",
+    "weight": 6,
+    "text": "Filled out a Bravery Intent Form at the Hatch Authority. Left the 'acts of heroism' section blank. Realistic.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "HUB", "traits": "coward" },
+    "effects": {}
+  },
+  {
+    "id": "trait_coward_deploying_regret",
+    "weight": 8,
+    "text": "Pod sealed. Immediate regret. {raider_name} whispered 'this is fine' in a voice that convinced no one, including the pod.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "DEPLOYING", "traits": "coward" },
+    "effects": {}
+  },
+
+  {
+    "id": "trait_hoarder_hub_stash_audit",
+    "weight": 10,
+    "text": "Conducted a full stash audit. Everything is essential. Especially the seventh cracked mug. That one has history.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "HUB", "traits": "hoarder" },
+    "effects": { "mood": 1 }
+  },
+  {
+    "id": "trait_hoarder_hub_pawn_standoff",
+    "weight": 8,
+    "text": "The Pawn Desk offered 3 coins for the bent spoon. {raider_name} took the spoon home. Some things are beyond money.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "HUB", "traits": "hoarder" },
+    "effects": {}
+  },
+  {
+    "id": "trait_hoarder_raiding_empty_crate",
+    "weight": 10,
+    "text": "Found an empty crate. Took a moment to grieve what could have been. Kept the crate's lid as a memento.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "RAIDING", "traits": "hoarder" },
+    "effects": {}
+  },
+  {
+    "id": "trait_hoarder_raiding_pocket_math",
+    "weight": 9,
+    "text": "Backpack at capacity. Pockets at capacity. {raider_name} is now evaluating which items can be worn as hats.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "RAIDING", "traits": "hoarder" },
+    "effects": { "mood": 1 }
+  },
+  {
+    "id": "trait_hoarder_raiding_one_more",
+    "weight": 9,
+    "text": "Said 'last one' about a crate for the fourth time. The phrase has lost all legal meaning.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "RAIDING", "traits": "hoarder" },
+    "effects": { "greedLevel": 2 }
+  },
+  {
+    "id": "trait_hoarder_raiding_sentimental_bolt",
+    "weight": 8,
+    "text": "Picked up a bolt. Not a special bolt. But it looked lonely, and the backpack has room if you don't measure.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "RAIDING", "traits": "hoarder" },
+    "effects": {}
+  },
+  {
+    "id": "trait_hoarder_hub_shelf_plans",
+    "weight": 7,
+    "text": "Sketched plans for a third shelf. The bunk doesn't fit a third shelf. The plans now include a smaller bunk.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "HUB", "traits": "hoarder" },
+    "effects": { "mood": 1 }
+  },
+  {
+    "id": "trait_hoarder_knocked_out_inventory_dream",
+    "weight": 8,
+    "text": "Unconscious, {raider_name} dreamed of a warehouse with infinite shelving. Even asleep, began filling it.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "KNOCKED_OUT", "traits": "hoarder" },
+    "effects": {}
+  },
+
+  {
+    "id": "trait_optimist_hub_forecast",
+    "weight": 10,
+    "text": "Checked the surface forecast: acid rain and robot patrols. {raider_name} read it as 'free power-wash with an audience.'",
+    "commsPriority": "ambient",
+    "requires": { "phase": "HUB", "traits": "optimist" },
+    "effects": { "mood": 1 }
+  },
+  {
+    "id": "trait_optimist_hub_queue_friend",
+    "weight": 8,
+    "text": "Made a friend in the ration line. The friend has not confirmed the friendship. Details.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "HUB", "traits": "optimist" },
+    "effects": { "mood": 1 }
+  },
+  {
+    "id": "trait_optimist_raiding_alarm",
+    "weight": 10,
+    "text": "A distant alarm went off. {raider_name} assumed it was celebrating something and waved back.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "RAIDING", "traits": "optimist" },
+    "effects": { "mood": 1 }
+  },
+  {
+    "id": "trait_optimist_raiding_scenic",
+    "weight": 9,
+    "text": "Paused to appreciate the view: rubble, fog, one distant killer machine. 'You can't buy ambiance like this.'",
+    "commsPriority": "ambient",
+    "requires": { "phase": "RAIDING", "traits": "optimist" },
+    "effects": { "mood": 1 }
+  },
+  {
+    "id": "trait_optimist_raiding_half_full",
+    "weight": 8,
+    "text": "Found half a sandwich. Declared the day 'half won.' The other half of the sandwich was never discussed again.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "RAIDING", "traits": "optimist" },
+    "effects": { "mood": 1 }
+  },
+  {
+    "id": "trait_optimist_knocked_out_review",
+    "weight": 8,
+    "text": "Woke up in recovery and rated the raid five stars: 'Would be knocked unconscious here again.'",
+    "commsPriority": "ambient",
+    "requires": { "phase": "KNOCKED_OUT", "traits": "optimist" },
+    "effects": { "mood": 1 }
+  },
+  {
+    "id": "trait_optimist_deploying_brochure",
+    "weight": 8,
+    "text": "Treated the pod safety card like a vacation brochure. Circled 'emergency exits' as 'points of interest.'",
+    "commsPriority": "ambient",
+    "requires": { "phase": "DEPLOYING", "traits": "optimist" },
+    "effects": { "mood": 1 }
+  },
+  {
+    "id": "trait_optimist_hub_tube_review",
+    "weight": 7,
+    "text": "Overheard someone say the tubes are getting worse. {raider_name} gently corrected them: the tubes are getting more exciting.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "HUB", "traits": "optimist" },
+    "effects": {}
+  },
+
+  {
+    "id": "trait_drama_hub_entrance",
+    "weight": 10,
+    "text": "Entered the mess hall dramatically. Held the pose. The Permit Choir looked up, then chose paperwork over art.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "HUB", "traits": "drama_magnet" },
+    "effects": {}
+  },
+  {
+    "id": "trait_drama_hub_monologue",
+    "weight": 8,
+    "text": "Rehearsed a farewell monologue in case tomorrow's raid goes poorly. It has three acts and an intermission.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "HUB", "traits": "drama_magnet" },
+    "effects": { "mood": 1 }
+  },
+  {
+    "id": "trait_drama_raiding_narration",
+    "weight": 10,
+    "text": "'{raider_name} moved through the ruins,' narrated {raider_name}, aloud, in the third person, near the motion sensors.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "RAIDING", "traits": "drama_magnet" },
+    "effects": {}
+  },
+  {
+    "id": "trait_drama_raiding_slow_turn",
+    "weight": 9,
+    "text": "Heard a clank and executed a slow dramatic turn. Nothing was there, which was somehow more dramatic.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "RAIDING", "traits": "drama_magnet" },
+    "effects": { "mood": 1 }
+  },
+  {
+    "id": "trait_drama_raiding_rain_moment",
+    "weight": 8,
+    "text": "Stopped in the rain, looked up, and let it hit their face for cinematic effect. Immediately got water in both boots.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "RAIDING", "traits": "drama_magnet" },
+    "effects": { "mood": -1 }
+  },
+  {
+    "id": "trait_drama_knocked_out_encore",
+    "weight": 8,
+    "text": "Regained consciousness, checked for an audience, and briefly considered going down again for the encore.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "KNOCKED_OUT", "traits": "drama_magnet" },
+    "effects": {}
+  },
+  {
+    "id": "trait_drama_deploying_countdown",
+    "weight": 8,
+    "text": "Counted down the pod launch personally, one second ahead of the actual countdown, for dramatic tension.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "DEPLOYING", "traits": "drama_magnet" },
+    "effects": {}
+  },
+  {
+    "id": "trait_drama_hub_understudy",
+    "weight": 7,
+    "text": "Appointed a confused stranger as their understudy 'in case of tragedy.' The stranger has not accepted the role.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "HUB", "traits": "drama_magnet" },
+    "effects": {}
+  },
+
+  {
+    "id": "trait_paranoid_hub_vending_watch",
+    "weight": 10,
+    "text": "The vending machine hummed when {raider_name} walked past. It has never hummed for anyone else. Noted.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "HUB", "traits": "paranoid" },
+    "effects": {}
+  },
+  {
+    "id": "trait_paranoid_hub_stamp_check",
+    "weight": 8,
+    "text": "Checked the deployment stamp twice, then checked whether the checker needed checking. The system works.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "HUB", "traits": "paranoid" },
+    "effects": {}
+  },
+  {
+    "id": "trait_paranoid_raiding_too_quiet",
+    "weight": 10,
+    "text": "It's quiet. Not 'peaceful' quiet. 'The chassis are holding a meeting about me specifically' quiet.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "RAIDING", "traits": "paranoid" },
+    "effects": {}
+  },
+  {
+    "id": "trait_paranoid_raiding_crate_trap",
+    "weight": 9,
+    "text": "Found a perfectly good crate in a perfectly open spot. Obviously bait. Looted it anyway, but with narrowed eyes.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "RAIDING", "traits": "paranoid" },
+    "effects": { "mood": 1 }
+  },
+  {
+    "id": "trait_paranoid_raiding_bird",
+    "weight": 8,
+    "text": "Spotted a bird. Or a surveillance drone doing an excellent bird impression. {raider_name} saluted it, to be safe.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "RAIDING", "traits": "paranoid" },
+    "effects": {}
+  },
+  {
+    "id": "trait_paranoid_raiding_own_footsteps",
+    "weight": 8,
+    "text": "Was followed for ten minutes by a set of footsteps that matched theirs exactly. Refuses to accept the obvious explanation.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "RAIDING", "traits": "paranoid" },
+    "effects": { "mood": -1 }
+  },
+  {
+    "id": "trait_paranoid_hub_cot_rotation",
+    "weight": 7,
+    "text": "Rotated sleeping cots again. A moving target sleeps better. The cot assignment desk has opened a file.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "HUB", "traits": "paranoid" },
+    "effects": {}
+  },
+  {
+    "id": "trait_paranoid_deploying_pod_inspection",
+    "weight": 8,
+    "text": "Inspected the pod for listening devices. Found a speaker. Technically correct. Filed a complaint mid-launch.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "DEPLOYING", "traits": "paranoid" },
+    "effects": {}
+  },
+
+  {
+    "id": "trait_snack_hub_ration_negotiation",
+    "weight": 10,
+    "text": "Negotiated with the ration desk for extra crackers. Offered tactical intel. The intel was about where crackers are.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "HUB", "traits": "snack_driven" },
+    "effects": { "mood": 1 }
+  },
+  {
+    "id": "trait_snack_hub_soup_scouting",
+    "weight": 8,
+    "text": "Planned tomorrow's raid route based on a rumor of an intact snack aisle. The route is otherwise indefensible.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "HUB", "traits": "snack_driven" },
+    "effects": {}
+  },
+  {
+    "id": "trait_snack_raiding_vending_pilgrimage",
+    "weight": 10,
+    "text": "Detoured 400 meters to a vending machine. It was empty. {raider_name} paid their respects and moved on, changed.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "RAIDING", "traits": "snack_driven" },
+    "effects": { "mood": -1 }
+  },
+  {
+    "id": "trait_snack_raiding_pocket_crumbs",
+    "weight": 9,
+    "text": "Morale dipped, so {raider_name} checked the emergency pocket. Crumbs. Emergency crumbs. Morale restored.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "RAIDING", "traits": "snack_driven" },
+    "effects": { "mood": 1 }
+  },
+  {
+    "id": "trait_snack_raiding_tactical_lunch",
+    "weight": 9,
+    "text": "Declared a tactical lunch. Tactically, it was just lunch. Strategically, it was delicious.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "RAIDING", "traits": "snack_driven" },
+    "effects": { "mood": 1 }
+  },
+  {
+    "id": "trait_snack_raiding_label_reading",
+    "weight": 8,
+    "text": "Found a can with no label. The correct move is to leave it. The snack-driven move is now in the backpack.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "RAIDING", "traits": "snack_driven" },
+    "effects": {}
+  },
+  {
+    "id": "trait_snack_deploying_snack_check",
+    "weight": 8,
+    "text": "Pre-launch checklist: weapon, shield, snacks, backup snacks, decoy snacks to surrender if cornered. Ready.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "DEPLOYING", "traits": "snack_driven" },
+    "effects": { "mood": 1 }
+  },
+  {
+    "id": "trait_snack_knocked_out_snack_dream",
+    "weight": 8,
+    "text": "Came to in recovery asking about the soup of the day. There is no soup of the day. There is barely a day.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "KNOCKED_OUT", "traits": "snack_driven" },
+    "effects": {}
+  }
+]
