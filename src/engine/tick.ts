@@ -12,12 +12,13 @@ import { advanceSignal, applyCalmGreedReduction, applyPressureGreedIncrease } fr
 import { describeShieldDamage, resolveAmbientActivityEvent, resolveEvent, resolveFlavorKey, applyEffects, resolveHealingItemFind, resolveShieldRechargerFind, events as allEvents } from './eventResolver.js'
 import { transferBackpackToHomeStash, HOME_STASH_ITEM_LIMIT } from './homeStash.js'
 import { appendActivityLogEntries, appendLogEntries, logConditionsForRaid } from './log.js'
-import { recordOutcome, recordRobotDefeat } from './stats.js'
+import { recordOutcome, recordRobotDefeat, recordRobotDowning } from './stats.js'
 import { advanceShieldRecharge } from './shields.js'
 import { applySkillPractice, getSkillModifierProfile, rollSkillPractice, type SkillLevelUp, type SkillPracticeTrigger } from './skills.js'
 import { applyRaiderXpGain, getRaiderLevelBenefitProfile, rollRaiderXp, type RaiderLevelUp, type RaiderXpTrigger } from './raiderLevel.js'
 import { advanceRaidActivity, raidActivities, startRaidActivity } from './raidActivities.js'
 import { applyFailedRaidWeaponLoss, applyRaidWeaponWear, consumeSelectedPreparationLoadouts } from './loadout.js'
+import { narrateOutcomeCallbacks } from './narrator.js'
 
 const LOOT_BONUS_HEALING_ITEM_CHANCE = 0.2 // 20% chance to find a healing item on any loot event, independent of normal loot rolls
 const LOOT_BONUS_SHIELD_RECHARGER_CHANCE = 0.15 // 15% chance to find a shield recharger on any loot event, independent of normal loot rolls
@@ -237,6 +238,9 @@ function startDownedCondition(state: GameState, tick: number, now: number, reaso
 
   const nextState = enforceIncapacitatedHp({
     ...state,
+    stats: reason.kind === 'robot' && reason.robotId
+      ? recordRobotDowning(state.stats, reason.robotId)
+      : state.stats,
     raid: {
       ...state.raid,
       activeShieldRecharge: null,
@@ -447,6 +451,7 @@ function completeExtractionCondition(
   skillPracticeTriggers: SkillPracticeTrigger[],
   raiderXpTriggers: RaiderXpTrigger[],
   emitted: LogEvent[],
+  rng: RNG,
   tick: number,
   now: number,
 ): GameState {
@@ -496,6 +501,12 @@ function completeExtractionCondition(
   if (transition) {
     emitted.push(phaseTransitionEvent(transition, tick, now))
   }
+
+  emitted.push(...narrateOutcomeCallbacks(state, currentState, {
+    kind: 'extract',
+    zone: extractedRaid.zone,
+    dangerLevel: extractedRaid.dangerLevel,
+  }, rng, tick, now))
 
   return currentState
 }
@@ -652,6 +663,11 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
         raiderXpTriggers.push({ reason: 'stash_overflow_sale', minXp: 2, maxXp: 4 })
         emitted.push(stashSaleEvent(recovery.soldItemCount, recovery.coinsGained, state.tick, now))
       }
+      emitted.push(...narrateOutcomeCallbacks(state, currentState, {
+        kind: 'death',
+        zone: state.raid.zone,
+        dangerLevel: state.raid.dangerLevel,
+      }, rng, state.tick, now))
     }
   }
 
@@ -659,7 +675,7 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
   currentState = conditionAdvance.state
   if (conditionAdvance.extractionCompleted) {
     activityEmitted.push(extractionActivityEvent('completed', state.tick, now))
-    currentState = completeExtractionCondition(currentState, skillPracticeTriggers, raiderXpTriggers, emitted, state.tick, now)
+    currentState = completeExtractionCondition(currentState, skillPracticeTriggers, raiderXpTriggers, emitted, rng, state.tick, now)
   } else if (conditionAdvance.downedExpired) {
     activityEmitted.push(downedActivityEvent('failed', state.tick, now))
     currentState = enterKnockedOutRecovery(currentState, emitted, state.tick, now)
@@ -951,7 +967,7 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
 
       if (template.effects?.completeExtraction) {
         activityEmitted.push(extractionActivityEvent('completed', state.tick, now))
-        currentState = completeExtractionCondition(currentState, skillPracticeTriggers, raiderXpTriggers, emitted, state.tick, now)
+        currentState = completeExtractionCondition(currentState, skillPracticeTriggers, raiderXpTriggers, emitted, rng, state.tick, now)
       }
     }
   }

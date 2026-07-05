@@ -288,6 +288,7 @@ function normalizeLifetimeStats(state: GameState): RaiderLifetimeStats {
     extracts: sanitizeOutcomeStats(state.stats.extracts, fallback.extracts.total),
     deaths: sanitizeOutcomeStats(state.stats.deaths, fallback.deaths.total),
     robotDefeats: sanitizeCounterMap(state.stats.robotDefeats),
+    robotDownings: sanitizeCounterMap((state.stats as LegacyRecord).robotDownings),
     healingItemsUsed: sanitizeHealingItemsUsed(state.stats.healingItemsUsed),
   }
 }

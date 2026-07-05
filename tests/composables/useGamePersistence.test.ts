@@ -51,6 +51,7 @@ describe('useGamePersistence', () => {
             removedDeathBreakdown: { old: 88 },
           },
           robotDefeats: { anxietick: 3 },
+          robotDownings: { tank_overcompensation: 2 },
           healingItemsUsed: {
             total: 'lost to old schema',
             byItem: { bandage_blue: 4, bandage_purple: 2 },
@@ -85,6 +86,7 @@ describe('useGamePersistence', () => {
         byZoneAndDanger: { damp_battlegrounds__High: 5 },
       },
       robotDefeats: { anxietick: 3 },
+      robotDownings: { tank_overcompensation: 2 },
       healingItemsUsed: {
         total: 6,
         byItem: { bandage_blue: 4, bandage_purple: 2 },
@@ -136,6 +138,7 @@ describe('useGamePersistence', () => {
 
     expect(loaded?.state.raider.traits).toEqual(['coward'])
     expect(loaded?.state.raider.name).toBe('Custom Name')
+    expect(loaded?.state.stats.robotDownings).toEqual({})
   })
 
   it('migrates legacy EXTRACTING phase saves into a RAIDING extraction condition', () => {

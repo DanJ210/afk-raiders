@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { createInitialLifetimeStats, recordHealingItemUse, recordOutcome, recordRobotDefeat } from '../../src/engine/stats'
+import { createInitialLifetimeStats, recordHealingItemUse, recordOutcome, recordRobotDefeat, recordRobotDowning } from '../../src/engine/stats'
 
 describe('lifetime stats helpers', () => {
   it('records extract/death totals and zone context', () => {
@@ -22,6 +22,14 @@ describe('lifetime stats helpers', () => {
     const afterTwo = recordRobotDefeat(afterOne, 'anxietick')
 
     expect(afterTwo.robotDefeats.anxietick).toBe(2)
+  })
+
+  it('records robot downings by id', () => {
+    const initial = createInitialLifetimeStats()
+    const afterOne = recordRobotDowning(initial, 'tank_overcompensation')
+    const afterTwo = recordRobotDowning(afterOne, 'tank_overcompensation')
+
+    expect(afterTwo.robotDownings.tank_overcompensation).toBe(2)
   })
 
   it('records healing item usage totals and by-item counts', () => {

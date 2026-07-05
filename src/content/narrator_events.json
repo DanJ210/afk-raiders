@@ -1,0 +1,180 @@
+{
+  "firstExtract": [
+    {
+      "id": "narrator_first_extract_1",
+      "weight": 10,
+      "text": "First extract on the books for {raider_name}. Desperanza would clap, but everyone is busy pretending this is normal."
+    },
+    {
+      "id": "narrator_first_extract_2",
+      "weight": 8,
+      "text": "{raider_name} made it home alive for the first time. The Hatch Authority hates setting expectations this early."
+    }
+  ],
+  "extractMilestones": [
+    {
+      "count": 5,
+      "entries": [
+        {
+          "id": "narrator_extract_5_1",
+          "weight": 10,
+          "text": "Five successful extracts for {raider_name}. Desperanza now calls this 'concerning competence.'"
+        }
+      ]
+    },
+    {
+      "count": 10,
+      "entries": [
+        {
+          "id": "narrator_extract_10_1",
+          "weight": 10,
+          "text": "Ten extracts logged. {raider_name} is becoming proof that bad ideas can be repeatable." 
+        }
+      ]
+    }
+  ],
+  "firstDeath": [
+    {
+      "id": "narrator_first_death_1",
+      "weight": 10,
+      "text": "First official death for {raider_name}. Desperanza has processed the paperwork and several feelings."
+    },
+    {
+      "id": "narrator_first_death_2",
+      "weight": 8,
+      "text": "The first death has been logged. In Desperanza terms, that means the career has truly started."
+    }
+  ],
+  "deathMilestones": [
+    {
+      "count": 5,
+      "entries": [
+        {
+          "id": "narrator_death_5_1",
+          "weight": 10,
+          "text": "Five deaths deep, {raider_name} is no longer unlucky. This is a management pattern."
+        }
+      ]
+    },
+    {
+      "count": 10,
+      "entries": [
+        {
+          "id": "narrator_death_10_1",
+          "weight": 10,
+          "text": "Ten deaths on file. The recovery cot in Desperanza is considering a naming rights deal."
+        }
+      ]
+    }
+  ],
+  "zoneExtractReputation": [
+    {
+      "count": 3,
+      "entries": [
+        {
+          "id": "narrator_zone_extract_3_1",
+          "weight": 10,
+          "text": "Third successful extract from {zone_name}. {raider_name} now calls it a route. Everyone else calls it a phase."
+        }
+      ]
+    },
+    {
+      "count": 5,
+      "entries": [
+        {
+          "id": "narrator_zone_extract_5_1",
+          "weight": 10,
+          "text": "Five returns from {zone_name}. The zone is starting to feel less like a destination and more like a bad commute."
+        }
+      ]
+    }
+  ],
+  "zoneDeathReputation": [
+    {
+      "count": 3,
+      "entries": [
+        {
+          "id": "narrator_zone_death_3_1",
+          "weight": 10,
+          "text": "Third death tied to {zone_name}. That place and {raider_name} are building a relationship nobody approves of."
+        }
+      ]
+    },
+    {
+      "count": 5,
+      "entries": [
+        {
+          "id": "narrator_zone_death_5_1",
+          "weight": 10,
+          "text": "Five deaths in {zone_name}. Desperanza now files trips there under 'predictable mistakes.'"
+        }
+      ]
+    }
+  ],
+  "waterBottleMilestones": [
+    {
+      "count": 10,
+      "entries": [
+        {
+          "id": "narrator_water_10_1",
+          "weight": 10,
+          "text": "Home stash water bottle count reached {water_count}. This has stopped being preparedness and started being theology."
+        }
+      ]
+    },
+    {
+      "count": 25,
+      "entries": [
+        {
+          "id": "narrator_water_25_1",
+          "weight": 10,
+          "text": "{water_count} water bottles in storage. The Water Ration Desk would like a private word and a public audit."
+        }
+      ]
+    },
+    {
+      "count": 50,
+      "entries": [
+        {
+          "id": "narrator_water_50_1",
+          "weight": 10,
+          "text": "Water bottle total: {water_count}. At this point {raider_name} isn't hoarding. They're founding a religion."
+        }
+      ]
+    }
+  ],
+  "nemesisEstablished": [
+    {
+      "id": "narrator_nemesis_1",
+      "weight": 10,
+      "text": "Nemesis update: {robot_name} has downed {raider_name} {count} times and is now the machine to beat, avoid, or resent professionally."
+    },
+    {
+      "id": "narrator_nemesis_2",
+      "weight": 8,
+      "text": "A pattern has emerged. {robot_name} keeps putting {raider_name} on the floor. Desperanza calls that a rivalry."
+    }
+  ],
+  "nemesisDeepens": [
+    {
+      "count": 3,
+      "entries": [
+        {
+          "id": "narrator_nemesis_3_1",
+          "weight": 10,
+          "text": "{robot_name} has downed {raider_name} {count} times now. This is no longer bad luck. This is recurring programming."
+        }
+      ]
+    },
+    {
+      "count": 5,
+      "entries": [
+        {
+          "id": "narrator_nemesis_5_1",
+          "weight": 10,
+          "text": "Five documented downings by {robot_name}. Desperanza is considering assigning the feud its own file cabinet."
+        }
+      ]
+    }
+  ]
+}

@@ -22,6 +22,8 @@ export interface EventTemplate extends ContentEntry {
     zoneCondition?: string | string[]
     /** Raider must have at least one of these personality trait ids. */
     traits?: string | string[]
+    /** Event only applies when a unique lifetime nemesis robot exists. */
+    hasNemesisRobot?: boolean
     activeActivityKind?: RaidActivityKind | RaidActivityKind[]
     activeActivityId?: string | string[]
     activeRobotId?: string | string[]
@@ -431,6 +433,8 @@ export interface RaiderLifetimeStats {
   extracts: OutcomeContextStats
   deaths: OutcomeContextStats
   robotDefeats: Record<string, number>
+  /** Robot ids keyed to the number of times they have downed the Raider. */
+  robotDownings: Record<string, number>
   healingItemsUsed: {
     total: number
     byItem: Record<string, number>

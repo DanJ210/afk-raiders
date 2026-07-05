@@ -442,6 +442,26 @@ describe('applyEffects — backpack item behavior', () => {
     expect([...traitlessIds].some(id => id.startsWith('trait_'))).toBe(false)
   })
 
+  it('filters nemesis hub events by whether a unique nemesis exists', () => {
+    const initial = createInitialState(0)
+    const withoutNemesis = {
+      ...initial,
+      raid: { ...initial.raid, phase: 'HUB' as const },
+      stats: { ...initial.stats, robotDownings: {} },
+    }
+    const withNemesis = {
+      ...initial,
+      raid: { ...initial.raid, phase: 'HUB' as const },
+      stats: { ...initial.stats, robotDownings: { anxietick: 2 } },
+    }
+
+    const withoutIds = new Set(eligibleEvents(withoutNemesis).map(event => event.id))
+    const withIds = new Set(eligibleEvents(withNemesis).map(event => event.id))
+
+    expect(withoutIds.has('hub_nemesis_maintenance_poster')).toBe(false)
+    expect(withIds.has('hub_nemesis_maintenance_poster')).toBe(true)
+  })
+
   it('fills {raider_name} from the raider state', () => {
     const initial = createInitialState(0)
     const state = {

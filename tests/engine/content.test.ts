@@ -28,6 +28,7 @@ import zonesData from '../../src/content/zones/zones.json'
 import weaponsData from '../../src/content/weapons.json'
 import raiderIdentityData from '../../src/content/raider_identity.json'
 import prepEventsData from '../../src/content/prep_events.json'
+import narratorEventsData from '../../src/content/narrator_events.json'
 import { MAX_RAIDER_LEVEL } from '../../src/engine/raiderLevel'
 import { raidActivities } from '../../src/engine/raidActivities'
 import type { RaidActivityDefinition, RaiderLevelContent, SkillDefinition, SkillTrackId } from '../../src/engine/types'
@@ -68,7 +69,7 @@ const DEADLINESS_RANK = {
 } as const
 
 // Known non-table slot names handled directly in fillSlots()
-const BUILT_IN_SLOTS = new Set(['mundane_item', 'water_item', 'healing_item', 'count', 'raider_name'])
+const BUILT_IN_SLOTS = new Set(['mundane_item', 'water_item', 'healing_item', 'count', 'raider_name', 'nemesis_robot_name', 'nemesis_robot_flavor'])
 const VALID_PHASES = new Set<Phase>(['HUB', 'DEPLOYING', 'RAIDING', 'KNOCKED_OUT'])
 const VALID_DANGER_LEVELS = new Set<DangerLevel>(['Low', 'Medium', 'High'])
 const VALID_SKILL_IDS = new Set<SkillTrackId>(['cardio', 'hoarding', 'hiding_in_lockers', 'signal_handling'])
@@ -310,11 +311,18 @@ describe('content validation', () => {
         const requiresRobotEncounter = ev.requires?.activeActivityKind === 'ROBOT_ENCOUNTER'
           || (Array.isArray(ev.requires?.activeActivityKind) && ev.requires.activeActivityKind.includes('ROBOT_ENCOUNTER'))
           || ev.requires?.activeRobotId !== undefined
+        const requiresNemesisRobot = ev.requires?.hasNemesisRobot === true
         for (const slot of slots) {
           // Context-aware robot slots are only valid on events gated to an active robot encounter.
           if (slot === 'robot_name' || slot === 'robot_flavor') {
             if (!requiresRobotEncounter) {
               unknown.push(`event "${ev.id}" uses context slot "{${slot}}" without requiring an active ROBOT_ENCOUNTER`)
+            }
+            continue
+          }
+          if (slot === 'nemesis_robot_name' || slot === 'nemesis_robot_flavor') {
+            if (!requiresNemesisRobot) {
+              unknown.push(`event "${ev.id}" uses context slot "{${slot}}" without requiring hasNemesisRobot: true`)
             }
             continue
           }
@@ -1109,6 +1117,37 @@ describe('content validation', () => {
           }
         }
       }
+    })
+  })
+
+  describe('narrator_events.json', () => {
+    const NARRATOR_SLOTS = new Set(['raider_name', 'zone_name', 'danger_level', 'count', 'water_count', 'robot_name'])
+    const pools = narratorEventsData as Record<string, unknown>
+
+    function entriesFromNarratorPool(pool: unknown): Array<{ id: string; weight: number; text: string }> {
+      if (!Array.isArray(pool)) return []
+      return pool as Array<{ id: string; weight: number; text: string }>
+    }
+
+    it('uses positive weights, unique ids, and known slots', () => {
+      const ids: string[] = []
+      for (const [key, value] of Object.entries(pools)) {
+        const groups = Array.isArray(value) && value.length > 0 && typeof value[0] === 'object' && value[0] !== null && 'entries' in (value[0] as Record<string, unknown>)
+          ? (value as Array<{ count: number; entries: Array<{ id: string; weight: number; text: string }> }>).flatMap(group => group.entries)
+          : entriesFromNarratorPool(value)
+
+        expect(groups.length, `narrator pool "${key}" must not be empty`).toBeGreaterThan(0)
+        for (const entry of groups) {
+          ids.push(entry.id)
+          expect(entry.weight, `narrator line "${entry.id}" has weight ${entry.weight}`).toBeGreaterThan(0)
+          expect(entry.text.trim(), `narrator line "${entry.id}" has empty text`).not.toBe('')
+          const slots = [...entry.text.matchAll(/\{(\w+)\}/g)].map(match => match[1])
+          for (const slot of slots) {
+            expect(NARRATOR_SLOTS.has(slot), `narrator line "${entry.id}" uses unknown slot "{${slot}}"`).toBe(true)
+          }
+        }
+      }
+      expect(new Set(ids).size).toBe(ids.length)
     })
   })
 })

@@ -42,6 +42,7 @@ import { getSkillModifierProfile } from './skills.js'
 import { clampGreedLevel, getGreedDangerEventWeightMultiplier, getGreedRarityWeightMultiplier } from './greed.js'
 import { logConditionsForRaid } from './log.js'
 import { getRaiderLevelFromXp } from './raiderLevel.js'
+import { getNemesisRobot } from './narrator.js'
 
 // Lifecycle phase events plus RAIDING condition events.
 const events = [
@@ -230,6 +231,8 @@ export function eligibleEvents(state: GameState): EventTemplate[] {
       const raiderTraits = state.raider.traits ?? []
       if (!wanted.some(trait => raiderTraits.includes(trait))) return false
     }
+    if (r.hasNemesisRobot === true && !getNemesisRobot(state.stats)) return false
+    if (r.hasNemesisRobot === false && getNemesisRobot(state.stats)) return false
     if (r.activeActivityKind || r.activeActivityId || r.activeRobotId) {
       const context = currentAmbientActivityContext(state)
       if (!context) return false
@@ -373,7 +376,7 @@ function pickRaidingEventTemplate(eligible: EventTemplate[], state: GameState, r
 }
 
 /** Fill {slot} placeholders in a template string */
-function fillSlots(text: string, rng: RNG, context: { activeRobot?: RobotEntry | null; raiderName?: string } = {}): string {
+function fillSlots(text: string, rng: RNG, context: { activeRobot?: RobotEntry | null; activeNemesisRobot?: RobotEntry | null; raiderName?: string } = {}): string {
   return text.replace(/\{([^}]+)\}/g, (_match, slot: string) => {
     // Named flavor tables
     if (slot in flavor) {
@@ -386,6 +389,13 @@ function fillSlots(text: string, rng: RNG, context: { activeRobot?: RobotEntry |
     // Context-aware raider identity slot
     if (slot === 'raider_name') {
       return context.raiderName ?? 'the Raider'
+    }
+
+    if (slot === 'nemesis_robot_name') {
+      return context.activeNemesisRobot?.name ?? 'that one robot'
+    }
+    if (slot === 'nemesis_robot_flavor') {
+      return context.activeNemesisRobot ? rng.pick(context.activeNemesisRobot.flavorLines) : 'still holding a grudge somehow'
     }
 
     // Context-aware robot slots — resolve from the current ROBOT_ENCOUNTER robot.
@@ -763,7 +773,11 @@ export function resolveEvent(
     weight: adjustedEventWeight(template, state),
   }))
   const template = pickRaidingEventTemplate(weightedEligible, state, rng)
-  const text = fillSlots(template.text, rng, { activeRobot: activeEncounterRobot(state), raiderName: state.raider.name })
+  const text = fillSlots(template.text, rng, {
+    activeRobot: activeEncounterRobot(state),
+    activeNemesisRobot: getNemesisRobot(state.stats),
+    raiderName: state.raider.name,
+  })
 
   return {
     id: template.id,
@@ -796,7 +810,11 @@ export function resolveAmbientActivityEvent(
     id: template.id,
     tick: state.tick,
     timestamp: now,
-    text: fillSlots(template.text, rng, { activeRobot: activeEncounterRobot(state), raiderName: state.raider.name }),
+    text: fillSlots(template.text, rng, {
+      activeRobot: activeEncounterRobot(state),
+      activeNemesisRobot: getNemesisRobot(state.stats),
+      raiderName: state.raider.name,
+    }),
     phase: state.raid.phase,
     commsPriority: CommsPriority.Ambient,
     conditions: logConditionsForRaid(state.raid),
