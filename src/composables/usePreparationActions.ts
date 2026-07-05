@@ -31,67 +31,76 @@ export function usePreparationActions(
   publishEvents?: (events: LogEvent[]) => void,
   getSeed?: () => number,
 ): PreparationActionsReturn {
-  function commit(result: NonNullable<ReturnType<typeof purchaseWeapon>>) {
+  function persistState() {
+    persistCallback(stateRef.value, getSeed?.() ?? 0, lastTickAtRef.value)
+  }
+
+  function commitLogged(result: NonNullable<ReturnType<typeof purchaseWeapon>>) {
     stateRef.value = {
       ...result.state,
       log: appendLogEntries(stateRef.value.log, [result.event]),
     }
     publishEvents?.([result.event])
-    persistCallback(stateRef.value, getSeed?.() ?? 0, lastTickAtRef.value)
+    persistState()
+  }
+
+  function commitSilent(result: NonNullable<ReturnType<typeof purchaseWeapon>>) {
+    stateRef.value = result.state
+    persistState()
   }
 
   function purchaseWeaponAction(weaponId: string) {
     const result = purchaseWeapon(stateRef.value, weaponId, Date.now())
     if (!result) return
-    commit(result)
+    commitSilent(result)
   }
 
   function repairWeaponAction(weaponId: string) {
     const result = repairWeapon(stateRef.value, weaponId, Date.now())
     if (!result) return
-    commit(result)
+    commitLogged(result)
   }
 
   function equipWeaponAction(weaponId: string) {
     const result = equipWeapon(stateRef.value, weaponId, Date.now())
     if (!result) return
-    commit(result)
+    commitLogged(result)
   }
 
   function purchaseHealingItemAction(itemId: string, quantity = 1) {
     const result = purchaseHealingItem(stateRef.value, itemId, quantity, Date.now())
     if (!result) return
-    commit(result)
+    commitSilent(result)
   }
 
   function purchaseShieldRechargerAction(itemId: string, quantity = 1) {
     const result = purchaseShieldRecharger(stateRef.value, itemId, quantity, Date.now())
     if (!result) return
-    commit(result)
+    commitSilent(result)
   }
 
   function setSelectedHealingLoadoutAction(selections: Array<{ itemId: string; quantity: number }>) {
     const result = setSelectedHealingLoadout(stateRef.value, selections, Date.now())
     if (!result) return
-    commit(result)
+    commitLogged(result)
   }
 
   function setSelectedShieldRechargerLoadoutAction(selections: Array<{ itemId: string; quantity: number }>) {
     const result = setSelectedShieldRechargerLoadout(stateRef.value, selections, Date.now())
     if (!result) return
-    commit(result)
+    commitLogged(result)
   }
 
   function clearSelectedHealingLoadoutAction() {
     const result = clearSelectedHealingLoadout(stateRef.value, Date.now())
     if (!result) return
-    commit(result)
+    commitLogged(result)
   }
 
   function clearSelectedShieldRechargerLoadoutAction() {
     const result = clearSelectedShieldRechargerLoadout(stateRef.value, Date.now())
     if (!result) return
-    commit(result)
+    commitLogged(result)
   }
 
   return {

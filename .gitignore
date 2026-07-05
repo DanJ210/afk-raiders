@@ -58,3 +58,4 @@ node_modules
 *.sln
 *.sw?
 .vite/
+/coverage
