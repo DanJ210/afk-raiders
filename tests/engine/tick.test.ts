@@ -1404,6 +1404,14 @@ describe('deterministic snapshot', () => {
     expect(result.events.some(event => event.id === 'condition_downed_started')).toBe(true)
   })
 
+  it('starts a story arc during ordinary HUB ticking', () => {
+    const state = createInitialState(0)
+    const result = processTick(state, createRNG(1), 0)
+
+    expect(result.state.story.activeArc?.id).toBe('missing_stamp')
+    expect(result.events.some(event => event.id === 'arc_missing_stamp_start')).toBe(true)
+  })
+
   it('skips ambient activity comms when important handler logs are already queued', () => {
     const initial = createInitialState(0)
     const downedContextState = {

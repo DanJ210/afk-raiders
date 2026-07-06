@@ -17,6 +17,7 @@ import { createStarterShieldState } from '../engine/shields.js'
 import { normalizeSkills } from '../engine/skills.js'
 import { normalizeRaiderLevelXp } from '../engine/raiderLevel.js'
 import { DEFAULT_RAIDER_NAME, generateIdentityForSeed, sanitizePersonalityTraits } from '../engine/identity.js'
+import { normalizeStoryState } from '../engine/arcs.js'
 import { createStarterOwnedWeapon, findWeapon, getDefaultWeapon } from '../engine/weapons.js'
 
 const STORAGE_KEY = 'afk-raiders-save'
@@ -361,6 +362,7 @@ export function useGamePersistence(): GamePersistenceReturn {
         purchasedShieldRechargers: normalizePurchasedShieldRechargers((loadedState as unknown as Record<string, unknown>).purchasedShieldRechargers),
         coins: (loadedState.coins ?? 0) + sale.coinsGained,
         stats: normalizeLifetimeStats(loadedState),
+        story: normalizeStoryState((loadedState as unknown as Record<string, unknown>).story),
         raid: {
           ...normalizedRaid,
           equippedWeaponId: reconcileEquippedWeaponId(normalizedRaid.equippedWeaponId, ownedWeapons),

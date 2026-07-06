@@ -19,6 +19,7 @@ import { applyRaiderXpGain, getRaiderLevelBenefitProfile, rollRaiderXp, type Rai
 import { advanceRaidActivity, raidActivities, startRaidActivity } from './raidActivities.js'
 import { applyFailedRaidWeaponLoss, applyRaidWeaponWear, consumeSelectedPreparationLoadouts } from './loadout.js'
 import { narrateOutcomeCallbacks } from './narrator.js'
+import { advanceStoryArcs, resolveArcAmbientEvent } from './arcs.js'
 
 const LOOT_BONUS_HEALING_ITEM_CHANCE = 0.2 // 20% chance to find a healing item on any loot event, independent of normal loot rolls
 const LOOT_BONUS_SHIELD_RECHARGER_CHANCE = 0.15 // 15% chance to find a shield recharger on any loot event, independent of normal loot rolls
@@ -1067,6 +1068,17 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
     }
     const conditions = logConditionsForRaid(currentState.raid)
     emitted.push(...xpResult.levelUps.map(levelUp => raiderLevelUpEvent(levelUp, state.tick, now, currentState.raid.phase, conditions)))
+  }
+
+  const storyAdvance = advanceStoryArcs(currentState, state.tick, now)
+  currentState = storyAdvance.state
+  emitted.push(...storyAdvance.events)
+
+  if (!hasPriorityCommsQueued(emitted) && !hasAmbientCommsQueued(emitted)) {
+    const arcAmbientEvent = resolveArcAmbientEvent(currentState, state.tick, now)
+    if (arcAmbientEvent) {
+      emitted.push(arcAmbientEvent)
+    }
   }
 
   // ------------------------------------------------------------------

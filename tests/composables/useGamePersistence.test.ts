@@ -92,6 +92,10 @@ describe('useGamePersistence', () => {
         byItem: { bandage_blue: 4, bandage_purple: 2 },
       },
     })
+    expect(loaded?.state.story).toEqual({
+      activeArc: null,
+      completedArcIds: [],
+    })
   })
 
   it('backfills personality traits for legacy saves deterministically from the seed', () => {
@@ -139,6 +143,7 @@ describe('useGamePersistence', () => {
     expect(loaded?.state.raider.traits).toEqual(['coward'])
     expect(loaded?.state.raider.name).toBe('Custom Name')
     expect(loaded?.state.stats.robotDownings).toEqual({})
+    expect(loaded?.state.story).toEqual({ activeArc: null, completedArcIds: [] })
   })
 
   it('migrates legacy EXTRACTING phase saves into a RAIDING extraction condition', () => {

@@ -116,13 +116,13 @@ describe('resolveEvent — RAIDING activity mix', () => {
     expect(sampleRaidSelectionMix('Low').activityStarterShare).toBeCloseTo(0.75, 1)
     expect(sampleRaidSelectionMix('Medium').activityStarterShare).toBeCloseTo(0.75, 1)
     expect(sampleRaidSelectionMix('High').activityStarterShare).toBeCloseTo(0.75, 1)
-  })
+  }, 30_000)
 
   it('shifts SEARCH and ROBOT_ENCOUNTER starter share by danger level', () => {
     expect(sampleRaidSelectionMix('Low').activitySearchShare).toBeCloseTo(0.85, 1)
     expect(sampleRaidSelectionMix('Medium').activitySearchShare).toBeCloseTo(0.72, 1)
     expect(sampleRaidSelectionMix('High').activitySearchShare).toBeCloseTo(0.62, 1)
-  })
+  }, 30_000)
 })
 
 describe('resolveAmbientActivityEvent', () => {

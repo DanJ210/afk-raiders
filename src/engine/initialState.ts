@@ -8,8 +8,9 @@ import { createStarterShieldState } from './shields.js'
 import { createInitialSkills } from './skills.js'
 import { createStarterOwnedWeapon, STARTER_WEAPON_ID } from './weapons.js'
 import { DEFAULT_RAIDER_NAME, type RaiderIdentity } from './identity.js'
+import { createInitialStoryState } from './arcs.js'
 
-export const SAVE_VERSION = 10
+export const SAVE_VERSION = 11
 
 export function createInitialState(now: number = Date.now(), identity?: RaiderIdentity): GameState {
   return {
@@ -61,6 +62,7 @@ export function createInitialState(now: number = Date.now(), identity?: RaiderId
     purchasedShieldRechargers: [],
     coins: 0,
     stats: createInitialLifetimeStats(),
+    story: createInitialStoryState(),
     pendingCalm: false,
     pendingPressure: false,
   }

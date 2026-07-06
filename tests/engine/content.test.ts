@@ -29,6 +29,7 @@ import weaponsData from '../../src/content/weapons.json'
 import raiderIdentityData from '../../src/content/raider_identity.json'
 import prepEventsData from '../../src/content/prep_events.json'
 import narratorEventsData from '../../src/content/narrator_events.json'
+import arcsData from '../../src/content/arcs/arcs.json'
 import { MAX_RAIDER_LEVEL } from '../../src/engine/raiderLevel'
 import { raidActivities } from '../../src/engine/raidActivities'
 import type { RaidActivityDefinition, RaiderLevelContent, SkillDefinition, SkillTrackId } from '../../src/engine/types'
@@ -1148,6 +1149,47 @@ describe('content validation', () => {
         }
       }
       expect(new Set(ids).size).toBe(ids.length)
+    })
+  })
+
+  describe('arcs.json', () => {
+    const ARC_SLOTS = new Set(['raider_name', 'nemesis_robot_name'])
+
+    it('defines unique arc ids and non-empty beat chains', () => {
+      const ids = arcsData.arcs.map(arc => arc.id)
+      expect(new Set(ids).size).toBe(ids.length)
+
+      for (const arc of arcsData.arcs) {
+        expect(arc.name.trim(), `arc "${arc.id}" missing name`).not.toBe('')
+        expect(arc.summary.trim(), `arc "${arc.id}" missing summary`).not.toBe('')
+        expect(arc.beats.length, `arc "${arc.id}" must have at least one beat`).toBeGreaterThan(0)
+        const beatIds = arc.beats.map(beat => beat.id)
+        expect(new Set(beatIds).size, `arc "${arc.id}" beat ids must be unique`).toBe(beatIds.length)
+      }
+    })
+
+    it('only uses known slots in arc start/completion/ambient text', () => {
+      const unknown: string[] = []
+
+      for (const arc of arcsData.arcs) {
+        const texts = [arc.completedText, ...arc.beats.flatMap(beat => [
+          beat.startText,
+          ...(beat.completedText ? [beat.completedText] : []),
+          ...(beat.ambientTexts?.HUB ?? []),
+          ...(beat.ambientTexts?.RAIDING ?? []),
+        ])]
+
+        for (const text of texts) {
+          const slots = [...text.matchAll(/\{(\w+)\}/g)].map(match => match[1])
+          for (const slot of slots) {
+            if (!ARC_SLOTS.has(slot)) {
+              unknown.push(`arc "${arc.id}" uses unknown slot "{${slot}}" in text "${text}"`)
+            }
+          }
+        }
+      }
+
+      expect(unknown).toEqual([])
     })
   })
 })

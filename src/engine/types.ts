@@ -477,6 +477,25 @@ export interface ActivityLogEvent extends LogEvent {
   status: ActivityStatus
 }
 
+export interface StoryArcProgress {
+  coins: number
+  extractsTotal: number
+  deathsTotal: number
+  waterBottles: number
+  nemesisDownings: number
+}
+
+export interface ActiveStoryArc {
+  id: string
+  beatIndex: number
+  progress: StoryArcProgress
+}
+
+export interface StoryState {
+  activeArc: ActiveStoryArc | null
+  completedArcIds: string[]
+}
+
 export interface GameState {
   version: number
   tick: number
@@ -496,6 +515,7 @@ export interface GameState {
   /** Coin stash from auto-sold overflow loot — value is never deleted, only converted */
   coins: number
   stats: RaiderLifetimeStats
+  story: StoryState
   // Set by CALL_EXTRACT so the tick driver knows to nudge the next greed check
   pendingCalm: boolean
   pendingPressure: boolean
