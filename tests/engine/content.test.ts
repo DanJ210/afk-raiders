@@ -1121,6 +1121,43 @@ describe('content validation', () => {
     })
   })
 
+  describe('raider_identity.json', () => {
+    const namedPools = [
+      ['firstNames', raiderIdentityData.firstNames],
+      ['callsigns', raiderIdentityData.callsigns],
+      ['lastNames', raiderIdentityData.lastNames],
+    ] as const
+
+    it('defines non-empty name pools with unique ids and positive weights', () => {
+      const ids: string[] = []
+
+      for (const [poolName, pool] of namedPools) {
+        expect(pool.length, `identity pool "${poolName}" must not be empty`).toBeGreaterThan(0)
+        for (const entry of pool) {
+          ids.push(entry.id)
+          expect(entry.weight, `identity entry "${entry.id}" has weight ${entry.weight}`).toBeGreaterThan(0)
+          expect(entry.text.trim(), `identity entry "${entry.id}" has empty text`).not.toBe('')
+        }
+      }
+
+      expect(new Set(ids).size).toBe(ids.length)
+    })
+
+    it('defines non-empty trait entries with unique ids and positive weights', () => {
+      expect(raiderIdentityData.traits.length, 'identity traits must not be empty').toBeGreaterThan(0)
+
+      const ids: string[] = []
+      for (const trait of raiderIdentityData.traits) {
+        ids.push(trait.id)
+        expect(trait.weight, `trait "${trait.id}" has weight ${trait.weight}`).toBeGreaterThan(0)
+        expect(trait.name.trim(), `trait "${trait.id}" has empty name`).not.toBe('')
+        expect(trait.description.trim(), `trait "${trait.id}" has empty description`).not.toBe('')
+      }
+
+      expect(new Set(ids).size).toBe(ids.length)
+    })
+  })
+
   describe('narrator_events.json', () => {
     const NARRATOR_SLOTS = new Set(['raider_name', 'zone_name', 'danger_level', 'count', 'water_count', 'robot_name'])
     const pools = narratorEventsData as Record<string, unknown>
