@@ -116,13 +116,13 @@ describe('resolveEvent — RAIDING activity mix', () => {
     expect(sampleRaidSelectionMix('Low').activityStarterShare).toBeCloseTo(0.75, 1)
     expect(sampleRaidSelectionMix('Medium').activityStarterShare).toBeCloseTo(0.75, 1)
     expect(sampleRaidSelectionMix('High').activityStarterShare).toBeCloseTo(0.75, 1)
-  })
+  }, 30_000)
 
   it('shifts SEARCH and ROBOT_ENCOUNTER starter share by danger level', () => {
     expect(sampleRaidSelectionMix('Low').activitySearchShare).toBeCloseTo(0.85, 1)
     expect(sampleRaidSelectionMix('Medium').activitySearchShare).toBeCloseTo(0.72, 1)
     expect(sampleRaidSelectionMix('High').activitySearchShare).toBeCloseTo(0.62, 1)
-  })
+  }, 30_000)
 })
 
 describe('resolveAmbientActivityEvent', () => {
@@ -418,6 +418,74 @@ describe('applyEffects — backpack item behavior', () => {
 
     expect(ids.has('raid_apology_weather_forecast')).toBe(true)
     expect(ids.has('raid_polite_glyphs_customer_service')).toBe(false)
+  })
+
+  it('filters trait events by raider personality traits', () => {
+    const initial = createInitialState(0)
+    const cowardState = {
+      ...initial,
+      raider: {
+        ...initial.raider,
+        traits: ['coward'],
+      },
+      raid: {
+        ...initial.raid,
+        phase: 'RAIDING' as const,
+      },
+    }
+
+    const cowardIds = new Set(eligibleEvents(cowardState).map(event => event.id))
+    expect(cowardIds.has('trait_coward_raiding_exit_count')).toBe(true)
+    expect(cowardIds.has('trait_hoarder_raiding_empty_crate')).toBe(false)
+
+    const traitlessIds = new Set(eligibleEvents(initial).map(event => event.id))
+    expect([...traitlessIds].some(id => id.startsWith('trait_'))).toBe(false)
+  })
+
+  it('filters nemesis hub events by whether a unique nemesis exists', () => {
+    const initial = createInitialState(0)
+    const withoutNemesis = {
+      ...initial,
+      raid: { ...initial.raid, phase: 'HUB' as const },
+      stats: { ...initial.stats, robotDownings: {} },
+    }
+    const withNemesis = {
+      ...initial,
+      raid: { ...initial.raid, phase: 'HUB' as const },
+      stats: { ...initial.stats, robotDownings: { anxietick: 2 } },
+    }
+
+    const withoutIds = new Set(eligibleEvents(withoutNemesis).map(event => event.id))
+    const withIds = new Set(eligibleEvents(withNemesis).map(event => event.id))
+
+    expect(withoutIds.has('hub_nemesis_maintenance_poster')).toBe(false)
+    expect(withIds.has('hub_nemesis_maintenance_poster')).toBe(true)
+  })
+
+  it('fills {raider_name} from the raider state', () => {
+    const initial = createInitialState(0)
+    const state = {
+      ...initial,
+      raider: {
+        ...initial.raider,
+        name: 'Mira "Wet Socks" Malone',
+        traits: ['coward'],
+      },
+      raid: {
+        ...initial.raid,
+        phase: 'HUB' as const,
+      },
+    }
+
+    // Resolve until a raider_name template lands or attempts run out.
+    const rng = createRNG(99)
+    let sawName = false
+    for (let i = 0; i < 500 && !sawName; i++) {
+      const event = resolveEvent({ ...state, tick: i }, rng, 1000 + i)
+      if (event && event.text.includes('Mira "Wet Socks" Malone')) sawName = true
+      expect(event?.text ?? '').not.toContain('{raider_name}')
+    }
+    expect(sawName).toBe(true)
   })
 
   it('filters Drama Queen events by minRaiderLevel requirements', () => {

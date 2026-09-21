@@ -257,6 +257,37 @@ function activityBadge(entry: ActivityLogEvent): string {
   return badges[entry.activity]
 }
 
+type StorySourceBadge = {
+  text: string
+  className: string
+}
+
+function storySourceBadge(entry: LogEvent): StorySourceBadge | null {
+  const id = entry.id
+  if (id.startsWith('trait_')) {
+    return { text: 'TRAIT', className: 'comms-log__story-badge--trait' }
+  }
+  if (id.startsWith('zone_')) {
+    return { text: 'ZONE', className: 'comms-log__story-badge--zone' }
+  }
+  if (id.startsWith('narrator_')) {
+    return { text: 'CALLBACK', className: 'comms-log__story-badge--callback' }
+  }
+  if (id.startsWith('arc_')) {
+    return { text: 'ARC', className: 'comms-log__story-badge--arc' }
+  }
+  if (
+    id.startsWith('weapon_purchase_')
+    || id.startsWith('weapon_equipped_')
+    || id.startsWith('weapon_repaired_')
+    || id.startsWith('healing_purchase_')
+    || id.startsWith('shield_recharger_purchase_')
+  ) {
+    return { text: 'PREP', className: 'comms-log__story-badge--prep' }
+  }
+  return null
+}
+
 </script>
 
 <template>
@@ -341,6 +372,9 @@ function activityBadge(entry: ActivityLogEvent): string {
     <section class="comms-log__handler" aria-label="Handler Comms">
       <header class="comms-log__handler-header">
         <span>HANDLER COMMS</span>
+        <span class="comms-log__story-legend" aria-label="Story source labels">
+          TRAIT • ZONE • CALLBACK • ARC • PREP
+        </span>
       </header>
       <div
         :ref="pinnedTopLog.logEl"
@@ -366,7 +400,16 @@ function activityBadge(entry: ActivityLogEvent): string {
           <span class="shrink-0 text-muted font-mono text-[0.75rem] pt-0.5 min-w-comms-timestamp">
             {{ logBadge(entry) }} {{ formatTime(entry.timestamp) }}
           </span>
-          <span class="text-text font-mono">{{ entry.text }}</span>
+          <span class="text-text font-mono flex items-start gap-2 min-w-0">
+            <span
+              v-if="storySourceBadge(entry)"
+              class="comms-log__story-badge shrink-0"
+              :class="storySourceBadge(entry)?.className"
+            >
+              {{ storySourceBadge(entry)?.text }}
+            </span>
+            <span class="min-w-0">{{ entry.text }}</span>
+          </span>
         </div>
       </div>
       <div v-if="pinnedTopLog.userScrolledDown.value" class="px-3.5 py-1.5 bg-accent text-bg text-[0.75rem] text-center cursor-pointer font-mono" @click="pinnedTopLog.jumpToTop()">
@@ -478,6 +521,7 @@ function activityBadge(entry: ActivityLogEvent): string {
 .comms-log__handler-header {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 0.5rem;
   padding: 0.5rem 0.875rem 0.35rem;
   border-bottom: 1px solid var(--color-border-subtle);
@@ -486,6 +530,49 @@ function activityBadge(entry: ActivityLogEvent): string {
   font-size: 0.68rem;
   font-weight: 700;
   letter-spacing: 0.08em;
+}
+
+.comms-log__story-legend {
+  font-size: 0.58rem;
+  color: var(--color-muted);
+  letter-spacing: 0.03em;
+}
+
+.comms-log__story-badge {
+  display: inline-flex;
+  align-items: center;
+  height: 1.1rem;
+  padding: 0 0.35rem;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  font-size: 0.58rem;
+  letter-spacing: 0.04em;
+  line-height: 1;
+}
+
+.comms-log__story-badge--trait {
+  background: color-mix(in srgb, var(--color-accent-secondary) 22%, transparent);
+  color: var(--color-accent-secondary);
+}
+
+.comms-log__story-badge--zone {
+  background: color-mix(in srgb, var(--color-success) 20%, transparent);
+  color: var(--color-success);
+}
+
+.comms-log__story-badge--callback {
+  background: color-mix(in srgb, var(--color-warning) 22%, transparent);
+  color: var(--color-warning);
+}
+
+.comms-log__story-badge--arc {
+  background: color-mix(in srgb, var(--color-accent) 22%, transparent);
+  color: var(--color-accent);
+}
+
+.comms-log__story-badge--prep {
+  background: color-mix(in srgb, var(--color-text) 12%, transparent);
+  color: var(--color-text);
 }
 
 .comms-log__handler-list {

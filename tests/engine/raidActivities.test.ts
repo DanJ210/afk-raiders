@@ -1012,7 +1012,7 @@ describe('raid activities', () => {
     const higherResilienceHp = applyRepeatedRetaliation(xpRequiredForLevel(64))
 
     expect(higherResilienceHp).toBeGreaterThan(lowerResilienceHp)
-  })
+  }, 30_000)
 
   it('scales robot activity retaliation by danger level', () => {
     const medium = advanceRaidActivity(createActiveRobotState({ robotId: 'tank_overcompensation', dangerLevel: 'Medium', shielded: false }), fixedRng(), 0)

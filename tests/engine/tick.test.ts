@@ -1364,6 +1364,54 @@ describe('deterministic snapshot', () => {
     expect(resolutionEvent?.text).toContain(result.activityEvents[0].text)
   })
 
+  it('records robot downings when a robot encounter starts the downed condition', () => {
+    const rng = createRNG(1)
+    const initial = createInitialState(0)
+    const state = {
+      ...initial,
+      raider: {
+        ...initial.raider,
+        hp: 1,
+      },
+      raid: {
+        ...initial.raid,
+        phase: 'RAIDING' as const,
+        dangerLevel: 'High' as const,
+        zone: 'arc_ruins',
+        phaseTicksRemaining: 30,
+        shield: initial.raid.shield ? { ...initial.raid.shield, charge: 0, durability: initial.raid.shield.durability } : null,
+        activeRaidActivity: {
+          id: 'robot_encounter_standard',
+          kind: 'ROBOT_ENCOUNTER' as const,
+          ticksRemaining: 6,
+          totalTicks: 6,
+          robotId: 'tank_overcompensation',
+          robotHp: 999,
+          robotMaxHp: 999,
+          weaponId: 'tea_kettle',
+          weaponName: 'Tea Kettle',
+          raiderBaseDamage: 0,
+          raiderDamageMultiplier: 1,
+          robotDamageMultiplier: 2,
+          raiderAction: 'fighting' as const,
+        },
+      },
+    }
+
+    const result = processTick(state, rng, 0)
+
+    expect(result.state.stats.robotDownings.tank_overcompensation).toBe(1)
+    expect(result.events.some(event => event.id === 'condition_downed_started')).toBe(true)
+  })
+
+  it('starts a story arc during ordinary HUB ticking', () => {
+    const state = createInitialState(0)
+    const result = processTick(state, createRNG(1), 0)
+
+    expect(result.state.story.activeArc?.id).toBe('missing_stamp')
+    expect(result.events.some(event => event.id === 'arc_missing_stamp_start')).toBe(true)
+  })
+
   it('skips ambient activity comms when important handler logs are already queued', () => {
     const initial = createInitialState(0)
     const downedContextState = {

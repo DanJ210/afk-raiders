@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { createInitialState } from '../../src/engine/initialState'
+import { createRNG } from '../../src/engine/rng'
 import {
   applyFailedRaidWeaponLoss,
   applyRaidWeaponWear,
@@ -25,6 +26,28 @@ function createState() {
 }
 
 describe('loadout transactions', () => {
+  it('narrates prep transactions with filled desk-voice slots', () => {
+    for (let seed = 0; seed < 10; seed++) {
+      const rng = createRNG(seed)
+      const purchase = purchaseWeapon(createState(), 'aspperigo', 0, rng)
+      expect(purchase).not.toBeNull()
+      expect(purchase!.event.text).toContain('Aspperigo')
+      expect(purchase!.event.text).toContain('65')
+      expect(purchase!.event.text).not.toMatch(/\{\w+\}/)
+
+      const healing = purchaseHealingItem(createState(), 'bandage_green', 2, 0, rng)
+      expect(healing).not.toBeNull()
+      expect(healing!.event.text).toContain('2x')
+      expect(healing!.event.text).not.toMatch(/\{\w+\}/)
+    }
+  })
+
+  it('falls back to the first narration line without an RNG', () => {
+    const purchase = purchaseWeapon(createState(), 'aspperigo', 0)
+    expect(purchase!.event.text).toContain('Aspperigo')
+    expect(purchase!.event.text).not.toMatch(/\{\w+\}/)
+  })
+
   it('buys and equips a weapon from the catalog', () => {
     const purchase = purchaseWeapon(createState(), 'aspperigo', 0)
     expect(purchase).not.toBeNull()
