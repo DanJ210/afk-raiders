@@ -111,6 +111,23 @@ describe('RaiderCreationPanel', () => {
     expect(wrapper.get('#outside').attributes('inert')).toBeDefined()
   })
 
+  it('restores sibling inert and aria-hidden attributes to their prior values', async () => {
+    const Shell = defineComponent({
+      components: { RaiderCreationPanel },
+      template: '<div><button id="outside" inert aria-hidden="false">Outside</button><RaiderCreationPanel /></div>',
+    })
+    const wrapper = mount(Shell, { attachTo: document.body })
+
+    await nextTick()
+    activeStore.needsRaiderCreation = false
+    await nextTick()
+    await nextTick()
+
+    const outside = wrapper.get('#outside')
+    expect(outside.attributes('inert')).toBeDefined()
+    expect(outside.attributes('aria-hidden')).toBe('false')
+  })
+
   it('traps keyboard focus inside the dialog', async () => {
     const wrapper = mount(RaiderCreationPanel, { attachTo: document.body })
     await nextTick()

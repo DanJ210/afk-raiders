@@ -8,6 +8,8 @@ const store = useGameStore()
 const suggestion = store.suggestIdentity()
 const modalRoot = ref<HTMLElement | null>(null)
 const nameField = ref<HTMLInputElement | null>(null)
+const siblingAttributeState = new WeakMap<HTMLElement, { inert: string | null; ariaHidden: string | null }>()
+let inertSiblings: HTMLElement[] = []
 const nameInput = ref(suggestion.name)
 const selectedTraits = ref<string[]>([...suggestion.traits])
 
@@ -42,18 +44,44 @@ function begin() {
 }
 
 function setSiblingInert(active: boolean) {
+  if (!active) {
+    for (const sibling of inertSiblings) {
+      const previous = siblingAttributeState.get(sibling)
+      if (!previous) continue
+      if (previous.inert === null) {
+        sibling.removeAttribute('inert')
+      } else {
+        sibling.setAttribute('inert', previous.inert)
+      }
+      if (previous.ariaHidden === null) {
+        sibling.removeAttribute('aria-hidden')
+      } else {
+        sibling.setAttribute('aria-hidden', previous.ariaHidden)
+      }
+      siblingAttributeState.delete(sibling)
+    }
+    inertSiblings = []
+    return
+  }
+
   const overlay = modalRoot.value
   const parent = overlay?.parentElement
   if (!overlay || !parent) return
 
+  inertSiblings = []
   for (const element of Array.from(parent.children)) {
     if (element === overlay) continue
+    const sibling = element as HTMLElement
+    inertSiblings.push(sibling)
     if (active) {
-      element.setAttribute('inert', '')
-      element.setAttribute('aria-hidden', 'true')
-    } else {
-      element.removeAttribute('inert')
-      element.removeAttribute('aria-hidden')
+      if (!siblingAttributeState.has(sibling)) {
+        siblingAttributeState.set(sibling, {
+          inert: sibling.getAttribute('inert'),
+          ariaHidden: sibling.getAttribute('aria-hidden'),
+        })
+      }
+      sibling.setAttribute('inert', '')
+      sibling.setAttribute('aria-hidden', 'true')
     }
   }
 }
