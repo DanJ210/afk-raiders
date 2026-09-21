@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { useGamePersistence } from '../../src/composables/useGamePersistence'
 import { createInitialState, SAVE_VERSION } from '../../src/engine/initialState'
+import { generateIdentityForSeed } from '../../src/engine/identity'
 
 const STORAGE_KEY = 'afk-raiders-save'
 
@@ -50,6 +51,7 @@ describe('useGamePersistence', () => {
             removedDeathBreakdown: { old: 88 },
           },
           robotDefeats: { anxietick: 3 },
+          robotDownings: { tank_overcompensation: 2 },
           healingItemsUsed: {
             total: 'lost to old schema',
             byItem: { bandage_blue: 4, bandage_purple: 2 },
@@ -84,11 +86,107 @@ describe('useGamePersistence', () => {
         byZoneAndDanger: { damp_battlegrounds__High: 5 },
       },
       robotDefeats: { anxietick: 3 },
+      robotDownings: { tank_overcompensation: 2 },
       healingItemsUsed: {
         total: 6,
         byItem: { bandage_blue: 4, bandage_purple: 2 },
       },
     })
+    expect(loaded?.state.story).toEqual({
+      activeArc: null,
+      completedArcIds: [],
+    })
+  })
+
+  it('backfills legacy default identity data deterministically from the seed', () => {
+    const initial = createInitialState(1000)
+    const legacyRaider = { ...initial.raider } as Record<string, unknown>
+    delete legacyRaider.traits
+    const legacySave = {
+      state: {
+        ...initial,
+        version: 9,
+        raider: legacyRaider,
+      },
+      seed: 123,
+      lastTickAt: 1000,
+      version: 9,
+    }
+    stubLocalStorage([[STORAGE_KEY, JSON.stringify(legacySave)]])
+
+    const loaded = useGamePersistence().loadSave()
+
+    expect(loaded?.state.raider.traits).toEqual(generateIdentityForSeed(123).traits)
+    expect(loaded?.state.raider.name).toBe(generateIdentityForSeed(123).name)
+  })
+
+  it('preserves custom legacy names while still backfilling traits', () => {
+    const initial = createInitialState(1000)
+    const legacyRaider = { ...initial.raider, name: 'Custom Name' } as Record<string, unknown>
+    delete legacyRaider.traits
+    const legacySave = {
+      state: {
+        ...initial,
+        version: 9,
+        raider: legacyRaider,
+      },
+      seed: 321,
+      lastTickAt: 1000,
+      version: 9,
+    }
+    stubLocalStorage([[STORAGE_KEY, JSON.stringify(legacySave)]])
+
+    const loaded = useGamePersistence().loadSave()
+
+    expect(loaded?.state.raider.name).toBe('Custom Name')
+    expect(loaded?.state.raider.traits).toEqual(generateIdentityForSeed(321).traits)
+  })
+
+  it('backfills a full deterministic trait set when saved traits sanitize to a partial result', () => {
+    const initial = createInitialState(1000)
+    const legacySave = {
+      state: {
+        ...initial,
+        raider: {
+          ...initial.raider,
+          name: 'Custom Name',
+          traits: ['coward', 'definitely_not_a_trait', 'coward'],
+        },
+      },
+      seed: 55,
+      lastTickAt: 1000,
+      version: SAVE_VERSION,
+    }
+    stubLocalStorage([[STORAGE_KEY, JSON.stringify(legacySave)]])
+
+    const loaded = useGamePersistence().loadSave()
+
+    expect(loaded?.state.raider.traits).toEqual(generateIdentityForSeed(55).traits)
+    expect(loaded?.state.raider.name).toBe('Custom Name')
+    expect(loaded?.state.stats.robotDownings).toEqual({})
+    expect(loaded?.state.story).toEqual({ activeArc: null, completedArcIds: [] })
+  })
+
+  it('preserves a full valid saved trait set', () => {
+    const initial = createInitialState(1000)
+    const legacySave = {
+      state: {
+        ...initial,
+        raider: {
+          ...initial.raider,
+          name: 'Custom Name',
+          traits: ['coward', 'optimist'],
+        },
+      },
+      seed: 88,
+      lastTickAt: 1000,
+      version: SAVE_VERSION,
+    }
+    stubLocalStorage([[STORAGE_KEY, JSON.stringify(legacySave)]])
+
+    const loaded = useGamePersistence().loadSave()
+
+    expect(loaded?.state.raider.traits).toEqual(['coward', 'optimist'])
   })
 
   it('migrates legacy EXTRACTING phase saves into a RAIDING extraction condition', () => {

@@ -32,6 +32,7 @@ export function useGameTicker(
   rngRef: { current: RNG },
   persistCallback: (state: GameState, seed: number, lastTickAt: number) => void,
   publishEvents?: (events: LogEvent[]) => void,
+  canRun: () => boolean = () => true,
 ): GameTickerReturn {
   const awaySummary = ref<AwaySummary | null>(null)
   let timeoutId: ReturnType<typeof setTimeout> | null = null
@@ -45,6 +46,9 @@ export function useGameTicker(
 
   function scheduleNextTick() {
     clearScheduledTick()
+    if (!canRun()) {
+      return
+    }
     const elapsed = Math.max(0, Date.now() - lastTickAtRef.value)
     const delay = Math.max(0, TICK_INTERVAL_MS - elapsed)
     timeoutId = setTimeout(() => {
@@ -54,6 +58,9 @@ export function useGameTicker(
   }
 
   function runCatchUp(fromTickAt: number, toNow: number) {
+    if (!canRun()) {
+      return
+    }
     const result = catchUp(stateRef.value as GameState, rngRef.current, fromTickAt, toNow)
     stateRef.value = result.state
     if (result.summary.ticksReplayed > 0) {
@@ -66,6 +73,9 @@ export function useGameTicker(
   }
 
   function tick() {
+    if (!canRun()) {
+      return
+    }
     const tickNow = Date.now()
     const result = processTick(stateRef.value as GameState, rngRef.current, tickNow)
     stateRef.value = result.state
@@ -88,13 +98,13 @@ export function useGameTicker(
   watch(visibility, (vis) => {
     if (vis === 'hidden') {
       pause()
-    } else {
+    } else if (canRun()) {
       runCatchUp(lastTickAtRef.value, Date.now())
       resume()
     }
   })
 
-  if (visibility.value !== 'hidden') {
+  if (visibility.value !== 'hidden' && canRun()) {
     scheduleNextTick()
   }
 

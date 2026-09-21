@@ -16,6 +16,14 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { createRNG } from '../engine/rng.js'
 import { createInitialState } from '../engine/initialState.js'
+import {
+  PERSONALITY_TRAIT_COUNT,
+  generateIdentityForSeed,
+  generateRaiderIdentity,
+  personalityTraits,
+  sanitizePersonalityTraits,
+  type RaiderIdentity,
+} from '../engine/identity.js'
 import { computeSignal } from '../engine/signal.js'
 import { catchUp, MAX_CATCHUP_TICKS, TICK_INTERVAL_MS } from '../engine/catchUp.js'
 import type { GameState, LogEvent } from '../engine/types.js'
@@ -33,24 +41,36 @@ export const useGameStore = defineStore('game', () => {
 
   // Seed is stable per save — derive from timestamp on first run
   const seedValue = ref<number>(saved?.seed ?? (now & 0xffffffff))
+  const identitySuggestionCounter = ref(0)
+  const lastSuggestedIdentity = ref<RaiderIdentity | null>(null)
   const rngRef = { current: createRNG(seedValue.value) }
 
-  // If we have a save, restore; otherwise start fresh
-  let initialState = createInitialState(now)
+  // First-time users create their raider before the story starts. The flag
+  // persists so closing the tab mid-creation re-opens the flow next visit.
+  const needsRaiderCreation = ref(!saved || persistence.loadCreationPending())
+  if (!saved) {
+    persistence.setCreationPending(true)
+  }
+
+  // If we have a save, restore; otherwise start fresh with a seeded identity
+  let initialState = createInitialState(now, generateIdentityForSeed(seedValue.value))
   let initialLastTickAt = saved?.lastTickAt ?? now
   let initialAwaySummary: AwaySummary | null = null
   if (saved) {
-    const elapsed = Math.max(0, now - saved.lastTickAt)
-    const rawTicks = Math.floor(elapsed / TICK_INTERVAL_MS)
-    const startupCatchUp = catchUp(saved.state, rngRef.current, saved.lastTickAt, now)
-    initialState = startupCatchUp.state
-    const wasCapped = rawTicks > MAX_CATCHUP_TICKS
-    initialLastTickAt = wasCapped
-      ? now
-      : saved.lastTickAt + (startupCatchUp.summary.ticksReplayed * TICK_INTERVAL_MS)
-    if (startupCatchUp.summary.ticksReplayed > 0) {
-      initialAwaySummary = startupCatchUp.summary
-      persistence.persistSave(initialState, seedValue.value, initialLastTickAt)
+    initialState = saved.state
+    if (!needsRaiderCreation.value) {
+      const elapsed = Math.max(0, now - saved.lastTickAt)
+      const rawTicks = Math.floor(elapsed / TICK_INTERVAL_MS)
+      const startupCatchUp = catchUp(saved.state, rngRef.current, saved.lastTickAt, now)
+      initialState = startupCatchUp.state
+      const wasCapped = rawTicks > MAX_CATCHUP_TICKS
+      initialLastTickAt = wasCapped
+        ? now
+        : saved.lastTickAt + (startupCatchUp.summary.ticksReplayed * TICK_INTERVAL_MS)
+      if (startupCatchUp.summary.ticksReplayed > 0) {
+        initialAwaySummary = startupCatchUp.summary
+        persistence.persistSave(initialState, seedValue.value, initialLastTickAt)
+      }
     }
   }
 
@@ -85,7 +105,11 @@ export const useGameStore = defineStore('game', () => {
     (events) => {
       newEvents.value = events
     },
+    () => !needsRaiderCreation.value,
   )
+  if (needsRaiderCreation.value) {
+    ticker.pause()
+  }
 
   // Initialize handler actions (all signal-gated player actions)
   const actions = useHandlerActions(
@@ -103,7 +127,11 @@ export const useGameStore = defineStore('game', () => {
       state.value = freshState
       lastTickAt.value = tickTime
       ticker.awaySummary.value = null
+      ticker.pause()
       persistence.persistSave(freshState, newSeed, tickTime)
+      // A reset raider is a new raider — let the player name them too.
+      persistence.setCreationPending(true)
+      needsRaiderCreation.value = true
     },
     () => {
       // dismissAwaySummary callback
@@ -128,6 +156,43 @@ export const useGameStore = defineStore('game', () => {
 
   if (initialAwaySummary) {
     ticker.awaySummary.value = initialAwaySummary
+  }
+
+  /** Fresh random identity suggestion for the creation screen (UI-only roll). */
+  function suggestIdentity(): RaiderIdentity {
+    identitySuggestionCounter.value += 1
+    const suggestionSeed = (seedValue.value ^ 0x51f15eed ^ Math.imul(identitySuggestionCounter.value, 0x9e3779b1)) >>> 0
+    const identity = generateRaiderIdentity(createRNG(suggestionSeed))
+    lastSuggestedIdentity.value = identity
+    return identity
+  }
+
+  /**
+   * Finish first-run raider creation: start a brand-new deterministic run
+   * with the chosen identity. Any placeholder ticks that landed while the
+   * creation screen was open are discarded with the old state.
+   */
+  function confirmRaiderCreation(name: string, traits: string[]) {
+    const freshNow = Date.now()
+    const newSeed = seedValue.value
+    const fallback = lastSuggestedIdentity.value ?? generateIdentityForSeed(newSeed)
+    const trimmedName = name.trim().slice(0, actions.RAIDER_NAME_MAX_LENGTH)
+    const sanitizedTraits = sanitizePersonalityTraits(traits)
+    const identity: RaiderIdentity = {
+      name: trimmedName || fallback.name,
+      traits: sanitizedTraits.length === PERSONALITY_TRAIT_COUNT ? sanitizedTraits : fallback.traits,
+    }
+
+    const freshState = createInitialState(freshNow, identity)
+    seedValue.value = newSeed
+    rngRef.current = createRNG(newSeed)
+    state.value = freshState
+    lastTickAt.value = freshNow
+    ticker.awaySummary.value = null
+    persistence.persistSave(freshState, newSeed, freshNow)
+    persistence.setCreationPending(false)
+    needsRaiderCreation.value = false
+    ticker.resume()
   }
 
   return {
@@ -162,6 +227,11 @@ export const useGameStore = defineStore('game', () => {
     dismissAwaySummary: actions.dismissAwaySummary,
     renameRaider: actions.renameRaider,
     RAIDER_NAME_MAX_LENGTH: actions.RAIDER_NAME_MAX_LENGTH,
+    needsRaiderCreation,
+    personalityTraits,
+    PERSONALITY_TRAIT_COUNT,
+    suggestIdentity,
+    confirmRaiderCreation,
     purchaseWeapon: preparationActions.purchaseWeapon,
     repairWeapon: preparationActions.repairWeapon,
     equipWeapon: preparationActions.equipWeapon,
@@ -173,4 +243,3 @@ export const useGameStore = defineStore('game', () => {
     clearSelectedShieldRechargerLoadout: preparationActions.clearSelectedShieldRechargerLoadout,
   }
 })
-

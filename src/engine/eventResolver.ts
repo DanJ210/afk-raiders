@@ -17,9 +17,11 @@ import hubEventsData from '../content/hub_events.json'
 import deploymentEventsData from '../content/deployment_events.json'
 import raidingEventsData from '../content/raiding-events/raiding_events.json'
 import ambientEventsData from '../content/raiding-events/ambient_events.json'
+import zoneEventsData from '../content/raiding-events/zone_events.json'
 import extractionEventsData from '../content/raiding-events/extraction_events.json'
 import downedEventsData from '../content/downed_events.json'
 import knockedOutEventsData from '../content/knocked_out_events.json'
+import traitEventsData from '../content/trait_events.json'
 import healingItemsData from '../content/healing_items.json'
 import shieldRechargersData from '../content/shield_rechargers.json'
 import robotsData from '../content/robots.json'
@@ -40,6 +42,7 @@ import { getSkillModifierProfile } from './skills.js'
 import { clampGreedLevel, getGreedDangerEventWeightMultiplier, getGreedRarityWeightMultiplier } from './greed.js'
 import { logConditionsForRaid } from './log.js'
 import { getRaiderLevelFromXp } from './raiderLevel.js'
+import { getNemesisRobot } from './narrator.js'
 
 // Lifecycle phase events plus RAIDING condition events.
 const events = [
@@ -47,9 +50,11 @@ const events = [
   ...deploymentEventsData,
   ...raidingEventsData,
   ...ambientEventsData,
+  ...zoneEventsData,
   ...extractionEventsData,
   ...downedEventsData,
   ...knockedOutEventsData,
+  ...traitEventsData,
 ] as EventTemplate[]
 const baseLoot = [
   ...(apparelAccessoriesData as { items: LootItem[] }).items,
@@ -221,6 +226,13 @@ export function eligibleEvents(state: GameState): EventTemplate[] {
       const conditionIds = Array.isArray(r.zoneCondition) ? r.zoneCondition : [r.zoneCondition]
       if (!conditionIds.includes(raid.zoneCondition.id)) return false
     }
+    if (r.traits) {
+      const wanted = Array.isArray(r.traits) ? r.traits : [r.traits]
+      const raiderTraits = state.raider.traits ?? []
+      if (!wanted.some(trait => raiderTraits.includes(trait))) return false
+    }
+    if (r.hasNemesisRobot === true && !getNemesisRobot(state.stats)) return false
+    if (r.hasNemesisRobot === false && getNemesisRobot(state.stats)) return false
     if (r.activeActivityKind || r.activeActivityId || r.activeRobotId) {
       const context = currentAmbientActivityContext(state)
       if (!context) return false
@@ -364,7 +376,7 @@ function pickRaidingEventTemplate(eligible: EventTemplate[], state: GameState, r
 }
 
 /** Fill {slot} placeholders in a template string */
-function fillSlots(text: string, rng: RNG, context: { activeRobot?: RobotEntry | null } = {}): string {
+function fillSlots(text: string, rng: RNG, context: { activeRobot?: RobotEntry | null; activeNemesisRobot?: RobotEntry | null; raiderName?: string } = {}): string {
   return text.replace(/\{([^}]+)\}/g, (_match, slot: string) => {
     // Named flavor tables
     if (slot in flavor) {
@@ -372,6 +384,18 @@ function fillSlots(text: string, rng: RNG, context: { activeRobot?: RobotEntry |
       const entry = rng.weightedPick(table)
       // Recursively fill any nested slots in the chosen flavor text
       return fillSlots(entry.text, rng, context)
+    }
+
+    // Context-aware raider identity slot
+    if (slot === 'raider_name') {
+      return context.raiderName ?? 'the Raider'
+    }
+
+    if (slot === 'nemesis_robot_name') {
+      return context.activeNemesisRobot?.name ?? 'that one robot'
+    }
+    if (slot === 'nemesis_robot_flavor') {
+      return context.activeNemesisRobot ? rng.pick(context.activeNemesisRobot.flavorLines) : 'still holding a grudge somehow'
     }
 
     // Context-aware robot slots — resolve from the current ROBOT_ENCOUNTER robot.
@@ -749,7 +773,11 @@ export function resolveEvent(
     weight: adjustedEventWeight(template, state),
   }))
   const template = pickRaidingEventTemplate(weightedEligible, state, rng)
-  const text = fillSlots(template.text, rng, { activeRobot: activeEncounterRobot(state) })
+  const text = fillSlots(template.text, rng, {
+    activeRobot: activeEncounterRobot(state),
+    activeNemesisRobot: getNemesisRobot(state.stats),
+    raiderName: state.raider.name,
+  })
 
   return {
     id: template.id,
@@ -782,7 +810,11 @@ export function resolveAmbientActivityEvent(
     id: template.id,
     tick: state.tick,
     timestamp: now,
-    text: fillSlots(template.text, rng, { activeRobot: activeEncounterRobot(state) }),
+    text: fillSlots(template.text, rng, {
+      activeRobot: activeEncounterRobot(state),
+      activeNemesisRobot: getNemesisRobot(state.stats),
+      raiderName: state.raider.name,
+    }),
     phase: state.raid.phase,
     commsPriority: CommsPriority.Ambient,
     conditions: logConditionsForRaid(state.raid),

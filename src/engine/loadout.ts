@@ -1,11 +1,28 @@
 import healingItemsData from '../content/healing_items.json'
 import shieldRechargersData from '../content/shield_rechargers.json'
+import prepEventsData from '../content/prep_events.json'
 import type { BackpackItem, GameState, HealingItem, HealingItemStack, LogEvent, OwnedWeapon, ShieldRechargerItem, ShieldRechargerStack } from './types.js'
 import { CommsPriority } from './types.js'
+import type { RNG } from './rng.js'
 import { findWeapon, getDefaultWeapon, getWeaponCatalog as resolveWeaponCatalog } from './weapons.js'
 
 const healingCatalog = healingItemsData as HealingItem[]
 const shieldRechargerCatalog = shieldRechargersData as ShieldRechargerItem[]
+
+type PrepEventKind = keyof typeof prepEventsData
+const prepEvents = prepEventsData as Record<PrepEventKind, Array<{ id: string; weight: number; text: string }>>
+
+/**
+ * Pick a desk-voice narration line for a prep transaction and fill its slots.
+ * Without an RNG (legacy callers), the first (highest-weight) line is used.
+ */
+function prepNarration(kind: PrepEventKind, vars: Record<string, string | number>, rng?: RNG): string {
+  const pool = prepEvents[kind]
+  const template = rng ? rng.weightedPick(pool) : pool[0]
+  return template.text.replace(/\{(\w+)\}/g, (match, slot: string) => (
+    slot in vars ? String(vars[slot]) : match
+  ))
+}
 
 export interface LoadoutTransactionResult {
   state: GameState
@@ -109,7 +126,7 @@ export function getShieldRechargerPurchaseCost(itemId: string | null | undefined
   return item?.value ?? 0
 }
 
-export function purchaseWeapon(state: GameState, weaponId: string, now: number): LoadoutTransactionResult | null {
+export function purchaseWeapon(state: GameState, weaponId: string, now: number, rng?: RNG): LoadoutTransactionResult | null {
   const weapon = findWeapon(weaponId)
   if (!weapon || state.coins < weapon.value) return null
 
@@ -128,12 +145,12 @@ export function purchaseWeapon(state: GameState, weaponId: string, now: number):
       `weapon_purchase_${weapon.id}`,
       state.tick,
       now,
-      `Purchased ${weapon.name} for ${weapon.value} coins. It will probably complain less than the old one.`,
+      prepNarration('weapon_purchase', { item: weapon.name, cost: weapon.value }, rng),
     ),
   }
 }
 
-export function equipWeapon(state: GameState, weaponId: string, now: number): LoadoutTransactionResult | null {
+export function equipWeapon(state: GameState, weaponId: string, now: number, rng?: RNG): LoadoutTransactionResult | null {
   const weapon = findWeapon(weaponId)
   if (!weapon) return null
   const owned = state.ownedWeapons.find(entry => entry.weaponId === weapon.id)
@@ -151,12 +168,12 @@ export function equipWeapon(state: GameState, weaponId: string, now: number): Lo
       `weapon_equipped_${weapon.id}`,
       state.tick,
       now,
-      `Equipped ${weapon.name} for the next deployment. The raider approved the vibes.`,
+      prepNarration('weapon_equip', { item: weapon.name }, rng),
     ),
   }
 }
 
-export function repairWeapon(state: GameState, weaponId: string, now: number): LoadoutTransactionResult | null {
+export function repairWeapon(state: GameState, weaponId: string, now: number, rng?: RNG): LoadoutTransactionResult | null {
   const weapon = findWeapon(weaponId)
   if (!weapon) return null
   const owned = state.ownedWeapons.find(entry => entry.weaponId === weapon.id)
@@ -175,12 +192,12 @@ export function repairWeapon(state: GameState, weaponId: string, now: number): L
       `weapon_repaired_${weapon.id}`,
       state.tick,
       now,
-      `Repaired ${weapon.name} for ${weapon.repairCost} coins. The maintenance budget cried quietly.`,
+      prepNarration('weapon_repair', { item: weapon.name, cost: weapon.repairCost }, rng),
     ),
   }
 }
 
-export function purchaseHealingItem(state: GameState, itemId: string, quantity: number, now: number): LoadoutTransactionResult | null {
+export function purchaseHealingItem(state: GameState, itemId: string, quantity: number, now: number, rng?: RNG): LoadoutTransactionResult | null {
   const item = findHealingItem(itemId)
   const stackQuantity = normalizeQuantity(quantity)
   const totalCost = item?.purchaseCost ? item.purchaseCost * stackQuantity : 0
@@ -207,12 +224,12 @@ export function purchaseHealingItem(state: GameState, itemId: string, quantity: 
       `healing_purchase_${item.id}`,
       state.tick,
       now,
-      `Bought ${stackQuantity}x ${item.name} for ${totalCost} coins. Medicine is cheaper than regret.`,
+      prepNarration('healing_purchase', { item: item.name, cost: totalCost, quantity: stackQuantity }, rng),
     ),
   }
 }
 
-export function purchaseShieldRecharger(state: GameState, itemId: string, quantity: number, now: number): LoadoutTransactionResult | null {
+export function purchaseShieldRecharger(state: GameState, itemId: string, quantity: number, now: number, rng?: RNG): LoadoutTransactionResult | null {
   const item = findShieldRecharger(itemId)
   const stackQuantity = normalizeQuantity(quantity)
   const totalCost = item?.value ? item.value * stackQuantity : 0
@@ -239,7 +256,7 @@ export function purchaseShieldRecharger(state: GameState, itemId: string, quanti
       `shield_recharger_purchase_${item.id}`,
       state.tick,
       now,
-      `Bought ${stackQuantity}x ${item.name} for ${totalCost} coins. The shield budget called this proactive optimism.`,
+      prepNarration('shield_recharger_purchase', { item: item.name, cost: totalCost, quantity: stackQuantity }, rng),
     ),
   }
 }

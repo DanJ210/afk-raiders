@@ -1,0 +1,92 @@
+{
+  "weapon_purchase": [
+    {
+      "id": "prep_weapon_buy_gear_weirdo_destiny",
+      "weight": 10,
+      "text": "Bought {item} for {cost} coins. The Gear Weirdo said it 'has a destiny.' The destiny was not specified."
+    },
+    {
+      "id": "prep_weapon_buy_gear_weirdo_history",
+      "weight": 9,
+      "text": "Purchased {item} for {cost} coins. The Gear Weirdo swore it only had one previous owner and 'barely any incidents.'"
+    },
+    {
+      "id": "prep_weapon_buy_receipt",
+      "weight": 8,
+      "text": "Acquired {item} for {cost} coins. The receipt is longer than the warranty."
+    },
+    {
+      "id": "prep_weapon_buy_confidence",
+      "weight": 8,
+      "text": "Bought {item} for {cost} coins. It hummed once during the handoff. The Gear Weirdo called that 'enthusiasm.'"
+    }
+  ],
+  "weapon_equip": [
+    {
+      "id": "prep_weapon_equip_vibes",
+      "weight": 10,
+      "text": "Equipped {item} for the next deployment. The raider approved the vibes."
+    },
+    {
+      "id": "prep_weapon_equip_ritual",
+      "weight": 9,
+      "text": "Strapped on {item}. Performed the traditional pre-raid pep talk to the equipment. The equipment stayed neutral."
+    },
+    {
+      "id": "prep_weapon_equip_pose",
+      "weight": 8,
+      "text": "Equipped {item} and practiced one heroic pose in the locker mirror. The mirror has seen worse. Barely."
+    }
+  ],
+  "weapon_repair": [
+    {
+      "id": "prep_weapon_repair_budget",
+      "weight": 10,
+      "text": "Repaired {item} for {cost} coins. The maintenance budget cried quietly."
+    },
+    {
+      "id": "prep_weapon_repair_percussive",
+      "weight": 9,
+      "text": "Repaired {item} for {cost} coins. The bench tech hit it twice, listened, and declared it 'basically new-adjacent.'"
+    },
+    {
+      "id": "prep_weapon_repair_warranty",
+      "weight": 8,
+      "text": "Paid {cost} coins to repair {item}. Asked about a warranty. The tech laughed until they needed water."
+    }
+  ],
+  "healing_purchase": [
+    {
+      "id": "prep_healing_buy_regret_math",
+      "weight": 10,
+      "text": "Bought {quantity}x {item} for {cost} coins. Medicine is cheaper than regret."
+    },
+    {
+      "id": "prep_healing_buy_probably_clean",
+      "weight": 9,
+      "text": "Stocked {quantity}x {item} for {cost} coins. The med counter insists everything is 'sterile-ish.'"
+    },
+    {
+      "id": "prep_healing_buy_nearly_fresh",
+      "weight": 8,
+      "text": "Bought {quantity}x {item} for {cost} coins from a shelf marked NEARLY FRESH. For medical supplies, that word choice is doing a lot of work."
+    }
+  ],
+  "shield_recharger_purchase": [
+    {
+      "id": "prep_recharger_buy_proactive_optimism",
+      "weight": 10,
+      "text": "Bought {quantity}x {item} for {cost} coins. The shield budget called this proactive optimism."
+    },
+    {
+      "id": "prep_recharger_buy_bravado_pitch",
+      "weight": 9,
+      "text": "Bought {quantity}x {item} for {cost} coins. The Bravado Battery Kiosk described each cell as 'courageous.' Batteries cannot be brave. These might be."
+    },
+    {
+      "id": "prep_recharger_buy_tiny_spark",
+      "weight": 8,
+      "text": "Picked up {quantity}x {item} for {cost} coins. One sparked during bagging. The kiosk called it a free demonstration."
+    }
+  ]
+}
