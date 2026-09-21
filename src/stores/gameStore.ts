@@ -105,6 +105,7 @@ export const useGameStore = defineStore('game', () => {
     (events) => {
       newEvents.value = events
     },
+    () => !needsRaiderCreation.value,
   )
   if (needsRaiderCreation.value) {
     ticker.pause()

@@ -14,6 +14,7 @@ const persistence = {
 
 const tickerPause = vi.fn()
 const tickerResume = vi.fn()
+let capturedCanRun: (() => boolean) | null = null
 let capturedResetSave:
   | ((freshState: ReturnType<typeof createInitialState>, newSeed: number, tickTime: number) => void)
   | null = null
@@ -23,11 +24,21 @@ vi.mock('../../src/composables/useGamePersistence.js', () => ({
 }))
 
 vi.mock('../../src/composables/useGameTicker.js', () => ({
-  useGameTicker: () => ({
-    awaySummary: ref(null),
-    pause: tickerPause,
-    resume: tickerResume,
-  }),
+  useGameTicker: (
+    _state: unknown,
+    _lastTickAt: unknown,
+    _rngRef: unknown,
+    _persist: unknown,
+    _publishEvents: unknown,
+    canRun?: () => boolean,
+  ) => {
+    capturedCanRun = canRun ?? null
+    return {
+      awaySummary: ref(null),
+      pause: tickerPause,
+      resume: tickerResume,
+    }
+  },
 }))
 
 vi.mock('../../src/composables/useHandlerActions.js', () => ({
@@ -82,6 +93,7 @@ describe('gameStore raider creation flow', () => {
     persistence.setCreationPending.mockReset()
     tickerPause.mockReset()
     tickerResume.mockReset()
+    capturedCanRun = null
     capturedResetSave = null
   })
 
@@ -101,6 +113,7 @@ describe('gameStore raider creation flow', () => {
     expect(store.needsRaiderCreation).toBe(true)
     expect(store.state.tick).toBe(saved.state.tick)
     expect(persistence.persistSave).not.toHaveBeenCalled()
+    expect(capturedCanRun?.()).toBe(false)
     expect(tickerPause).toHaveBeenCalledTimes(1)
   })
 
@@ -117,6 +130,7 @@ describe('gameStore raider creation flow', () => {
     expect(store.raider.name).toBe('Custom Name')
     expect(persistence.setCreationPending).toHaveBeenLastCalledWith(false)
     expect(persistence.persistSave).toHaveBeenCalledTimes(1)
+    expect(capturedCanRun?.()).toBe(true)
     expect(tickerResume).toHaveBeenCalledTimes(1)
   })
 
@@ -145,6 +159,7 @@ describe('gameStore raider creation flow', () => {
 
     expect(store.needsRaiderCreation).toBe(true)
     expect(persistence.setCreationPending).toHaveBeenLastCalledWith(true)
+    expect(capturedCanRun?.()).toBe(false)
     expect(tickerPause).toHaveBeenCalledTimes(2)
   })
 })
