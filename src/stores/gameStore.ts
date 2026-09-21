@@ -41,6 +41,7 @@ export const useGameStore = defineStore('game', () => {
 
   // Seed is stable per save — derive from timestamp on first run
   const seedValue = ref<number>(saved?.seed ?? (now & 0xffffffff))
+  const identitySuggestionCounter = ref(0)
   const rngRef = { current: createRNG(seedValue.value) }
 
   // First-time users create their raider before the story starts. The flag
@@ -157,7 +158,9 @@ export const useGameStore = defineStore('game', () => {
 
   /** Fresh random identity suggestion for the creation screen (UI-only roll). */
   function suggestIdentity(): RaiderIdentity {
-    return generateRaiderIdentity(createRNG((Math.random() * 0xffffffff) >>> 0))
+    identitySuggestionCounter.value += 1
+    const suggestionSeed = (seedValue.value ^ 0x51f15eed ^ Math.imul(identitySuggestionCounter.value, 0x9e3779b1)) >>> 0
+    return generateRaiderIdentity(createRNG(suggestionSeed))
   }
 
   /**
