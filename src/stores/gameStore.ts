@@ -42,6 +42,7 @@ export const useGameStore = defineStore('game', () => {
   // Seed is stable per save — derive from timestamp on first run
   const seedValue = ref<number>(saved?.seed ?? (now & 0xffffffff))
   const identitySuggestionCounter = ref(0)
+  const lastSuggestedIdentity = ref<RaiderIdentity | null>(null)
   const rngRef = { current: createRNG(seedValue.value) }
 
   // First-time users create their raider before the story starts. The flag
@@ -160,7 +161,9 @@ export const useGameStore = defineStore('game', () => {
   function suggestIdentity(): RaiderIdentity {
     identitySuggestionCounter.value += 1
     const suggestionSeed = (seedValue.value ^ 0x51f15eed ^ Math.imul(identitySuggestionCounter.value, 0x9e3779b1)) >>> 0
-    return generateRaiderIdentity(createRNG(suggestionSeed))
+    const identity = generateRaiderIdentity(createRNG(suggestionSeed))
+    lastSuggestedIdentity.value = identity
+    return identity
   }
 
   /**
@@ -171,7 +174,7 @@ export const useGameStore = defineStore('game', () => {
   function confirmRaiderCreation(name: string, traits: string[]) {
     const freshNow = Date.now()
     const newSeed = freshNow & 0xffffffff
-    const fallback = generateIdentityForSeed(newSeed)
+    const fallback = lastSuggestedIdentity.value ?? generateIdentityForSeed(newSeed)
     const trimmedName = name.trim().slice(0, actions.RAIDER_NAME_MAX_LENGTH)
     const sanitizedTraits = sanitizePersonalityTraits(traits)
     const identity: RaiderIdentity = {

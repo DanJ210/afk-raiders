@@ -120,6 +120,20 @@ describe('gameStore raider creation flow', () => {
     expect(tickerResume).toHaveBeenCalledTimes(1)
   })
 
+  it('uses the current suggestion as the confirmation fallback identity', async () => {
+    persistence.loadSave.mockReturnValue(null)
+    persistence.loadCreationPending.mockReturnValue(false)
+
+    const { useGameStore } = await import('../../src/stores/gameStore')
+    const store = useGameStore()
+
+    const suggestion = store.suggestIdentity()
+    store.confirmRaiderCreation('   ', [])
+
+    expect(store.raider.name).toBe(suggestion.name)
+    expect(store.raider.traits).toEqual(suggestion.traits)
+  })
+
   it('pauses ticking again when reset returns to the creation flow', async () => {
     persistence.loadSave.mockReturnValue(null)
     persistence.loadCreationPending.mockReturnValue(false)
