@@ -144,4 +144,12 @@ describe('RaiderCreationPanel', () => {
     await dialog.trigger('keydown', { key: 'Tab', shiftKey: true })
     expect(document.activeElement).toBe(lastButton.element)
   })
+
+  it('exposes the trait picker as a labeled fieldset with helper text', () => {
+    const wrapper = mount(RaiderCreationPanel)
+
+    const fieldset = wrapper.get('fieldset[aria-describedby="raider-traits-help"]')
+    expect(fieldset.text()).toContain('Persona — pick 2')
+    expect(wrapper.get('#raider-traits-help').text()).toContain('Select exactly 2 traits.')
+  })
 })

@@ -211,7 +211,7 @@ export function narrateNemesisCallbacks(
     count: nextNemesisCount,
   }
 
-  if (previousNemesisId !== nextNemesisId) {
+  if (previousNemesisId !== nextNemesisId && nextNemesisCount !== previousNemesisCount) {
     queueEntry(events, narratorEvents.nemesisEstablished, vars, rng, tick, now)
   } else if (nextNemesisCount !== previousNemesisCount) {
     queueMilestone(events, narratorEvents.nemesisDeepens, nextNemesisCount, vars, rng, tick, now)

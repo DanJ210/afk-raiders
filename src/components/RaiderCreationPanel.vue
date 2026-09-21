@@ -177,11 +177,11 @@ onBeforeUnmount(() => {
         </div>
       </div>
 
-      <div class="flex flex-col gap-1.5">
-        <div class="flex items-baseline justify-between">
-          <span class="font-mono text-raider-tiny tracking-wider text-muted uppercase">
+      <fieldset class="flex flex-col gap-1.5 min-w-0 border-0 p-0 m-0" aria-describedby="raider-traits-help">
+        <div class="flex items-baseline justify-between gap-2">
+          <legend class="font-mono text-raider-tiny tracking-wider text-muted uppercase">
             Persona — pick {{ store.PERSONALITY_TRAIT_COUNT }}
-          </span>
+          </legend>
           <button
             type="button"
             class="font-mono text-raider-tiny bg-transparent border border-border text-muted rounded px-2.5 py-0.5 cursor-pointer hover:text-accent hover:border-accent"
@@ -189,6 +189,9 @@ onBeforeUnmount(() => {
             @click="rerollTraits"
           >🎲 Surprise me</button>
         </div>
+        <p id="raider-traits-help" class="font-mono text-raider-tiny text-muted m-0">
+          Select exactly {{ store.PERSONALITY_TRAIT_COUNT }} traits.
+        </p>
         <div class="grid grid-cols-1 gap-1.5">
           <button
             v-for="trait in store.personalityTraits"
@@ -205,7 +208,7 @@ onBeforeUnmount(() => {
             <span class="block text-raider-tiny mt-0.5">{{ trait.description }}</span>
           </button>
         </div>
-      </div>
+      </fieldset>
 
       <button
         type="button"

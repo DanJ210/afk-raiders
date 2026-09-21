@@ -173,7 +173,7 @@ export const useGameStore = defineStore('game', () => {
    */
   function confirmRaiderCreation(name: string, traits: string[]) {
     const freshNow = Date.now()
-    const newSeed = freshNow & 0xffffffff
+    const newSeed = seedValue.value
     const fallback = lastSuggestedIdentity.value ?? generateIdentityForSeed(newSeed)
     const trimmedName = name.trim().slice(0, actions.RAIDER_NAME_MAX_LENGTH)
     const sanitizedTraits = sanitizePersonalityTraits(traits)
