@@ -18,7 +18,7 @@ import { applySkillPractice, getSkillModifierProfile, rollSkillPractice, type Sk
 import { applyRaiderXpGain, getRaiderLevelBenefitProfile, rollRaiderXp, type RaiderLevelUp, type RaiderXpTrigger } from './raiderLevel.js'
 import { advanceRaidActivity, raidActivities, startRaidActivity } from './raidActivities.js'
 import { applyFailedRaidWeaponLoss, applyRaidWeaponWear, consumeSelectedPreparationLoadouts } from './loadout.js'
-import { narrateOutcomeCallbacks } from './narrator.js'
+import { narrateNemesisCallbacks, narrateOutcomeCallbacks } from './narrator.js'
 import { advanceStoryArcs, resolveArcAmbientEvent } from './arcs.js'
 
 const LOOT_BONUS_HEALING_ITEM_CHANCE = 0.2 // 20% chance to find a healing item on any loot event, independent of normal loot rolls
@@ -254,6 +254,26 @@ function startDownedCondition(state: GameState, tick: number, now: number, reaso
     state: nextState,
     event: conditionEvent('condition_downed_started', reason.text, tick, now, logConditionsForRaid(nextState.raid) ?? ['DOWNED']),
   }
+}
+
+function applyDownedTransition(
+  state: GameState,
+  emitted: LogEvent[],
+  activityEmitted: ActivityLogEvent[],
+  rng: RNG,
+  tick: number,
+  now: number,
+  reason: DownedReason,
+): GameState {
+  const downed = startDownedCondition(state, tick, now, reason)
+  if (!downed.event) {
+    return downed.state
+  }
+
+  emitted.push(downed.event)
+  emitted.push(...narrateNemesisCallbacks(state, downed.state, rng, tick, now))
+  activityEmitted.push(downedActivityEvent('started', tick, now, downed.state.raid.downed?.ticksRemaining ?? DOWNED_TICKS))
+  return downed.state
 }
 
 function advanceRaidConditions(state: GameState): { state: GameState; extractionCompleted: boolean; downedExpired: boolean } {
@@ -691,15 +711,10 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
     currentState.raid.phase === 'RAIDING' &&
     !currentState.raid.downed
   ) {
-    const downed = startDownedCondition(currentState, state.tick, now, {
+    currentState = applyDownedTransition(currentState, emitted, activityEmitted, rng, state.tick, now, {
       kind: 'damage',
       text: 'Raider is down: HP was already gone when the next tick checked the clipboard.',
     })
-    currentState = downed.state
-    if (downed.event) {
-      emitted.push(downed.event)
-      activityEmitted.push(downedActivityEvent('started', state.tick, now, currentState.raid.downed?.ticksRemaining ?? DOWNED_TICKS))
-    }
   }
 
   // ------------------------------------------------------------------
@@ -747,12 +762,7 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
       currentState.raid.phase === 'RAIDING' &&
       !currentState.raid.downed
     ) {
-      const downed = startDownedCondition(currentState, state.tick, now, activityResult.downedReason)
-      currentState = downed.state
-      if (downed.event) {
-        emitted.push(downed.event)
-        activityEmitted.push(downedActivityEvent('started', state.tick, now, currentState.raid.downed?.ticksRemaining ?? DOWNED_TICKS))
-      }
+      currentState = applyDownedTransition(currentState, emitted, activityEmitted, rng, state.tick, now, activityResult.downedReason)
     }
     if (activityResult.robotDefeatedId) {
       currentState = {
@@ -830,15 +840,10 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
         activityEmitted.push(extractionActivityEvent('started', state.tick, now, currentState.raid.extracting?.ticksRemaining ?? EXTRACTING_TICKS))
       }
     } else if (greedResult.outcome === 'DOWNED') {
-      const downed = startDownedCondition(currentState, state.tick, now, {
+      currentState = applyDownedTransition(currentState, emitted, activityEmitted, rng, state.tick, now, {
         kind: 'ambient_pressure',
         text: 'Raider is down: the zone pressure finally cashed the check. No single villain, just accumulated bad decisions.',
       })
-      currentState = downed.state
-      if (downed.event) {
-        emitted.push(downed.event)
-        activityEmitted.push(downedActivityEvent('started', state.tick, now, currentState.raid.downed?.ticksRemaining ?? DOWNED_TICKS))
-      }
     }
     // PUSH_DEEPER -> stay in RAIDING (greedLevel already updated above)
   }
@@ -859,8 +864,11 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
       }
 
       if (!currentState.raid.downed) {
-        const downed = startDownedCondition(
+        currentState = applyDownedTransition(
           currentState,
+          emitted,
+          activityEmitted,
+          rng,
           state.tick,
           now,
           {
@@ -868,11 +876,6 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
             text: 'Raid timer hit zero during extraction. Raider is down, and only the shuttle clock can still save this.',
           },
         )
-        currentState = downed.state
-        if (downed.event) {
-          emitted.push(downed.event)
-          activityEmitted.push(downedActivityEvent('started', state.tick, now, currentState.raid.downed?.ticksRemaining ?? DOWNED_TICKS))
-        }
       }
     }
   }
@@ -944,15 +947,10 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
       }
 
       if (template.effects?.startDowned) {
-        const downed = startDownedCondition(currentState, state.tick, now, {
+        currentState = applyDownedTransition(currentState, emitted, activityEmitted, rng, state.tick, now, {
           kind: 'extraction',
           text: transitionText('EXTRACTING_to_DOWNED'),
         })
-        currentState = downed.state
-        if (downed.event) {
-          emitted.push(downed.event)
-          activityEmitted.push(downedActivityEvent('started', state.tick, now, currentState.raid.downed?.ticksRemaining ?? DOWNED_TICKS))
-        }
       }
 
       if (template.effects?.failExtraction) {
@@ -991,17 +989,12 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
     currentState.raid.phase === 'RAIDING' &&
     !currentState.raid.downed
   ) {
-    const downed = startDownedCondition(currentState, state.tick, now, {
+    currentState = applyDownedTransition(currentState, emitted, activityEmitted, rng, state.tick, now, {
       kind: 'damage',
       text: currentState.raid.extracting
         ? 'Raider is down: damage hit zero during extraction chaos, and the shuttle timer suddenly matters a lot.'
         : 'Raider is down: damage hit zero before the Handler could turn concern into policy.',
     })
-    currentState = downed.state
-    if (downed.event) {
-      emitted.push(downed.event)
-      activityEmitted.push(downedActivityEvent('started', state.tick, now, currentState.raid.downed?.ticksRemaining ?? DOWNED_TICKS))
-    }
   }
 
   currentState = enforceIncapacitatedHp(currentState)

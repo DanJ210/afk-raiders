@@ -1,11 +1,13 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { useGameStore } from '../stores/gameStore'
 
 const store = useGameStore()
 
 // Prefill from a random suggestion so "just start" is one click.
 const suggestion = store.suggestIdentity()
+const modalRoot = ref<HTMLElement | null>(null)
+const nameField = ref<HTMLInputElement | null>(null)
 const nameInput = ref(suggestion.name)
 const selectedTraits = ref<string[]>([...suggestion.traits])
 
@@ -38,15 +40,83 @@ function begin() {
   if (!canBegin.value) return
   store.confirmRaiderCreation(nameInput.value, selectedTraits.value)
 }
+
+function setSiblingInert(active: boolean) {
+  const overlay = modalRoot.value
+  const parent = overlay?.parentElement
+  if (!overlay || !parent) return
+
+  for (const element of Array.from(parent.children)) {
+    if (element === overlay) continue
+    if (active) {
+      element.setAttribute('inert', '')
+      element.setAttribute('aria-hidden', 'true')
+    } else {
+      element.removeAttribute('inert')
+      element.removeAttribute('aria-hidden')
+    }
+  }
+}
+
+function focusNameField() {
+  nameField.value?.focus()
+}
+
+function onDialogKeydown(event: KeyboardEvent) {
+  if (event.key !== 'Tab' || !modalRoot.value) return
+
+  const focusable = Array.from(
+    modalRoot.value.querySelectorAll<HTMLElement>(
+      'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+    ),
+  ).filter(element => !element.hasAttribute('inert') && element.tabIndex >= 0)
+
+  if (focusable.length === 0) return
+
+  const first = focusable[0]
+  const last = focusable[focusable.length - 1]
+  const active = document.activeElement as HTMLElement | null
+
+  if (event.shiftKey) {
+    if (active === first || !modalRoot.value.contains(active)) {
+      event.preventDefault()
+      last.focus()
+    }
+    return
+  }
+
+  if (active === last || !modalRoot.value.contains(active)) {
+    event.preventDefault()
+    first.focus()
+  }
+}
+
+watch(
+  () => store.needsRaiderCreation,
+  async (needsCreation) => {
+    await nextTick()
+    setSiblingInert(needsCreation)
+    if (needsCreation) {
+      focusNameField()
+    }
+  },
+  { immediate: true },
+)
+
+onBeforeUnmount(() => {
+  setSiblingInert(false)
+})
 </script>
 
 <template>
   <div
     v-if="store.needsRaiderCreation"
+    ref="modalRoot"
     class="modal-overlay z-away-summary"
     role="dialog"
     aria-modal="true"
     aria-label="Create your raider"
+    @keydown="onDialogKeydown"
   >
     <div class="w-[min(100%,480px)] max-h-[92dvh] overflow-y-auto bg-surface border border-accent rounded-[10px] p-6 flex flex-col gap-4">
       <div class="flex items-center gap-2">
@@ -62,6 +132,7 @@ function begin() {
         <div class="flex gap-2">
           <input
             id="raider-name"
+            ref="nameField"
             v-model="nameInput"
             type="text"
             :maxlength="store.RAIDER_NAME_MAX_LENGTH"

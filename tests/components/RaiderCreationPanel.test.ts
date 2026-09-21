@@ -2,16 +2,16 @@
 
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
 import { mount } from '@vue/test-utils'
-import { reactive } from 'vue'
+import { defineComponent, nextTick, reactive } from 'vue'
 import RaiderCreationPanel from '../../src/components/RaiderCreationPanel.vue'
-import { personalityTraits } from '../../src/engine/identity'
+import { personalityTraits, RAIDER_NAME_MAX_LENGTH } from '../../src/engine/identity'
 
 function createStore(overrides: Record<string, unknown> = {}) {
   return reactive({
     needsRaiderCreation: true,
     personalityTraits,
     PERSONALITY_TRAIT_COUNT: 2,
-    RAIDER_NAME_MAX_LENGTH: 25,
+    RAIDER_NAME_MAX_LENGTH,
     suggestIdentity: vi.fn(() => ({
       name: 'Mira "Wet Socks" Malone',
       traits: ['coward', 'hoarder'],
@@ -95,5 +95,36 @@ describe('RaiderCreationPanel', () => {
 
     await traitButton(wrapper, 'Coward').trigger('click')
     expect(beginButton(wrapper).attributes('disabled')).toBeDefined()
+  })
+
+  it('focuses the name field and makes sibling content inert while open', async () => {
+    const Shell = defineComponent({
+      components: { RaiderCreationPanel },
+      template: '<div><button id="outside">Outside</button><RaiderCreationPanel /></div>',
+    })
+    const wrapper = mount(Shell, { attachTo: document.body })
+
+    await nextTick()
+
+    const input = wrapper.get('input#raider-name')
+    expect(document.activeElement).toBe(input.element)
+    expect(wrapper.get('#outside').attributes('inert')).toBeDefined()
+  })
+
+  it('traps keyboard focus inside the dialog', async () => {
+    const wrapper = mount(RaiderCreationPanel, { attachTo: document.body })
+    await nextTick()
+
+    const dialog = wrapper.get('[role="dialog"]')
+    const input = wrapper.get('input#raider-name')
+    const lastButton = beginButton(wrapper)
+
+    ;(lastButton.element as HTMLButtonElement).focus()
+    await dialog.trigger('keydown', { key: 'Tab' })
+    expect(document.activeElement).toBe(input.element)
+
+    ;(input.element as HTMLInputElement).focus()
+    await dialog.trigger('keydown', { key: 'Tab', shiftKey: true })
+    expect(document.activeElement).toBe(lastButton.element)
   })
 })

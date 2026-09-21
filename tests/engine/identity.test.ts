@@ -7,9 +7,11 @@
 
 import { describe, it, expect } from 'vitest'
 import { createRNG } from '../../src/engine/rng'
+import identityData from '../../src/content/raider_identity.json'
 import {
   DEFAULT_RAIDER_NAME,
   PERSONALITY_TRAIT_COUNT,
+  RAIDER_NAME_MAX_LENGTH,
   generateIdentityForSeed,
   generateRaiderIdentity,
   generateRaiderName,
@@ -38,6 +40,17 @@ describe('raider identity', () => {
   it('names follow the First "Callsign" Last format', () => {
     const name = generateRaiderName(createRNG(42))
     expect(name).toMatch(/^\S.* ".+" \S.*$/)
+  })
+
+  it('keeps every generated name within the shared limit', () => {
+    for (const first of identityData.firstNames) {
+      for (const callsign of identityData.callsigns) {
+        for (const last of identityData.lastNames) {
+          const name = `${first.text} "${callsign.text}" ${last.text}`
+          expect(name.length).toBeLessThanOrEqual(RAIDER_NAME_MAX_LENGTH)
+        }
+      }
+    }
   })
 
   it('rolls distinct, known trait ids', () => {

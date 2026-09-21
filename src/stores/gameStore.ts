@@ -55,17 +55,20 @@ export const useGameStore = defineStore('game', () => {
   let initialLastTickAt = saved?.lastTickAt ?? now
   let initialAwaySummary: AwaySummary | null = null
   if (saved) {
-    const elapsed = Math.max(0, now - saved.lastTickAt)
-    const rawTicks = Math.floor(elapsed / TICK_INTERVAL_MS)
-    const startupCatchUp = catchUp(saved.state, rngRef.current, saved.lastTickAt, now)
-    initialState = startupCatchUp.state
-    const wasCapped = rawTicks > MAX_CATCHUP_TICKS
-    initialLastTickAt = wasCapped
-      ? now
-      : saved.lastTickAt + (startupCatchUp.summary.ticksReplayed * TICK_INTERVAL_MS)
-    if (startupCatchUp.summary.ticksReplayed > 0) {
-      initialAwaySummary = startupCatchUp.summary
-      persistence.persistSave(initialState, seedValue.value, initialLastTickAt)
+    initialState = saved.state
+    if (!needsRaiderCreation.value) {
+      const elapsed = Math.max(0, now - saved.lastTickAt)
+      const rawTicks = Math.floor(elapsed / TICK_INTERVAL_MS)
+      const startupCatchUp = catchUp(saved.state, rngRef.current, saved.lastTickAt, now)
+      initialState = startupCatchUp.state
+      const wasCapped = rawTicks > MAX_CATCHUP_TICKS
+      initialLastTickAt = wasCapped
+        ? now
+        : saved.lastTickAt + (startupCatchUp.summary.ticksReplayed * TICK_INTERVAL_MS)
+      if (startupCatchUp.summary.ticksReplayed > 0) {
+        initialAwaySummary = startupCatchUp.summary
+        persistence.persistSave(initialState, seedValue.value, initialLastTickAt)
+      }
     }
   }
 
@@ -101,6 +104,9 @@ export const useGameStore = defineStore('game', () => {
       newEvents.value = events
     },
   )
+  if (needsRaiderCreation.value) {
+    ticker.pause()
+  }
 
   // Initialize handler actions (all signal-gated player actions)
   const actions = useHandlerActions(
@@ -118,6 +124,7 @@ export const useGameStore = defineStore('game', () => {
       state.value = freshState
       lastTickAt.value = tickTime
       ticker.awaySummary.value = null
+      ticker.pause()
       persistence.persistSave(freshState, newSeed, tickTime)
       // A reset raider is a new raider — let the player name them too.
       persistence.setCreationPending(true)
@@ -178,6 +185,7 @@ export const useGameStore = defineStore('game', () => {
     persistence.persistSave(freshState, newSeed, freshNow)
     persistence.setCreationPending(false)
     needsRaiderCreation.value = false
+    ticker.resume()
   }
 
   return {
@@ -228,4 +236,3 @@ export const useGameStore = defineStore('game', () => {
     clearSelectedShieldRechargerLoadout: preparationActions.clearSelectedShieldRechargerLoadout,
   }
 })
-

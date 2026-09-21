@@ -311,6 +311,18 @@ function normalizeRaiderTraits(value: unknown, seed: number): string[] {
   return generateIdentityForSeed(seed).traits
 }
 
+function normalizeRaiderName(value: unknown, seed: number, saveVersion: number): string {
+  if (typeof value === 'string' && value.trim().length > 0) {
+    if (saveVersion <= 9 && value.trim() === DEFAULT_RAIDER_NAME) {
+      return generateIdentityForSeed(seed).name
+    }
+    return value
+  }
+  return saveVersion <= 9
+    ? generateIdentityForSeed(seed).name
+    : DEFAULT_RAIDER_NAME
+}
+
 export interface GamePersistenceReturn {
   loadSave: () => SaveData | null
   persistSave: (state: GameState, seed: number, lastTickAt: number) => void
@@ -342,9 +354,7 @@ export function useGamePersistence(): GamePersistenceReturn {
         ...loadedState,
         raider: {
           ...loadedState.raider,
-          name: typeof loadedState.raider.name === 'string' && loadedState.raider.name.trim().length > 0
-            ? loadedState.raider.name
-            : DEFAULT_RAIDER_NAME,
+          name: normalizeRaiderName(loadedState.raider.name, data.seed, data.version),
           traits: normalizeRaiderTraits(loadedState.raider.traits, data.seed),
           mood: clampMood(loadedState.raider.mood),
           levelXp: loadedRaider.levelXp === undefined

@@ -112,6 +112,23 @@ function queueMilestone(events: LogEvent[], groups: NarratorMilestoneGroup[], co
   events.push(makeNarratorEvent(rng.weightedPick(group.entries), vars, tick, now))
 }
 
+function queueCrossedMilestones(
+  events: LogEvent[],
+  groups: NarratorMilestoneGroup[],
+  previousCount: number,
+  nextCount: number,
+  varsForCount: (count: number) => Record<string, string | number>,
+  rng: RNG,
+  tick: number,
+  now: number,
+) {
+  if (nextCount <= previousCount) return
+  for (const group of groups) {
+    if (group.count <= previousCount || group.count > nextCount || group.entries.length === 0) continue
+    events.push(makeNarratorEvent(rng.weightedPick(group.entries), varsForCount(group.count), tick, now))
+  }
+}
+
 export function narrateOutcomeCallbacks(
   previous: GameState,
   next: GameState,
@@ -143,9 +160,16 @@ export function narrateOutcomeCallbacks(
 
     const previousWater = waterBottleCount(previous)
     const nextWater = waterBottleCount(next)
-    if (nextWater !== previousWater) {
-      queueMilestone(events, narratorEvents.waterBottleMilestones, nextWater, { ...vars, water_count: nextWater }, rng, tick, now)
-    }
+    queueCrossedMilestones(
+      events,
+      narratorEvents.waterBottleMilestones,
+      previousWater,
+      nextWater,
+      count => ({ ...vars, water_count: count }),
+      rng,
+      tick,
+      now,
+    )
   }
 
   if (context.kind === 'death') {
@@ -163,24 +187,34 @@ export function narrateOutcomeCallbacks(
     }
   }
 
+  return events
+}
+
+export function narrateNemesisCallbacks(
+  previous: GameState,
+  next: GameState,
+  rng: RNG,
+  tick: number,
+  now: number,
+): LogEvent[] {
+  const events: LogEvent[] = []
   const previousNemesisId = getNemesisRobotId(previous.stats)
   const nextNemesisId = getNemesisRobotId(next.stats)
-  if (nextNemesisId) {
-    const nextNemesisCount = next.stats.robotDownings[nextNemesisId] ?? 0
-    const nextNemesisName = robots.find(robot => robot.id === nextNemesisId)?.name ?? nextNemesisId
-    if (previousNemesisId !== nextNemesisId) {
-      queueEntry(events, narratorEvents.nemesisEstablished, {
-        ...vars,
-        robot_name: nextNemesisName,
-        count: nextNemesisCount,
-      }, rng, tick, now)
-    } else {
-      queueMilestone(events, narratorEvents.nemesisDeepens, nextNemesisCount, {
-        ...vars,
-        robot_name: nextNemesisName,
-        count: nextNemesisCount,
-      }, rng, tick, now)
-    }
+  if (!nextNemesisId) return events
+
+  const previousNemesisCount = previous.stats.robotDownings[nextNemesisId] ?? 0
+  const nextNemesisCount = next.stats.robotDownings[nextNemesisId] ?? 0
+  const nextNemesisName = robots.find(robot => robot.id === nextNemesisId)?.name ?? nextNemesisId
+  const vars = {
+    raider_name: next.raider.name,
+    robot_name: nextNemesisName,
+    count: nextNemesisCount,
+  }
+
+  if (previousNemesisId !== nextNemesisId) {
+    queueEntry(events, narratorEvents.nemesisEstablished, vars, rng, tick, now)
+  } else if (nextNemesisCount !== previousNemesisCount) {
+    queueMilestone(events, narratorEvents.nemesisDeepens, nextNemesisCount, vars, rng, tick, now)
   }
 
   return events

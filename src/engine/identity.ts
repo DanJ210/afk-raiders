@@ -37,6 +37,9 @@ export const personalityTraits: PersonalityTraitDefinition[] = identity.traits
 /** Fallback name for states created without an identity roll (tests, legacy saves with blank names). */
 export const DEFAULT_RAIDER_NAME = 'Raider Danakin'
 
+/** Shared raider-name limit; sized to fit the longest generated identity. */
+export const RAIDER_NAME_MAX_LENGTH = 37
+
 /** Number of distinct personality traits rolled at Raider creation. */
 export const PERSONALITY_TRAIT_COUNT = 2
 

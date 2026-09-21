@@ -98,7 +98,7 @@ describe('useGamePersistence', () => {
     })
   })
 
-  it('backfills personality traits for legacy saves deterministically from the seed', () => {
+  it('backfills legacy default identity data deterministically from the seed', () => {
     const initial = createInitialState(1000)
     const legacyRaider = { ...initial.raider } as Record<string, unknown>
     delete legacyRaider.traits
@@ -117,8 +117,29 @@ describe('useGamePersistence', () => {
     const loaded = useGamePersistence().loadSave()
 
     expect(loaded?.state.raider.traits).toEqual(generateIdentityForSeed(123).traits)
-    // Legacy names are preserved, never regenerated.
-    expect(loaded?.state.raider.name).toBe(initial.raider.name)
+    expect(loaded?.state.raider.name).toBe(generateIdentityForSeed(123).name)
+  })
+
+  it('preserves custom legacy names while still backfilling traits', () => {
+    const initial = createInitialState(1000)
+    const legacyRaider = { ...initial.raider, name: 'Custom Name' } as Record<string, unknown>
+    delete legacyRaider.traits
+    const legacySave = {
+      state: {
+        ...initial,
+        version: 9,
+        raider: legacyRaider,
+      },
+      seed: 321,
+      lastTickAt: 1000,
+      version: 9,
+    }
+    stubLocalStorage([[STORAGE_KEY, JSON.stringify(legacySave)]])
+
+    const loaded = useGamePersistence().loadSave()
+
+    expect(loaded?.state.raider.name).toBe('Custom Name')
+    expect(loaded?.state.raider.traits).toEqual(generateIdentityForSeed(321).traits)
   })
 
   it('keeps valid saved traits and drops unknown trait ids', () => {
