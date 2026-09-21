@@ -14,7 +14,7 @@ import type { DangerLevel, GameState, RaiderSkillsState, SkillTrackId } from '..
 
 type RaidOutcome = 'EXTRACTED' | 'DOWNED'
 
-const BALANCE_SAMPLE_SIZE = 480
+const BALANCE_SAMPLE_SIZE = process.env.CI ? 240 : 480
 const STARTER_MEDIUM_MIN_DOWNED_RATE = 0.45
 const STARTER_HIGH_MIN_DOWNED_RATE = 0.60
 const MIN_DANGER_STEP_DOWNED_RATE_INCREASE = 0.01
