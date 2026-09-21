@@ -16,7 +16,7 @@ import { sellStashOverflow } from '../engine/homeStash.js'
 import { createStarterShieldState } from '../engine/shields.js'
 import { normalizeSkills } from '../engine/skills.js'
 import { normalizeRaiderLevelXp } from '../engine/raiderLevel.js'
-import { DEFAULT_RAIDER_NAME, generateIdentityForSeed, sanitizePersonalityTraits } from '../engine/identity.js'
+import { DEFAULT_RAIDER_NAME, generateIdentityForSeed, PERSONALITY_TRAIT_COUNT, sanitizePersonalityTraits } from '../engine/identity.js'
 import { normalizeStoryState } from '../engine/arcs.js'
 import { createStarterOwnedWeapon, findWeapon, getDefaultWeapon } from '../engine/weapons.js'
 
@@ -307,7 +307,7 @@ function seedLegacyRaiderLevelXp(raider: Pick<GameState['raider'], 'extractCount
  */
 function normalizeRaiderTraits(value: unknown, seed: number): string[] {
   const sanitized = sanitizePersonalityTraits(value)
-  if (sanitized.length > 0) return sanitized
+  if (sanitized.length === PERSONALITY_TRAIT_COUNT) return sanitized
   return generateIdentityForSeed(seed).traits
 }
 

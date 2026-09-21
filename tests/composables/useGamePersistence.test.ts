@@ -142,7 +142,7 @@ describe('useGamePersistence', () => {
     expect(loaded?.state.raider.traits).toEqual(generateIdentityForSeed(321).traits)
   })
 
-  it('keeps valid saved traits and drops unknown trait ids', () => {
+  it('backfills a full deterministic trait set when saved traits sanitize to a partial result', () => {
     const initial = createInitialState(1000)
     const legacySave = {
       state: {
@@ -161,10 +161,32 @@ describe('useGamePersistence', () => {
 
     const loaded = useGamePersistence().loadSave()
 
-    expect(loaded?.state.raider.traits).toEqual(['coward'])
+    expect(loaded?.state.raider.traits).toEqual(generateIdentityForSeed(55).traits)
     expect(loaded?.state.raider.name).toBe('Custom Name')
     expect(loaded?.state.stats.robotDownings).toEqual({})
     expect(loaded?.state.story).toEqual({ activeArc: null, completedArcIds: [] })
+  })
+
+  it('preserves a full valid saved trait set', () => {
+    const initial = createInitialState(1000)
+    const legacySave = {
+      state: {
+        ...initial,
+        raider: {
+          ...initial.raider,
+          name: 'Custom Name',
+          traits: ['coward', 'optimist'],
+        },
+      },
+      seed: 88,
+      lastTickAt: 1000,
+      version: SAVE_VERSION,
+    }
+    stubLocalStorage([[STORAGE_KEY, JSON.stringify(legacySave)]])
+
+    const loaded = useGamePersistence().loadSave()
+
+    expect(loaded?.state.raider.traits).toEqual(['coward', 'optimist'])
   })
 
   it('migrates legacy EXTRACTING phase saves into a RAIDING extraction condition', () => {
