@@ -26,6 +26,10 @@ import raiderLevelsData from '../../src/content/raider_levels.json'
 import zoneConditionsData from '../../src/content/zones/zone_conditions.json'
 import zonesData from '../../src/content/zones/zones.json'
 import weaponsData from '../../src/content/weapons.json'
+import raiderIdentityData from '../../src/content/raider_identity.json'
+import prepEventsData from '../../src/content/prep_events.json'
+import narratorEventsData from '../../src/content/narrator_events.json'
+import arcsData from '../../src/content/arcs/arcs.json'
 import { MAX_RAIDER_LEVEL } from '../../src/engine/raiderLevel'
 import { raidActivities } from '../../src/engine/raidActivities'
 import type { RaidActivityDefinition, RaiderLevelContent, SkillDefinition, SkillTrackId } from '../../src/engine/types'
@@ -66,7 +70,7 @@ const DEADLINESS_RANK = {
 } as const
 
 // Known non-table slot names handled directly in fillSlots()
-const BUILT_IN_SLOTS = new Set(['mundane_item', 'water_item', 'healing_item', 'count'])
+const BUILT_IN_SLOTS = new Set(['mundane_item', 'water_item', 'healing_item', 'count', 'raider_name', 'nemesis_robot_name', 'nemesis_robot_flavor'])
 const VALID_PHASES = new Set<Phase>(['HUB', 'DEPLOYING', 'RAIDING', 'KNOCKED_OUT'])
 const VALID_DANGER_LEVELS = new Set<DangerLevel>(['Low', 'Medium', 'High'])
 const VALID_SKILL_IDS = new Set<SkillTrackId>(['cardio', 'hoarding', 'hiding_in_lockers', 'signal_handling'])
@@ -76,6 +80,7 @@ const VALID_ZONE_CONDITION_IDS = new Set([
   ...zoneConditionsData.major_conditions,
 ].map(condition => condition.id))
 const VALID_ZONE_IDS = new Set(zonesData.map(zone => zone.id))
+const VALID_TRAIT_IDS = new Set(raiderIdentityData.traits.map(trait => trait.id))
 const contentJsonModules = import.meta.glob('../../src/content/**/*.json', { eager: true }) as Record<string, { default: unknown }>
 const NON_PLAYER_FACING_CONTENT_KEYS = new Set([
   'category',
@@ -241,6 +246,9 @@ describe('content validation', () => {
         const activeRobotIds = event.requires?.activeRobotId === undefined
           ? []
           : Array.isArray(event.requires.activeRobotId) ? event.requires.activeRobotId : [event.requires.activeRobotId]
+        const traits = event.requires?.traits === undefined
+          ? []
+          : Array.isArray(event.requires.traits) ? event.requires.traits : [event.requires.traits]
         const minRaiderLevel = event.requires?.minRaiderLevel
         const maxRaiderLevel = event.requires?.maxRaiderLevel
 
@@ -264,6 +272,9 @@ describe('content validation', () => {
         }
         for (const activeRobotId of activeRobotIds) {
           expect(robotIds.has(activeRobotId), `event "${event.id}" has invalid activeRobotId "${activeRobotId}"`).toBe(true)
+        }
+        for (const trait of traits) {
+          expect(VALID_TRAIT_IDS.has(trait), `event "${event.id}" has invalid trait "${trait}"`).toBe(true)
         }
         if (minRaiderLevel !== undefined) {
           expect(Number.isInteger(minRaiderLevel), `event "${event.id}" minRaiderLevel must be an integer`).toBe(true)
@@ -301,11 +312,18 @@ describe('content validation', () => {
         const requiresRobotEncounter = ev.requires?.activeActivityKind === 'ROBOT_ENCOUNTER'
           || (Array.isArray(ev.requires?.activeActivityKind) && ev.requires.activeActivityKind.includes('ROBOT_ENCOUNTER'))
           || ev.requires?.activeRobotId !== undefined
+        const requiresNemesisRobot = ev.requires?.hasNemesisRobot === true
         for (const slot of slots) {
           // Context-aware robot slots are only valid on events gated to an active robot encounter.
           if (slot === 'robot_name' || slot === 'robot_flavor') {
             if (!requiresRobotEncounter) {
               unknown.push(`event "${ev.id}" uses context slot "{${slot}}" without requiring an active ROBOT_ENCOUNTER`)
+            }
+            continue
+          }
+          if (slot === 'nemesis_robot_name' || slot === 'nemesis_robot_flavor') {
+            if (!requiresNemesisRobot) {
+              unknown.push(`event "${ev.id}" uses context slot "{${slot}}" without requiring hasNemesisRobot: true`)
             }
             continue
           }
@@ -1071,6 +1089,144 @@ describe('content validation', () => {
       expect([...coveredLevels].sort((a, b) => a - b)).toEqual(
         Array.from({ length: MAX_RAIDER_LEVEL }, (_, index) => index + 1),
       )
+    })
+  })
+
+  describe('prep_events.json', () => {
+    const PREP_SLOTS = new Set(['item', 'cost', 'quantity'])
+    const pools = Object.entries(prepEventsData) as Array<[string, Array<{ id: string; weight: number; text: string }>]>
+
+    it('every pool has entries with positive weights and unique ids', () => {
+      const allIds: string[] = []
+      for (const [kind, pool] of pools) {
+        expect(pool.length, `prep pool "${kind}" must not be empty`).toBeGreaterThan(0)
+        for (const entry of pool) {
+          expect(entry.weight, `prep line "${entry.id}" has weight ${entry.weight}`).toBeGreaterThan(0)
+          expect(entry.text.trim(), `prep line "${entry.id}" has empty text`).not.toBe('')
+          allIds.push(entry.id)
+        }
+      }
+      expect(new Set(allIds).size).toBe(allIds.length)
+    })
+
+    it('only uses known narration slots', () => {
+      for (const [, pool] of pools) {
+        for (const entry of pool) {
+          const slots = [...entry.text.matchAll(/\{(\w+)\}/g)].map(match => match[1])
+          for (const slot of slots) {
+            expect(PREP_SLOTS.has(slot), `prep line "${entry.id}" uses unknown slot "{${slot}}"`).toBe(true)
+          }
+        }
+      }
+    })
+  })
+
+  describe('raider_identity.json', () => {
+    const namedPools = [
+      ['firstNames', raiderIdentityData.firstNames],
+      ['callsigns', raiderIdentityData.callsigns],
+      ['lastNames', raiderIdentityData.lastNames],
+    ] as const
+
+    it('defines non-empty name pools with unique ids and positive weights', () => {
+      const ids: string[] = []
+
+      for (const [poolName, pool] of namedPools) {
+        expect(pool.length, `identity pool "${poolName}" must not be empty`).toBeGreaterThan(0)
+        for (const entry of pool) {
+          ids.push(entry.id)
+          expect(entry.weight, `identity entry "${entry.id}" has weight ${entry.weight}`).toBeGreaterThan(0)
+          expect(entry.text.trim(), `identity entry "${entry.id}" has empty text`).not.toBe('')
+        }
+      }
+
+      expect(new Set(ids).size).toBe(ids.length)
+    })
+
+    it('defines non-empty trait entries with unique ids and positive weights', () => {
+      expect(raiderIdentityData.traits.length, 'identity traits must not be empty').toBeGreaterThan(0)
+
+      const ids: string[] = []
+      for (const trait of raiderIdentityData.traits) {
+        ids.push(trait.id)
+        expect(trait.weight, `trait "${trait.id}" has weight ${trait.weight}`).toBeGreaterThan(0)
+        expect(trait.name.trim(), `trait "${trait.id}" has empty name`).not.toBe('')
+        expect(trait.description.trim(), `trait "${trait.id}" has empty description`).not.toBe('')
+      }
+
+      expect(new Set(ids).size).toBe(ids.length)
+    })
+  })
+
+  describe('narrator_events.json', () => {
+    const NARRATOR_SLOTS = new Set(['raider_name', 'zone_name', 'danger_level', 'count', 'water_count', 'robot_name'])
+    const pools = narratorEventsData as Record<string, unknown>
+
+    function entriesFromNarratorPool(pool: unknown): Array<{ id: string; weight: number; text: string }> {
+      if (!Array.isArray(pool)) return []
+      return pool as Array<{ id: string; weight: number; text: string }>
+    }
+
+    it('uses positive weights, unique ids, and known slots', () => {
+      const ids: string[] = []
+      for (const [key, value] of Object.entries(pools)) {
+        const groups = Array.isArray(value) && value.length > 0 && typeof value[0] === 'object' && value[0] !== null && 'entries' in (value[0] as Record<string, unknown>)
+          ? (value as Array<{ count: number; entries: Array<{ id: string; weight: number; text: string }> }>).flatMap(group => group.entries)
+          : entriesFromNarratorPool(value)
+
+        expect(groups.length, `narrator pool "${key}" must not be empty`).toBeGreaterThan(0)
+        for (const entry of groups) {
+          ids.push(entry.id)
+          expect(entry.weight, `narrator line "${entry.id}" has weight ${entry.weight}`).toBeGreaterThan(0)
+          expect(entry.text.trim(), `narrator line "${entry.id}" has empty text`).not.toBe('')
+          const slots = [...entry.text.matchAll(/\{(\w+)\}/g)].map(match => match[1])
+          for (const slot of slots) {
+            expect(NARRATOR_SLOTS.has(slot), `narrator line "${entry.id}" uses unknown slot "{${slot}}"`).toBe(true)
+          }
+        }
+      }
+      expect(new Set(ids).size).toBe(ids.length)
+    })
+  })
+
+  describe('arcs.json', () => {
+    const ARC_SLOTS = new Set(['raider_name', 'nemesis_robot_name'])
+
+    it('defines unique arc ids and non-empty beat chains', () => {
+      const ids = arcsData.arcs.map(arc => arc.id)
+      expect(new Set(ids).size).toBe(ids.length)
+
+      for (const arc of arcsData.arcs) {
+        expect(arc.name.trim(), `arc "${arc.id}" missing name`).not.toBe('')
+        expect(arc.summary.trim(), `arc "${arc.id}" missing summary`).not.toBe('')
+        expect(arc.beats.length, `arc "${arc.id}" must have at least one beat`).toBeGreaterThan(0)
+        const beatIds = arc.beats.map(beat => beat.id)
+        expect(new Set(beatIds).size, `arc "${arc.id}" beat ids must be unique`).toBe(beatIds.length)
+      }
+    })
+
+    it('only uses known slots in arc start/completion/ambient text', () => {
+      const unknown: string[] = []
+
+      for (const arc of arcsData.arcs) {
+        const texts = [arc.completedText, ...arc.beats.flatMap(beat => [
+          beat.startText,
+          ...(beat.completedText ? [beat.completedText] : []),
+          ...(beat.ambientTexts?.HUB ?? []),
+          ...(beat.ambientTexts?.RAIDING ?? []),
+        ])]
+
+        for (const text of texts) {
+          const slots = [...text.matchAll(/\{(\w+)\}/g)].map(match => match[1])
+          for (const slot of slots) {
+            if (!ARC_SLOTS.has(slot)) {
+              unknown.push(`arc "${arc.id}" uses unknown slot "{${slot}}" in text "${text}"`)
+            }
+          }
+        }
+      }
+
+      expect(unknown).toEqual([])
     })
   })
 })

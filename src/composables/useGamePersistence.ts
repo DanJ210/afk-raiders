@@ -16,9 +16,12 @@ import { sellStashOverflow } from '../engine/homeStash.js'
 import { createStarterShieldState } from '../engine/shields.js'
 import { normalizeSkills } from '../engine/skills.js'
 import { normalizeRaiderLevelXp } from '../engine/raiderLevel.js'
+import { DEFAULT_RAIDER_NAME, generateIdentityForSeed, PERSONALITY_TRAIT_COUNT, sanitizePersonalityTraits } from '../engine/identity.js'
+import { normalizeStoryState } from '../engine/arcs.js'
 import { createStarterOwnedWeapon, findWeapon, getDefaultWeapon } from '../engine/weapons.js'
 
 const STORAGE_KEY = 'afk-raiders-save'
+const CREATION_PENDING_KEY = 'afk-raiders-creation-pending'
 const MIN_SUPPORTED_SAVE_VERSION = 3
 
 type LegacyRaiderStats = Omit<GameState['raider'], 'levelXp'> & { levelXp?: unknown }
@@ -286,6 +289,7 @@ function normalizeLifetimeStats(state: GameState): RaiderLifetimeStats {
     extracts: sanitizeOutcomeStats(state.stats.extracts, fallback.extracts.total),
     deaths: sanitizeOutcomeStats(state.stats.deaths, fallback.deaths.total),
     robotDefeats: sanitizeCounterMap(state.stats.robotDefeats),
+    robotDownings: sanitizeCounterMap((state.stats as LegacyRecord).robotDownings),
     healingItemsUsed: sanitizeHealingItemsUsed(state.stats.healingItemsUsed),
   }
 }
@@ -297,10 +301,34 @@ function seedLegacyRaiderLevelXp(raider: Pick<GameState['raider'], 'extractCount
   return normalizeRaiderLevelXp(extracts * 60 + deaths * 15 + deploys * 4)
 }
 
+/**
+ * Keep valid saved trait ids; legacy saves that predate personality traits
+ * get a deterministic backfill rolled from the save seed.
+ */
+function normalizeRaiderTraits(value: unknown, seed: number): string[] {
+  const sanitized = sanitizePersonalityTraits(value)
+  if (sanitized.length === PERSONALITY_TRAIT_COUNT) return sanitized
+  return generateIdentityForSeed(seed).traits
+}
+
+function normalizeRaiderName(value: unknown, seed: number, saveVersion: number): string {
+  if (typeof value === 'string' && value.trim().length > 0) {
+    if (saveVersion <= 9 && value.trim() === DEFAULT_RAIDER_NAME) {
+      return generateIdentityForSeed(seed).name
+    }
+    return value
+  }
+  return saveVersion <= 9
+    ? generateIdentityForSeed(seed).name
+    : DEFAULT_RAIDER_NAME
+}
+
 export interface GamePersistenceReturn {
   loadSave: () => SaveData | null
   persistSave: (state: GameState, seed: number, lastTickAt: number) => void
   clearSave: () => void
+  loadCreationPending: () => boolean
+  setCreationPending: (pending: boolean) => void
 }
 
 /**
@@ -326,6 +354,8 @@ export function useGamePersistence(): GamePersistenceReturn {
         ...loadedState,
         raider: {
           ...loadedState.raider,
+          name: normalizeRaiderName(loadedState.raider.name, data.seed, data.version),
+          traits: normalizeRaiderTraits(loadedState.raider.traits, data.seed),
           mood: clampMood(loadedState.raider.mood),
           levelXp: loadedRaider.levelXp === undefined
             ? seedLegacyRaiderLevelXp(loadedRaider)
@@ -342,6 +372,7 @@ export function useGamePersistence(): GamePersistenceReturn {
         purchasedShieldRechargers: normalizePurchasedShieldRechargers((loadedState as unknown as Record<string, unknown>).purchasedShieldRechargers),
         coins: (loadedState.coins ?? 0) + sale.coinsGained,
         stats: normalizeLifetimeStats(loadedState),
+        story: normalizeStoryState((loadedState as unknown as Record<string, unknown>).story),
         raid: {
           ...normalizedRaid,
           equippedWeaponId: reconcileEquippedWeaponId(normalizedRaid.equippedWeaponId, ownedWeapons),
@@ -372,9 +403,32 @@ export function useGamePersistence(): GamePersistenceReturn {
     }
   }
 
+  /** True while a fresh raider still needs the first-run creation flow. */
+  function loadCreationPending(): boolean {
+    try {
+      return localStorage.getItem(CREATION_PENDING_KEY) === '1'
+    } catch {
+      return false
+    }
+  }
+
+  function setCreationPending(pending: boolean) {
+    try {
+      if (pending) {
+        localStorage.setItem(CREATION_PENDING_KEY, '1')
+      } else {
+        localStorage.removeItem(CREATION_PENDING_KEY)
+      }
+    } catch {
+      // silently ignore
+    }
+  }
+
   return {
     loadSave,
     persistSave,
     clearSave,
+    loadCreationPending,
+    setCreationPending,
   }
 }

@@ -13,6 +13,7 @@ export function createInitialLifetimeStats(): RaiderLifetimeStats {
       byZoneAndDanger: {},
     },
     robotDefeats: {},
+    robotDownings: {},
     healingItemsUsed: {
       total: 0,
       byItem: {},
@@ -54,6 +55,13 @@ export function recordRobotDefeat(stats: RaiderLifetimeStats, robotId: string): 
   return {
     ...stats,
     robotDefeats: incrementCounter(stats.robotDefeats, robotId),
+  }
+}
+
+export function recordRobotDowning(stats: RaiderLifetimeStats, robotId: string): RaiderLifetimeStats {
+  return {
+    ...stats,
+    robotDownings: incrementCounter(stats.robotDownings, robotId),
   }
 }
 

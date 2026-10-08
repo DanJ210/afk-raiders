@@ -20,6 +20,10 @@ export interface EventTemplate extends ContentEntry {
     dangerLevel?: DangerLevel | DangerLevel[]
     zone?: string | string[]
     zoneCondition?: string | string[]
+    /** Raider must have at least one of these personality trait ids. */
+    traits?: string | string[]
+    /** Event only applies when a unique lifetime nemesis robot exists. */
+    hasNemesisRobot?: boolean
     activeActivityKind?: RaidActivityKind | RaidActivityKind[]
     activeActivityId?: string | string[]
     activeRobotId?: string | string[]
@@ -397,6 +401,8 @@ export interface RaidState {
 
 export interface RaiderStats {
   name: string
+  /** Personality trait ids from raider_identity.json — gate diary lines via requires.traits. */
+  traits: string[]
   hp: number
   maxHp: number
   mood: number        // -5 to +5
@@ -427,6 +433,8 @@ export interface RaiderLifetimeStats {
   extracts: OutcomeContextStats
   deaths: OutcomeContextStats
   robotDefeats: Record<string, number>
+  /** Robot ids keyed to the number of times they have downed the Raider. */
+  robotDownings: Record<string, number>
   healingItemsUsed: {
     total: number
     byItem: Record<string, number>
@@ -469,6 +477,25 @@ export interface ActivityLogEvent extends LogEvent {
   status: ActivityStatus
 }
 
+export interface StoryArcProgress {
+  coins: number
+  extractsTotal: number
+  deathsTotal: number
+  waterBottles: number
+  nemesisDownings: number
+}
+
+export interface ActiveStoryArc {
+  id: string
+  beatIndex: number
+  progress: StoryArcProgress
+}
+
+export interface StoryState {
+  activeArc: ActiveStoryArc | null
+  completedArcIds: string[]
+}
+
 export interface GameState {
   version: number
   tick: number
@@ -488,6 +515,7 @@ export interface GameState {
   /** Coin stash from auto-sold overflow loot — value is never deleted, only converted */
   coins: number
   stats: RaiderLifetimeStats
+  story: StoryState
   // Set by CALL_EXTRACT so the tick driver knows to nudge the next greed check
   pendingCalm: boolean
   pendingPressure: boolean

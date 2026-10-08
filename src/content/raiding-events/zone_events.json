@@ -1,0 +1,416 @@
+[
+  {
+    "id": "zone_damp_puddle_ambush",
+    "weight": 9,
+    "text": "Stepped in a puddle that was significantly deeper than advertised. The Damp Battlegrounds have no advertising standards.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "RAIDING", "zone": "damp_battlegrounds" },
+    "effects": { "mood": -1 }
+  },
+  {
+    "id": "zone_damp_sock_status",
+    "weight": 9,
+    "text": "Sock status report: both wet, one squeaking. Combat effectiveness unchanged. Dignity effectiveness reduced.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "RAIDING", "zone": "damp_battlegrounds" },
+    "effects": {}
+  },
+  {
+    "id": "zone_damp_energy_drink",
+    "weight": 8,
+    "text": "Found someone else's energy drink can floating past like a tiny shipwreck. Saluted it. It bumped into a wall.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "RAIDING", "zone": "damp_battlegrounds" },
+    "effects": { "mood": 1 }
+  },
+  {
+    "id": "zone_damp_rust_smell",
+    "weight": 8,
+    "text": "The air smells like rust and regret. Mostly rust. The regret might be personal.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "RAIDING", "zone": "damp_battlegrounds" },
+    "effects": {}
+  },
+  {
+    "id": "zone_damp_catwalk_gamble",
+    "weight": 8,
+    "text": "Crossed a catwalk that flexed like it was stretching before a workout. Did not look down. Heard the water anyway.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "RAIDING", "zone": "damp_battlegrounds" },
+    "effects": {}
+  },
+  {
+    "id": "zone_damp_dry_spot",
+    "weight": 7,
+    "text": "Found a genuinely dry patch of floor. Stood on it for a moment of pure luxury. A drip started immediately overhead.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "RAIDING", "zone": "damp_battlegrounds" },
+    "effects": { "mood": 1 }
+  },
+  {
+    "id": "zone_damp_reflection",
+    "weight": 7,
+    "text": "Saw a threatening silhouette in the floodwater. Prepared for combat. It was the reflection. It won the stare-down.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "RAIDING", "zone": "damp_battlegrounds" },
+    "effects": {}
+  },
+  {
+    "id": "zone_damp_drizzle_redundant",
+    "weight": 8,
+    "text": "It's drizzling on the flooded zone. Somewhere, a weather system is doing paperwork it doesn't need to do.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "RAIDING", "zone": "damp_battlegrounds", "zoneCondition": "drizzle" },
+    "effects": {}
+  },
+
+  {
+    "id": "zone_buried_tombstone_towers",
+    "weight": 9,
+    "text": "The buildings here poke out of the sand like tombstones. One has a FOR LEASE sign. Optimistic landlord.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "RAIDING", "zone": "buried_city" },
+    "effects": {}
+  },
+  {
+    "id": "zone_buried_shortcut",
+    "weight": 9,
+    "text": "Took a shortcut through a second-story window that is now a ground-floor window. The city has opinions about floors.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "RAIDING", "zone": "buried_city" },
+    "effects": {}
+  },
+  {
+    "id": "zone_buried_sand_everywhere",
+    "weight": 8,
+    "text": "Emptied a boot. A small dune came out. The Buried City is now 0.0001% less buried. You're welcome.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "RAIDING", "zone": "buried_city" },
+    "effects": { "mood": 1 }
+  },
+  {
+    "id": "zone_buried_street_sign",
+    "weight": 8,
+    "text": "Found a street sign pointing at solid sand. Either the road is down there or the sign is a memorial.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "RAIDING", "zone": "buried_city" },
+    "effects": {}
+  },
+  {
+    "id": "zone_buried_history_smell",
+    "weight": 7,
+    "text": "The air is thick with the scent of history and decay. History smells suspiciously like old carpet.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "RAIDING", "zone": "buried_city" },
+    "effects": {}
+  },
+  {
+    "id": "zone_buried_rooftop_commute",
+    "weight": 8,
+    "text": "Commuted across three rooftops that used to be penthouses. Real estate here is very horizontal now.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "RAIDING", "zone": "buried_city" },
+    "effects": {}
+  },
+  {
+    "id": "zone_buried_museum_thought",
+    "weight": 7,
+    "text": "Realized the whole zone is technically a museum where the exhibits fell on the museum. Did not touch the art. Much.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "RAIDING", "zone": "buried_city" },
+    "effects": { "mood": 1 }
+  },
+  {
+    "id": "zone_buried_sandstorm_bonus",
+    "weight": 8,
+    "text": "A sandstorm, in the sand city, adding sand. The Buried City is now 31% more buried. Someone update the sign.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "RAIDING", "zone": "buried_city", "zoneCondition": "sandstorm" },
+    "effects": { "mood": -1 }
+  },
+
+  {
+    "id": "zone_breach_loud_silence",
+    "weight": 9,
+    "text": "The silence in The Breach has texture. It's the kind of quiet that feels like it's been assigned to you personally.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "RAIDING", "zone": "the_breach" },
+    "effects": {}
+  },
+  {
+    "id": "zone_breach_edge_peek",
+    "weight": 9,
+    "text": "Peeked over the edge of the tear. The bottom declined to be perceived. Respected its privacy and backed away.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "RAIDING", "zone": "the_breach" },
+    "effects": {}
+  },
+  {
+    "id": "zone_breach_no_stamp",
+    "weight": 8,
+    "text": "Whatever made The Breach, no Desperanza desk will stamp it. When the paperwork refuses, you know it's serious.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "RAIDING", "zone": "the_breach" },
+    "effects": {}
+  },
+  {
+    "id": "zone_breach_echo_test",
+    "weight": 8,
+    "text": "Whispered 'hello' at the tear. The echo took eleven seconds and came back sounding disappointed.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "RAIDING", "zone": "the_breach" },
+    "effects": { "mood": -1 }
+  },
+  {
+    "id": "zone_breach_machine_procession",
+    "weight": 8,
+    "text": "Watched a line of chassis walk toward the tear, pause, and walk away, like tourists disappointed by the gift shop.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "RAIDING", "zone": "the_breach" },
+    "effects": {}
+  },
+  {
+    "id": "zone_breach_rock_offering",
+    "weight": 7,
+    "text": "Dropped a pebble into The Breach as an offering. Heard no landing. The pebble is on its own journey now.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "RAIDING", "zone": "the_breach" },
+    "effects": { "mood": 1 }
+  },
+  {
+    "id": "zone_breach_hum_harmony",
+    "weight": 8,
+    "text": "The ambient hum and the silence of the tear are harmonizing. It's beautiful. It's horrible. It's both.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "RAIDING", "zone": "the_breach", "zoneCondition": "ambient_hum" },
+    "effects": {}
+  },
+
+  {
+    "id": "zone_chassis_retired_sign",
+    "weight": 9,
+    "text": "Passed a safety sign reading DAYS SINCE INCIDENT with the number ripped off. The rip counts as an incident.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "RAIDING", "zone": "arc_ruins" },
+    "effects": {}
+  },
+  {
+    "id": "zone_chassis_parts_pile",
+    "weight": 9,
+    "text": "Walked past a pile of chassis parts sorted by no discernible system. Somewhere, a robot librarian is furious.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "RAIDING", "zone": "arc_ruins" },
+    "effects": {}
+  },
+  {
+    "id": "zone_chassis_service_bell",
+    "weight": 8,
+    "text": "Found a service counter with a bell. Did not ring the bell. Some jokes aren't worth the response time.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "RAIDING", "zone": "arc_ruins" },
+    "effects": { "mood": 1 }
+  },
+  {
+    "id": "zone_chassis_eye_flicker",
+    "weight": 8,
+    "text": "A decommissioned chassis head flickered one eye as I passed. Decided it was a trick of the light. Walked faster anyway.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "RAIDING", "zone": "arc_ruins" },
+    "effects": {}
+  },
+  {
+    "id": "zone_chassis_warranty_wall",
+    "weight": 8,
+    "text": "An entire wall of expired warranty notices. The machines here died as they lived: slightly out of coverage.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "RAIDING", "zone": "arc_ruins" },
+    "effects": {}
+  },
+  {
+    "id": "zone_chassis_oil_rainbow",
+    "weight": 7,
+    "text": "Found a puddle of ancient machine oil making a rainbow. Nature heals. Incorrectly, but it heals.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "RAIDING", "zone": "arc_ruins" },
+    "effects": { "mood": 1 }
+  },
+  {
+    "id": "zone_chassis_storm_twitch",
+    "weight": 8,
+    "text": "The electrical storm is making the dead chassis twitch. They're not waking up. They're just dreaming. Probably.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "RAIDING", "zone": "arc_ruins", "zoneCondition": "electrical_storm" },
+    "effects": { "mood": -1 }
+  },
+
+  {
+    "id": "zone_highrise_stair_dare",
+    "weight": 9,
+    "text": "The stairwell is 40% stairs, 60% suggestion. Climbed the suggestion.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "RAIDING", "zone": "the_sunken_highrise" },
+    "effects": {}
+  },
+  {
+    "id": "zone_highrise_elevator_button",
+    "weight": 9,
+    "text": "Pressed the elevator button out of habit. The shaft is full of water and one very patient fish.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "RAIDING", "zone": "the_sunken_highrise" },
+    "effects": { "mood": 1 }
+  },
+  {
+    "id": "zone_highrise_floor_lottery",
+    "weight": 8,
+    "text": "Every floor here is a lottery: loot, mud, or a hole to the floor below. Bought three tickets. Won mud twice.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "RAIDING", "zone": "the_sunken_highrise" },
+    "effects": {}
+  },
+  {
+    "id": "zone_highrise_corner_office",
+    "weight": 8,
+    "text": "Found the corner office. Great view of the flood. Someone fought hard for this office once. The mud got the promotion.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "RAIDING", "zone": "the_sunken_highrise" },
+    "effects": {}
+  },
+  {
+    "id": "zone_highrise_lobby_fountain",
+    "weight": 7,
+    "text": "The lobby fountain is now indistinguishable from the lobby. Finally, the architecture achieved its vision.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "RAIDING", "zone": "the_sunken_highrise" },
+    "effects": { "mood": 1 }
+  },
+  {
+    "id": "zone_highrise_motivational_poster",
+    "weight": 8,
+    "text": "A soggy motivational poster reads HANG IN THERE. It is hanging by one corner over open water. It gets it.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "RAIDING", "zone": "the_sunken_highrise" },
+    "effects": { "mood": 1 }
+  },
+  {
+    "id": "zone_highrise_acid_indoors",
+    "weight": 8,
+    "text": "Acid rain is coming through thirty broken floors to find me specifically. Committed weather.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "RAIDING", "zone": "the_sunken_highrise", "zoneCondition": "acid_rain" },
+    "effects": { "mood": -1 }
+  },
+
+  {
+    "id": "zone_fields_wheat_stealth",
+    "weight": 9,
+    "text": "Attempted stealth in waist-high wheat. The wheat rustled a full public announcement of my position.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "RAIDING", "zone": "forgotten_fields" },
+    "effects": {}
+  },
+  {
+    "id": "zone_fields_scarecrow_respect",
+    "weight": 9,
+    "text": "Passed a scarecrow that has outlasted civilization. Nodded at a professional. It said nothing. It didn't have to.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "RAIDING", "zone": "forgotten_fields" },
+    "effects": { "mood": 1 }
+  },
+  {
+    "id": "zone_fields_cover_review",
+    "weight": 8,
+    "text": "Cover options assessment: one fence post, one bush with attitude, one tractor from the before-times. Chose the bush.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "RAIDING", "zone": "forgotten_fields" },
+    "effects": {}
+  },
+  {
+    "id": "zone_fields_horizon_dot",
+    "weight": 8,
+    "text": "Spotted a dot on the horizon. Could be a robot. Could be a cow that made it. Rooting for the cow.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "RAIDING", "zone": "forgotten_fields" },
+    "effects": { "mood": 1 }
+  },
+  {
+    "id": "zone_fields_barn_negotiation",
+    "weight": 8,
+    "text": "The barn door creaked so loudly it counts as a negotiation. The barn wanted to be left alone. Terms accepted.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "RAIDING", "zone": "forgotten_fields" },
+    "effects": {}
+  },
+  {
+    "id": "zone_fields_nature_reclaim",
+    "weight": 7,
+    "text": "Nature has reclaimed this farmland, which is ironic, because it was already nature. Middle management, man.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "RAIDING", "zone": "forgotten_fields" },
+    "effects": {}
+  },
+  {
+    "id": "zone_fields_fog_crop_circles",
+    "weight": 8,
+    "text": "Heavy fog over open farmland. Somewhere in there, robots are making crop circles ironically.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "RAIDING", "zone": "forgotten_fields", "zoneCondition": "heavy_fog" },
+    "effects": {}
+  },
+
+  {
+    "id": "zone_stella_tent_city",
+    "weight": 9,
+    "text": "Passed a tent with a welcome mat, a perimeter alarm, and a sign reading JUST RESTING. Nobody here is just resting.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "RAIDING", "zone": "stella" },
+    "effects": {}
+  },
+  {
+    "id": "zone_stella_tactical_picnic",
+    "weight": 9,
+    "text": "Interrupted a tactical picnic. Four raiders, one blanket, zero movement in three hours. Strategy, apparently.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "RAIDING", "zone": "stella" },
+    "effects": { "mood": 1 }
+  },
+  {
+    "id": "zone_stella_bush_greeting",
+    "weight": 8,
+    "text": "Said 'good morning' to a suspicious bush. The bush said 'good morning' back, then apologized for breaking character.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "RAIDING", "zone": "stella" },
+    "effects": { "mood": 1 }
+  },
+  {
+    "id": "zone_stella_queue_theory",
+    "weight": 8,
+    "text": "There's a polite line forming near the good loot. A line. In a war zone. Desperanza habits die hard.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "RAIDING", "zone": "stella" },
+    "effects": {}
+  },
+  {
+    "id": "zone_stella_camper_review",
+    "weight": 8,
+    "text": "A camper has been watching the same doorway so long that moss is forming. On the camper. Commitment.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "RAIDING", "zone": "stella" },
+    "effects": {}
+  },
+  {
+    "id": "zone_stella_holiday_spirit",
+    "weight": 7,
+    "text": "Someone strung up festive lights between two wrecks. Nothing here is celebrating anything. The lights stay on.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "RAIDING", "zone": "stella" },
+    "effects": { "mood": 1 }
+  },
+  {
+    "id": "zone_stella_fog_lump_census",
+    "weight": 8,
+    "text": "Light fog has turned every camper into a spooky lump. Conducted a lump census: nine lumps, three confirmed breathing.",
+    "commsPriority": "ambient",
+    "requires": { "phase": "RAIDING", "zone": "stella", "zoneCondition": "light_fog" },
+    "effects": {}
+  }
+]

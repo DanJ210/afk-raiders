@@ -881,6 +881,42 @@
     }
   },
   {
+    "id": "hub_nemesis_maintenance_poster",
+    "weight": 7,
+    "text": "Spotted a maintenance poster featuring {nemesis_robot_name}. Looked away first. Maturity is a journey.",
+    "requires": {
+      "phase": "HUB",
+      "hasNemesisRobot": true
+    },
+    "effects": {
+      "mood": -1
+    }
+  },
+  {
+    "id": "hub_nemesis_cafe_briefing",
+    "weight": 7,
+    "text": "Someone in the cafe described {nemesis_robot_name} from memory. Corrected them using lived experience.",
+    "requires": {
+      "phase": "HUB",
+      "hasNemesisRobot": true
+    },
+    "effects": {
+      "ratRating": 1
+    }
+  },
+  {
+    "id": "hub_nemesis_flavor_grudge",
+    "weight": 6,
+    "text": "Heard a chassis in the next tunnel sound suspiciously like {nemesis_robot_flavor}. My shoulders prepared for history.",
+    "requires": {
+      "phase": "HUB",
+      "hasNemesisRobot": true
+    },
+    "effects": {
+      "mood": -1
+    }
+  },
+  {
     "id": "hub_gear_weirdo_calibration_demo",
     "weight": 8,
     "text": "Gear weirdo calibrated a weapon part using a spoon and confidence. The spoon looked nervous.",

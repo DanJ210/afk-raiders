@@ -2,6 +2,9 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useNow } from '@vueuse/core'
 import { useGameStore } from '../stores/gameStore'
+import { findStoryArcDefinition, getActiveArcDisplay } from '../engine/arcs'
+import { findPersonalityTrait } from '../engine/identity'
+import { getNemesisRobot } from '../engine/narrator'
 import { zoneConditionByDangerLevel, zoneDescription, zoneName } from '../utils/zones'
 import { TICK_INTERVAL_MS } from '../engine/catchUp'
 import RaiderStatusHeaderStats from './RaiderStatusHeaderStats.vue'
@@ -20,6 +23,32 @@ const showCurrentZone = computed(() => store.phase === 'RAIDING' && currentZoneN
 const currentCondition = computed(() =>
   store.raid.zoneCondition ?? zoneConditionByDangerLevel(store.raid.dangerLevel),
 )
+const activeArc = computed(() => getActiveArcDisplay(store.state.story))
+const activeArcProgress = computed(() => {
+  const active = store.state.story.activeArc
+  if (!active) return null
+  const definition = findStoryArcDefinition(active.id)
+  if (!definition) return null
+  return {
+    beat: active.beatIndex + 1,
+    totalBeats: definition.beats.length,
+  }
+})
+const completedArcCount = computed(() => store.state.story.completedArcIds.length)
+const personalityTraitNames = computed(() => (
+  store.raider.traits
+    .map(traitId => findPersonalityTrait(traitId)?.name ?? traitId)
+    .slice(0, 3)
+))
+const nemesisSummary = computed(() => {
+  const nemesis = getNemesisRobot(store.state.stats)
+  if (!nemesis) return null
+  const downings = store.state.stats.robotDownings[nemesis.id] ?? 0
+  return {
+    name: nemesis.name,
+    downings,
+  }
+})
 const showCurrentCondition = computed(() => store.phase === 'RAIDING' && currentCondition.value !== null)
 const showRaidTimer = computed(() => store.phase === 'RAIDING')
 const now = useNow({ interval: 1000 })
@@ -167,6 +196,43 @@ onBeforeUnmount(() => {
       <div class="flex items-center gap-2 min-w-0">
         <span class="font-mono text-xs text-muted min-w-raider-label">Rat Rating</span>
         <span class="font-mono text-raider-value text-accent-secondary">🐀 {{ raider.ratRating }}</span>
+      </div>
+
+      <div v-if="personalityTraitNames.length > 0" class="flex items-start gap-2 min-w-0 max-[600px]:flex-wrap">
+        <span class="font-mono text-xs text-muted min-w-raider-label max-[600px]:min-w-0">Persona</span>
+        <div class="flex flex-wrap gap-1.5 min-w-0">
+          <span
+            v-for="traitName in personalityTraitNames"
+            :key="traitName"
+            class="font-mono text-raider-meta text-accent-secondary border border-border rounded px-1.5 py-0.5"
+          >
+            {{ traitName }}
+          </span>
+        </div>
+      </div>
+
+      <div v-if="activeArc" class="flex items-start gap-2 min-w-0 max-[600px]:flex-wrap">
+        <span class="font-mono text-xs text-muted min-w-raider-label max-[600px]:min-w-0">Chapter</span>
+        <div class="min-w-0">
+          <div class="font-mono text-raider-value text-accent-secondary wrap-anywhere">{{ activeArc.arcName }}</div>
+          <div class="font-mono text-raider-meta text-muted wrap-anywhere">{{ activeArc.beatTitle }}</div>
+          <div v-if="activeArcProgress" class="font-mono text-raider-tiny text-muted">
+            Beat {{ activeArcProgress.beat }} / {{ activeArcProgress.totalBeats }}
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 min-w-0">
+        <span class="font-mono text-xs text-muted min-w-raider-label">Chapters Cleared</span>
+        <span class="font-mono text-raider-value text-accent-secondary">{{ completedArcCount }}</span>
+      </div>
+
+      <div v-if="nemesisSummary" class="flex items-start gap-2 min-w-0 max-[600px]:flex-wrap">
+        <span class="font-mono text-xs text-muted min-w-raider-label max-[600px]:min-w-0">Nemesis</span>
+        <div class="min-w-0">
+          <div class="font-mono text-raider-value text-danger wrap-anywhere">{{ nemesisSummary.name }}</div>
+          <div class="font-mono text-raider-meta text-muted">Downed you {{ nemesisSummary.downings }}x</div>
+        </div>
       </div>
 
       <div class="flex gap-4 font-mono text-raider-meta text-muted mt-1 max-[600px]:flex-wrap max-[600px]:gap-x-3 max-[600px]:gap-y-2">

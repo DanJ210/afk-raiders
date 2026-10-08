@@ -1,0 +1,211 @@
+{
+  "arcs": [
+    {
+      "id": "missing_stamp",
+      "name": "The Missing Stamp",
+      "summary": "A Desperanza paperwork saga about a form that definitely exists somewhere.",
+      "startWhen": {},
+      "beats": [
+        {
+          "id": "stamp_notice",
+          "title": "Form Trouble",
+          "startText": "Hatch Authority says {raider_name} is missing a deployment stamp. No one agrees on which stamp, only that it matters deeply.",
+          "completeWhen": { "extractsTotal": 1 },
+          "ambientTexts": {
+            "HUB": [
+              "Hatch Authority checked the form again. Still no stamp. Spirits remain heavily stamped, though.",
+              "Someone at the Permit Choir insists the missing stamp is emotional, not physical. This is less helpful than it sounds."
+            ],
+            "RAIDING": [
+              "While looting, {raider_name} briefly wondered if the missing stamp is out here somewhere, hiding in a crate and judging everyone."
+            ]
+          }
+        },
+        {
+          "id": "backup_stamp",
+          "title": "Backup Bureaucracy",
+          "startText": "A backup stamp has been requested for {raider_name}. The request itself now needs two stamps and a witness.",
+          "completeWhen": { "extractsTotal": 2 },
+          "ambientTexts": {
+            "HUB": [
+              "Security Stamp Maze says the backup stamp is in transit. So is everyone else's confidence.",
+              "A clerk whispered that the stamp drawer is alphabetized by feeling now. Bad sign."
+            ]
+          }
+        },
+        {
+          "id": "decorative_stamp",
+          "title": "Administrative Resolution",
+          "startText": "The replacement stamp arrived. It is decorative. Desperanza is calling this progress anyway.",
+          "completeWhen": { "extractsTotal": 3 }
+        }
+      ],
+      "completedText": "Paperwork update: the missing stamp was never required. Desperanza has filed the victory under process improvement."
+    },
+    {
+      "id": "bunk_with_a_door",
+      "name": "A Bunk With A Door",
+      "summary": "Save enough coins to dream of privacy in a city that treats privacy as a rumor.",
+      "startWhen": {},
+      "beats": [
+        {
+          "id": "bunk_catalog",
+          "title": "Window Shopping For Walls",
+          "startText": "{raider_name} has started pricing a bunk with a door. Desperanza real estate describes doors as a premium emotional feature.",
+          "completeWhen": { "coins": 40 },
+          "ambientTexts": {
+            "HUB": [
+              "Pawn Desk says a door is possible if expectations are load-bearing. {raider_name} is taking notes.",
+              "ComfortCo Warranty Clerk called curtains a gateway privacy product. Suspicious pitch."
+            ]
+          }
+        },
+        {
+          "id": "door_budget",
+          "title": "The Dream Gets Hinges",
+          "startText": "Coin stash is starting to look door-shaped. The dream now includes a latch and maybe one whole wall.",
+          "completeWhen": { "coins": 120 },
+          "ambientTexts": {
+            "HUB": [
+              "A Coupon Baron offered a bunk discount if the floor remains theoretical. Declined for now.",
+              "{raider_name} inspected three bunks today and disliked all of their public-facing energy."
+            ]
+          }
+        },
+        {
+          "id": "privacy_fund",
+          "title": "Almost Respectable Housing",
+          "startText": "{raider_name} now has enough coin to discuss door options seriously. Desperanza is nervous about this level of optimism.",
+          "completeWhen": { "coins": 250 }
+        }
+      ],
+      "completedText": "Housing milestone reached: {raider_name} can now afford the idea of a bunk with a door, pending inspections, fees, and emotional surcharges."
+    },
+    {
+      "id": "vending_machine_friendship",
+      "name": "Vending Machine Friendship",
+      "summary": "A one-sided relationship with a machine that may or may not be listening.",
+      "startWhen": { "extractsTotal": 1 },
+      "beats": [
+        {
+          "id": "first_greeting",
+          "title": "Mutual Recognition, Allegedly",
+          "startText": "A vending machine near the bunks hummed when {raider_name} walked by. Friendship has been declared unilaterally.",
+          "completeWhen": { "extractsTotal": 2 },
+          "ambientTexts": {
+            "HUB": [
+              "The vending machine lit up one extra button today. {raider_name} considers this growth.",
+              "Someone else used the vending machine and got normal snacks. Deeply suspicious."
+            ],
+            "RAIDING": [
+              "Mid-raid thought: bring something nice back for the vending machine. Maybe a battery. Maybe closure."
+            ]
+          }
+        },
+        {
+          "id": "gift_strategy",
+          "title": "Gift Economy",
+          "startText": "{raider_name} is considering a peace offering for the vending machine. Desperanza advises against feeding machines emotionally.",
+          "completeWhen": { "coins": 90 },
+          "ambientTexts": {
+            "HUB": [
+              "Nearly Fresh Counter suggested buying the vending machine a snack. This feels circular and therefore profound.",
+              "The vending machine accepted a coin, then returned it. Boundaries have been established."
+            ]
+          }
+        },
+        {
+          "id": "trusted_customer",
+          "title": "Machine Rapport",
+          "startText": "The vending machine now rattles in what {raider_name} insists is a familiar tone. The rest of Desperanza remains unconvinced.",
+          "completeWhen": { "extractsTotal": 4 }
+        }
+      ],
+      "completedText": "Relationship status updated: {raider_name} and the vending machine are now on nodding terms, which is healthier than several human arrangements down here."
+    },
+    {
+      "id": "hoarding_intervention",
+      "name": "The Intervention Crate",
+      "summary": "Desperanza notices the stash problem and addresses it with concern, paperwork, and more shelving.",
+      "startWhen": { "waterBottles": 10 },
+      "beats": [
+        {
+          "id": "quiet_concern",
+          "title": "Concerned Looks",
+          "startText": "Water bottle count reached double digits. Desperanza has upgraded from curiosity to concerned looks.",
+          "completeWhen": { "waterBottles": 25 },
+          "ambientTexts": {
+            "HUB": [
+              "Water Ration Desk asked if the stash is a collection or a warning. {raider_name} said yes.",
+              "Pawn Desk suggested selling the extra bottles. The word 'extra' offended everyone involved."
+            ],
+            "RAIDING": [
+              "Every new bottle still feels important to {raider_name}. This is how legends and problems begin."
+            ]
+          }
+        },
+        {
+          "id": "structured_denial",
+          "title": "Shelf Planning",
+          "startText": "At {raider_name}'s current pace, the stash needs a shelving plan and perhaps a constitution.",
+          "completeWhen": { "waterBottles": 50 },
+          "ambientTexts": {
+            "HUB": [
+              "A clerk suggested labeling the bottles by mood. The stash is not helping the mood situation.",
+              "Desperanza has begun measuring bottle quantities in architectural terms."
+            ]
+          }
+        },
+        {
+          "id": "religious_quantity",
+          "title": "The Bottled Future",
+          "startText": "Water bottle totals are now entering myth territory. Some residents believe {raider_name} is planning a tiny flood.",
+          "completeWhen": { "waterBottles": 75 }
+        }
+      ],
+      "completedText": "Intervention outcome: Desperanza failed to reduce the stash, but did concede that {raider_name} has achieved a recognizable lifestyle."
+    },
+    {
+      "id": "nemesis_grudge",
+      "name": "Machine Grudge Match",
+      "summary": "A recurring robot problem graduates into a full-time personal feud.",
+      "startWhen": { "hasNemesisRobot": true },
+      "beats": [
+        {
+          "id": "pattern_notice",
+          "title": "A Pattern Forms",
+          "startText": "{raider_name} has started using the word 'nemesis' about {nemesis_robot_name}, which is a strong word and currently the correct one.",
+          "completeWhen": { "nemesisDownings": 3 },
+          "ambientTexts": {
+            "HUB": [
+              "Someone mentioned {nemesis_robot_name} over lunch. {raider_name} answered with details no one had requested.",
+              "The grudge against {nemesis_robot_name} is now specific enough to require diagrams."
+            ],
+            "RAIDING": [
+              "Every loud chassis in the distance now gets one immediate question: is that {nemesis_robot_name} again?"
+            ]
+          }
+        },
+        {
+          "id": "revenge_planning",
+          "title": "Professional Resentment",
+          "startText": "The feud with {nemesis_robot_name} has matured into planning. Desperanza is calling that growth because 'obsession' felt rude.",
+          "completeWhen": { "nemesisDownings": 5 },
+          "ambientTexts": {
+            "HUB": [
+              "{raider_name} described three separate revenge plans today. Two involved paperwork somehow.",
+              "A clerk suggested forgiving {nemesis_robot_name}. Everyone laughed like it was a joke."
+            ]
+          }
+        },
+        {
+          "id": "legendary_beef",
+          "title": "Documented Hostility",
+          "startText": "The conflict with {nemesis_robot_name} now has witnesses, speculation, and its own corner of the gossip circuit.",
+          "completeWhen": { "extractsTotal": 6 }
+        }
+      ],
+      "completedText": "Grudge update: the feud with {nemesis_robot_name} is now part of Desperanza folklore, which is cheaper than therapy and louder than wisdom."
+    }
+  ]
+}

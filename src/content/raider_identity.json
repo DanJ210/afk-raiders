@@ -1,0 +1,94 @@
+{
+  "firstNames": [
+    { "id": "first_mira", "weight": 10, "text": "Mira" },
+    { "id": "first_dev", "weight": 10, "text": "Dev" },
+    { "id": "first_tuck", "weight": 10, "text": "Tuck" },
+    { "id": "first_bram", "weight": 10, "text": "Bram" },
+    { "id": "first_solveig", "weight": 8, "text": "Solveig" },
+    { "id": "first_ines", "weight": 10, "text": "Ines" },
+    { "id": "first_ozzy", "weight": 10, "text": "Ozzy" },
+    { "id": "first_petra", "weight": 10, "text": "Petra" },
+    { "id": "first_hank", "weight": 10, "text": "Hank" },
+    { "id": "first_jun", "weight": 10, "text": "Jun" },
+    { "id": "first_ludo", "weight": 8, "text": "Ludo" },
+    { "id": "first_greta", "weight": 10, "text": "Greta" },
+    { "id": "first_moss", "weight": 8, "text": "Moss" },
+    { "id": "first_edda", "weight": 8, "text": "Edda" },
+    { "id": "first_ferris", "weight": 8, "text": "Ferris" },
+    { "id": "first_paloma", "weight": 8, "text": "Paloma" }
+  ],
+  "callsigns": [
+    { "id": "callsign_wet_socks", "weight": 10, "text": "Wet Socks" },
+    { "id": "callsign_refund", "weight": 10, "text": "Refund" },
+    { "id": "callsign_two_crates", "weight": 10, "text": "Two Crates" },
+    { "id": "callsign_left_boot", "weight": 10, "text": "Left Boot" },
+    { "id": "callsign_snack_break", "weight": 10, "text": "Snack Break" },
+    { "id": "callsign_paperwork", "weight": 10, "text": "Paperwork" },
+    { "id": "callsign_indoor_voice", "weight": 8, "text": "Indoor Voice" },
+    { "id": "callsign_receipt", "weight": 8, "text": "Receipt" },
+    { "id": "callsign_lowercase", "weight": 8, "text": "Lowercase" },
+    { "id": "callsign_naptime", "weight": 8, "text": "Naptime" },
+    { "id": "callsign_backup_plan", "weight": 8, "text": "Backup Plan" },
+    { "id": "callsign_gravy", "weight": 8, "text": "Gravy" },
+    { "id": "callsign_locker", "weight": 8, "text": "Locker" },
+    { "id": "callsign_probably", "weight": 8, "text": "Probably" },
+    { "id": "callsign_ladder_incident", "weight": 6, "text": "Ladder Incident" },
+    { "id": "callsign_form_b", "weight": 6, "text": "Form B" }
+  ],
+  "lastNames": [
+    { "id": "last_malone", "weight": 10, "text": "Malone" },
+    { "id": "last_kowalski", "weight": 10, "text": "Kowalski" },
+    { "id": "last_okafor", "weight": 10, "text": "Okafor" },
+    { "id": "last_vance", "weight": 10, "text": "Vance" },
+    { "id": "last_bramble", "weight": 8, "text": "Bramble" },
+    { "id": "last_ferreira", "weight": 10, "text": "Ferreira" },
+    { "id": "last_holt", "weight": 10, "text": "Holt" },
+    { "id": "last_okada", "weight": 10, "text": "Okada" },
+    { "id": "last_lindqvist", "weight": 8, "text": "Lindqvist" },
+    { "id": "last_moreau", "weight": 10, "text": "Moreau" },
+    { "id": "last_pikkarainen", "weight": 6, "text": "Pikkarainen" },
+    { "id": "last_druzek", "weight": 6, "text": "Druzek" },
+    { "id": "last_santos", "weight": 10, "text": "Santos" },
+    { "id": "last_grubb", "weight": 8, "text": "Grubb" },
+    { "id": "last_whitlock", "weight": 8, "text": "Whitlock" },
+    { "id": "last_padilla", "weight": 8, "text": "Padilla" }
+  ],
+  "traits": [
+    {
+      "id": "coward",
+      "weight": 10,
+      "name": "Coward",
+      "description": "Practices professional-grade self-preservation. Knows every locker in every zone by first name."
+    },
+    {
+      "id": "hoarder",
+      "weight": 10,
+      "name": "Hoarder",
+      "description": "Believes every object is one repair away from priceless. The backpack disagrees."
+    },
+    {
+      "id": "optimist",
+      "weight": 10,
+      "name": "Optimist",
+      "description": "Interprets every alarm as a celebration and every robot as a future friend."
+    },
+    {
+      "id": "drama_magnet",
+      "weight": 10,
+      "name": "Drama Magnet",
+      "description": "Narrates their own life in the third person during emergencies. Emergencies oblige."
+    },
+    {
+      "id": "paranoid",
+      "weight": 10,
+      "name": "Paranoid",
+      "description": "Suspects the vending machines are taking notes. Has evidence. Will not share it."
+    },
+    {
+      "id": "snack_driven",
+      "weight": 10,
+      "name": "Snack-Driven",
+      "description": "Makes all tactical decisions based on proximity to food. Surprisingly effective."
+    }
+  ]
+}

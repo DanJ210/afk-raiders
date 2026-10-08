@@ -14,7 +14,7 @@ import type { DangerLevel, GameState, RaiderSkillsState, SkillTrackId } from '..
 
 type RaidOutcome = 'EXTRACTED' | 'DOWNED'
 
-const BALANCE_SAMPLE_SIZE = 120
+const BALANCE_SAMPLE_SIZE = process.env.CI ? 240 : 480
 const STARTER_MEDIUM_MIN_DOWNED_RATE = 0.45
 const STARTER_HIGH_MIN_DOWNED_RATE = 0.60
 const MIN_DANGER_STEP_DOWNED_RATE_INCREASE = 0.01
@@ -180,7 +180,7 @@ describe('raid balance', () => {
     expect(high.downedRate).toBeGreaterThanOrEqual(STARTER_HIGH_MIN_DOWNED_RATE)
     expect(medium.downedRate).toBeGreaterThanOrEqual(low.downedRate + MIN_DANGER_STEP_DOWNED_RATE_INCREASE)
     expect(high.downedRate).toBeGreaterThanOrEqual(medium.downedRate + MIN_DANGER_STEP_DOWNED_RATE_INCREASE)
-  }, 15_000)
+  }, 120_000)
 
   it('keeps danger profiles monotonic for risk and reward tuning', () => {
     expect(DANGER_LEVEL_PROFILES.Medium.lootValueMultiplier).toBeGreaterThan(DANGER_LEVEL_PROFILES.Low.lootValueMultiplier)

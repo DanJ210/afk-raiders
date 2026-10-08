@@ -7,15 +7,18 @@ import { createInitialLifetimeStats } from './stats.js'
 import { createStarterShieldState } from './shields.js'
 import { createInitialSkills } from './skills.js'
 import { createStarterOwnedWeapon, STARTER_WEAPON_ID } from './weapons.js'
+import { DEFAULT_RAIDER_NAME, type RaiderIdentity } from './identity.js'
+import { createInitialStoryState } from './arcs.js'
 
-export const SAVE_VERSION = 9
+export const SAVE_VERSION = 11
 
-export function createInitialState(now: number = Date.now()): GameState {
+export function createInitialState(now: number = Date.now(), identity?: RaiderIdentity): GameState {
   return {
     version: SAVE_VERSION,
     tick: 0,
     raider: {
-      name: 'Raider Danakin',
+      name: identity?.name ?? DEFAULT_RAIDER_NAME,
+      traits: identity?.traits ?? [],
       hp: 100,
       maxHp: 100,
       mood: 0,
@@ -59,6 +62,7 @@ export function createInitialState(now: number = Date.now()): GameState {
     purchasedShieldRechargers: [],
     coins: 0,
     stats: createInitialLifetimeStats(),
+    story: createInitialStoryState(),
     pendingCalm: false,
     pendingPressure: false,
   }
