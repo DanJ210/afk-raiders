@@ -7,7 +7,7 @@
 
 import { describe, it, expect } from 'vitest'
 import { createRNG } from '../../src/engine/rng'
-import { DEFAULT_MIN_NATURAL_EXTRACTION_RAIDING_TICKS, runGreedCheck } from '../../src/engine/greedCheck'
+import { deadlineExtractionChance, DEFAULT_MIN_NATURAL_EXTRACTION_RAIDING_TICKS, runGreedCheck } from '../../src/engine/greedCheck'
 import { PHASE_DURATIONS } from '../../src/engine/raidStateMachine'
 import type { RaidState } from '../../src/engine/types'
 
@@ -30,7 +30,7 @@ function makeRaid(overrides: Partial<RaidState> = {}): RaidState {
     backpackValue: 0,
     greedLevel: 0,
     phase: 'RAIDING',
-    phaseTicksRemaining: 0,
+    phaseTicksRemaining: 30,
     forceExtract: false,
   }
 
@@ -177,16 +177,19 @@ describe('greedCheck', () => {
       currentHp: 35,
       maxHp: 100,
       hasHealingItems: false,
+      minimumRaidingTicksBeforeExtraction: 0,
     })
     const mediumDanger = countOutcomes(makeRaid({ greedLevel: 20, dangerLevel: 'Medium' }), 500, {
       currentHp: 35,
       maxHp: 100,
       hasHealingItems: false,
+      minimumRaidingTicksBeforeExtraction: 0,
     })
     const highDanger = countOutcomes(makeRaid({ greedLevel: 20, dangerLevel: 'High' }), 500, {
       currentHp: 35,
       maxHp: 100,
       hasHealingItems: false,
+      minimumRaidingTicksBeforeExtraction: 0,
     })
 
     expect(mediumDanger.extract).toBeLessThan(lowDanger.extract)
@@ -206,5 +209,35 @@ describe('greedCheck', () => {
     })
 
     expect(woundedWithBandages.extract).toBeLessThan(woundedNoBandages.extract)
+  })
+
+  it('ramps urgency with countdown margin while leaving greed-driven misses possible', () => {
+    const chances = [17, 16, 12, 8, 4, 1].map(remaining =>
+      deadlineExtractionChance(makeRaid({ phaseTicksRemaining: remaining }), 4),
+    )
+    expect(chances[0]).toBe(0)
+    expect(chances[1]).toBeCloseTo(0.1)
+    expect(chances[4]).toBeCloseTo(0.75)
+    for (let i = 1; i < chances.length; i++) expect(chances[i]).toBeGreaterThanOrEqual(chances[i - 1])
+    expect(deadlineExtractionChance(makeRaid({ phaseTicksRemaining: 4, greedLevel: 100 }), 4)).toBeCloseTo(0.732)
+    const outcomes = countOutcomes(makeRaid({ phaseTicksRemaining: 4, greedLevel: 100 }), 5000)
+    expect(outcomes.extract / 5000).toBeGreaterThan(0.70)
+    expect(outcomes.pushDeeper).toBeGreaterThan(0)
+  })
+
+  it('reserves the actual zone countdown and overrides even a long early guard', () => {
+    const raid = makeRaid({ phaseTicksRemaining: 17 })
+    expect(deadlineExtractionChance(raid, 4)).toBe(0)
+    expect(deadlineExtractionChance(raid, 6)).toBeGreaterThan(0.1)
+    expect(countOutcomes({ ...raid, phaseTicksRemaining: 4 }, 5000, {
+      minimumRaidingTicksBeforeExtraction: 100,
+    }).extract).toBeGreaterThan(3000)
+  })
+
+  it('does not spontaneously start extraction after the deadline but preserves forced calls', () => {
+    const expired = makeRaid({ phaseTicksRemaining: 0 })
+    expect(deadlineExtractionChance(expired)).toBe(0)
+    expect(countOutcomes(expired, 5000).extract).toBe(0)
+    expect(runGreedCheck({ ...expired, forceExtract: true }, createRNG(1), {}).outcome).toBe('EXTRACT')
   })
 })

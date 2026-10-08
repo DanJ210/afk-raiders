@@ -15,13 +15,12 @@ import type { DangerLevel, GameState, RaiderSkillsState, SkillTrackId } from '..
 type RaidOutcome = 'EXTRACTED' | 'DOWNED'
 
 const BALANCE_SAMPLE_SIZE = process.env.CI ? 240 : 480
-const STARTER_MEDIUM_MIN_DOWNED_RATE = 0.45
-const STARTER_HIGH_MIN_DOWNED_RATE = 0.60
-const MIN_DANGER_STEP_DOWNED_RATE_INCREASE = 0.01
+const MIN_DANGER_STEP_DOWNED_RATE_INCREASE = 0.05
 
 interface RaidSimulationResult {
   outcome: RaidOutcome
   raidingTicks: number
+  hitDeadline: boolean
 }
 
 interface RaidBalanceSummary {
@@ -29,6 +28,7 @@ interface RaidBalanceSummary {
   extractionRate: number
   downedRate: number
   averageRaidingTicks: number
+  onTimeExtractionRate: number
 }
 
 function createRaidStart(dangerLevel: DangerLevel): GameState {
@@ -49,15 +49,17 @@ function simulateRaid(seed: number, dangerLevel: DangerLevel): RaidSimulationRes
   const rng = createRNG(seed)
   let state = createRaidStart(dangerLevel)
   let raidingTicks = 0
+  let hitDeadline = false
 
   for (let tick = 0; tick < 1_200; tick += 1) {
     if (state.raid.phase === 'RAIDING') {
       raidingTicks += 1
+      hitDeadline ||= state.raid.phaseTicksRemaining <= 1
     }
     state = processTick(state, rng, tick * TICK_INTERVAL_MS).state
 
-    if (state.raider.extractCount > 0) return { outcome: 'EXTRACTED', raidingTicks }
-    if (state.raider.deathCount > 0) return { outcome: 'DOWNED', raidingTicks }
+    if (state.raider.extractCount > 0) return { outcome: 'EXTRACTED', raidingTicks, hitDeadline }
+    if (state.raider.deathCount > 0) return { outcome: 'DOWNED', raidingTicks, hitDeadline }
   }
 
   throw new Error(`raid did not resolve for seed ${seed}`)
@@ -69,6 +71,7 @@ function summarizeStarterRaids(dangerLevel: DangerLevel): RaidBalanceSummary {
     (_, index) => simulateRaid(index + 1, dangerLevel),
   )
   const extracts = outcomes.filter(result => result.outcome === 'EXTRACTED').length
+  if (extracts === 0) throw new Error(`no surviving ${dangerLevel} raids in balance cohort`)
   const extractionRate = extracts / outcomes.length
   const averageRaidingTicks = outcomes.reduce((sum, result) => sum + result.raidingTicks, 0) / outcomes.length
 
@@ -77,6 +80,7 @@ function summarizeStarterRaids(dangerLevel: DangerLevel): RaidBalanceSummary {
     extractionRate,
     downedRate: 1 - extractionRate,
     averageRaidingTicks,
+    onTimeExtractionRate: outcomes.filter(result => result.outcome === 'EXTRACTED' && !result.hitDeadline).length / extracts,
   }
 }
 
@@ -172,14 +176,13 @@ describe('raid balance', () => {
     const medium = summarizeStarterRaids('Medium')
     const high = summarizeStarterRaids('High')
 
-    expect(low.extractionRate).toBeGreaterThanOrEqual(0.19)
-    expect(low.extractionRate).toBeLessThanOrEqual(0.70)
+    expect(low.extractionRate).toBeGreaterThanOrEqual(0.80)
+    expect(low.extractionRate).toBeLessThan(1)
     expect(low.averageRaidingTicks).toBeGreaterThanOrEqual(20)
 
-    expect(medium.downedRate).toBeGreaterThanOrEqual(STARTER_MEDIUM_MIN_DOWNED_RATE)
-    expect(high.downedRate).toBeGreaterThanOrEqual(STARTER_HIGH_MIN_DOWNED_RATE)
     expect(medium.downedRate).toBeGreaterThanOrEqual(low.downedRate + MIN_DANGER_STEP_DOWNED_RATE_INCREASE)
     expect(high.downedRate).toBeGreaterThanOrEqual(medium.downedRate + MIN_DANGER_STEP_DOWNED_RATE_INCREASE)
+    for (const summary of [low, medium, high]) expect(summary.onTimeExtractionRate).toBeGreaterThanOrEqual(0.95)
   }, 120_000)
 
   it('keeps danger profiles monotonic for risk and reward tuning', () => {

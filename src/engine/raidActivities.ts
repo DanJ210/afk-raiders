@@ -22,6 +22,7 @@ import { applyShieldedDamage, type ShieldDamageResult } from './shields.js'
 import { describeShieldDamage } from './eventResolver.js'
 import { getSkillModifierProfile } from './skills.js'
 import { findWeapon, getDefaultWeapon } from './weapons.js'
+import { raidLootWeightMultiplier } from './raidPacing.js'
 
 export const DEFAULT_RAIDER_WEAPON = getDefaultWeapon()
 
@@ -200,12 +201,14 @@ function resolveSearchLootTable(lootTableId: string | string[] | undefined): Loo
 /** Weighted search loot pick with danger-level, mood, and greed rarity biases applied. */
 function pickSearchLootItem(lootTable: LootItem[], state: GameState, rng: RNG): LootItem {
   const profile = getDangerLevelProfile(state.raid.dangerLevel)
+  const maxValue = Math.max(0, ...lootTable.map(item => item.value))
   return rng.weightedPick(lootTable.map(item => ({
     ...item,
     weight: item.weight
       * rarityWeight(profile, item.rarity)
       * getMoodRarityWeightMultiplier(item.rarity, state.raider.mood)
-      * getGreedRarityWeightMultiplier(item.rarity, state.raid.greedLevel),
+      * getGreedRarityWeightMultiplier(item.rarity, state.raid.greedLevel)
+      * raidLootWeightMultiplier(state.raid, item.value, maxValue),
   })))
 }
 const ROBOT_HP_PER_MENACE = 6
@@ -675,7 +678,11 @@ export function advanceRaidActivity(state: GameState, rng: RNG, now: number): Ad
   const nextRobotHp = Math.max(0, (activity.robotHp ?? robotMaxHp(robot, state.raid.dangerLevel)) - raiderDamage)
 
   if (nextRobotHp <= 0) {
-    const loot = robotLootToBackpackItem(rng.weightedPick(robot.lootTable), robot)
+    const maxValue = Math.max(0, ...robot.lootTable.map(item => item.value))
+    const loot = robotLootToBackpackItem(rng.weightedPick(robot.lootTable.map(item => ({
+      ...item,
+      weight: item.weight * raidLootWeightMultiplier(state.raid, item.value, maxValue),
+    }))), robot)
     const nextRaid = addBackpackItem({ ...state.raid, activeRaidActivity: null }, loot)
     const text = fillActivityText(definition.text.completed, {
       robot_name: robot.name,

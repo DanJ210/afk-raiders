@@ -78,14 +78,14 @@ function makeBandage(overrides: Partial<HealingItemStack> = {}): HealingItemStac
   }
 }
 
-function sampleRaidSelectionMix(dangerLevel: DangerLevel): { activityStarterShare: number; activitySearchShare: number } {
+function sampleRaidSelectionMix(dangerLevel: DangerLevel, remaining = 60): { activityStarterShare: number; activitySearchShare: number } {
   const initial = createInitialState(0)
   const state = {
     ...initial,
     raid: {
       ...initial.raid,
       phase: 'RAIDING' as const,
-      phaseTicksRemaining: 30,
+      phaseTicksRemaining: remaining,
       dangerLevel,
       zone: 'damp_battlegrounds',
       zoneCondition: zoneConditionsData.minor_conditions[0],
@@ -122,6 +122,13 @@ describe('resolveEvent — RAIDING activity mix', () => {
     expect(sampleRaidSelectionMix('Low').activitySearchShare).toBeCloseTo(0.85, 1)
     expect(sampleRaidSelectionMix('Medium').activitySearchShare).toBeCloseTo(0.72, 1)
     expect(sampleRaidSelectionMix('High').activitySearchShare).toBeCloseTo(0.62, 1)
+  }, 30_000)
+
+  it('increases robot encounter share as time passes at the same danger and greed', () => {
+    for (const danger of ['Low', 'Medium', 'High'] as const) {
+      expect(sampleRaidSelectionMix(danger, 10).activitySearchShare)
+        .toBeLessThan(sampleRaidSelectionMix(danger, 60).activitySearchShare)
+    }
   }, 30_000)
 })
 

@@ -1,6 +1,20 @@
-# AFK Raiders — Story-First Direction Plan
+# AFK Raiders — Historical Story-First Proposal
 
-> Status: proposal / decision doc. Written in response to the concern: *"I meant for this to be a parody story of the life of a Raider, with the flow of Godville — an auto-story. Did I take this in the wrong direction?"*
+> Status: historical proposal, superseded as product direction by [GAME_DESIGN.md](GAME_DESIGN.md). Written in response to the earlier concern: *"I meant for this to be a parody story of the life of a Raider, with the flow of Godville — an auto-story. Did I take this in the wrong direction?"*
+
+## Current interpretation
+
+The agreed direction combines autonomous Raider behavior, meaningful Handler survival decisions, useful extracted loot, and asynchronous real-player encounters including PvP. Comedy and narrative continuity strengthen those systems; they are not the sole product or shipping criterion.
+
+The proposal below is retained as historical context, including its then-current gap assessment. It is not a current implementation inventory or an active work order. In particular:
+- "Zero-player" does not prohibit meaningful Handler interaction.
+- The recommendation to pause combat/economy work until narrative catches up is no longer active. Prioritize changes that make intervention and secured loot rewarding.
+- Shields, robots, and greed are gameplay systems as well as story inputs; do not demote their stakes or feedback to background flavor.
+- Identity, callbacks, hub life, zone voice, and arcs remain useful narrative ideas. Check the current implementation before proposing them as missing features.
+- Narrative enrichment is not a prerequisite for testing real-player encounters, and scripted relationships do not substitute for social play.
+- The current success gates and delivery priorities live in [GAME_DESIGN.md](GAME_DESIGN.md#9-roadmap-and-verification).
+
+Everything after this section records the earlier proposal, not the revised priorities.
 
 ## 1. Honest assessment: how wrong is the current direction?
 
