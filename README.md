@@ -45,7 +45,7 @@ The current MVP loop includes:
 ## 🛠️ Getting Started
 
 ### Prerequisites
-- Node.js 18+
+- Node.js 20.19+ or 22.12+ (required by Vite 8)
 
 ### Install and run
 
@@ -65,6 +65,24 @@ npm test         # Run Vitest unit tests
 ```
 
 PWA install prompts are browser-controlled and usually will not appear during `npm run dev`. To test installability, run `npm run build` followed by `npm run preview`, then open the preview URL in Chrome or Edge. The custom install banner appears only after the browser fires `beforeinstallprompt`; iOS/Safari uses the manual "Add to Home Screen" flow instead.
+
+### Dependency audit troubleshooting
+
+If `npm audit fix` fails with `Cannot read properties of null (reading 'edgesOut')`,
+npm 10.9.3 can crash inside its peer-dependency resolver while processing Vitest.
+Use npm 11 for the fix without changing your global npm installation:
+
+```bash
+npx --yes npm@11.21.0 audit fix
+npm audit
+npm test
+npm run build
+```
+
+Keep `package-lock.json` and review its changes. Avoid `npm audit fix --force`:
+it can introduce breaking major-version upgrades. If audit findings remain,
+update the affected packages to patched compatible releases; keep `vitest`
+and `@vitest/coverage-v8` on matching versions.
 
 ### Prototype progression profile
 
