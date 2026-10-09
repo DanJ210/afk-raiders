@@ -72,7 +72,7 @@ function normalizeExtractionReceipt(value: unknown): ExtractionReceipt | null {
   const isCount = (entry: unknown): entry is number =>
     typeof entry === 'number' && Number.isSafeInteger(entry) && entry >= 0
   if (
-    !isCount(timestamp) || !isCount(extractionNumber) || extractionNumber === 0
+    !isCount(timestamp) || Number.isNaN(new Date(timestamp).getTime()) || !isCount(extractionNumber) || extractionNumber === 0
     || (zone !== null && typeof zone !== 'string')
     || (dangerLevel !== null && dangerLevel !== 'Low' && dangerLevel !== 'Medium' && dangerLevel !== 'High')
     || !isCount(lootItemCount) || !isCount(lootValue)
