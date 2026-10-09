@@ -752,6 +752,22 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
   let startedExtractionThisTick = false
   let advancedBlockingActivity = false
   let advancedActivityThisTick = false
+  if (
+    currentState.raid.phase === 'RAIDING' &&
+    !currentState.raid.extracting &&
+    !currentState.raid.downed &&
+    (currentState.pendingCalm || currentState.pendingPressure)
+  ) {
+    currentState = {
+      ...currentState,
+      raid: {
+        ...currentState.raid,
+        greedLevel: currentState.pendingCalm
+          ? applyCalmGreedReduction(currentState.raid.greedLevel)
+          : applyPressureGreedIncrease(currentState.raid.greedLevel),
+      },
+    }
+  }
   const combatDeadlineChance = currentState.raid.activeRaidActivity?.kind === 'ROBOT_ENCOUNTER'
     ? deadlineExtractionChance(currentState.raid, getExtractionDurationForZone(currentState.raid.zone))
     : 0
@@ -838,20 +854,8 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
       })
     }
 
-    const raidForGreedCheck = currentState.pendingCalm
-      ? {
-          ...currentState.raid,
-          greedLevel: applyCalmGreedReduction(currentState.raid.greedLevel),
-        }
-      : currentState.pendingPressure
-        ? {
-            ...currentState.raid,
-            greedLevel: applyPressureGreedIncrease(currentState.raid.greedLevel),
-          }
-        : currentState.raid
-
     const greedResult = runGreedCheck(
-      raidForGreedCheck,
+      currentState.raid,
       rng,
       {
         currentHp: currentState.raider.hp,
@@ -866,7 +870,7 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
     // Update greed level
     currentState = {
       ...currentState,
-      raid: { ...raidForGreedCheck, greedLevel: greedResult.newGreedLevel },
+      raid: { ...currentState.raid, greedLevel: greedResult.newGreedLevel },
     }
 
     if (greedResult.outcome === 'EXTRACT') {

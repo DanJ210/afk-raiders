@@ -121,13 +121,59 @@ describe('deadline extraction during combat', () => {
     expect(result.events.find(event => event.id === 'condition_extracting_started')?.text).toContain('6 ticks')
   })
 
-  it.each(['pendingCalm', 'pendingPressure'] as const)('consumes %s with feedback when urgency interrupts combat', (action) => {
+  it.each([
+    { action: 'pendingCalm', greed: 50, expectedGreed: 38 },
+    { action: 'pendingPressure', greed: 50, expectedGreed: 58 },
+    { action: 'pendingCalm', greed: 5, expectedGreed: 0 },
+    { action: 'pendingPressure', greed: 97, expectedGreed: 100 },
+  ] as const)('applies $action once with feedback when urgency interrupts combat at greed $greed', ({ action, greed, expectedGreed }) => {
     const initial = { ...combatAt(9), [action]: true }
+    initial.raid.greedLevel = greed
     const rng = createRNG(1)
     vi.spyOn(rng, 'next').mockReturnValue(0.3)
     const result = processTick(initial, rng, 30_000)
+    expect(result.state.raid.extracting).not.toBeNull()
+    expect(result.state.raid.greedLevel).toBe(expectedGreed)
     expect(result.state[action]).toBe(false)
     expect(result.events.some(event => event.id === (action === 'pendingCalm' ? 'handler_calm' : 'handler_pressure'))).toBe(true)
+    expect(initial.raid.greedLevel).toBe(greed)
+    expect(initial[action]).toBe(true)
+    const next = processTick(result.state, rng, 60_000)
+    expect(next.state.raid.greedLevel).toBe(expectedGreed)
+    expect(next.events.some(event => event.id === 'handler_calm' || event.id === 'handler_pressure')).toBe(false)
+  })
+
+  it.each([
+    { action: 'pendingCalm', expectedGreed: 38, extracts: true },
+    { action: 'pendingPressure', expectedGreed: 58, extracts: false },
+  ] as const)('uses $action-adjusted greed for the combat deadline roll', ({ action, expectedGreed, extracts }) => {
+    const initial = { ...combatAt(9), [action]: true }
+    initial.raid.greedLevel = 50
+    const unadjustedChance = deadlineExtractionChance({ ...initial.raid, phaseTicksRemaining: 8 }, 4)
+    const adjustedChance = deadlineExtractionChance({
+      ...initial.raid, phaseTicksRemaining: 8, greedLevel: expectedGreed,
+    }, 4)
+    const roll = (unadjustedChance + adjustedChance) / 2
+    const rng = createRNG(1)
+    vi.spyOn(rng, 'next').mockReturnValueOnce(roll).mockReturnValue(0.3)
+    const result = processTick(initial, rng, 30_000)
+    expect(result.state.raid.extracting !== null).toBe(extracts)
+    expect(result.state.raid.greedLevel).toBe(expectedGreed)
+    expect(result.state[action]).toBe(false)
+  })
+
+  it.each([
+    { action: 'pendingCalm', expectedGreed: 38 },
+    { action: 'pendingPressure', expectedGreed: 58 },
+  ] as const)('applies $action exactly once in the regular greed check', ({ action, expectedGreed }) => {
+    const initial = { ...raidAt(9), [action]: true }
+    initial.raid.greedLevel = 50
+    const rng = createRNG(1)
+    vi.spyOn(rng, 'next').mockReturnValue(0.3)
+    const result = processTick(initial, rng, 30_000)
+    expect(result.state.raid.extracting).not.toBeNull()
+    expect(result.state.raid.greedLevel).toBe(expectedGreed)
+    expect(result.state[action]).toBe(false)
   })
 
   it('does not interrupt early combat or an already-running downed/extraction race', () => {
