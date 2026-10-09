@@ -35,6 +35,10 @@ Product goals and verification gates live in [GAME_DESIGN.md](GAME_DESIGN.md). T
 
 On mobile, [MobileRescuePrompt.vue](../src/components/MobileRescuePrompt.vue) stays above the tab content while the Raider is DOWNED. It renders the knockout/extraction countdowns and available Signal, amplifiers, and revive-med quantities. Its shortcuts switch to the existing Raider (Signal) and Raid (field meds) tabs; they do not spend resources or simulate a revive. The existing action boundaries remain authoritative. Desktop retains its side-by-side controls.
 
+Successful extraction records `GameState.lastExtraction` before the raid snapshot resets. This immutable historical receipt contains extracted loot quantity/value (excluding staged supplies), net stash-value change, overflow quantities/coins, the pre-award level stipend, zone/danger, timestamp, and extraction number. It is populated by the shared success path for timer/event outcomes and catch-up. Failed raids, sales, and purchases do not rewrite it. Save version 12 initializes missing or malformed receipts to `null`; old history is not fabricated.
+
+[ExtractionPayoff.vue](../src/components/ExtractionPayoff.vue) displays the latest receipt as a non-blocking, collapsed HUB-only summary. The stash/preparation shortcuts collapse the receipt and switch mobile tabs or scroll/focus desktop panels. Hiding it in field phases keeps it from displacing urgent rescue UI. [PreparationGoal.vue](../src/components/PreparationGoal.vue) offers a session-local purchase goal, initially an unowned weapon, using existing catalog prices/effects. It computes shortfall from current coins only, displays unsold stash value separately, and never buys or sells anything. Mobile preparation uses `v-show` so the selected goal survives trips to the stash; it resets on reload/layout remount. No goal is persisted in the simulation save.
+
 ## Core engine contracts
 - Determinism: the same seed + state must produce the same outcomes, diary sequence, and activity-thread sequence.
 - Single damage pipeline: all incoming HP damage must flow through shared shield-aware helpers (no ad hoc HP subtraction).

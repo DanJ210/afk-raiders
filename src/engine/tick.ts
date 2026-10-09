@@ -10,7 +10,7 @@ import { DOWNED_TICKS, EXTRACTING_TICKS, tickPhase, transitionText, type PhaseTr
 import { deadlineExtractionChance, runGreedCheck } from './greedCheck.js'
 import { advanceSignal, applyCalmGreedReduction, applyPressureGreedIncrease } from './signal.js'
 import { describeShieldDamage, resolveAmbientActivityEvent, resolveEvent, resolveFlavorKey, applyEffects, resolveHealingItemFind, resolveShieldRechargerFind, events as allEvents } from './eventResolver.js'
-import { transferBackpackToHomeStash, HOME_STASH_ITEM_LIMIT } from './homeStash.js'
+import { getTotalItemValue, transferBackpackToHomeStash, HOME_STASH_ITEM_LIMIT } from './homeStash.js'
 import { appendActivityLogEntries, appendLogEntries, logConditionsForRaid } from './log.js'
 import { recordOutcome, recordRobotDefeat, recordRobotDowning } from './stats.js'
 import { advanceShieldRecharge } from './shields.js'
@@ -504,6 +504,33 @@ function completeExtractionCondition(
     dangerLevel: extractedRaid.dangerLevel,
   })
   currentState = extraction.state
+  currentState = {
+    ...currentState,
+    lastExtraction: {
+      timestamp: now,
+      extractionNumber: currentState.raider.extractCount,
+      zone: extractedRaid.zone,
+      dangerLevel: extractedRaid.dangerLevel,
+      lootItemCount: totalBackpackQuantity(extractedBackpack),
+      lootValue: extractedBackpackValue,
+      stashValueChange: getTotalItemValue(currentState.homeStash) - getTotalItemValue(state.homeStash),
+      overflowItemCount: extraction.soldItemCount,
+      overflowCoins: extraction.coinsGained,
+      stipendCoins: extraction.levelCoinBonus,
+    },
+  }
+  emitted.push({
+    id: 'extraction_receipt',
+    tick,
+    timestamp: now,
+    text: transitionText('extraction_receipt', {
+      item_count: String(totalBackpackQuantity(extractedBackpack)),
+      loot_value: String(extractedBackpackValue),
+      coins: String(extraction.coinsGained + extraction.levelCoinBonus),
+    }),
+    phase: 'HUB',
+    commsPriority: CommsPriority.Priority,
+  })
   const weaponWear = applyRaidWeaponWear(currentState, now)
   if (weaponWear) {
     currentState = weaponWear.state

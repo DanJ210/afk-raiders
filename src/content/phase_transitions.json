@@ -1,5 +1,6 @@
 {
   "transitions": {
+    "extraction_receipt": "Haul secured: {item_count} loot units worth {loot_value}. Coins credited: {coins}. Unsold stash items are not coins; the Pawn Desk awaits your questionable valuables.",
     "HUB_to_DEPLOYING": "Gear packed. Pod hatch sealed. One person capacity, zero personal space.",
     "DEPLOYING_to_RAIDING": "Pod doors hissed open. Zone is live. The checklist has become emotional support.",
     "RAIDING_to_EXTRACTING": "Extract beacon deployed. Shuttle ETA about 90 seconds. Please be at the LZ.",

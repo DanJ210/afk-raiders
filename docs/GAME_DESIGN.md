@@ -355,6 +355,10 @@ Tests verify deadline misses, combat interruption, actual zone countdowns, exist
 
 The mobile usability walkthrough found that a DOWNED countdown was visible on Comms, but both rescue paths were hidden on separate tabs. A persistent DOWNED rescue prompt now appears above every mobile tab: it shows time to knockout, any competing extraction countdown, Signal revive cost/current resources, and revive-med dose count, with shortcuts to the existing controls. It explicitly reports when neither rescue is currently available. This removes a navigation/discoverability barrier; it does not change rescue timing, cost, or balance, and is not a substitute for a human fun/readability playtest.
 
+Extraction payoff now has a non-blocking **latest-success receipt** in HUB, available on desktop and every mobile tab. Expand it to see secured loot units/value, net stash-value change, overflow sales, and the extraction stipend. The timestamp and extraction number distinguish this historical success from a later failed return. Overflow can sell older stash items, so the receipt reports net stash change rather than pretending every incoming item remained unsold. Staged supplies and unused field meds are not counted as earned loot. Receipts persist through reload/catch-up; older saves begin with no receipt.
+
+Receipt shortcuts open the stash for **manual selling** or preparation to choose a **next purchase goal**. The goal shows the real item's benefit, catalog cost, current spendable coins, and coin shortfall, explicitly distinguishing unsold stash value. An unowned weapon is the initial suggestion; the Handler may choose a med or recharger instead. Goals are session-local UI choices, not quests or automatic transactions. Buying remains HUB-only, with existing confirmation, equipment-loss, and loadout rules. This makes the existing economy easier to understand; it does not add progression or rebalance rewards.
+
 The full-tick starter cohort also requires at least 95% of successful Raiders at each danger level to extract strictly before the timer-zero tick, rather than relying on the expiry race to satisfy the pacing goal.
 
 ## 10. Legal Positioning
