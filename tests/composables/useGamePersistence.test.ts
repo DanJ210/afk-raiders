@@ -26,6 +26,39 @@ describe('useGamePersistence', () => {
     vi.unstubAllGlobals()
   })
 
+  it('loads older profiles without inventing a historical extraction receipt', () => {
+    const { lastExtraction: _receipt, ...legacyState } = createInitialState(1000)
+    stubLocalStorage([[STORAGE_KEY, JSON.stringify({
+      state: legacyState, seed: 42, lastTickAt: 1000, version: 11,
+    })]])
+    const loaded = useGamePersistence().loadSave()
+    expect(loaded?.state.lastExtraction).toBeNull()
+    expect(loaded?.version).toBe(SAVE_VERSION)
+  })
+
+  it('round-trips a receipt as an immutable historical snapshot, including negative stash change', () => {
+    stubLocalStorage()
+    const state = createInitialState(1000)
+    state.lastExtraction = {
+      timestamp: 1000, extractionNumber: 1, zone: 'damp_battlegrounds', dangerLevel: 'High',
+      lootItemCount: 1, lootValue: 5, stashValueChange: -7,
+      overflowItemCount: 1, overflowCoins: 12, stipendCoins: 0,
+    }
+    const persistence = useGamePersistence()
+    persistence.persistSave(state, 42, 1000)
+    expect(persistence.loadSave()?.state.lastExtraction).toEqual(state.lastExtraction)
+  })
+
+  it('drops malformed optional receipt data without dropping the profile', () => {
+    stubLocalStorage([[STORAGE_KEY, JSON.stringify({
+      state: { ...createInitialState(1000), lastExtraction: { lootValue: 'invalid' } },
+      seed: 42, lastTickAt: 1000, version: SAVE_VERSION,
+    })]])
+    const loaded = useGamePersistence().loadSave()
+    expect(loaded).not.toBeNull()
+    expect(loaded?.state.lastExtraction).toBeNull()
+  })
+
   it('upgrades old saves and removes stale lifetime stat fields', () => {
     const initial = createInitialState(1000)
     const legacySave = {

@@ -1,8 +1,10 @@
 {
   "transitions": {
+    "extraction_receipt": "Haul secured: {item_count} loot units worth {loot_value}. Coins credited: {coins}. Unsold stash items are not coins; the Pawn Desk awaits your questionable valuables.",
     "HUB_to_DEPLOYING": "Gear packed. Pod hatch sealed. One person capacity, zero personal space.",
     "DEPLOYING_to_RAIDING": "Pod doors hissed open. Zone is live. The checklist has become emotional support.",
     "RAIDING_to_EXTRACTING": "Extract beacon deployed. Shuttle ETA about 90 seconds. Please be at the LZ.",
+    "RAIDING_to_EXTRACTING_deadline": "Exit window closing. Raider called extraction before 'one more crate' became a recovery invoice. LZ countdown: {tick_count}.",
     "RAIDING_to_DOWNED": "Raider is down. Still breathing, still judging the Handler silently.",
     "RAIDING_to_HUB": "Successful extraction. Welcome back to Desperanza. Please shower.",
     "RAIDING_to_KNOCKED_OUT": "No revive arrived. Recovery crew is inbound with a clipboard and absolutely no compliments.",

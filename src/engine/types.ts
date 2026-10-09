@@ -496,6 +496,19 @@ export interface StoryState {
   completedArcIds: string[]
 }
 
+export interface ExtractionReceipt {
+  timestamp: number
+  extractionNumber: number
+  zone: string | null
+  dangerLevel: DangerLevel | null
+  lootItemCount: number
+  lootValue: number
+  stashValueChange: number
+  overflowItemCount: number
+  overflowCoins: number
+  stipendCoins: number
+}
+
 export interface GameState {
   version: number
   tick: number
@@ -512,8 +525,9 @@ export interface GameState {
   purchasedHealingItems: HealingItemStack[]
   /** Purchased HUB stock of shield rechargers available for future raid loadouts. */
   purchasedShieldRechargers: ShieldRechargerStack[]
-  /** Coin stash from auto-sold overflow loot — value is never deleted, only converted */
+  /** Spendable coins from manual/overflow stash sales and extraction stipends. */
   coins: number
+  lastExtraction: ExtractionReceipt | null
   stats: RaiderLifetimeStats
   story: StoryState
   // Set by CALL_EXTRACT so the tick driver knows to nudge the next greed check

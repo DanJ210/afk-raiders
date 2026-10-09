@@ -7,10 +7,10 @@
 import { CommsPriority, type ActivityLogEvent, type ActivityStatus, type BackpackItem, type DownedReason, type GameState, type HiddenPocketItem, type LogCondition, type LogEvent, type TickResult } from './types.js'
 import type { RNG } from './rng.js'
 import { DOWNED_TICKS, EXTRACTING_TICKS, tickPhase, transitionText, type PhaseTransition } from './raidStateMachine.js'
-import { runGreedCheck } from './greedCheck.js'
+import { deadlineExtractionChance, runGreedCheck } from './greedCheck.js'
 import { advanceSignal, applyCalmGreedReduction, applyPressureGreedIncrease } from './signal.js'
 import { describeShieldDamage, resolveAmbientActivityEvent, resolveEvent, resolveFlavorKey, applyEffects, resolveHealingItemFind, resolveShieldRechargerFind, events as allEvents } from './eventResolver.js'
-import { transferBackpackToHomeStash, HOME_STASH_ITEM_LIMIT } from './homeStash.js'
+import { getTotalItemValue, transferBackpackToHomeStash, HOME_STASH_ITEM_LIMIT } from './homeStash.js'
 import { appendActivityLogEntries, appendLogEntries, logConditionsForRaid } from './log.js'
 import { recordOutcome, recordRobotDefeat, recordRobotDowning } from './stats.js'
 import { advanceShieldRecharge } from './shields.js'
@@ -186,7 +186,7 @@ function getExtractionDurationForZone(zone: string | null): number {
   return zoneExtraction?.ticks ?? defaultExtraction?.ticks ?? EXTRACTING_TICKS
 }
 
-function startExtractionCondition(state: GameState, tick: number, now: number): { state: GameState; event: LogEvent | null } {
+function startExtractionCondition(state: GameState, tick: number, now: number, deadlineDriven = false): { state: GameState; event: LogEvent | null } {
   if (state.raid.phase !== 'RAIDING' || state.raid.extracting) return { state, event: null }
 
   const extractionDuration = getExtractionDurationForZone(state.raid.zone)
@@ -204,7 +204,9 @@ function startExtractionCondition(state: GameState, tick: number, now: number): 
       ...state,
       raid,
     },
-    event: conditionEvent('condition_extracting_started', transitionText('RAIDING_to_EXTRACTING'), tick, now, logConditionsForRaid(raid) ?? ['EXTRACTING']),
+    event: conditionEvent('condition_extracting_started', deadlineDriven
+      ? fillTimedActivityText(transitionText('RAIDING_to_EXTRACTING_deadline'), extractionDuration)
+      : transitionText('RAIDING_to_EXTRACTING'), tick, now, logConditionsForRaid(raid) ?? ['EXTRACTING']),
   }
 }
 
@@ -502,6 +504,33 @@ function completeExtractionCondition(
     dangerLevel: extractedRaid.dangerLevel,
   })
   currentState = extraction.state
+  currentState = {
+    ...currentState,
+    lastExtraction: {
+      timestamp: now,
+      extractionNumber: currentState.raider.extractCount,
+      zone: extractedRaid.zone,
+      dangerLevel: extractedRaid.dangerLevel,
+      lootItemCount: totalBackpackQuantity(extractedBackpack),
+      lootValue: extractedBackpackValue,
+      stashValueChange: getTotalItemValue(currentState.homeStash) - getTotalItemValue(state.homeStash),
+      overflowItemCount: extraction.soldItemCount,
+      overflowCoins: extraction.coinsGained,
+      stipendCoins: extraction.levelCoinBonus,
+    },
+  }
+  emitted.push({
+    id: 'extraction_receipt',
+    tick,
+    timestamp: now,
+    text: transitionText('extraction_receipt', {
+      item_count: String(totalBackpackQuantity(extractedBackpack)),
+      loot_value: String(extractedBackpackValue),
+      coins: String(extraction.coinsGained + extraction.levelCoinBonus),
+    }),
+    phase: 'HUB',
+    commsPriority: CommsPriority.Priority,
+  })
   const weaponWear = applyRaidWeaponWear(currentState, now)
   if (weaponWear) {
     currentState = weaponWear.state
@@ -725,12 +754,37 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
   let advancedActivityThisTick = false
   if (
     currentState.raid.phase === 'RAIDING' &&
-    currentState.raid.forceExtract &&
     !currentState.raid.extracting &&
-    !currentState.raid.downed
+    !currentState.raid.downed &&
+    (currentState.pendingCalm || currentState.pendingPressure)
+  ) {
+    currentState = {
+      ...currentState,
+      raid: {
+        ...currentState.raid,
+        greedLevel: currentState.pendingCalm
+          ? applyCalmGreedReduction(currentState.raid.greedLevel)
+          : applyPressureGreedIncrease(currentState.raid.greedLevel),
+      },
+    }
+  }
+  const combatDeadlineChance = currentState.raid.activeRaidActivity?.kind === 'ROBOT_ENCOUNTER'
+    ? deadlineExtractionChance(currentState.raid, getExtractionDurationForZone(currentState.raid.zone))
+    : 0
+  if (
+    currentState.raid.phase === 'RAIDING' &&
+    !currentState.raid.extracting &&
+    !currentState.raid.downed &&
+    (
+      currentState.raid.forceExtract ||
+      (
+        combatDeadlineChance > 0 &&
+        rng.next() < combatDeadlineChance
+      )
+    )
   ) {
     skillPracticeTriggers.push({ skillId: 'cardio', reason: 'extraction_started', minXp: 1, maxXp: 2 })
-    const started = startExtractionCondition(currentState, state.tick, now)
+    const started = startExtractionCondition(currentState, state.tick, now, !currentState.raid.forceExtract)
     currentState = started.state
     startedExtractionThisTick = started.event !== null
     if (started.event) {
@@ -800,20 +854,8 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
       })
     }
 
-    const raidForGreedCheck = currentState.pendingCalm
-      ? {
-          ...currentState.raid,
-          greedLevel: applyCalmGreedReduction(currentState.raid.greedLevel),
-        }
-      : currentState.pendingPressure
-        ? {
-            ...currentState.raid,
-            greedLevel: applyPressureGreedIncrease(currentState.raid.greedLevel),
-          }
-        : currentState.raid
-
     const greedResult = runGreedCheck(
-      raidForGreedCheck,
+      currentState.raid,
       rng,
       {
         currentHp: currentState.raider.hp,
@@ -821,18 +863,20 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
         hasHealingItems: currentState.raid.healingItems.some(item => item.healAmount > 0),
         extractionChanceBonus: getSkillModifierProfile(currentState.raider.skills).extractionChanceBonus,
         deathChanceMultiplier: getSkillModifierProfile(currentState.raider.skills).ambientRaidDeathChanceMultiplier,
+        extractionDurationTicks: getExtractionDurationForZone(currentState.raid.zone),
       },
     )
 
     // Update greed level
     currentState = {
       ...currentState,
-      raid: { ...raidForGreedCheck, greedLevel: greedResult.newGreedLevel },
+      raid: { ...currentState.raid, greedLevel: greedResult.newGreedLevel },
     }
 
     if (greedResult.outcome === 'EXTRACT') {
       skillPracticeTriggers.push({ skillId: 'cardio', reason: 'extraction_started', minXp: 1, maxXp: 2 })
-      const started = startExtractionCondition(currentState, state.tick, now)
+      const started = startExtractionCondition(currentState, state.tick, now,
+        deadlineExtractionChance(currentState.raid, getExtractionDurationForZone(currentState.raid.zone)) > 0)
       currentState = started.state
       startedExtractionThisTick = started.event !== null
       if (started.event) {

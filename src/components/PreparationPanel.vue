@@ -4,6 +4,9 @@ import { formatNumber } from '../utils/stash'
 import { rarityBarClass, rarityLabel } from '../utils/rarity'
 import { usePreparationViewModel } from '../composables/usePreparationViewModel'
 import teaKettleThumbnail from '../assets/weapon-icons/tea-kettle/tk_thumbnail.png'
+import PreparationGoal from './PreparationGoal.vue'
+
+defineOptions({ inheritAttrs: false })
 
 interface PreparationConfirmState {
   open: boolean
@@ -114,8 +117,9 @@ function repairButtonColorClass(weaponId: string, durabilityMax: number): string
 </script>
 
 <template>
-  <section class="preparation-panel panel-card shrink-0 min-h-0 h-full flex flex-col overflow-y-auto max-[600px]:p-2.5" aria-label="Preparation">
+  <section v-bind="$attrs" class="preparation-panel panel-card shrink-0 min-h-0 h-full flex flex-col overflow-y-auto max-[600px]:p-2.5" aria-label="Preparation">
     <header class="section-header">PREPARATION</header>
+    <PreparationGoal />
 
     <div class="mb-3 rounded border border-border-subtle bg-surface-raised p-2">
       <div class="mb-1.5 inline-flex items-center gap-1.5 rounded border px-2 py-0.5 font-mono text-[0.62rem]"

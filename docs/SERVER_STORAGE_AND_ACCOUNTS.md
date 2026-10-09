@@ -1,10 +1,12 @@
 # Server-side storage and accounts plan
 
+> Scope: planned account and solo-save foundation, not a multiplayer encounter design. [GAME_DESIGN.md](GAME_DESIGN.md) sets asynchronous real-player encounters including PvP as a product target; those require an additional authoritative resolution boundary.
+
 ## Problem
 
 AFK Raiders currently stores one anonymous local save in `localStorage` as `{ state, seed, lastTickAt, version }`. That works for MVP, but it does not provide per-user accounts, cross-device continuity, account recovery, or server-backed progress.
 
-The intended next architecture is account-backed storage where each user owns their Raider and progress. The selected direction is **offline-first sync**: the client continues deterministic local simulation and syncs signed-in saves to the server when online.
+The intended account/save foundation is account-backed storage where each user owns their Raider and progress. The selected direction for solo progress is **offline-first sync**: the client continues deterministic local simulation and syncs signed-in saves to the server when online. This does not make client-authored saves authoritative for contested rewards or losses.
 
 Because the project is still early, preserving existing anonymous local saves is **not required**. Introducing accounts/server saves may intentionally reset or invalidate old local saves in exchange for a cleaner foundation.
 
@@ -180,4 +182,12 @@ This first phase prioritizes integrity and isolation over anti-cheat hardening.
 - Do not move simulation to server in this phase.
 - Do not introduce non-.NET backend runtime for this feature.
 - Keep first backend phase narrow: accounts, authentication, save storage, reset, offline sync conflict handling.
-- Defer social/leaderboard/other-Raider features.
+- Social/leaderboard/other-Raider features are outside this account/save implementation phase, not deferred product priorities. A bounded asynchronous encounter prototype is the next social validation target in the game design.
+
+## Boundary with asynchronous multiplayer
+
+Neither the save checksum nor optimistic save revisions establish trustworthy, mutually consistent encounter outcomes between two players. This plan must not be reused as a PvP settlement protocol.
+
+Before implementing real-player encounters, specify shared outcome ownership, eligible Raider state, Handler action timing, matching, offline exposure/loss limits, and reconciliation with local catch-up. The resolution service must prevent incompatible outcomes and duplicate settlement across retries. The exact protocol, schema, and anti-abuse rules remain undecided.
+
+Keep solo offline progression independent of service availability. Shared player rewards/losses may only be settled through the approved encounter authority, not invented or independently replayed by an offline client.

@@ -38,7 +38,7 @@ function handleDialogSell() {
         <span class="text-raider-tiny text-muted font-mono">Stash Value</span>
         <span class="text-[1rem] font-bold text-text font-mono">{{ formatNumber(viewModel.stashValue.value) }}</span>
       </div>
-      <div class="flex flex-col gap-1 bg-surface-raised p-2 rounded" title="Coins earned by selling stash items or auto-selling overflow">
+      <div class="flex flex-col gap-1 bg-surface-raised p-2 rounded" title="Spendable coins from stash sales and extraction stipends">
         <span class="text-raider-tiny text-muted font-mono">🪙 Coin Value</span>
         <span class="text-[1rem] font-bold text-text font-mono">{{ formatNumber(viewModel.coinValue.value) }}</span>
       </div>

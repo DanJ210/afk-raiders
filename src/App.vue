@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 import { useMediaQuery, useNow } from '@vueuse/core'
 import { useGameStore } from './stores/gameStore'
 import { zoneConditionByDangerLevel, zoneName } from './utils/zones'
@@ -16,6 +16,8 @@ import PhaseStatusStrip from './components/PhaseStatusStrip.vue'
 import SkillsPanel from './components/SkillsPanel.vue'
 import RaiderLifetimeStats from './components/RaiderLifetimeStats.vue'
 import PreparationPanel from './components/PreparationPanel.vue'
+import MobileRescuePrompt from './components/MobileRescuePrompt.vue'
+import ExtractionPayoff from './components/ExtractionPayoff.vue'
 
 const store = useGameStore()
 const isMobile = useMediaQuery('(max-width: 600px)')
@@ -32,6 +34,13 @@ const mobileTabs: Array<{ id: MobileTabId; label: string; icon: string }> = [
 ]
 
 const activeMobileTab = ref<MobileTabId>('comms')
+async function openEconomyTab(tab: 'stash' | 'prep') {
+  activeMobileTab.value = tab
+  await nextTick()
+  const panel = document.getElementById(`economy-${tab}`)
+  panel?.scrollIntoView({ block: 'nearest' })
+  panel?.focus({ preventScroll: true })
+}
 const now = useNow({ interval: 1000 })
 const logCount = computed(() => store.log.length)
 const latestLogKey = computed(() => {
@@ -93,14 +102,15 @@ const phaseTimeText = computed(() => {
         @click="store.resetSave()"
       >↺ Reset</button>
     </header>
+    <ExtractionPayoff @open-stash="openEconomyTab('stash')" @open-prep="openEconomyTab('prep')" />
 
     <main v-if="!isMobile" class="app__desktop-main flex-1 grid gap-3 min-h-0" style="grid-template-columns: minmax(240px,260px) minmax(0,1fr) minmax(240px,260px)">
       <aside class="flex flex-col gap-2.5 overflow-visible">
         <HandlerActions />
         <RaiderCard />
         <SkillsPanel />
-        <PreparationPanel />
-        <HomeStash />
+        <PreparationPanel id="economy-prep" tabindex="-1" />
+        <HomeStash id="economy-stash" tabindex="-1" />
         <section class="panel-card shrink-0" aria-label="Lifetime Stats">
           <RaiderLifetimeStats :stats="lifetimeStats" :raider="store.raider" />
         </section>
@@ -116,6 +126,10 @@ const phaseTimeText = computed(() => {
     </main>
 
     <main v-else class="flex-1 min-h-0 flex flex-col gap-2">
+      <MobileRescuePrompt
+        @open-signal="activeMobileTab = 'raider'"
+        @open-meds="activeMobileTab = 'raid'"
+      />
       <PhaseStatusStrip
         :phase="store.phase"
         :zone-name="currentZoneName"
@@ -139,8 +153,8 @@ const phaseTimeText = computed(() => {
         <SkillsPanel />
       </section>
 
-      <section v-if="activeMobileTab === 'prep'" class="app__mobile-fill min-h-0 flex-1 flex flex-col gap-2.5 overflow-y-auto">
-        <PreparationPanel />
+      <section v-show="activeMobileTab === 'prep'" class="app__mobile-fill min-h-0 flex-1 flex flex-col gap-2.5 overflow-y-auto">
+        <PreparationPanel id="economy-prep" tabindex="-1" />
       </section>
 
       <section v-if="activeMobileTab === 'stats'" class="min-h-0 flex-1 flex flex-col gap-2.5 overflow-y-auto pb-3">
@@ -150,7 +164,7 @@ const phaseTimeText = computed(() => {
       </section>
 
       <section v-if="activeMobileTab === 'stash'" class="app__mobile-fill min-h-0 flex-1 flex flex-col gap-2.5 overflow-y-auto">
-        <HomeStash />
+        <HomeStash id="economy-stash" tabindex="-1" />
       </section>
     </main>
 

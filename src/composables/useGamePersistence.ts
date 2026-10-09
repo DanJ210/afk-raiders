@@ -8,7 +8,7 @@
  * - Silent fallback if localStorage is unavailable
  */
 
-import type { GameState, OutcomeContextStats, RaiderLifetimeStats } from '../engine/types.js'
+import type { ExtractionReceipt, GameState, OutcomeContextStats, RaiderLifetimeStats } from '../engine/types.js'
 import { SAVE_VERSION } from '../engine/initialState.js'
 import { EXTRACTING_TICKS, PHASE_DURATIONS } from '../engine/raidStateMachine.js'
 import { createInitialLifetimeStats } from '../engine/stats.js'
@@ -63,6 +63,24 @@ function sanitizeCount(value: unknown): number {
   return typeof value === 'number' && Number.isFinite(value)
     ? Math.max(0, Math.floor(value))
     : 0
+}
+
+function normalizeExtractionReceipt(value: unknown): ExtractionReceipt | null {
+  if (!isRecord(value)) return null
+  const { timestamp, extractionNumber, zone, dangerLevel, lootItemCount, lootValue,
+    stashValueChange, overflowItemCount, overflowCoins, stipendCoins } = value
+  const isCount = (entry: unknown): entry is number =>
+    typeof entry === 'number' && Number.isSafeInteger(entry) && entry >= 0
+  if (
+    !isCount(timestamp) || Number.isNaN(new Date(timestamp).getTime()) || !isCount(extractionNumber) || extractionNumber === 0
+    || (zone !== null && typeof zone !== 'string')
+    || (dangerLevel !== null && dangerLevel !== 'Low' && dangerLevel !== 'Medium' && dangerLevel !== 'High')
+    || !isCount(lootItemCount) || !isCount(lootValue)
+    || typeof stashValueChange !== 'number' || !Number.isSafeInteger(stashValueChange)
+    || !isCount(overflowItemCount) || !isCount(overflowCoins) || !isCount(stipendCoins)
+  ) return null
+  return { timestamp, extractionNumber, zone, dangerLevel, lootItemCount, lootValue,
+    stashValueChange, overflowItemCount, overflowCoins, stipendCoins }
 }
 
 function sanitizeTicksRemaining(value: unknown, fallback: number): number {
@@ -371,6 +389,7 @@ export function useGamePersistence(): GamePersistenceReturn {
         purchasedHealingItems: normalizePurchasedHealingItems((loadedState as unknown as Record<string, unknown>).purchasedHealingItems),
         purchasedShieldRechargers: normalizePurchasedShieldRechargers((loadedState as unknown as Record<string, unknown>).purchasedShieldRechargers),
         coins: (loadedState.coins ?? 0) + sale.coinsGained,
+        lastExtraction: normalizeExtractionReceipt(loadedState.lastExtraction),
         stats: normalizeLifetimeStats(loadedState),
         story: normalizeStoryState((loadedState as unknown as Record<string, unknown>).story),
         raid: {

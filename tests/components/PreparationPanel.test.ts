@@ -9,6 +9,7 @@ function createStore(overrides: Record<string, unknown> = {}) {
   const store = reactive({
     state: {
       coins: 1_000,
+      homeStash: [],
     },
     phase: 'HUB',
     raid: {

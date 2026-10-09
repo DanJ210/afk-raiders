@@ -1,7 +1,9 @@
 # AFK Raiders — Copilot Instructions
 
 ## What this project is
-AFK Raiders is a "zero-player" idle comedy game (inspired by Godville) that parodies extraction-shooter tropes. The player is a **Handler** who watches an autonomous **Raider** deploy, loot, panic, and die via a text comms feed. The player's only input is a small regenerating resource called **Signal**.
+AFK Raiders is an autonomous extraction comedy game (inspired by Godville) that parodies extraction-shooter tropes. The player is a **Handler** who prepares and supports an autonomous **Raider**, manages danger, and helps secure loot. Autonomy applies to movement, searching, and fighting; it does not mean spectator-only gameplay. Signal, preparation, consumables, and extraction decisions should make attention consequential.
+
+`docs/GAME_DESIGN.md` owns product direction: readable survival decisions, useful secured loot, offline continuity, comedy, and planned asynchronous real-player encounters including PvP. `docs/STORY_FIRST_DIRECTION.md` is a historical proposal, not a competing mandate to pause survival/economy work. Keep implemented mechanics, approved targets, and unresolved proposals distinct.
 
 Key docs — read these before making changes:
 - `docs/GAME_DESIGN.md` — game concept, mechanics, comedy content, roadmap
@@ -17,7 +19,7 @@ Key docs — read these before making changes:
 - vite-plugin-pwa — offline-first PWA targeting web, iOS, and Android
 - localStorage persistence for MVP (IndexedDB via localForage later)
 - Vitest for testing
-- MVP is **fully client-side**: no backend, no network calls, no accounts
+- The current local prototype is **fully client-side**: no backend, no network calls, no accounts. Planned real-player encounters require a separately approved authoritative resolution design; account/save sync alone does not provide multiplayer.
 
 ## Hard architectural rules
 1. **Engine purity:** Everything in `src/engine/` is pure TypeScript. No Vue, Pinia, DOM, or browser API imports. The engine must run in Node (for tests) and the browser identically.
@@ -30,7 +32,7 @@ Key docs — read these before making changes:
 
 ## Content & tone guidelines
 - Comedy tone: deadpan, absurd, affectionate parody of extraction-shooter player behavior (loot greed, hoarding, hiding in lockers, "one more crate" syndrome).
-- The comms log IS the product. When in doubt, make the log entry funnier.
+- The comms log carries personality and explains consequential gameplay. Keep jokes funny without obscuring danger, support costs, or the actual effect of an intervention; funny logs alone do not satisfy the gameplay goals.
 - **Legally distinct parody:** never use the "ARC Raiders" trademark, character names, lore text, or assets. Use this project's parody equivalents (see the parody table in `docs/GAME_DESIGN.md`). In our lore, A.R.C. = "Aggressively Roaming Chassis."
 - For source-lore intake, do not commit copied wiki prose or exact source names. Add AFK-original equivalents to `docs/lore/` first, then convert approved concepts into `src/content/*.json`.
 
@@ -41,6 +43,12 @@ Key docs — read these before making changes:
 - Tailwind v4 custom sizing, spacing, text, and duration utilities must be backed by explicit tokens in `src/style.css` (`@theme inline`). Prefer standard Tailwind utilities when they match; otherwise add a semantic token instead of relying on ambiguous numeric utilities.
 
 ## Key Game Features
+
+### Gameplay review priorities
+- Preserve autonomous/offline play while making attended raids measurably better at survival and securing loot. Do not add busywork just to increase clicks.
+- Review threat readability, usable response windows, support opportunity costs, and visible payoff together. Existing pacing values are current mechanics, not immutable product goals.
+- Validate balance with matched starting states/seeds, danger levels, an explicit Handler policy, and approved numeric thresholds. Include resource costs and lost equipment; do not claim improved rewards from loot that never extracted.
+- Treat real-player social/PvP encounters as a core planned pillar. NPC flavor, leaderboards, and spectating are not substitutes. Do not invent offline-loss rules, matching policy, or shared authority without approval.
 
 ### Danger Level & Zone Conditions
 - Each deployment picks both a zone and a seeded zone condition from `src/content/zones/zone_conditions.json`. Conditions are split into minor and major pools; carried-over greed nudges the seeded pool roll toward major conditions before weighted condition selection.
@@ -74,6 +82,10 @@ AFK Raiders includes a parody safe pocket named **Secret Hidden Pocket**:
 
 ### Raid Pacing
 Raid aggression is autonomous; there is no extraction preference slider. `runGreedCheck()` uses fixed seeded probabilities so the Raider generally spends more time raiding before choosing to extract. Natural extraction is disabled until a danger-scaled minimum of active RAIDING ticks has elapsed: `DEFAULT_MIN_NATURAL_EXTRACTION_RAIDING_TICKS` (currently 30 ticks / 15 minutes) on Low danger, +8 ticks on Medium, +16 ticks on High — all derived from the default so raid-duration changes propagate. `CALL_EXTRACT` bypasses this guard; when the pending handler action is consumed on the next simulation tick, it starts EXTRACTING immediately and interrupts any active raid activity or in-progress shield recharge thread. Higher greed directly suppresses the extraction roll once natural extraction is unlocked (a mild linear penalty, about −1.8% at greed 100); greed also represents loot appetite, rarity bias, risky-event pressure, event gates, and decayed major-condition momentum for the next deployment after successful returns. KNOCKED_OUT recovery outcomes reset greed to 0. Greed rises by a small fixed amount when `runGreedCheck()` returns `PUSH_DEEPER`; content events and Handler actions can further adjust it. Low HP without any current-raid bandages increases extraction-start probability after the natural-extraction guard so the raider tries to survive and cash out, but that no-bandage extraction bonus is dampened by danger level so Medium/High conditions still punish unattended raids. If they do have bandages, this no-bandage extraction bonus is not applied. Calm reduces current greed and Pressure raises current greed before the next greed check.
+
+Those minimum durations govern ordinary extraction checks only. `deadlineExtractionChance()` overrides them when time remaining minus the zone's actual extraction countdown is at most 12 ticks. Its chance rises from 10% to 75% before the mild greed penalty, never guaranteeing extraction. It can interrupt blocking robot combat and recharge so surviving Raiders usually leave before timeout. Never start natural extraction at an expired timer or while DOWNED/already extracting; preserve CALL EXTRACT priority and condition races.
+
+Elapsed raid time independently increases exposure through `src/engine/raidPacing.ts`: ambient downing pressure, robot encounter odds, and risky extraction-event weights gain up to 1.5x; diary loot target value gains up to 1.5x; SEARCH and robot rewards increasingly favor valuable catalog items. Keep catalog/stored item prices stable for stash stacking and save compatibility. Exposure is derived from the existing timer, not saved, and does not change the named danger-level label. The late-raid risk/reward tradeoff must be tested using actual awarded item values, not only `backpackValue`.
 
 Separately, the RAIDING phase has a hard timer cap. If the timer hits zero with no extraction in progress, the raid transitions straight to `KNOCKED_OUT` — the round is over. If extraction is already in progress at timeout, a one-shot DOWNED race starts (guarded by `RaidState.raidTimeoutDownedStarted`): extraction completing first still succeeds, the DOWNED timer expiring first fails to KNOCKED_OUT, and a revive during the race permanently escapes that expired timer — it must never re-down the revived raider.
 

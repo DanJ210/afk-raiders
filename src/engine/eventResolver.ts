@@ -36,6 +36,7 @@ import scrapComponentsData from '../content/loot-tables/scrap_components.json'
 import valuablesData from '../content/loot-tables/valuables.json'
 import weaponsPartsData from '../content/loot-tables/weapons_parts.json'
 import { getDangerLevelProfile, rarityWeight, type DangerLevelProfile } from './dangerLevelProfiles.js'
+import { raidLootValueMultiplier, raidRiskMultiplier } from './raidPacing.js'
 import { clampMood, getMoodRarityWeightMultiplier } from './mood.js'
 import { applyShieldedDamage, startShieldRecharge, type ShieldDamageResult } from './shields.js'
 import { getSkillModifierProfile } from './skills.js'
@@ -298,12 +299,12 @@ function adjustedEventWeight(template: EventTemplate, state: GameState): number 
   let weight = template.weight
 
   if (template.effects?.startRaidActivity?.kind === 'ROBOT_ENCOUNTER') {
-    weight *= profile.robotEncounterWeightMultiplier * getGreedDangerEventWeightMultiplier(state.raid.greedLevel)
+    weight *= profile.robotEncounterWeightMultiplier * getGreedDangerEventWeightMultiplier(state.raid.greedLevel) * raidRiskMultiplier(state.raid)
   }
 
   if (state.raid.extracting) {
     if (isRiskyExtractionEvent(template)) {
-      weight *= profile.extractionRiskEventWeightMultiplier * getGreedDangerEventWeightMultiplier(state.raid.greedLevel)
+      weight *= profile.extractionRiskEventWeightMultiplier * getGreedDangerEventWeightMultiplier(state.raid.greedLevel) * (template.effects?.startRaidActivity?.kind === 'ROBOT_ENCOUNTER' ? 1 : raidRiskMultiplier(state.raid))
     } else if (isSafeExtractionEvent(template)) {
       weight *= profile.extractionSafeEventWeightMultiplier
     }
@@ -322,7 +323,7 @@ function targetRaidActivitySearchShare(state: GameState): number {
     ? RAID_ACTIVITY_SEARCH_SHARE_BY_DANGER[state.raid.dangerLevel]
     : RAID_ACTIVITY_SEARCH_SHARE_BY_DANGER.Low
   const baseRobotShare = 1 - baseSearchShare
-  const robotOdds = baseRobotShare * getGreedDangerEventWeightMultiplier(state.raid.greedLevel)
+  const robotOdds = baseRobotShare * getGreedDangerEventWeightMultiplier(state.raid.greedLevel) * raidRiskMultiplier(state.raid)
 
   return baseSearchShare / (baseSearchShare + robotOdds)
 }
@@ -850,7 +851,7 @@ export function applyEffects(
     if (delta > 0) {
       const profile = getDangerLevelProfile(raid.dangerLevel)
       const skillModifiers = getSkillModifierProfile(raider.skills)
-      const profiledDelta = Math.max(1, Math.round(delta * profile.lootValueMultiplier * skillModifiers.lootValueMultiplier))
+      const profiledDelta = Math.max(1, Math.round(delta * profile.lootValueMultiplier * skillModifiers.lootValueMultiplier * raidLootValueMultiplier(raid)))
       const item = pickLootItemForValue(profiledDelta, rng, profile, raider.mood, raid.greedLevel)
       raid = addBackpackItem(raid, item)
       raid = {
