@@ -304,7 +304,7 @@ function adjustedEventWeight(template: EventTemplate, state: GameState): number 
 
   if (state.raid.extracting) {
     if (isRiskyExtractionEvent(template)) {
-      weight *= profile.extractionRiskEventWeightMultiplier * getGreedDangerEventWeightMultiplier(state.raid.greedLevel) * raidRiskMultiplier(state.raid)
+      weight *= profile.extractionRiskEventWeightMultiplier * getGreedDangerEventWeightMultiplier(state.raid.greedLevel) * (template.effects?.startRaidActivity?.kind === 'ROBOT_ENCOUNTER' ? 1 : raidRiskMultiplier(state.raid))
     } else if (isSafeExtractionEvent(template)) {
       weight *= profile.extractionSafeEventWeightMultiplier
     }
