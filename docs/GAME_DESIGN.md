@@ -353,6 +353,8 @@ Tests verify deadline misses, combat interruption, actual zone countdowns, exist
 
 **Next validation:** human playtest threat anticipation, rescue timing, and secured-loot payoff. More valuable late loot is not progression by itself; useful spending/progression and the unresolved asynchronous PvP design still matter.
 
+The mobile usability walkthrough found that a DOWNED countdown was visible on Comms, but both rescue paths were hidden on separate tabs. A persistent DOWNED rescue prompt now appears above every mobile tab: it shows time to knockout, any competing extraction countdown, Signal revive cost/current resources, and revive-med dose count, with shortcuts to the existing controls. It explicitly reports when neither rescue is currently available. This removes a navigation/discoverability barrier; it does not change rescue timing, cost, or balance, and is not a substitute for a human fun/readability playtest.
+
 The full-tick starter cohort also requires at least 95% of successful Raiders at each danger level to extract strictly before the timer-zero tick, rather than relying on the expiry race to satisfy the pacing goal.
 
 ## 10. Legal Positioning

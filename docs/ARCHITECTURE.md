@@ -33,6 +33,8 @@ The simulation engine is **pure TypeScript with zero framework imports**. Vue re
 
 Product goals and verification gates live in [GAME_DESIGN.md](GAME_DESIGN.md). The current client-only prototype remains the implementation baseline. Planned asynchronous real-player encounters do not silently expand that boundary or authorize shared results from local saves.
 
+On mobile, [MobileRescuePrompt.vue](../src/components/MobileRescuePrompt.vue) stays above the tab content while the Raider is DOWNED. It renders the knockout/extraction countdowns and available Signal, amplifiers, and revive-med quantities. Its shortcuts switch to the existing Raider (Signal) and Raid (field meds) tabs; they do not spend resources or simulate a revive. The existing action boundaries remain authoritative. Desktop retains its side-by-side controls.
+
 ## Core engine contracts
 - Determinism: the same seed + state must produce the same outcomes, diary sequence, and activity-thread sequence.
 - Single damage pipeline: all incoming HP damage must flow through shared shield-aware helpers (no ad hoc HP subtraction).

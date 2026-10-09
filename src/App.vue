@@ -16,6 +16,7 @@ import PhaseStatusStrip from './components/PhaseStatusStrip.vue'
 import SkillsPanel from './components/SkillsPanel.vue'
 import RaiderLifetimeStats from './components/RaiderLifetimeStats.vue'
 import PreparationPanel from './components/PreparationPanel.vue'
+import MobileRescuePrompt from './components/MobileRescuePrompt.vue'
 
 const store = useGameStore()
 const isMobile = useMediaQuery('(max-width: 600px)')
@@ -116,6 +117,10 @@ const phaseTimeText = computed(() => {
     </main>
 
     <main v-else class="flex-1 min-h-0 flex flex-col gap-2">
+      <MobileRescuePrompt
+        @open-signal="activeMobileTab = 'raider'"
+        @open-meds="activeMobileTab = 'raid'"
+      />
       <PhaseStatusStrip
         :phase="store.phase"
         :zone-name="currentZoneName"
