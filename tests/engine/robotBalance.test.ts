@@ -139,12 +139,14 @@ describe('robot balance guardrails', () => {
     const starter = createRobotState({ dangerLevel: 'High', shielded: false, levelXp: 0 })
     const maxLevel = createRobotState({ dangerLevel: 'High', shielded: false, levelXp: xpRequiredForLevel(75) })
     const mediumStarter = createRobotState({ dangerLevel: 'Medium', shielded: false, levelXp: 0 })
-    const starterDamage = robotRoundHpDamage('tank_overcompensation', starter)
-    const maxLevelDamage = robotRoundHpDamage('tank_overcompensation', maxLevel)
+    // The max-level 1.6% trim needs several low-damage rounds to accumulate a full HP.
+    const rounds = 8
+    const starterDamage = robotRoundHpDamage('tank_overcompensation', starter, rounds)
+    const maxLevelDamage = robotRoundHpDamage('tank_overcompensation', maxLevel, rounds)
 
     expect(maxLevelDamage).toBeLessThan(starterDamage)
-    expect(maxLevelDamage).toBeGreaterThanOrEqual(robotRoundHpDamage('tank_overcompensation', mediumStarter))
-    expect(starterDamage - maxLevelDamage).toBeLessThanOrEqual(3)
+    expect(maxLevelDamage).toBeGreaterThanOrEqual(robotRoundHpDamage('tank_overcompensation', mediumStarter, rounds))
+    expect(starterDamage - maxLevelDamage).toBeLessThanOrEqual(3 * rounds)
   })
 
   it('keeps mood resilience helpful but smaller than the danger jump', () => {
@@ -155,12 +157,15 @@ describe('robot balance guardrails', () => {
       raider: { ...highNeutral.raider, mood: 5 },
     }
 
-    const mediumDamage = robotRoundHpDamage('tank_overcompensation', mediumNeutral)
-    const highDamage = robotRoundHpDamage('tank_overcompensation', highNeutral)
-    const highMoodDamage = robotRoundHpDamage('tank_overcompensation', highMood)
+    const rounds = 3
+    const mediumDamage = robotRoundHpDamage('tank_overcompensation', mediumNeutral, rounds)
+    const highDamage = robotRoundHpDamage('tank_overcompensation', highNeutral, rounds)
+    const highMoodResult = advanceRobotRounds('tank_overcompensation', highMood, rounds)
+    const highMoodDamage = highMood.raider.hp - highMoodResult.state.raider.hp
 
     expect(highMoodDamage).toBeLessThan(highDamage)
     expect(highMoodDamage).toBeGreaterThanOrEqual(mediumDamage)
+    expect(highMoodResult.activityEvents.some(event => event.text.includes('Resilience mitigated'))).toBe(true)
   })
 
   it('keeps max Hiding in Lockers helpful but below the High-danger curve', () => {

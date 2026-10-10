@@ -32,7 +32,7 @@ import narratorEventsData from '../../src/content/narrator_events.json'
 import arcsData from '../../src/content/arcs/arcs.json'
 import { MAX_RAIDER_LEVEL } from '../../src/engine/raiderLevel'
 import { raidActivities } from '../../src/engine/raidActivities'
-import type { RaidActivityDefinition, RaiderLevelContent, SkillDefinition, SkillTrackId } from '../../src/engine/types'
+import type { RaiderLevelContent, SkillDefinition, SkillTrackId } from '../../src/engine/types'
 
 const rawLoot = [
   ...(apparelAccessoriesData as { items: typeof loot }).items,
@@ -1211,9 +1211,9 @@ describe('content validation', () => {
       for (const arc of arcsData.arcs) {
         const texts = [arc.completedText, ...arc.beats.flatMap(beat => [
           beat.startText,
-          ...(beat.completedText ? [beat.completedText] : []),
+          ...('completedText' in beat && typeof beat.completedText === 'string' ? [beat.completedText] : []),
           ...(beat.ambientTexts?.HUB ?? []),
-          ...(beat.ambientTexts?.RAIDING ?? []),
+          ...(beat.ambientTexts && 'RAIDING' in beat.ambientTexts ? beat.ambientTexts.RAIDING ?? [] : []),
         ])]
 
         for (const text of texts) {

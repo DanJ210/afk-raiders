@@ -7,6 +7,7 @@
 
 import { describe, it, expect } from 'vitest'
 import { createRNG } from '../../src/engine/rng'
+import { createInitialState } from '../../src/engine/initialState'
 import { deadlineExtractionChance, DEFAULT_MIN_NATURAL_EXTRACTION_RAIDING_TICKS, runGreedCheck } from '../../src/engine/greedCheck'
 import { PHASE_DURATIONS } from '../../src/engine/raidStateMachine'
 import type { RaidState } from '../../src/engine/types'
@@ -20,6 +21,7 @@ interface GreedCheckOpts {
 
 function makeRaid(overrides: Partial<RaidState> = {}): RaidState {
   const baseRaid: RaidState = {
+    ...createInitialState(0).raid,
     zone: 'damp_battlegrounds',
     dangerLevel: 'Low',
     shield: null,

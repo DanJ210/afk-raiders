@@ -6,7 +6,7 @@ import { skillDefinitionById } from '../../src/engine/skills'
 import { MAX_LOG_SIZE } from '../../src/engine/log'
 import { processTick } from '../../src/engine/tick'
 import { xpRequiredForLevel, getRevivalSignalCost } from '../../src/engine/raiderLevel'
-import type { GameState } from '../../src/engine/types'
+import { CommsPriority, type GameState, type LogEvent } from '../../src/engine/types'
 import { useHandlerActions } from '../../src/composables/useHandlerActions'
 
 function createHarness(state: GameState = createInitialState(0)) {
@@ -14,7 +14,7 @@ function createHarness(state: GameState = createInitialState(0)) {
   const rngRef = { current: createRNG(123) }
   const lastTickAtRef = { value: 0 }
   const persistCallback = vi.fn()
-  const publishEvents = vi.fn()
+  const publishEvents = vi.fn<(events: LogEvent[]) => void>()
 
   const actions = useHandlerActions(
     stateRef,
@@ -123,12 +123,13 @@ describe('useHandlerActions Signal Handling skill', () => {
   it('caps the log when Ready Up appends the deployment transition', () => {
     const initial = createInitialState(0)
     const now = Date.now()
-    const existingLog = Array.from({ length: MAX_LOG_SIZE }, (_, index) => ({
+    const existingLog: LogEvent[] = Array.from({ length: MAX_LOG_SIZE }, (_, index) => ({
       id: `existing_${index}`,
       tick: index,
       timestamp: index,
       text: `Existing log ${index}`,
       phase: 'HUB' as const,
+      commsPriority: CommsPriority.Ambient,
     }))
     const { actions, stateRef, persistCallback } = createHarness({
       ...initial,
@@ -314,6 +315,7 @@ describe('useHandlerActions Signal Handling skill', () => {
     expect(stateRef.value.signal.current).toBe(SIGNAL_CAP - 4)
     expect(stateRef.value.raider.hp).toBe(25)
     expect(stateRef.value.raid.downed).toBeNull()
+    expect(publishEvents).toHaveBeenCalledOnce()
     expect(persistCallback).toHaveBeenCalledOnce()
   })
 

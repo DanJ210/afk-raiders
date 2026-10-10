@@ -1,6 +1,7 @@
 import { computed, ref } from 'vue'
 import { describe, expect, it } from 'vitest'
 import { createInitialState } from '../../src/engine/initialState'
+import type { GameState } from '../../src/engine/types'
 import { useBackpackViewModel } from '../../src/composables/useBackpackViewModel'
 
 describe('useBackpackViewModel', () => {
@@ -113,9 +114,9 @@ describe('useBackpackViewModel', () => {
       rarity: 4,
       quantity: 1,
     }
-    const raidRef = ref({
+    const raidRef = ref<GameState['raid']>({
       ...initial.raid,
-      phase: 'RAIDING' as const,
+      phase: 'RAIDING',
       downed: null,
       healingItems: [panicPaddles],
     })

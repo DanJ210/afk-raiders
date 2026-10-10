@@ -699,7 +699,8 @@ describe('deterministic snapshot', () => {
           name: 'Field Recharger',
           ticksRemaining: 2,
           totalTicks: 4,
-          chargePerTick: 8,
+          totalCharge: 32,
+          chargeRemaining: 16,
         },
         activeRaidActivity: {
           id: 'robot_encounter_standard',
