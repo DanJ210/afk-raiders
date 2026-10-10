@@ -361,5 +361,50 @@ Receipt shortcuts open the stash for **manual selling** or preparation to choose
 
 The full-tick starter cohort also requires at least 95% of successful Raiders at each danger level to extract strictly before the timer-zero tick, rather than relying on the expiry race to satisfy the pacing goal.
 
+### Extraction timing and economy measurement — 2026-10-09
+
+The [survival audit](../tests/composables/survivalAudit.test.ts) now compares **24 matched seeds, eight hours each**, for five exit policies with and without paid preparation. These results reflect the current elapsed-time/urgency tuning, not the earlier pre-tuning baseline.
+
+All profiles start in HUB with the same **500-coin experimental capital**, Tea Kettle, full Signal, and no progression or stock. No capital is added later. This tests a funded strategy, not first-session affordability. Natural zones/conditions, progression, Signal scarcity, HUB/deployment/recovery time, and incomplete final raids remain in the simulation.
+
+- Exit requests use elapsed raid ticks: early **20**, mid **36**, deep **50**, overextended **58**. Support uses the existing audit policy. All attended policies may extract early at HP ≤50% after healing with a nonempty haul; early/mid/deep also attempt extraction at ≤6 ticks remaining. Overextended omits that fallback. Requests require legal, affordable CALL EXTRACT; autonomous extraction is never suppressed. Names describe requested policies, not guaranteed actual raid durations.
+- Paid preparation runs once on arrival in HUB: sell stash through the real Handler action, buy/rebuy Aspperigo if affordable, repair it if damaged and affordable, then top stock up to three Blue Bandages, one Panic Paddles, and two Fizz Cells in that order. Stage available stock using preparation helpers. Purchases never exceed coins; no Ready Up, Calm, Pressure, or pocket action is used.
+- The paid "unattended" row is **preparation-only**: HUB management but no field intervention. The found-only unattended row is the fully hands-off control.
+- Current purchased loadout stock remains in persistent inventory across deployments; deployed copies are not charged as another purchase by the game. The measurement preserves that behavior rather than silently introducing consumable depletion.
+
+#### Accounting
+**Gross secured/hour:** sum each tick's increase in stash value + coins, before Handler transactions. This includes successful loot, overflow conversion, stipends, and failure-pocket recovery if present, but excludes unextracted backpack loot. Selling stash into coins preserves value rather than adding another reward.
+
+**Retained net/hour:** `(ending retained wealth - starting retained wealth) / 8 hours`. Retained wealth includes stash, coins, purchased stock at catalog replacement cost, and owned equipment. Equipment is valued at catalog replacement cost less one repair-cost liability if damaged, floored at zero. This is an explicit retained-utility proxy, not a weapon resale price or linear durability depreciation. Unextracted backpack/field-med copies and Signal are not assets in this calculation. Purchases reduce coins and add assets; do not subtract purchase/loss costs again.
+
+**Replacement proxy/hour:** `(gross secured - full staged supply replacement cost for every deployment - actual repairs - weapon purchases + ending equipment value - starting equipment value) / hours`. This separate conservative scenario charges the entire staged loadout even if unused and excludes unspent stock purchases. It asks what returns would look like if deployed supplies had to be replaced each raid; it is **not the current economy** or an implemented consumption rule. Found meds have no purchase cost; found rechargers consumed cannot enter secured loot, so do not deduct their value again.
+
+The report also lists supply purchases, weapon purchases, repairs, lost-weapon replacement value, deployed supply replacement value, median profile net/hour, nearest-rank 10th-percentile profile net/hour, successful haul size, and actual successful raid duration. Costs are diagnostic breakdowns, not additional deductions from retained net. Tests reconcile gross gains with coins/stash changes and purchase spend, check asset retention/repair accounting, deterministic paid replay, affordability, and finite report values. No new balance acceptance threshold is asserted.
+
+| Preparation | Exit policy | Extraction rate | Retained net/hour | Replacement proxy/hour | Mean successful haul | Mean successful RAIDING minutes |
+|---|---|---|---|---|---|---|
+| Found-only | Unattended | 67.5% | 2,374.2 | 2,374.2 | 2,072.0 | 25.5 |
+| Found-only | Early | 84.8% | 2,300.9 | 2,300.9 | 1,217.0 | 14.9 |
+| Found-only | Mid | 86.6% | 2,583.8 | 2,583.8 | 1,498.8 | 18.4 |
+| Found-only | Deep | 94.1% | 2,927.3 | 2,927.3 | 1,687.8 | 19.9 |
+| Found-only | Overextended | 95.2% | 2,950.9 | 2,950.9 | 1,696.3 | 20.1 |
+| Paid | Preparation-only | 68.5% | 2,485.2 | 2,061.5 | 2,197.3 | 25.5 |
+| Paid | Early | 97.5% | 2,631.9 | 2,111.9 | 1,335.7 | 16.0 |
+| Paid | Mid | 99.2% | 3,159.3 | 2,690.5 | 1,717.6 | 19.0 |
+| Paid | Deep | 100.0% | 3,585.9 | 3,162.1 | 2,136.4 | 22.4 |
+| Paid | Overextended | 100.0% | 3,488.6 | 3,069.8 | 2,091.7 | 22.7 |
+
+Paid early/deep median profile returns were **2,399.4 / 3,811.8** per hour; 10th-percentile returns were **1,899.0 / 2,314.4**. These small-cohort distributions are descriptive, not confidence intervals or proof of optimal strategies.
+
+**Interpretation:** Deep handling earns more than early handling in this cohort, even under the replacement-cost scenario. However, paid deep and overextended policies had no resolved failures. Their actual successful durations are shorter than the requested exit tick because emergency and autonomous extraction remain active. The measurement therefore does not establish that deliberately staying near the deadline incurs the intended highest risk. Nor do offline successful hauls look uniformly "modest": unattended successes are relatively large, but much less frequent. Before tuning, review actual exposure, offline reward goals, supply-stock semantics, and alternative resource budgets; do not treat a 100% sample success rate as a guarantee.
+
+To reproduce this measurement independently of the original JSON report:
+
+```powershell
+$env:SURVIVAL_ECONOMY_REPORT = '1'
+npm test -- tests\composables\survivalAudit.test.ts --disableConsoleIntercept --reporter=verbose
+Remove-Item Env:SURVIVAL_ECONOMY_REPORT
+```
+
 ## 10. Legal Positioning
 Parody enjoys some protection, but we do **not** use the "ARC Raiders" trademark, logos, names, lore text, or assets — especially important for app-store distribution. Branding is original; positioning is "affectionate parody of extraction shooters" generally. All names in the parody table above are original to this project. See [docs/lore/content-guidelines/LEGAL_GUARDRAILS.md](lore/content-guidelines/LEGAL_GUARDRAILS.md) before adding new lore or content.

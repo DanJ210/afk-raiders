@@ -9,6 +9,7 @@ import {
   purchaseShieldRecharger,
   purchaseWeapon,
   repairWeapon,
+  samplePurchaseComms,
   setSelectedHealingLoadout,
   setSelectedShieldRechargerLoadout,
 } from '../engine/loadout.js'
@@ -41,20 +42,22 @@ export function usePreparationActions(
     return createRNG((((getSeed?.() ?? 0) ^ now) >>> 0))
   }
 
-  function commitLogged(result: NonNullable<ReturnType<typeof purchaseWeapon>>) {
+  function commitLogged(result: { state: GameState; event: LogEvent | null }) {
+    const events = result.event ? [result.event] : []
     stateRef.value = {
       ...result.state,
-      log: appendLogEntries(stateRef.value.log, [result.event]),
+      log: events.length ? appendLogEntries(stateRef.value.log, events) : stateRef.value.log,
     }
-    publishEvents?.([result.event])
+    publishEvents?.(events)
     persistState()
   }
 
   function purchaseWeaponAction(weaponId: string) {
     const now = Date.now()
-    const result = purchaseWeapon(stateRef.value, weaponId, now, narrationRng(now))
+    const rng = narrationRng(now)
+    const result = purchaseWeapon(stateRef.value, weaponId, now, rng)
     if (!result) return
-    commitLogged(result)
+    commitLogged(samplePurchaseComms(result, rng))
   }
 
   function repairWeaponAction(weaponId: string) {
@@ -73,16 +76,18 @@ export function usePreparationActions(
 
   function purchaseHealingItemAction(itemId: string, quantity = 1) {
     const now = Date.now()
-    const result = purchaseHealingItem(stateRef.value, itemId, quantity, now, narrationRng(now))
+    const rng = narrationRng(now)
+    const result = purchaseHealingItem(stateRef.value, itemId, quantity, now, rng)
     if (!result) return
-    commitLogged(result)
+    commitLogged(samplePurchaseComms(result, rng))
   }
 
   function purchaseShieldRechargerAction(itemId: string, quantity = 1) {
     const now = Date.now()
-    const result = purchaseShieldRecharger(stateRef.value, itemId, quantity, now, narrationRng(now))
+    const rng = narrationRng(now)
+    const result = purchaseShieldRecharger(stateRef.value, itemId, quantity, now, rng)
     if (!result) return
-    commitLogged(result)
+    commitLogged(samplePurchaseComms(result, rng))
   }
 
   function setSelectedHealingLoadoutAction(selections: Array<{ itemId: string; quantity: number }>) {

@@ -1,3 +1,4 @@
+import process from 'node:process'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { useHandlerActions } from '../../src/composables/useHandlerActions'
 import { catchUp, MAX_CATCHUP_TICKS, TICK_INTERVAL_MS } from '../../src/engine/catchUp'
@@ -6,6 +7,7 @@ import { createInitialState } from '../../src/engine/initialState'
 import {
   consumeSelectedPreparationLoadouts, getHealingPurchaseCost, getShieldRechargerPurchaseCost,
   purchaseHealingItem, purchaseShieldRecharger, setSelectedHealingLoadout, setSelectedShieldRechargerLoadout,
+  equipWeapon, purchaseWeapon, repairWeapon,
 } from '../../src/engine/loadout'
 import { PHASE_DURATIONS } from '../../src/engine/raidStateMachine'
 import { getRevivalSignalCost } from '../../src/engine/raiderLevel'
@@ -21,6 +23,7 @@ const POLICIES: Policy[] = ['unattended', 'support', 'support_extract']
 const RAID_SEEDS = 120
 const SESSION_SEEDS = 24
 const PREPARATION_COST = 240
+const EXTRACTION_TIMINGS = { early: 20, mid: 36, deep: 50, overextended: 58 } as const
 
 interface Metrics {
   ticks: number
@@ -87,6 +90,8 @@ function applyPolicy(
   actions: ReturnType<typeof useHandlerActions>,
   policy: Policy,
   totals: Metrics,
+  extractionTick = 20,
+  deadlineFallback = true,
 ) {
   if (policy === 'unattended' || stateRef.value.raid.phase !== 'RAIDING') return
   const perform = (action: () => void) => {
@@ -132,10 +137,10 @@ function applyPolicy(
   state = stateRef.value
   // Decide extraction before starting a recharge it would immediately interrupt.
   const wantsExtraction = policy === 'support_extract' && (
-    state.raid.phaseTicksRemaining <= 6
+    (deadlineFallback && state.raid.phaseTicksRemaining <= 6)
     || (state.raid.backpackValue > 0 && (
       state.raider.hp <= state.raider.maxHp * 0.5
-      || state.raid.phaseTicksRemaining <= PHASE_DURATIONS.RAIDING - 20
+      || state.raid.phaseTicksRemaining <= PHASE_DURATIONS.RAIDING - extractionTick
     ))
   )
   if (wantsExtraction && !state.raid.extracting && !state.raid.forceExtract
@@ -160,26 +165,110 @@ function applyPolicy(
   }
 }
 
+interface EconomyMetrics {
+  grossSecured: number
+  supplyPurchases: number
+  weaponPurchases: number
+  repairs: number
+  deployedSupplyReplacement: number
+  successfulHauls: number[]
+  successfulRaidTicks: number[]
+}
+
+function stockValue(state: GameState): number {
+  return state.purchasedHealingItems.reduce((sum, item) => sum + item.quantity * getHealingPurchaseCost(item.itemId), 0)
+    + state.purchasedShieldRechargers.reduce((sum, item) => sum + item.quantity * getShieldRechargerPurchaseCost(item.itemId), 0)
+}
+
+// Replacement-value proxy, not a weapon sale price; damaged weapons carry a repair liability.
+function equipmentValue(state: GameState): number {
+  return state.ownedWeapons.reduce((sum, owned) => {
+    const weapon = findWeapon(owned.weaponId)
+    if (!weapon) throw new Error(`Unknown audit weapon ${owned.weaponId}`)
+    return sum + Math.max(0, weapon.value - (owned.durability < weapon.durabilityMax ? weapon.repairCost : 0))
+  }, 0)
+}
+
+function retainedWealth(state: GameState): number {
+  return securedWealth(state) + stockValue(state) + equipmentValue(state)
+}
+
+function prepareEconomy(state: GameState, now: number, economy: EconomyMetrics): GameState {
+  if (state.raid.phase !== 'HUB') return state
+  let next = state
+  const commit = (result: { state: GameState } | null, category: 'supplyPurchases' | 'weaponPurchases' | 'repairs') => {
+    const updated = requireTransaction(result)
+    economy[category] += next.coins - updated.coins
+    next = updated
+  }
+  const weapon = findWeapon('aspperigo')
+  if (!weapon) throw new Error('Missing audit weapon')
+  let owned = next.ownedWeapons.find(item => item.weaponId === weapon.id)
+  if (!owned && next.coins >= weapon.value) {
+    commit(purchaseWeapon(next, weapon.id, now), 'weaponPurchases')
+    owned = next.ownedWeapons.find(item => item.weaponId === weapon.id)
+  }
+  if (owned) {
+    if (owned.durability < weapon.durabilityMax && next.coins >= weapon.repairCost) {
+      commit(repairWeapon(next, weapon.id, now), 'repairs')
+    }
+    next = requireTransaction(equipWeapon(next, weapon.id, now))
+  }
+  for (const [id, quantity] of [['bandage_blue', 3], ['panic_paddles', 1]] as const) {
+    const available = next.purchasedHealingItems.find(item => item.itemId === id)?.quantity ?? 0
+    const wanted = Math.min(quantity - available, Math.floor(next.coins / getHealingPurchaseCost(id)))
+    if (wanted > 0) commit(purchaseHealingItem(next, id, wanted, now), 'supplyPurchases')
+  }
+  const available = next.purchasedShieldRechargers.find(item => item.itemId === 'fizz_cell')?.quantity ?? 0
+  const wanted = Math.min(2 - available, Math.floor(next.coins / getShieldRechargerPurchaseCost('fizz_cell')))
+  if (wanted > 0) commit(purchaseShieldRecharger(next, 'fizz_cell', wanted, now), 'supplyPurchases')
+  next = requireTransaction(setSelectedHealingLoadout(next, next.purchasedHealingItems.map(item => ({
+    itemId: item.itemId, quantity: item.quantity,
+  })), now))
+  return requireTransaction(setSelectedShieldRechargerLoadout(next, next.purchasedShieldRechargers.map(item => ({
+    itemId: item.itemId, quantity: item.quantity,
+  })), now))
+}
+
 function securedWealth(state: GameState): number {
   return getTotalItemValue(state.homeStash) + state.coins
 }
 
-function simulate(initial: GameState, seed: number, policy: Policy, singleRaid: boolean) {
+function simulate(initial: GameState, seed: number, policy: Policy, singleRaid: boolean, extractionTick?: number, paidPreparation = false) {
   const stateRef = { value: structuredClone(initial) }
   const rngRef = { current: createRNG(seed) }
   const lastTickAt = { value: 0 }
   const totals = metrics()
+  const economy: EconomyMetrics = {
+    grossSecured: 0, supplyPurchases: 0, weaponPurchases: 0, repairs: 0,
+    deployedSupplyReplacement: 0, successfulHauls: [], successfulRaidTicks: [],
+  }
   const actions = useHandlerActions(
     stateRef, rngRef, lastTickAt,
     () => stateRef.value.pendingCalm || stateRef.value.pendingPressure || stateRef.value.raid.forceExtract,
     () => undefined, () => { throw new Error('Audit must not reset the save') }, () => undefined,
   )
   const startingWealth = securedWealth(initial)
+  const startingRetained = retainedWealth(initial)
+  if (paidPreparation) stateRef.value = prepareEconomy(stateRef.value, 0, economy)
   for (let tick = 1; tick <= MAX_CATCHUP_TICKS; tick += 1) {
     const before = stateRef.value
     const now = tick * TICK_INTERVAL_MS
     const result = processTick(before, rngRef.current, now)
     stateRef.value = result.state
+    const tickGain = securedWealth(result.state) - securedWealth(before)
+    economy.grossSecured += tickGain
+    if (result.state.stats.extracts.total > before.stats.extracts.total) {
+      economy.successfulHauls.push(tickGain)
+      economy.successfulRaidTicks.push(PHASE_DURATIONS.RAIDING - before.raid.phaseTicksRemaining + 1)
+    }
+    if (before.raid.phase === 'HUB' && result.state.raid.phase === 'DEPLOYING') {
+      economy.deployedSupplyReplacement += before.raid.selectedHealingLoadout.reduce(
+        (sum, item) => sum + item.quantity * getHealingPurchaseCost(item.itemId), 0,
+      ) + before.raid.selectedShieldRechargerLoadout.reduce(
+        (sum, item) => sum + item.quantity * getShieldRechargerPurchaseCost(item.itemId), 0,
+      )
+    }
     lastTickAt.value = now
     totals.ticks += 1
     if (before.raid.phase === 'RAIDING') totals.raidingTicks += 1
@@ -211,13 +300,22 @@ function simulate(initial: GameState, seed: number, policy: Policy, singleRaid: 
     }
     if (singleRaid && (result.state.stats.extracts.total > 0 || result.state.stats.deaths.total > 0)) break
     vi.spyOn(Date, 'now').mockReturnValue(now + 1)
-    applyPolicy(stateRef, actions, policy, totals)
+    applyPolicy(stateRef, actions, policy, totals, extractionTick, extractionTick !== EXTRACTION_TIMINGS.overextended)
+    if (paidPreparation && tick < MAX_CATCHUP_TICKS && before.raid.phase !== 'HUB' && stateRef.value.raid.phase === 'HUB') {
+      for (const item of [...stateRef.value.homeStash]) actions.sellHomeStashItem(item.itemId)
+      stateRef.value = prepareEconomy(stateRef.value, now + 1, economy)
+    }
   }
   totals.extracts = stateRef.value.stats.extracts.total - initial.stats.extracts.total
   totals.failures = stateRef.value.stats.deaths.total - initial.stats.deaths.total
   totals.securedValue = securedWealth(stateRef.value) - startingWealth
   if (singleRaid && totals.extracts + totals.failures !== 1) throw new Error(`Unresolved audit raid: ${seed}`)
-  return { state: stateRef.value, seed: rngRef.current.getSeed(), totals }
+  const purchaseSpend = economy.supplyPurchases + economy.weaponPurchases + economy.repairs
+  expect(totals.securedValue).toBe(economy.grossSecured - purchaseSpend)
+  const retainedGain = retainedWealth(stateRef.value) - startingRetained
+  const sustainableProxy = economy.grossSecured - economy.deployedSupplyReplacement - economy.repairs
+    + equipmentValue(stateRef.value) - equipmentValue(initial) - economy.weaponPurchases
+  return { state: stateRef.value, seed: rngRef.current.getSeed(), totals, economy, retainedGain, sustainableProxy }
 }
 
 function summarize(label: string, results: ReturnType<typeof simulate>[], preparationSpent = 0) {
@@ -262,6 +360,29 @@ describe('survival audit baseline (no balance thresholds)', () => {
     expect(securedWealth(state)).toBe(41)
   })
 
+  it('retains unspent stock and equipment without double charging purchases or ignoring wear', () => {
+    const initial = { ...createInitialState(0), coins: 500 }
+    const economy: EconomyMetrics = {
+      grossSecured: 0, supplyPurchases: 0, weaponPurchases: 0, repairs: 0,
+      deployedSupplyReplacement: 0, successfulHauls: [], successfulRaidTicks: [],
+    }
+    const prepared = prepareEconomy(initial, 0, economy)
+    expect(economy.supplyPurchases).toBe(PREPARATION_COST)
+    expect(economy.weaponPurchases).toBe(65)
+    expect(retainedWealth(prepared)).toBe(retainedWealth(initial))
+    const worn = {
+      ...prepared,
+      ownedWeapons: prepared.ownedWeapons.map(item => item.weaponId === 'aspperigo'
+        ? { ...item, durability: item.durability - 1 } : item),
+    }
+    expect(retainedWealth(worn)).toBe(retainedWealth(initial) - 18)
+    const repaired = prepareEconomy(worn, 1, economy)
+    expect(economy.repairs).toBe(18)
+    expect(retainedWealth(repaired)).toBe(retainedWealth(worn))
+    expect(simulate(initial, 17, 'support_extract', false, 50, true))
+      .toEqual(simulate(initial, 17, 'support_extract', false, 50, true))
+  })
+
   it('reports fixed cohorts and verifies eight-hour unattended catch-up parity', () => {
     const report: ReturnType<typeof summarize>[] = []
     for (const danger of DANGERS) {
@@ -299,5 +420,48 @@ describe('survival audit baseline (no balance thresholds)', () => {
       report.push(summarize(`8h/natural_zones/${policy}`, results))
     }
     if (process.env.SURVIVAL_AUDIT_REPORT === '1') console.log(JSON.stringify(report, null, 2))
+  }, 120_000)
+
+  it('compares extraction timings with an affordable preparation loop and reconciled accounting', () => {
+    const report = []
+    for (const prepared of [false, true]) {
+      for (const timing of ['unattended', 'early', 'mid', 'deep', 'overextended'] as const) {
+        const results = Array.from({ length: SESSION_SEEDS }, (_, i) => {
+          const initial = { ...createInitialState(0), coins: 500 }
+          const tick = timing === 'unattended' ? undefined : EXTRACTION_TIMINGS[timing]
+          return simulate(initial, i + 1, timing === 'unattended' ? 'unattended' : 'support_extract', false, tick, prepared)
+        })
+        const hourly = (values: number[]) => values.reduce((sum, value) => sum + value, 0) / (SESSION_SEEDS * 8)
+        const sorted = results.map(result => result.retainedGain / 8).sort((a, b) => a - b)
+        const hauls = results.flatMap(result => result.economy.successfulHauls)
+        const raidTicks = results.flatMap(result => result.economy.successfulRaidTicks)
+        const extracts = results.reduce((sum, result) => sum + result.totals.extracts, 0)
+        const failures = results.reduce((sum, result) => sum + result.totals.failures, 0)
+        report.push({
+          preparation: prepared ? 'paid' : 'found_only', timing,
+          extractionRate: extracts / (extracts + failures),
+          grossSecuredPerHour: hourly(results.map(result => result.economy.grossSecured)),
+          retainedNetPerHour: hourly(results.map(result => result.retainedGain)),
+          sustainableReplacementProxyPerHour: hourly(results.map(result => result.sustainableProxy)),
+          medianRetainedNetPerHour: (sorted[11] + sorted[12]) / 2,
+          p10RetainedNetPerHour: sorted[Math.ceil(sorted.length * 0.1) - 1],
+          meanSuccessfulHaul: hauls.reduce((sum, value) => sum + value, 0) / hauls.length,
+          meanSuccessfulRaidingMinutes: raidTicks.reduce((sum, value) => sum + value, 0) / raidTicks.length / 2,
+          supplyPurchasesPerHour: hourly(results.map(result => result.economy.supplyPurchases)),
+          weaponPurchasesPerHour: hourly(results.map(result => result.economy.weaponPurchases)),
+          repairsPerHour: hourly(results.map(result => result.economy.repairs)),
+          weaponLossValuePerHour: hourly(results.map(result => result.totals.weaponLossValue)),
+          deployedSupplyReplacementPerHour: hourly(results.map(result => result.economy.deployedSupplyReplacement)),
+        })
+        for (const result of results) {
+          expect(result.state.coins).toBeGreaterThanOrEqual(0)
+          expect(result.totals.ticks).toBe(MAX_CATCHUP_TICKS)
+        }
+        for (const value of Object.values(report.at(-1)!)) {
+          if (typeof value === 'number') expect(Number.isFinite(value)).toBe(true)
+        }
+      }
+    }
+    if (process.env.SURVIVAL_ECONOMY_REPORT === '1') console.log(JSON.stringify(report, null, 2))
   }, 120_000)
 })

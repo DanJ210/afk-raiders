@@ -525,6 +525,12 @@ export interface GameState {
   purchasedHealingItems: HealingItemStack[]
   /** Purchased HUB stock of shield rechargers available for future raid loadouts. */
   purchasedShieldRechargers: ShieldRechargerStack[]
+  /** Optional narration budget; old saves start with no purchase chatter. */
+  purchaseComms?: {
+    hubVisit: number
+    count: number
+    lastTimestamp: number
+  }
   /** Spendable coins from manual/overflow stash sales and extraction stipends. */
   coins: number
   lastExtraction: ExtractionReceipt | null

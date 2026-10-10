@@ -29,6 +29,35 @@ export interface LoadoutTransactionResult {
   event: LogEvent
 }
 
+export function samplePurchaseComms(
+  result: LoadoutTransactionResult,
+  rng: RNG,
+): { state: GameState; event: LogEvent | null } {
+  const { state, event } = result
+  // Both raid outcomes increment their lifetime count before returning to HUB.
+  const hubVisit = state.raider.extractCount + state.raider.deathCount
+  const budget = state.purchaseComms?.hubVisit === hubVisit ? state.purchaseComms : undefined
+  if (
+    state.raid.phase !== 'HUB'
+    || (budget && (budget.count >= 2 || event.timestamp - budget.lastTimestamp < 30_000))
+    || rng.next() >= 0.25
+  ) {
+    return { state, event: null }
+  }
+
+  return {
+    state: {
+      ...state,
+      purchaseComms: {
+        hubVisit,
+        count: (budget?.count ?? 0) + 1,
+        lastTimestamp: event.timestamp,
+      },
+    },
+    event,
+  }
+}
+
 function createPurchaseEvent(id: string, tick: number, timestamp: number, text: string): LogEvent {
   return {
     id,

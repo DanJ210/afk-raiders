@@ -65,6 +65,19 @@ function sanitizeCount(value: unknown): number {
     : 0
 }
 
+function normalizePurchaseComms(value: unknown): GameState['purchaseComms'] {
+  if (!isRecord(value)) return undefined
+  const { hubVisit, count, lastTimestamp } = value
+  if (![hubVisit, count, lastTimestamp].every(entry =>
+    typeof entry === 'number' && Number.isSafeInteger(entry) && entry >= 0,
+  )) return undefined
+  return {
+    hubVisit: sanitizeCount(hubVisit),
+    count: Math.min(2, sanitizeCount(count)),
+    lastTimestamp: sanitizeCount(lastTimestamp),
+  }
+}
+
 function normalizeExtractionReceipt(value: unknown): ExtractionReceipt | null {
   if (!isRecord(value)) return null
   const { timestamp, extractionNumber, zone, dangerLevel, lootItemCount, lootValue,
@@ -390,6 +403,7 @@ export function useGamePersistence(): GamePersistenceReturn {
         purchasedShieldRechargers: normalizePurchasedShieldRechargers((loadedState as unknown as Record<string, unknown>).purchasedShieldRechargers),
         coins: (loadedState.coins ?? 0) + sale.coinsGained,
         lastExtraction: normalizeExtractionReceipt(loadedState.lastExtraction),
+        purchaseComms: normalizePurchaseComms(loadedState.purchaseComms),
         stats: normalizeLifetimeStats(loadedState),
         story: normalizeStoryState((loadedState as unknown as Record<string, unknown>).story),
         raid: {

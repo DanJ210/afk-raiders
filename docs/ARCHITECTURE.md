@@ -54,6 +54,7 @@ Successful extraction records `GameState.lastExtraction` before the raid snapsho
 - Every emitted `LogEvent` carries an explicit `commsPriority` (`ambient` | `priority` | `activity`). Templates may declare `commsPriority` in JSON; the resolver honors template values first with an id-based fallback for unannotated content.
 - Ambient chatter is intentionally sparse and is suppressed when priority comms already exist in the same tick; at most one ambient line lands per tick.
 - Priority comms include lifecycle, progression, and explicit Handler/system feedback lines that should always win over garnish text.
+- Successful preparation purchases share a sparse narration budget: a seeded 25% chance per transaction, at least 30 seconds between jokes, and at most two purchase jokes per HUB visit. Weapons, healing items, and shield rechargers use their existing item-specific pools in [prep_events.json](../src/content/prep_events.json). Coins/stock and saves update even when chatter is skipped. The optional `purchaseComms` budget survives reloads and log trimming; completed/failed raid totals identify the HUB visit. Equip, repair, and loadout feedback remain unconditional.
 - The current working implementation details for this contract live in [ACTIVE_RAID_ACTIVITY_PLAN.md](ACTIVE_RAID_ACTIVITY_PLAN.md); this section is the canonical reference.
 
 ## Folder structure
@@ -291,6 +292,7 @@ If RAIDING time expires without extraction completing, the raid enters the loss 
 When `RaidState.downed` and `RaidState.extracting` overlap, both timers continue. If extraction completes before or on the same tick as the DOWNED timer expires, extraction wins and the raid transitions `RAIDING -> HUB`. If the DOWNED timer expires first, the raid transitions `RAIDING -> KNOCKED_OUT`. KNOCKED_OUT then transitions to HUB after its short recovery timer and runs failed-raid bookkeeping.
 
 ## Testing strategy
+- [tests/tsconfig.json](../tests/tsconfig.json) gives test files an explicit TypeScript project with Node and Vite types, separate from the browser app. Vitest executes tests; the production build does not type-check test fixtures.
 - **Engine unit tests (Vitest):** given a fixed seed and starting state, assert the exact event sequence (snapshot tests).
 - **Content validation tests:** every template's `{slots}` must resolve against content tables; weights must be positive; IDs unique.
 - **Catch-up tests:** N elapsed hours → expected tick count, capped correctly.

@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { createInitialState } from '../../src/engine/initialState'
 import { createRNG } from '../../src/engine/rng'
 import {
@@ -13,6 +13,7 @@ import {
   purchaseShieldRecharger,
   purchaseWeapon,
   repairWeapon,
+  samplePurchaseComms,
   setSelectedHealingLoadout,
   setSelectedShieldRechargerLoadout,
 } from '../../src/engine/loadout'
@@ -26,6 +27,57 @@ function createState() {
 }
 
 describe('loadout transactions', () => {
+  it.each([0, 0.249999, 0.25, 0.999999])('samples purchase chatter at the exact 25%% threshold (%s)', roll => {
+    const result = purchaseHealingItem(createState(), 'bandage_green', 2, 0)!
+    const rng = createRNG(123)
+    vi.spyOn(rng, 'next').mockReturnValue(roll)
+    const sampled = samplePurchaseComms(result, rng)
+    expect(sampled.event !== null).toBe(roll < 0.25)
+    expect(sampled.state.coins).toBe(964)
+    expect(sampled.state.purchasedHealingItems[0]?.quantity).toBe(2)
+    expect(result.state.purchaseComms).toBeUndefined()
+  })
+
+  it('enforces the cooldown and two-joke cap even after the log is cleared', () => {
+    const rng = createRNG(123)
+    vi.spyOn(rng, 'next').mockReturnValue(0)
+    const first = samplePurchaseComms(purchaseWeapon(createState(), 'aspperigo', 0)!, rng)
+    expect(first.event?.text).toContain('Aspperigo')
+    const early = samplePurchaseComms(purchaseHealingItem(first.state, 'bandage_green', 1, 29_999)!, rng)
+    expect(early.event).toBeNull()
+    const second = samplePurchaseComms(purchaseHealingItem(early.state, 'bandage_green', 1, 30_000)!, rng)
+    expect(second.event?.text).toContain('Green Bandage')
+    expect(second.state.purchaseComms?.count).toBe(2)
+    const capped = samplePurchaseComms(purchaseShieldRecharger({ ...second.state, log: [] }, 'fizz_cell', 1, 60_000)!, rng)
+    expect(capped.event).toBeNull()
+    expect(capped.state.purchaseComms).toEqual(second.state.purchaseComms)
+  })
+
+  it.each(['extractCount', 'deathCount'] as const)('resets the budget on the next HUB visit after %s increases', outcome => {
+    const state = createState()
+    state.purchaseComms = { hubVisit: 0, count: 2, lastTimestamp: 0 }
+    state.raider[outcome] = 1
+    const rng = createRNG(123)
+    vi.spyOn(rng, 'next').mockReturnValue(0)
+    const sampled = samplePurchaseComms(purchaseShieldRecharger(state, 'fizz_cell', 1, 1)!, rng)
+    expect(sampled.event?.text).toContain('Fizz Cell')
+    expect(sampled.state.purchaseComms).toEqual({ hubVisit: 1, count: 1, lastTimestamp: 1 })
+  })
+
+  it('produces deterministic purchase chatter for a fixed seed', () => {
+    const sequence = () => {
+      let state = createState()
+      const rng = createRNG(123)
+      return Array.from({ length: 12 }, (_, index) => {
+        const sampled = samplePurchaseComms(purchaseHealingItem(state, 'bandage_white', 1, index * 30_000, rng)!, rng)
+        state = sampled.state
+        return sampled.event?.text ?? null
+      })
+    }
+    expect(sequence()).toEqual(sequence())
+    expect(sequence().filter(Boolean)).toHaveLength(2)
+  })
+
   it('narrates prep transactions with filled desk-voice slots', () => {
     for (let seed = 0; seed < 10; seed++) {
       const rng = createRNG(seed)

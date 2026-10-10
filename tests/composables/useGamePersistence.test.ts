@@ -26,6 +26,27 @@ describe('useGamePersistence', () => {
     vi.unstubAllGlobals()
   })
 
+  it('round-trips the optional purchase chatter budget', () => {
+    stubLocalStorage()
+    const state = createInitialState(1000)
+    state.purchaseComms = { hubVisit: 0, count: 2, lastTimestamp: 1000 }
+    const persistence = useGamePersistence()
+    persistence.persistSave(state, 42, 1000)
+    expect(persistence.loadSave()?.state.purchaseComms).toEqual(state.purchaseComms)
+  })
+
+  it.each([undefined, { count: 'invalid' }, { hubVisit: 0, count: 1, lastTimestamp: -1 }])(
+    'loads absent or malformed purchase budgets safely (%j)', purchaseComms => {
+      stubLocalStorage([[STORAGE_KEY, JSON.stringify({
+        state: { ...createInitialState(1000), purchaseComms },
+        seed: 42, lastTickAt: 1000, version: SAVE_VERSION,
+      })]])
+      const loaded = useGamePersistence().loadSave()
+      expect(loaded).not.toBeNull()
+      expect(loaded?.state.purchaseComms).toBeUndefined()
+    },
+  )
+
   it('loads older profiles without inventing a historical extraction receipt', () => {
     const { lastExtraction: _receipt, ...legacyState } = createInitialState(1000)
     stubLocalStorage([[STORAGE_KEY, JSON.stringify({
