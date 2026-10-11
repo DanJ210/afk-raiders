@@ -8,6 +8,7 @@ import {
   consumeSelectedPreparationLoadouts, getHealingPurchaseCost, getShieldRechargerPurchaseCost,
   purchaseHealingItem, purchaseShieldRecharger, setSelectedHealingLoadout, setSelectedShieldRechargerLoadout,
   equipWeapon, purchaseWeapon, repairWeapon,
+  loadoutQuantity,
 } from '../../src/engine/loadout'
 import { PHASE_DURATIONS } from '../../src/engine/raidStateMachine'
 import { getRevivalSignalCost } from '../../src/engine/raiderLevel'
@@ -171,6 +172,8 @@ interface EconomyMetrics {
   weaponPurchases: number
   repairs: number
   deployedSupplyReplacement: number
+  returnedSupplyValue: number
+  weaponBreaks: number
   successfulHauls: number[]
   successfulRaidTicks: number[]
 }
@@ -178,6 +181,12 @@ interface EconomyMetrics {
 function stockValue(state: GameState): number {
   return state.purchasedHealingItems.reduce((sum, item) => sum + item.quantity * getHealingPurchaseCost(item.itemId), 0)
     + state.purchasedShieldRechargers.reduce((sum, item) => sum + item.quantity * getShieldRechargerPurchaseCost(item.itemId), 0)
+}
+
+function deployedStockValue(state: GameState): number {
+  if (state.raid.phase !== 'RAIDING' && state.raid.phase !== 'DEPLOYING') return 0
+  return state.raid.healingItems.reduce((sum, item) => sum + loadoutQuantity(item) * getHealingPurchaseCost(item.itemId), 0)
+    + state.raid.backpack.reduce((sum, item) => sum + loadoutQuantity(item) * getShieldRechargerPurchaseCost(item.itemId), 0)
 }
 
 // Replacement-value proxy, not a weapon sale price; damaged weapons carry a repair liability.
@@ -241,7 +250,7 @@ function simulate(initial: GameState, seed: number, policy: Policy, singleRaid: 
   const totals = metrics()
   const economy: EconomyMetrics = {
     grossSecured: 0, supplyPurchases: 0, weaponPurchases: 0, repairs: 0,
-    deployedSupplyReplacement: 0, successfulHauls: [], successfulRaidTicks: [],
+    deployedSupplyReplacement: 0, returnedSupplyValue: 0, weaponBreaks: 0, successfulHauls: [], successfulRaidTicks: [],
   }
   const actions = useHandlerActions(
     stateRef, rngRef, lastTickAt,
@@ -259,6 +268,7 @@ function simulate(initial: GameState, seed: number, policy: Policy, singleRaid: 
     const tickGain = securedWealth(result.state) - securedWealth(before)
     economy.grossSecured += tickGain
     if (result.state.stats.extracts.total > before.stats.extracts.total) {
+      economy.returnedSupplyValue += stockValue(result.state) - stockValue(before)
       economy.successfulHauls.push(tickGain)
       economy.successfulRaidTicks.push(PHASE_DURATIONS.RAIDING - before.raid.phaseTicksRemaining + 1)
     }
@@ -292,6 +302,7 @@ function simulate(initial: GameState, seed: number, policy: Policy, singleRaid: 
       }
     }
     for (const event of result.events) {
+      if (event.id.startsWith('weapon_broken_')) economy.weaponBreaks += 1
       if (event.id.startsWith('weapon_lost_')) {
         const weapon = findWeapon(event.id.slice('weapon_lost_'.length))
         if (!weapon) throw new Error(`Audit cannot price lost weapon: ${event.id}`)
@@ -312,6 +323,8 @@ function simulate(initial: GameState, seed: number, policy: Policy, singleRaid: 
   if (singleRaid && totals.extracts + totals.failures !== 1) throw new Error(`Unresolved audit raid: ${seed}`)
   const purchaseSpend = economy.supplyPurchases + economy.weaponPurchases + economy.repairs
   expect(totals.securedValue).toBe(economy.grossSecured - purchaseSpend)
+  expect(stockValue(stateRef.value)).toBe(stockValue(initial) + economy.supplyPurchases
+    - economy.deployedSupplyReplacement + economy.returnedSupplyValue)
   const retainedGain = retainedWealth(stateRef.value) - startingRetained
   const sustainableProxy = economy.grossSecured - economy.deployedSupplyReplacement - economy.repairs
     + equipmentValue(stateRef.value) - equipmentValue(initial) - economy.weaponPurchases
@@ -364,7 +377,7 @@ describe('survival audit baseline (no balance thresholds)', () => {
     const initial = { ...createInitialState(0), coins: 500 }
     const economy: EconomyMetrics = {
       grossSecured: 0, supplyPurchases: 0, weaponPurchases: 0, repairs: 0,
-      deployedSupplyReplacement: 0, successfulHauls: [], successfulRaidTicks: [],
+      deployedSupplyReplacement: 0, returnedSupplyValue: 0, weaponBreaks: 0, successfulHauls: [], successfulRaidTicks: [],
     }
     const prepared = prepareEconomy(initial, 0, economy)
     expect(economy.supplyPurchases).toBe(PREPARATION_COST)
@@ -452,6 +465,11 @@ describe('survival audit baseline (no balance thresholds)', () => {
           repairsPerHour: hourly(results.map(result => result.economy.repairs)),
           weaponLossValuePerHour: hourly(results.map(result => result.totals.weaponLossValue)),
           deployedSupplyReplacementPerHour: hourly(results.map(result => result.economy.deployedSupplyReplacement)),
+          returnedSupplyValuePerHour: hourly(results.map(result => result.economy.returnedSupplyValue)),
+          usedOrLostSupplyValuePerHour: hourly(results.map(result => result.economy.deployedSupplyReplacement
+            - result.economy.returnedSupplyValue - deployedStockValue(result.state))),
+          endingAtRiskSupplyValue: results.reduce((sum, result) => sum + deployedStockValue(result.state), 0) / SESSION_SEEDS,
+          weaponBreaks: results.reduce((sum, result) => sum + result.economy.weaponBreaks, 0),
         })
         for (const result of results) {
           expect(result.state.coins).toBeGreaterThanOrEqual(0)

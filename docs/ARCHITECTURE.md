@@ -208,9 +208,12 @@ Signal regenerates (~1 per 10 min); the meter cycles through 1–5 and overflow 
 
 ### 3a. Preparation economy (HUB-only)
 - The Preparation flow is HUB-only and currently exposed by `PreparationPanel.vue`.
-- Weapons are bought with coins, can be equipped for the next raid, lose durability across raid outcomes, can be repaired in HUB, and can be lost on failed raid recovery paths.
+- Weapons lose one durability on successful extraction and are lost on failed recovery. Zero-durability weapons remain owned and repairable in HUB, but equip and combat resolution reject their use, including cached encounter weapons and content overrides.
+- `ensureUsableEquippedWeapon` selects a working owned fallback; if none remains it restores/supplies only the free starter weapon. Tick processing and Ready Up narrate fallback/restoration. Paid broken equipment is never implicitly repaired.
 - Healing purchases are persistent stock in `GameState.purchasedHealingItems`; selecting a raid loadout stages quantities in `RaidState.selectedHealingLoadout`.
-- Staged healing loadout is consumed exactly once at deployment start (`HUB -> DEPLOYING`), then converted into current-raid healing inventory.
+- Healing and shield recharger loadouts transfer exactly once at deployment start (`HUB -> DEPLOYING`, including Ready Up), subtracting stock and clearing selections. Quantities cannot exceed available stock; staging the same item twice is rejected.
+- `fromLoadoutQuantity` tracks purchased units within mixed purchased/found stacks. Consumption spends purchased units first. Successful timer/event extraction returns unused purchased units to supply storage before raid reset; these units are excluded from stash transfer, earned loot, receipts, and XP. Found meds remain current-raid-only, and found rechargers extract as loot. Failure loses deployed supplies but preserves unselected stock.
+- Save version 13 debits the original deployment once for legacy active saves that duplicated staged stock. It preserves the surviving raid inventory, initializes med provenance from the staged quantities, and clears old selections. It does not retroactively charge completed raids or recreate previously scrapped weapons. Current saves round-trip without another debit.
 - Purchase/equip/repair/clear-loadout actions are confirmation-gated in UI (`usePreparationViewModel`) to reduce accidental spending.
 
 ### 4. Lifetime stat collection

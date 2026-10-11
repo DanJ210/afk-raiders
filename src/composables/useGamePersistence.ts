@@ -19,6 +19,7 @@ import { normalizeRaiderLevelXp } from '../engine/raiderLevel.js'
 import { DEFAULT_RAIDER_NAME, generateIdentityForSeed, PERSONALITY_TRAIT_COUNT, sanitizePersonalityTraits } from '../engine/identity.js'
 import { normalizeStoryState } from '../engine/arcs.js'
 import { createStarterOwnedWeapon, findWeapon, getDefaultWeapon } from '../engine/weapons.js'
+import { consumeSelectedPreparationLoadouts, loadoutQuantity } from '../engine/loadout.js'
 
 const STORAGE_KEY = 'afk-raiders-save'
 const CREATION_PENDING_KEY = 'afk-raiders-creation-pending'
@@ -410,6 +411,26 @@ export function useGamePersistence(): GamePersistenceReturn {
           ...normalizedRaid,
           equippedWeaponId: reconcileEquippedWeaponId(normalizedRaid.equippedWeaponId, ownedWeapons),
         },
+      }
+      if (data.version < 13 && (data.state.raid.phase === 'DEPLOYING' || data.state.raid.phase === 'RAIDING')) {
+        // Old saves duplicated staged stock into the field. Debit that deployment
+        // once without replaying it or replacing the surviving raid inventory.
+        const transferred = consumeSelectedPreparationLoadouts(data.state)
+        const deployedHealing = transferred.raid.healingItems
+        data.state = {
+          ...data.state,
+          purchasedHealingItems: transferred.purchasedHealingItems,
+          purchasedShieldRechargers: transferred.purchasedShieldRechargers,
+          raid: {
+            ...data.state.raid,
+            selectedHealingLoadout: [],
+            selectedShieldRechargerLoadout: [],
+            healingItems: data.state.raid.healingItems.map(item => ({
+              ...item,
+              fromLoadoutQuantity: Math.min(loadoutQuantity(item), deployedHealing.find(entry => entry.itemId === item.itemId)?.quantity ?? 0),
+            })),
+          },
+        }
       }
       data.version = SAVE_VERSION
       data.state.version = SAVE_VERSION

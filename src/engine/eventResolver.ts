@@ -13,6 +13,7 @@
 
 import { CommsPriority, type BackpackItem, type DangerLevel, type EventTemplate, type GameState, type HealingItem, type HealingItemStack, type LogEvent, type LootItem, type Phase, type RaidActivityKind, type RobotEntry, type RobotLootItem, type ShieldRechargerItem } from './types.js'
 import type { RNG } from './rng.js'
+import { loadoutQuantity } from './loadout.js'
 import hubEventsData from '../content/hub_events.json'
 import deploymentEventsData from '../content/deployment_events.json'
 import raidingEventsData from '../content/raiding-events/raiding_events.json'
@@ -564,7 +565,7 @@ function addHealingItem(
   const healingItems = existing
     ? raid.healingItems.map(entry => (
         entry.itemId === item.id
-          ? { ...entry, quantity: entry.quantity + 1 }
+          ? { ...entry, quantity: entry.quantity + 1, fromLoadoutQuantity: loadoutQuantity(entry) }
           : entry
       ))
     : [...raid.healingItems, {
@@ -589,7 +590,7 @@ function removeHealingItem(
     ? raid.healingItems.filter(entry => entry.itemId !== item.itemId)
     : raid.healingItems.map(entry => (
         entry.itemId === item.itemId
-          ? { ...entry, quantity: entry.quantity - 1 }
+          ? { ...entry, quantity: entry.quantity - 1, fromLoadout: loadoutQuantity(entry) > 1, fromLoadoutQuantity: Math.max(0, loadoutQuantity(entry) - 1) }
           : entry
       ))
 

@@ -168,6 +168,13 @@ They should only be reintroduced after multi-tick `EXTRACTION` activities can ow
 
 ## Future Enhancement Targets
 
+### Equipment And Supply Economy Alignment — 2026-10-10
+- Implemented: zero-durability weapons remain owned but cannot equip or contribute combat damage until repaired. Cached encounter equipment and content overrides respect usable ownership.
+- Implemented: working fallback selection, with a narrated free starter restoration only when no working weapon remains.
+- Implemented: finite purchased supplies transfer out of stock on deployment; unused purchased supplies return on successful timer/event extraction, while consumption/failure removes them. Purchased/found quantities remain distinct within mixed stacks.
+- Preserved: healing, shield mitigation/recharge, free MVP shield restoration at HUB, and one weapon wear point per successful raid.
+- Deferred: combat-based wear and harsher threat tuning. Review the rerun in [GAME_DESIGN.md](GAME_DESIGN.md) before changing risk or maintenance rates.
+
 ### Downed Activity Lifecycle Ownership
 DOWNED activity definitions should eventually own duration and completion, replacing the hard-coded `DOWNED_TICKS` lifecycle value. This requires the activity system to safely emit started/progress/completed activity events and call lifecycle transitions, not just side-condition handling.
 

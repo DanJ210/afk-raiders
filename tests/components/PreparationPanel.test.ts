@@ -97,6 +97,15 @@ describe('PreparationPanel', () => {
     vi.restoreAllMocks()
   })
 
+  it('shows broken equipment as repairable but disables equipping it', () => {
+    activeStore.ownedWeapons.push({ weaponId: 'aspperigo', durability: 0 })
+    const wrapper = mount(PreparationPanel)
+    const card = findCardByText(wrapper, 'Aspperigo')
+    expect(card.text()).toContain('Broken - repair required')
+    expect(card.findAll('button').find(button => button.text() === 'Equip')?.attributes('disabled')).toBeDefined()
+    expect(card.findAll('button').find(button => button.text() === 'Repair')?.attributes('disabled')).toBeUndefined()
+  })
+
   it('asks for confirmation before buying a weapon and blocks purchase on cancel', async () => {
     const wrapper = mount(PreparationPanel)
 
@@ -186,8 +195,10 @@ describe('PreparationPanel', () => {
   it('shows explicit loadout behavior and weapon-loss warnings', () => {
     const wrapper = mount(PreparationPanel)
 
-    expect(wrapper.text()).toContain('Loadout behavior: staged healing and shield rechargers are available during the raid and remain configured on successful return.')
-    expect(wrapper.text()).toContain('Failure warning: KNOCKED_OUT clears staged loadouts, and the currently equipped weapon can be lost.')
+    expect(wrapper.text()).toContain('Staged supplies leave storage on deployment.')
+    expect(wrapper.text()).toContain('unused purchased supplies return to storage on extraction.')
+    expect(wrapper.text()).toContain('Failure loses deployed supplies and the equipped weapon.')
+    expect(wrapper.text()).toContain('Zero-durability weapons stay owned but require repair before use.')
   })
 
   it('shows total selected med quantity rather than distinct item count', () => {

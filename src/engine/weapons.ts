@@ -1,5 +1,5 @@
 import weaponsData from '../content/weapons.json'
-import type { OwnedWeapon, WeaponEntry } from './types.js'
+import type { GameState, OwnedWeapon, WeaponEntry } from './types.js'
 
 export const STARTER_WEAPON_ID = 'tea_kettle'
 
@@ -24,4 +24,9 @@ export function createStarterOwnedWeapon(): OwnedWeapon {
     weaponId: starter.id,
     durability: starter.durabilityMax,
   }
+}
+
+export function findUsableWeapon(state: GameState, weaponId: string | null | undefined): WeaponEntry | null {
+  const owned = state.ownedWeapons.find(entry => entry.weaponId === weaponId)
+  return owned && owned.durability > 0 ? findWeapon(weaponId) : null
 }

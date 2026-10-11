@@ -5,6 +5,29 @@ import { createRNG } from '../../src/engine/rng'
 import { getTotalItemValue } from '../../src/engine/homeStash'
 import { getRaiderLevelBenefitProfile, xpRequiredForLevel } from '../../src/engine/raiderLevel'
 import { catchUp, TICK_INTERVAL_MS } from '../../src/engine/catchUp'
+import {
+  consumeSelectedPreparationLoadouts, purchaseHealingItem, purchaseShieldRecharger,
+  setSelectedHealingLoadout, setSelectedShieldRechargerLoadout,
+} from '../../src/engine/loadout'
+import { consumeHealingItem, consumeShieldRecharger, resolveHealingItemFind, resolveShieldRechargerFind } from '../../src/engine/eventResolver'
+
+function suppliedRaid() {
+  let state = { ...createInitialState(0), coins: 500 }
+  state = purchaseHealingItem(state, 'bandage_blue', 4, 0)!.state
+  state = purchaseShieldRecharger(state, 'fizz_cell', 4, 0)!.state
+  state = setSelectedHealingLoadout(state, [{ itemId: 'bandage_blue', quantity: 3 }], 0)!.state
+  state = setSelectedShieldRechargerLoadout(state, [{ itemId: 'fizz_cell', quantity: 3 }], 0)!.state
+  state = consumeSelectedPreparationLoadouts(state)
+  state.raid.phase = 'RAIDING'
+  state.raid.phaseTicksRemaining = 20
+  state.raid.zone = 'damp_battlegrounds'
+  state.raid.dangerLevel = 'Low'
+  state.raider.hp = 40
+  state.raid.shield!.charge = 0
+  state = consumeHealingItem(state, 'bandage_blue', 0)!.state
+  state = consumeShieldRecharger(state, 'fizz_cell', 0)!.state
+  return state
+}
 
 function extractionStart() {
   const state = createInitialState(0)
@@ -21,6 +44,45 @@ function extractionStart() {
 }
 
 describe('extraction receipt', () => {
+  it('returns only unused purchased supplies, without counting them as loot or coins', () => {
+    let state = suppliedRaid()
+    // Mixed found/purchased stacks must return only purchased units.
+    const findRng = createRNG(42)
+    findRng.weightedPick = <T extends { weight: number }>(items: readonly T[]): T => (
+      items.find(item => 'id' in item && item.id === 'bandage_blue') ?? items[0]
+    )
+    state = resolveHealingItemFind(state, findRng, 0).state
+    state = resolveShieldRechargerFind(state, findRng, 0).state
+    expect(state.raid.healingItems[0]?.fromLoadoutQuantity).toBe(2)
+    expect(state.raid.backpack[0]?.fromLoadoutQuantity).toBe(2)
+    state.raid.extracting = { ticksRemaining: 1, totalTicks: 4 }
+    const before = structuredClone(state)
+    const result = processTick(state, createRNG(42), 30_000).state
+    expect(result.purchasedHealingItems[0]?.quantity).toBe(3)
+    expect(result.purchasedShieldRechargers[0]?.quantity).toBe(3)
+    expect(result.homeStash).toEqual([expect.objectContaining({ itemId: 'fizz_cell', quantity: 1 })])
+    expect(result.lastExtraction).toMatchObject({ lootItemCount: 1, lootValue: 12 })
+    expect(result.coins).toBe(state.coins)
+    expect(result.raid.healingItems).toEqual([])
+    expect(result.raid.selectedHealingLoadout).toEqual([])
+    expect(state).toEqual(before)
+    const offline = catchUp(state, createRNG(42), 0, 30_000).state
+    expect(offline.purchasedHealingItems).toEqual(result.purchasedHealingItems)
+    expect(offline.purchasedShieldRechargers).toEqual(result.purchasedShieldRechargers)
+  })
+
+  it('loses field supplies on failure without touching unselected stock', () => {
+    const state = suppliedRaid()
+    state.raid.phase = 'KNOCKED_OUT'
+    state.raid.phaseTicksRemaining = 1
+    const result = processTick(state, createRNG(42), 30_000).state
+    expect(result.purchasedHealingItems[0]?.quantity).toBe(1)
+    expect(result.purchasedShieldRechargers[0]?.quantity).toBe(1)
+    expect(result.raid.healingItems).toEqual([])
+    expect(result.raid.backpack).toEqual([])
+    expect(result.homeStash).toEqual([])
+  })
+
   it('records actual loot quantities and value, excludes staged supplies, and does not mutate input', () => {
     const state = extractionStart()
     const before = structuredClone(state)

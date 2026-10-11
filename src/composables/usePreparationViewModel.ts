@@ -82,6 +82,7 @@ export function usePreparationViewModel(options?: PreparationViewModelOptions) {
 
   async function equipWeapon(weaponId: string) {
     if (!isHubPhase.value) return
+    if ((ownedWeapon(weaponId)?.durability ?? 0) <= 0) return
 
     const weapon = weaponCatalog.find(entry => entry.id === weaponId)
     if (!weapon) return
@@ -102,7 +103,7 @@ export function usePreparationViewModel(options?: PreparationViewModelOptions) {
 
     const cost = getHealingPurchaseCost(itemId)
     const confirmed = await confirmDialog(
-      `Buy 1 ${item.name} for ${cost.toLocaleString()} coins?\n\nStaged loadout items stay configured on successful return and are cleared on KNOCKED_OUT.`,
+      `Buy 1 ${item.name} for ${cost.toLocaleString()} coins?\n\nStaged supplies leave storage on deployment. Used supplies are consumed; unused purchased supplies return on extraction and are lost on failure.`,
     )
     if (!confirmed) return
 
@@ -117,7 +118,7 @@ export function usePreparationViewModel(options?: PreparationViewModelOptions) {
 
     const cost = getShieldRechargerPurchaseCost(itemId)
     const confirmed = await confirmDialog(
-      `Buy 1 ${item.name} for ${cost.toLocaleString()} coins?\n\nStaged loadout items stay configured on successful return and are cleared on KNOCKED_OUT.`,
+      `Buy 1 ${item.name} for ${cost.toLocaleString()} coins?\n\nStaged supplies leave storage on deployment. Used supplies are consumed; unused purchased supplies return on extraction and are lost on failure.`,
     )
     if (!confirmed) return
 

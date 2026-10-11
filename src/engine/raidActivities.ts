@@ -21,17 +21,20 @@ import { getRaiderLevelBenefitProfile } from './raiderLevel.js'
 import { applyShieldedDamage, type ShieldDamageResult } from './shields.js'
 import { describeShieldDamage } from './eventResolver.js'
 import { getSkillModifierProfile } from './skills.js'
-import { findWeapon, getDefaultWeapon } from './weapons.js'
+import { findWeapon, findUsableWeapon, getDefaultWeapon } from './weapons.js'
+import { loadoutQuantity } from './loadout.js'
 import { raidLootWeightMultiplier } from './raidPacing.js'
 
 export const DEFAULT_RAIDER_WEAPON = getDefaultWeapon()
 
 function resolveEquippedWeapon(state: GameState) {
-  return findWeapon(state.raid.equippedWeaponId) ?? DEFAULT_RAIDER_WEAPON
+  return findUsableWeapon(state, state.raid.equippedWeaponId)
+    ?? state.ownedWeapons.map(entry => findUsableWeapon(state, entry.weaponId)).find(weapon => weapon !== null)
+    ?? null
 }
 
 function resolveActivityWeapon(state: GameState, definition: RaidActivityDefinition) {
-  return findWeapon(definition.weaponId) ?? resolveEquippedWeapon(state)
+  return findUsableWeapon(state, definition.weaponId) ?? resolveEquippedWeapon(state)
 }
 
 function normalizeActivityText(value: unknown): RaidActivityDefinition['text'] | null {
@@ -448,7 +451,7 @@ function formatLootList(items: BackpackItem[]): string {
 function addHealingItem(raid: GameState['raid'], item: HealingItem): GameState['raid'] {
   const existing = raid.healingItems.find(entry => entry.itemId === item.id)
   const nextHealingItems = existing
-    ? raid.healingItems.map(entry => entry.itemId === item.id ? { ...entry, quantity: entry.quantity + 1 } : entry)
+    ? raid.healingItems.map(entry => entry.itemId === item.id ? { ...entry, quantity: entry.quantity + 1, fromLoadoutQuantity: loadoutQuantity(entry) } : entry)
     : [...raid.healingItems, {
         itemId: item.id,
         name: item.name,
@@ -608,6 +611,7 @@ export function startRaidActivity(
   if (!robot) return null
 
   const activeWeapon = resolveActivityWeapon(state, definition)
+  if (!activeWeapon) return null
   const explicitBaseDamage = definition.raiderBaseDamage ?? effect.raiderBaseDamage
   const activeActivity: ActiveRaidActivity = {
     id: definition.id,
@@ -644,10 +648,11 @@ export function startRaidActivity(
 }
 
 export function advanceRaidActivity(state: GameState, rng: RNG, now: number): AdvanceRaidActivityResult {
-  const activity = state.raid.activeRaidActivity
-  if (!activity) {
+  const initialActivity = state.raid.activeRaidActivity
+  if (!initialActivity) {
     return { state, activityEvents: [], blocking: false }
   }
+  let activity = initialActivity
 
   if (activity.kind === 'SEARCH') {
     return advanceSearchActivity(state, activity, rng, now)
@@ -668,13 +673,26 @@ export function advanceRaidActivity(state: GameState, rng: RNG, now: number): Ad
     }
   }
 
-  const baseDamage = Math.max(1, activity.raiderBaseDamage ?? rollWeaponDamageBase(activity, rng))
+  if (!findUsableWeapon(state, activity.weaponId)) {
+    const fallback = resolveEquippedWeapon(state)
+    const previousWeapon = findWeapon(activity.weaponId)
+    activity = {
+      ...activity,
+      weaponId: fallback?.id,
+      weaponName: fallback?.name,
+      raiderBaseDamage: undefined,
+      raiderDamageMultiplier: (activity.raiderDamageMultiplier ?? 1)
+        / (previousWeapon?.damageMultiplier ?? 1) * (fallback?.damageMultiplier ?? 1),
+    }
+  }
+  const usableWeapon = findUsableWeapon(state, activity.weaponId)
+  const baseDamage = usableWeapon ? Math.max(1, activity.raiderBaseDamage ?? rollWeaponDamageBase(activity, rng)) : 0
   const weaponDamageMultiplier = Math.max(0.01, activity.raiderDamageMultiplier ?? 1)
   const levelDamageMultiplier = raiderLevelDamageMultiplier(state.raider.levelXp)
   const moodDamageMultiplier = raiderMoodDamageMultiplier(state.raider.mood)
   const activityDamageMultiplier = Math.max(0.01, activity.robotDamageTakenMultiplier ?? 1)
   const rawRaiderDamage = baseDamage * weaponDamageMultiplier * levelDamageMultiplier * moodDamageMultiplier * activityDamageMultiplier
-  const raiderDamage = Math.max(1, Math.ceil(rawRaiderDamage))
+  const raiderDamage = usableWeapon ? Math.max(1, Math.ceil(rawRaiderDamage)) : 0
   const nextRobotHp = Math.max(0, (activity.robotHp ?? robotMaxHp(robot, state.raid.dangerLevel)) - raiderDamage)
 
   if (nextRobotHp <= 0) {

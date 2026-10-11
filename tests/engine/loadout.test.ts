@@ -9,6 +9,7 @@ import {
   consumeSelectedPreparationLoadouts,
   consumeSelectedHealingLoadout,
   equipWeapon,
+  ensureUsableEquippedWeapon,
   purchaseHealingItem,
   purchaseShieldRecharger,
   purchaseWeapon,
@@ -134,6 +135,39 @@ describe('loadout transactions', () => {
     })
   })
 
+  it('keeps zero-durability gear unusable until repaired and rejects field repairs', () => {
+    const state = createState()
+    state.ownedWeapons.push({ weaponId: 'aspperigo', durability: 0 })
+    expect(equipWeapon(state, 'aspperigo', 0)).toBeNull()
+    const repaired = repairWeapon(state, 'aspperigo', 0)!
+    expect(repaired.state.coins).toBe(state.coins - 18)
+    expect(equipWeapon(repaired.state, 'aspperigo', 0)?.state.raid.equippedWeaponId).toBe('aspperigo')
+    state.raid.phase = 'RAIDING'
+    expect(repairWeapon(state, 'aspperigo', 0)).toBeNull()
+    expect(equipWeapon(state, 'tea_kettle', 0)).toBeNull()
+  })
+
+  it('skips broken fallbacks and repairs only the starter when no usable weapon remains', () => {
+    const state = createState()
+    state.raid.equippedWeaponId = 'aspperigo'
+    state.ownedWeapons = [
+      { weaponId: 'aspperigo', durability: 0 },
+      { weaponId: 'tea_kettle', durability: 0 },
+      { weaponId: 'vernerider', durability: 2 },
+    ]
+    const fallback = ensureUsableEquippedWeapon(state, 0)!
+    expect(fallback.state.raid.equippedWeaponId).toBe('vernerider')
+    expect(fallback.state.ownedWeapons).toEqual(state.ownedWeapons)
+    const allBroken = { ...state, ownedWeapons: state.ownedWeapons.map(item => ({ ...item, durability: 0 })) }
+    const restored = ensureUsableEquippedWeapon(allBroken, 0)!
+    expect(restored.state.raid.equippedWeaponId).toBe('tea_kettle')
+    expect(restored.state.ownedWeapons.find(item => item.weaponId === 'tea_kettle')?.durability).toBe(8)
+    expect(restored.state.ownedWeapons.find(item => item.weaponId === 'aspperigo')?.durability).toBe(0)
+    expect(restored.state.coins).toBe(state.coins)
+    expect(restored.event.id).toBe('weapon_starter_restored')
+    expect(ensureUsableEquippedWeapon(restored.state, 1)).toBeNull()
+  })
+
   it('buys healing items into the persistent stockpile', () => {
     const purchase = purchaseHealingItem(createState(), 'bandage_blue', 2, 0)
     expect(purchase).not.toBeNull()
@@ -232,18 +266,10 @@ describe('loadout transactions', () => {
 
     const applied = consumeSelectedPreparationLoadouts(state)
 
-    expect(applied.purchasedHealingItems).toEqual([
-      expect.objectContaining({ itemId: 'bandage_white', quantity: 1 }),
-    ])
-    expect(applied.purchasedShieldRechargers).toEqual([
-      expect.objectContaining({ itemId: 'fizz_cell', quantity: 1 }),
-    ])
-    expect(applied.raid.selectedHealingLoadout).toEqual([
-      expect.objectContaining({ itemId: 'bandage_white', quantity: 1 }),
-    ])
-    expect(applied.raid.selectedShieldRechargerLoadout).toEqual([
-      expect.objectContaining({ itemId: 'fizz_cell', quantity: 1 }),
-    ])
+    expect(applied.purchasedHealingItems).toEqual([])
+    expect(applied.purchasedShieldRechargers).toEqual([])
+    expect(applied.raid.selectedHealingLoadout).toEqual([])
+    expect(applied.raid.selectedShieldRechargerLoadout).toEqual([])
     expect(applied.raid.healingItems).toEqual([
       expect.objectContaining({ itemId: 'bandage_white', quantity: 1, fromLoadout: true }),
     ])
@@ -257,6 +283,7 @@ describe('loadout transactions', () => {
       }),
     ])
     expect(applied.raid.backpackValue).toBe(0)
+    expect(consumeSelectedPreparationLoadouts(applied)).toEqual(applied)
   })
 
   it('wears the equipped weapon down after a raid and breaks it at zero durability', () => {
@@ -274,7 +301,7 @@ describe('loadout transactions', () => {
 
     const broken = applyRaidWeaponWear(wornState, 0)
     expect(broken).not.toBeNull()
-    expect(broken?.state.ownedWeapons.some(entry => entry.weaponId === 'aspperigo')).toBe(false)
+    expect(broken?.state.ownedWeapons.find(entry => entry.weaponId === 'aspperigo')?.durability).toBe(0)
     expect(broken?.state.raid.equippedWeaponId).toBe('tea_kettle')
     expect(broken?.event.id).toBe('weapon_broken_aspperigo')
   })
@@ -295,6 +322,7 @@ describe('loadout transactions', () => {
     expect(broken).not.toBeNull()
     expect(broken?.state.raid.equippedWeaponId).toBe('tea_kettle')
     expect(broken?.state.ownedWeapons).toEqual([
+      expect.objectContaining({ weaponId: 'aspperigo', durability: 0 }),
       expect.objectContaining({ weaponId: 'tea_kettle', durability: 8 }),
     ])
   })

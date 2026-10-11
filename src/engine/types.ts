@@ -281,6 +281,7 @@ export interface HealingItemStack {
   quantity: number
   /** True when staged from HUB loadout rather than found during the raid. */
   fromLoadout?: boolean
+  fromLoadoutQuantity?: number
 }
 
 export interface ShieldRechargerStack {

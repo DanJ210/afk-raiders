@@ -1,4 +1,13 @@
 {
+  "weapon_broken": [
+    { "id": "prep_weapon_broken", "weight": 1, "text": "{item} reached 0 durability. It stays in storage, unusable until repaired." }
+  ],
+  "weapon_fallback": [
+    { "id": "prep_weapon_fallback", "weight": 1, "text": "Equipped working fallback {item}. The broken equipment is not invited." }
+  ],
+  "weapon_starter_restore": [
+    { "id": "prep_weapon_starter_restore", "weight": 1, "text": "No usable weapon remained. The HUB supplied a working {item} for free; paid equipment still needs repair." }
+  ],
   "weapon_purchase": [
     {
       "id": "prep_weapon_buy_gear_weirdo_destiny",

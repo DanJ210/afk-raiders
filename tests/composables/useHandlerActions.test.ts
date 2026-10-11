@@ -8,6 +8,7 @@ import { processTick } from '../../src/engine/tick'
 import { xpRequiredForLevel, getRevivalSignalCost } from '../../src/engine/raiderLevel'
 import { CommsPriority, type GameState, type LogEvent } from '../../src/engine/types'
 import { useHandlerActions } from '../../src/composables/useHandlerActions'
+import { purchaseHealingItem, purchaseShieldRecharger, setSelectedHealingLoadout, setSelectedShieldRechargerLoadout } from '../../src/engine/loadout'
 
 function createHarness(state: GameState = createInitialState(0)) {
   const stateRef = { value: state }
@@ -34,6 +35,33 @@ function createHarness(state: GameState = createInitialState(0)) {
 }
 
 describe('useHandlerActions Signal Handling skill', () => {
+  it.each(['ready_up', 'autonomous'] as const)('transfers staged supplies once during %s deployment and narrates a working starter fallback', mode => {
+    let state = { ...createInitialState(0), coins: 500 }
+    state = purchaseHealingItem(state, 'bandage_blue', 3, 0)!.state
+    state = purchaseShieldRecharger(state, 'fizz_cell', 3, 0)!.state
+    state = setSelectedHealingLoadout(state, [{ itemId: 'bandage_blue', quantity: 2 }], 0)!.state
+    state = setSelectedShieldRechargerLoadout(state, [{ itemId: 'fizz_cell', quantity: 2 }], 0)!.state
+    state.ownedWeapons[0]!.durability = 0
+    const harness = createHarness(state)
+    if (mode === 'ready_up') {
+      harness.actions.readyUp()
+    } else {
+      state.raid.phaseTicksRemaining = 1
+      harness.stateRef.value = processTick(state, harness.rngRef.current, 30_000).state
+    }
+    const deployed = harness.stateRef.value
+    expect(deployed.raid.phase).toBe('DEPLOYING')
+    expect(deployed.purchasedHealingItems[0]?.quantity).toBe(1)
+    expect(deployed.purchasedShieldRechargers[0]?.quantity).toBe(1)
+    expect(deployed.raid.healingItems[0]?.quantity).toBe(2)
+    expect(deployed.raid.backpack[0]?.quantity).toBe(2)
+    expect(deployed.log.some(event => event.id === 'weapon_starter_restored')).toBe(true)
+    const next = processTick(deployed, harness.rngRef.current, Date.now() + 30_000).state
+    expect(next.purchasedHealingItems).toEqual(deployed.purchasedHealingItems)
+    expect(next.purchasedShieldRechargers).toEqual(deployed.purchasedShieldRechargers)
+    expect(next.raid.backpack).toEqual(deployed.raid.backpack)
+  })
+
   it('awards Signal Handling XP when Signal is successfully spent', () => {
     const initial = createInitialState(0)
     const now = Date.now()

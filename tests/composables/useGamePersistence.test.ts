@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { useGamePersistence } from '../../src/composables/useGamePersistence'
 import { createInitialState, SAVE_VERSION } from '../../src/engine/initialState'
 import { generateIdentityForSeed } from '../../src/engine/identity'
+import { consumeSelectedPreparationLoadouts, purchaseHealingItem, purchaseShieldRecharger, setSelectedHealingLoadout, setSelectedShieldRechargerLoadout } from '../../src/engine/loadout'
 
 const STORAGE_KEY = 'afk-raiders-save'
 
@@ -22,6 +23,36 @@ function stubLocalStorage(initialEntries: Array<[string, string]> = []) {
 }
 
 describe('useGamePersistence', () => {
+  it('migrates legacy active supply copies once and preserves broken equipment', () => {
+    let state = { ...createInitialState(0), coins: 500 }
+    state = purchaseHealingItem(state, 'bandage_blue', 3, 0)!.state
+    state = purchaseShieldRecharger(state, 'fizz_cell', 2, 0)!.state
+    state = setSelectedHealingLoadout(state, [{ itemId: 'bandage_blue', quantity: 2 }], 0)!.state
+    state = setSelectedShieldRechargerLoadout(state, [{ itemId: 'fizz_cell', quantity: 1 }], 0)!.state
+    const deployed = consumeSelectedPreparationLoadouts(state)
+    const legacy = {
+      ...state,
+      ownedWeapons: [...state.ownedWeapons, { weaponId: 'aspperigo', durability: 0 }],
+      raid: {
+        ...deployed.raid, phase: 'RAIDING', equippedWeaponId: 'aspperigo',
+        selectedHealingLoadout: state.raid.selectedHealingLoadout,
+        selectedShieldRechargerLoadout: state.raid.selectedShieldRechargerLoadout,
+        healingItems: deployed.raid.healingItems.map(item => ({ ...item, fromLoadoutQuantity: undefined })),
+      },
+    }
+    stubLocalStorage([[STORAGE_KEY, JSON.stringify({ state: legacy, seed: 42, lastTickAt: 0, version: 12 })]])
+    const persistence = useGamePersistence()
+    const loaded = persistence.loadSave()!
+    expect(loaded.version).toBe(13)
+    expect(loaded.state.purchasedHealingItems[0]?.quantity).toBe(1)
+    expect(loaded.state.purchasedShieldRechargers[0]?.quantity).toBe(1)
+    expect(loaded.state.raid.healingItems[0]?.fromLoadoutQuantity).toBe(2)
+    expect(loaded.state.raid.selectedHealingLoadout).toEqual([])
+    expect(loaded.state.ownedWeapons.find(item => item.weaponId === 'aspperigo')?.durability).toBe(0)
+    persistence.persistSave(loaded.state, loaded.seed, loaded.lastTickAt)
+    expect(persistence.loadSave()?.state).toEqual(loaded.state)
+  })
+
   afterEach(() => {
     vi.unstubAllGlobals()
   })

@@ -10,7 +10,7 @@ import { createStarterOwnedWeapon, STARTER_WEAPON_ID } from './weapons.js'
 import { DEFAULT_RAIDER_NAME, type RaiderIdentity } from './identity.js'
 import { createInitialStoryState } from './arcs.js'
 
-export const SAVE_VERSION = 12
+export const SAVE_VERSION = 13
 
 export function createInitialState(now: number = Date.now(), identity?: RaiderIdentity): GameState {
   return {

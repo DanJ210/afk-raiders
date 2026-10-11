@@ -155,10 +155,10 @@ function repairButtonColorClass(weaponId: string, durabilityMax: number): string
 
     <div class="mb-3 rounded border border-border-subtle bg-surface-raised p-2">
       <p class="m-0 font-mono text-[0.65rem] leading-snug text-muted">
-        Loadout behavior: staged healing and shield rechargers are available during the raid and remain configured on successful return.
+        Staged supplies leave storage on deployment. Used supplies are consumed; unused purchased supplies return to storage on extraction. Stage the next loadout in HUB.
       </p>
       <p class="m-0 mt-1 font-mono text-[0.65rem] leading-snug text-muted">
-        Failure warning: KNOCKED_OUT clears staged loadouts, and the currently equipped weapon can be lost.
+        Failure loses deployed supplies and the equipped weapon. Unselected stock stays safe. Zero-durability weapons stay owned but require repair before use.
       </p>
     </div>
 
@@ -212,7 +212,7 @@ function repairButtonColorClass(weaponId: string, durabilityMax: number): string
                   type="button"
                   class="rounded border px-2 py-1 font-mono text-[0.68rem] bg-transparent cursor-pointer disabled:opacity-50"
                   :class="equipButtonColorClass(equippedWeaponId === weapon.id)"
-                  :disabled="equippedWeaponId === weapon.id || !isHubPhase"
+                  :disabled="equippedWeaponId === weapon.id || (ownedWeapon(weapon.id)?.durability ?? 0) <= 0 || !isHubPhase"
                   @click="equipWeapon(weapon.id)"
                 >{{ equippedWeaponId === weapon.id ? 'Equipped' : 'Equip' }}</button>
                 <button
@@ -223,6 +223,7 @@ function repairButtonColorClass(weaponId: string, durabilityMax: number): string
                   @click="repairWeapon(weapon.id)"
                 >Repair</button>
                 <span v-if="ownedWeapon(weapon.id)" class="self-center font-mono text-[0.66rem] text-muted">Durability {{ ownedWeapon(weapon.id)?.durability }}/{{ weapon.durabilityMax }}</span>
+                <span v-if="ownedWeapon(weapon.id)?.durability === 0" class="self-center font-mono text-[0.66rem] text-danger">Broken - repair required</span>
               </template>
             </div>
           </article>

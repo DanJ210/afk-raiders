@@ -22,7 +22,7 @@ import { generateIdentityForSeed, RAIDER_NAME_MAX_LENGTH } from '../engine/ident
 import { applyRaiderXpGain, rollRaiderXp, getRevivalSignalCost, type RaiderLevelUp } from '../engine/raiderLevel.js'
 import { applySkillPractice, rollSkillPractice, type SkillLevelUp } from '../engine/skills.js'
 import type { BackpackItem } from '../engine/types.js'
-import { consumeSelectedPreparationLoadouts } from '../engine/loadout.js'
+import { consumeSelectedPreparationLoadouts, ensureUsableEquippedWeapon } from '../engine/loadout.js'
 
 const REVIVE_HP_RESTORE = 25
 
@@ -188,7 +188,8 @@ export function useHandlerActions(
     const updated = spendSignal(syncSignalProgress(actionNow), 'READY_UP')
     if (!updated) return
 
-    const preparedState = consumeSelectedPreparationLoadouts(stateRef.value)
+    const fallback = ensureUsableEquippedWeapon(stateRef.value, actionNow)
+    const preparedState = consumeSelectedPreparationLoadouts(fallback?.state ?? stateRef.value)
     const { raid: deployingRaid, transition } = tickPhase(preparedState.raid, 'DEPLOYING', rngRef.current)
     if (!transition) return
 
@@ -207,11 +208,11 @@ export function useHandlerActions(
       raid: deployingRaid,
       log: appendLogEntries(
         preparedState.log,
-        [transitionEvent],
+        [...(fallback ? [fallback.event] : []), transitionEvent],
       ),
     }
     const signalUseEvents = awardSignalUseSkill(actionNow, 2)
-    publishEvents?.([transitionEvent, ...signalUseEvents])
+    publishEvents?.([...(fallback ? [fallback.event] : []), transitionEvent, ...signalUseEvents])
     persistCallback(stateRef.value, rngRef.current.getSeed(), lastTickAtRef.value)
   }
 

@@ -90,6 +90,38 @@ function createActiveRobotState(params: {
 }
 
 describe('raid activities', () => {
+  it('never uses a broken equipped or definition weapon to start combat', () => {
+    const state = createActiveRobotState({ robotId: 'anxietick' })
+    state.raid.activeRaidActivity = null
+    state.raid.equippedWeaponId = 'aspperigo'
+    state.ownedWeapons.push({ weaponId: 'aspperigo', durability: 0 })
+    const definition = raidActivities.find(item => item.id === 'robot_encounter_standard')!
+    const previous = definition.weaponId
+    definition.weaponId = 'aspperigo'
+    try {
+      const result = startRaidActivity(state, { activityId: definition.id, kind: 'ROBOT_ENCOUNTER', robotId: 'anxietick' }, fixedRng(), 0)!
+      expect(result.state.raid.activeRaidActivity?.weaponId).toBe('tea_kettle')
+      expect(result.activityEvent.text).toContain('Tea Kettle')
+    } finally {
+      definition.weaponId = previous
+    }
+  })
+
+  it('replaces broken cached combat gear with usable gear without retaining its damage bonus', () => {
+    const state = createActiveRobotState({ robotId: 'anxietick', robotHp: 999 })
+    state.ownedWeapons.push({ weaponId: 'aspperigo', durability: 0 })
+    const weapon = findWeapon('aspperigo')!
+    state.raid.activeRaidActivity = {
+      ...state.raid.activeRaidActivity!, weaponId: weapon.id, weaponName: weapon.name,
+      raiderBaseDamage: 999, raiderDamageMultiplier: weapon.damageMultiplier,
+    }
+    const result = advanceRaidActivity(state, fixedRng(), 0)
+    const baseline = advanceRaidActivity(createActiveRobotState({ robotId: 'anxietick', robotHp: 999 }), fixedRng(), 0)
+    expect(result.state.raid.activeRaidActivity?.weaponId).toBe('tea_kettle')
+    expect(result.state.raid.activeRaidActivity?.robotHp).toBe(baseline.state.raid.activeRaidActivity?.robotHp)
+    expect(result.activityEvents[0]?.text).toContain('Tea Kettle')
+  })
+
   it('starts a JSON-backed robot encounter with Tea Kettle as the default weapon', () => {
     const initial = createInitialState(0)
     const state = {
@@ -134,6 +166,7 @@ describe('raid activities', () => {
     const initial = createInitialState(0)
     const equipped = findWeapon('temptrest_ar')
     expect(equipped).not.toBeNull()
+    initial.ownedWeapons.push({ weaponId: equipped!.id, durability: equipped!.durabilityMax })
 
     const state = {
       ...initial,
@@ -191,6 +224,7 @@ describe('raid activities', () => {
     const initial = createInitialState(0)
     const equipped = findWeapon('aspperigo')
     expect(equipped).not.toBeNull()
+    initial.ownedWeapons.push({ weaponId: equipped!.id, durability: equipped!.durabilityMax })
     const definition = raidActivities.find(activity => activity.id === 'robot_encounter_standard')
     expect(definition).toBeDefined()
 
@@ -233,6 +267,7 @@ describe('raid activities', () => {
     const initial = createInitialState(0)
     const equipped = findWeapon('temptrest_ar')
     expect(equipped).not.toBeNull()
+    initial.ownedWeapons.push({ weaponId: equipped!.id, durability: equipped!.durabilityMax })
     const definition = raidActivities.find(activity => activity.id === 'robot_encounter_standard')
     expect(definition).toBeDefined()
 

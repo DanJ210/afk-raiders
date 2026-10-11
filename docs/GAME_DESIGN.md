@@ -29,7 +29,7 @@ This document owns product direction. Existing mechanics below describe the curr
 ## 2. Core Loop
 **Current prototype:** The lifecycle and mechanics below are the foundation to evaluate against the design pillars, not proof that the intended intervention loop already feels rewarding.
 
-1. **Prep phase (hub):** Raider sells loot, buys questionable gear, equips one weapon, and stages consumable loadout stock before deployment. Preparation is HUB-only: weapons can be bought/equipped/repaired, healing items and shield rechargers are purchased into persistent stock, and selected consumable loadouts are applied at deployment start without being auto-consumed. Purchase/equip/repair actions use confirmations so accidental spend is less likely.
+1. **Prep phase (hub):** Raider sells loot, buys questionable gear, equips one usable weapon, and stages consumable stock before deployment. Preparation is HUB-only. Deployment transfers staged quantities out of persistent stock into the raid and clears the selection. Using supplies consumes them permanently; unused purchased supplies return to storage on extraction and are lost on failure. Unselected stock stays safe. Stage the next loadout in HUB. Purchase/equip/repair actions use confirmations so accidental spend is less likely.
 2. **Deploy:** Raider autonomously picks a zone and a seeded **zone condition** (for example Light Fog, Acid Rain, Robot Surge). Greed carried over from the last raid nudges whether the next condition comes from the minor or major condition pool.
 3. **Raid diary and active threads:** Ambient raid diary lines cover loot finds, weather, suspicious noises, Raider commentary, and manual shield-recharger use/progress. Multi-tick active threads cover searches, extraction drama, DOWNED recovery, and robot fights. The selected condition sets a `dangerLevel` (Low/Medium/High), which then drives the danger-level profile for both upside (loot value/rarity) and risk (ambient downed pressure, robot pressure, extraction danger).
    - Raider **mood** now provides a tiny secondary bias to loot quality: positive mood slightly improves higher-rarity odds, while negative mood slightly favors lower-rarity outcomes. Greed adds a second small loot-appetite bias toward higher-rarity finds.
@@ -89,6 +89,12 @@ The Raider now starts each raid with a basic **Makeshift Confidence Shield** lay
 - For the MVP, returning to the HUB restores the starter shield to full charge and durability.
 - In future phases, a loadout and store loop can decide which shield is equipped and how it persists.
 
+### Weapon maintenance
+- Successful extraction costs one durability point on the equipped weapon; failed recovery loses that weapon instead. Combat-based wear is not implemented.
+- At zero durability, a weapon stays owned but cannot be equipped or used in combat until repaired in HUB at its catalog repair cost.
+- The Raider equips another usable owned weapon when needed. If none remains, the HUB restores/supplies the starter Tea Kettle for free and narrates it. Paid broken gear remains broken; this prevents an offline equipment softlock.
+- Shield rechargers cannot repair a zero-durability shield. Shields retain their existing free full HUB restoration for MVP; no paid shield-repair economy is introduced here.
+
 ### Resilience
 Mood also feeds a small hidden **resilience** bonus against robot damage:
 - Positive mood slightly reduces failed-robot damage before shield mitigation.
@@ -102,7 +108,7 @@ Shield rechargers are manual-use backpack consumables available from both RAIDIN
 - The player can buy them in HUB, stage them in a prep loadout, and deploy with them already in the backpack.
 - The player must manually apply them from the backpack UI.
 - Rechargers restore shield charge only; they do not repair shield durability.
-- If unused, RAIDING-found rechargers extract into Home Stash like normal backpack loot; staged loadout copies are excluded from extraction transfer by the engine.
+- If unused, RAIDING-found rechargers extract into Home Stash like normal backpack loot; unused purchased rechargers return to supply storage and are excluded from earned-loot receipts.
 
 ### Consumables on Loot
 When normal loot is received, the raid also rolls independent bonus chances for:
@@ -363,6 +369,8 @@ The full-tick starter cohort also requires at least 95% of successful Raiders at
 
 ### Extraction timing and economy measurement — 2026-10-09
 
+**Historical pre-consumption baseline:** This measurement used reusable purchased supplies. The 2026-10-10 rerun below supersedes its current-economy interpretation; retain these results for comparison.
+
 The [survival audit](../tests/composables/survivalAudit.test.ts) now compares **24 matched seeds, eight hours each**, for five exit policies with and without paid preparation. These results reflect the current elapsed-time/urgency tuning, not the earlier pre-tuning baseline.
 
 All profiles start in HUB with the same **500-coin experimental capital**, Tea Kettle, full Signal, and no progression or stock. No capital is added later. This tests a funded strategy, not first-session affordability. Natural zones/conditions, progression, Signal scarcity, HUB/deployment/recovery time, and incomplete final raids remain in the simulation.
@@ -405,6 +413,35 @@ $env:SURVIVAL_ECONOMY_REPORT = '1'
 npm test -- tests\composables\survivalAudit.test.ts --disableConsoleIntercept --reporter=verbose
 Remove-Item Env:SURVIVAL_ECONOMY_REPORT
 ```
+
+### Finite-supply economy rerun — 2026-10-10
+
+Implemented the agreed equipment/supply contracts before changing balance: broken weapons stay owned at zero durability and require repair; only usable weapons can equip or contribute combat damage. A working fallback is selected, with a narrated free starter restoration/supply only if no usable weapon remains. Successful raids still cost one weapon durability; failure still loses the equipped weapon. Shield mitigation, recharge, healing, and free MVP shield restoration at HUB remain unchanged.
+
+Purchased loadouts now **transfer out of storage once at deployment** and clear their selections. Used supplies are permanently consumed; unused purchased meds/rechargers return to supply storage on successful extraction. Failure loses deployed supplies, not unselected stock. Found meds remain field-only, and found rechargers still extract as loot. Mixed stacks track purchased quantities separately; returned supplies do not inflate receipts, XP, stash value, or gross rewards.
+
+Reran the same ten cohorts (24 seeds each, eight hours, 500 starting coins, identical support/extraction policies and affordable preparation order). No enemy, reward, timer, repair-price, or wear-rate tuning was added. The paid preparation loop still repairs on every HUB arrival and stages available stock for each deployment; it now buys replacements when necessary.
+
+| Preparation | Exit policy | Extraction rate | Retained net/hour | Supply purchases/hour | Repairs/hour |
+|---|---|---|---|---|---|
+| Found-only | Unattended | 67.5% | 2,374.2 | 0 | 0 |
+| Found-only | Early | 84.8% | 2,300.9 | 0 | 0 |
+| Found-only | Mid | 86.6% | 2,583.8 | 0 | 0 |
+| Found-only | Deep | 94.1% | 2,927.3 | 0 | 0 |
+| Found-only | Overextended | 95.2% | 2,950.9 | 0 | 0 |
+| Paid | Preparation-only | 68.3% | 2,390.0 | 157.7 | 20.6 |
+| Paid | Early | 97.5% | 2,454.7 | 179.7 | 36.0 |
+| Paid | Mid | 99.2% | 2,972.8 | 197.7 | 33.5 |
+| Paid | Deep | 100.0% | 3,396.3 | 202.0 | 30.5 |
+| Paid | Overextended | 100.0% | 3,303.4 | 200.2 | 30.3 |
+
+The retained-net definition above remains unchanged: only secured stock/equipment are assets; supplies still in the field at the eight-hour cutoff are excluded. For paid deep play, the mean ending at-risk supply value was **122 coins/profile**. The report now separates deployed, returned, used/lost, and ending at-risk supplies and verifies `ending stock = starting stock + purchases - deployed + returned`. The full-deployment replacement proxy remains a conservative scenario that discards unused supplies, not the agreed return-on-success economy.
+
+Paid early/deep median net/hour is now **2,237.0 / 3,598.5**; p10 is **1,683.5 / 2,150.1**. Paid deep play purchases **202.0** supply value/hour, uses or loses **174.3**/hour, and returns **234.2**/hour from deployed stock. These are accounting breakdowns, not extra deductions from net. All paid cohorts recorded **zero weapon breaks** because their policy repairs every return; zero-durability correctness is exercised by focused engine/UI/save tests, not claimed from this strategy.
+
+**Decision:** Keep finite supplies and repairable broken equipment. Deep handling still rewards support (about **38%** more net/hour than paid early play), but paid deep/overextended resolved extraction remains 100% in this sample, with actual successful raids averaging **22.4 / 22.7 minutes**. This is not evidence of guaranteed survival or of mandatory full-duration exposure. Before implementing combat-based wear, compare repair-every-return, low-durability repair, and repair-at-zero policies against actual encounter counts, fallback time, breaks, losses, and net returns. A flat repair fee makes delaying repairs potentially much cheaper; do not assume the current frequent-repair audit represents optimal upkeep. Only then test combat-based wear as an explicit risk/cost experiment, rather than raising enemy damage to compensate for former reusable supplies.
+
+The reproduction command above emits this latest measurement. Save version 13 migrates legacy active duplicated supply stock once; completed raid history is not charged retroactively.
 
 ## 10. Legal Positioning
 Parody enjoys some protection, but we do **not** use the "ARC Raiders" trademark, logos, names, lore text, or assets — especially important for app-store distribution. Branding is original; positioning is "affectionate parody of extraction shooters" generally. All names in the parody table above are original to this project. See [docs/lore/content-guidelines/LEGAL_GUARDRAILS.md](lore/content-guidelines/LEGAL_GUARDRAILS.md) before adding new lore or content.

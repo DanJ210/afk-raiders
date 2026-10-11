@@ -168,6 +168,12 @@ Additional shield behavior:
 - Shield rechargers can apply over multiple ticks via `RaidState.activeShieldRecharge`.
 - Comms should include shield split narration when mitigation occurs (shield charge lost vs HP damage landed).
 
+### Finite Supplies And Weapon Maintenance
+- Deployment transfers selected purchased meds/rechargers out of persistent stock exactly once and clears the selection. Unselected stock stays safe.
+- Track purchased units with `fromLoadoutQuantity` inside mixed found/purchased stacks. Spend purchased units first; return unused purchased supplies to stock on extraction, not to earned loot. Failure loses deployed supplies.
+- Zero-durability weapons stay owned and require HUB repair before equip/use. Successful extraction wears the weapon by one point; failure loses it.
+- Select a usable owned fallback. If none exists, narrate a free starter Tea Kettle restoration/supply only; never auto-repair paid broken weapons. Shield restoration at HUB remains the existing MVP exception.
+
 ## Persistence and Migration Notes
 - Saves are local-only (`localStorage`) and versioned.
 - Load migration fills missing fields for legacy saves (for example coins, stats, shield state, hidden pocket, danger level, zone condition, downed/extracting condition state).

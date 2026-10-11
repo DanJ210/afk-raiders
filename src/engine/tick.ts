@@ -17,7 +17,7 @@ import { advanceShieldRecharge } from './shields.js'
 import { applySkillPractice, getSkillModifierProfile, rollSkillPractice, type SkillLevelUp, type SkillPracticeTrigger } from './skills.js'
 import { applyRaiderXpGain, getRaiderLevelBenefitProfile, rollRaiderXp, type RaiderLevelUp, type RaiderXpTrigger } from './raiderLevel.js'
 import { advanceRaidActivity, raidActivities, startRaidActivity } from './raidActivities.js'
-import { applyFailedRaidWeaponLoss, applyRaidWeaponWear, consumeSelectedPreparationLoadouts } from './loadout.js'
+import { applyFailedRaidWeaponLoss, applyRaidWeaponWear, consumeSelectedPreparationLoadouts, ensureUsableEquippedWeapon, returnUnusedPreparationSupplies, loadoutQuantity } from './loadout.js'
 import { narrateNemesisCallbacks, narrateOutcomeCallbacks } from './narrator.js'
 import { advanceStoryArcs, resolveArcAmbientEvent } from './arcs.js'
 
@@ -379,8 +379,7 @@ function totalBackpackQuantity(backpack: BackpackItem[]): number {
 }
 
 function loadoutBackpackQuantity(item: BackpackItem): number {
-  const declaredLoadoutQuantity = Math.max(0, Math.floor(item.fromLoadoutQuantity ?? (item.fromLoadout ? item.quantity : 0)))
-  return Math.min(item.quantity, declaredLoadoutQuantity)
+  return loadoutQuantity(item)
 }
 
 function splitExtractedBackpack(backpack: BackpackItem[]): BackpackItem[] {
@@ -481,7 +480,7 @@ function completeExtractionCondition(
   const extractedRaid = state.raid
   const extractedBackpack = splitExtractedBackpack(extractedRaid.backpack)
   const extractedBackpackValue = extractedBackpack.reduce((sum, item) => sum + (item.value * item.quantity), 0)
-  let currentState: GameState = state
+  let currentState: GameState = returnUnusedPreparationSupplies(state)
 
   // First, apply the successful extraction bookkeeping (transfer loot, heal, etc.)
   queueSuccessfulExtractionSkillPractice(skillPracticeTriggers, {
@@ -675,6 +674,11 @@ export function processTick(state: GameState, rng: RNG, now: number = Date.now()
     signalAmplifiers: state.signalAmplifiers + signalAdvance.amplifiersGained,
   }
   currentState = enforceIncapacitatedHp(currentState)
+  const usableWeapon = ensureUsableEquippedWeapon(currentState, now)
+  if (usableWeapon) {
+    currentState = usableWeapon.state
+    emitted.push({ ...usableWeapon.event, phase: currentState.raid.phase })
+  }
 
   if (transition) {
     emitted.push(phaseTransitionEvent(transition, state.tick, now))
